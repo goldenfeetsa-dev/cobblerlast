@@ -1,0 +1,52 @@
+{
+  "name": "WorkingHours",
+  "type": "object",
+  "properties": {
+    "day_of_week": {
+      "type": "number",
+      "description": "0=Sunday, 1=Monday ... 6=Saturday"
+    },
+    "day_name_ar": {
+      "type": "string"
+    },
+    "is_open": {
+      "type": "boolean",
+      "default": true
+    },
+    "open_time": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "close_time": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "slot_duration": {
+      "type": "number",
+      "default": 30,
+      "description": "Slot duration in minutes"
+    }
+  },
+  "required": [
+    "day_of_week",
+    "day_name_ar"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

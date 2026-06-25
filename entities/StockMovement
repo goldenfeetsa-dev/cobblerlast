@@ -1,0 +1,75 @@
+{
+  "name": "StockMovement",
+  "type": "object",
+  "properties": {
+    "item_id": {
+      "type": "string"
+    },
+    "item_name": {
+      "type": "string"
+    },
+    "movement_type": {
+      "type": "string",
+      "enum": [
+        "warehouse_in",
+        "warehouse_to_branch",
+        "branch_sale",
+        "workshop_in",
+        "workshop_withdrawal",
+        "settlement_deduction"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u062d\u0631\u0643\u0629"
+    },
+    "quantity": {
+      "type": "number"
+    },
+    "unit": {
+      "type": "string"
+    },
+    "from_location": {
+      "type": "string",
+      "description": "\u0645\u0646: warehouse / branch_id / workshop"
+    },
+    "to_location": {
+      "type": "string",
+      "description": "\u0625\u0644\u0649: warehouse / branch_id / workshop"
+    },
+    "cost_price": {
+      "type": "number"
+    },
+    "sell_price": {
+      "type": "number"
+    },
+    "reference_id": {
+      "type": "string",
+      "description": "invoice_id or settlement_id"
+    },
+    "reference_type": {
+      "type": "string",
+      "enum": [
+        "invoice",
+        "transfer",
+        "settlement",
+        "manual"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "branch_id": {
+      "type": "string"
+    },
+    "branch_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "item_name",
+    "movement_type",
+    "quantity"
+  ]
+}

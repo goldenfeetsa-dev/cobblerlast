@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /booking
+Allow: /book
+Allow: /shop
+Allow: /repair-policy
+Allow: /reviews
+
+# Block admin pages from search engines
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /orders
+Disallow: /pos
+Disallow: /pin-login
+Disallow: /audit-log
+Disallow: /api/
+
+Sitemap: https://cobblerlast.com/sitemap.xml

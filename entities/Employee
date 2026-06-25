@@ -1,0 +1,51 @@
+{
+  "name": "Employee",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Employee full name"
+    },
+    "pin": {
+      "type": "string",
+      "description": "4-digit PIN for login"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "staff"
+      ],
+      "default": "staff",
+      "description": "Employee role"
+    },
+    "branch_id": {
+      "type": "string",
+      "description": "ID of the branch this employee belongs to (empty = all branches for admin)"
+    },
+    "branch_name": {
+      "type": "string",
+      "description": "Name of the branch (denormalized for display)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether employee is active"
+    },
+    "total_orders": {
+      "type": "number",
+      "default": 0,
+      "description": "Total orders processed"
+    },
+    "total_revenue": {
+      "type": "number",
+      "default": 0,
+      "description": "Total revenue generated"
+    }
+  },
+  "required": [
+    "name",
+    "pin",
+    "role"
+  ]
+}

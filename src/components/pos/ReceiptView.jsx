@@ -1,0 +1,340 @@
+import React, { useRef } from 'react';
+import BarcodeDisplay from './BarcodeDisplay';
+import { Button } from '@/components/ui/button';
+import { Printer, Download, CheckCircle, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import html2canvas from 'html2canvas';
+import { QRCodeSVG } from 'qrcode.react';
+import { buildZatcaTLV } from '@/lib/zatca/zatcaUtils';
+
+const ITEM_LABELS = {
+  shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
+  jacket: 'جاكيت', pants: 'بنطال', shirt: 'قميص', other: 'أخرى'
+};
+
+export default function ReceiptView({ order }) {
+  const receiptRef = useRef(null);
+
+  const { data: settingsList } = useQuery({
+    queryKey: ['shop-settings'],
+    queryFn: () => base44.entities.ShopSettings.list(),
+    initialData: [],
+  });
+  const settings = settingsList[0] || {};
+  const shopName = settings.shop_name || 'إبرة وخيط الإسكافي';
+  const logoUrl = settings.logo_url || '';
+  const header = settings.receipt_header || 'خدمات التصليح والخياطة للأحذية والحقائب الجلدية';
+  const footer = settings.receipt_footer || 'شكراً لثقتكم بنا — نسعد بخدمتكم دائماً';
+  const terms = settings.terms_conditions || '';
+  const vatNumber = settings.vat_number || '';
+  const crNumber = settings.commercial_registration || '';
+  const vatEnabled = settings.vat_enabled !== false;
+
+  const subtotal = order.subtotal || (vatEnabled ? parseFloat((order.total_price / 1.15).toFixed(2)) : order.total_price);
+  const vatAmount = order.vat_amount || (vatEnabled ? parseFloat((order.total_price - subtotal).toFixed(2)) : 0);
+  const createdDate = order.created_date ? new Date(order.created_date) : new Date();
+
+  // Use order's stored ZATCA QR if available (Phase 2 cleared), else build Phase 1 TLV
+  const zatcaQR = order.zatca_qr || buildZatcaTLV({
+    sellerName: shopName,
+    vatNumber,
+    invoiceDate: createdDate,
+    totalAmount: order.total_price ?? 0,
+    vatAmount: vatAmount ?? 0,
+  });
+
+  const handleDownload = async () => {
+    if (!receiptRef.current) return;
+    const canvas = await html2canvas(receiptRef.current, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
+    const link = document.createElement('a');
+    link.download = `فاتورة-${order.order_number}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const handlePrint = async () => {
+    if (!receiptRef.current) return;
+    const canvas = await html2canvas(receiptRef.current, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+      <head>
+        <meta charset="utf-8"/>
+        <title>فاتورة ${order.order_number}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { background: white; display:flex; justify-content:center; }
+          img { width: 80mm; display: block; }
+          @media print { body { width: 80mm; } }
+        </style>
+      </head>
+      <body>
+        <img src="${imgData}" />
+        <script>window.onload = function() { window.print(); window.close(); }</script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const Divider = ({ dashed = true }) => (
+    <div style={{ borderTop: dashed ? '1px dashed #d1d5db' : '2px solid #111', margin: '10px 0' }} />
+  );
+
+  const Row = ({ label, value, bold = false, large = false }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+      <span style={{ color: '#6b7280', fontSize: large ? '12px' : '10px' }}>{label}</span>
+      <span style={{ fontWeight: bold ? 'bold' : 'normal', fontSize: large ? '13px' : '10px', color: '#111' }}>{value}</span>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Receipt */}
+      <div
+        ref={receiptRef}
+        style={{
+          background: '#ffffff',
+          color: '#111111',
+          padding: '20px 16px',
+          borderRadius: '12px',
+          maxWidth: '320px',
+          margin: '0 auto',
+          fontFamily: "'Tajawal', 'Arial', sans-serif",
+          direction: 'rtl',
+          boxShadow: '0 0 0 1px #e5e7eb',
+        }}
+      >
+        {/* ── TOP HEADER ── */}
+        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+          {logoUrl && (
+            <img src={logoUrl} alt="logo" crossOrigin="anonymous"
+              style={{ height: '60px', margin: '0 auto 8px', objectFit: 'contain', display: 'block' }} />
+          )}
+          <div style={{ fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px' }}>
+            {shopName}
+          </div>
+          {header && (
+            <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{header}</div>
+          )}
+
+          {/* ZATCA required fields */}
+          <div style={{ marginTop: '6px', fontSize: '9px', color: '#374151', lineHeight: '1.6' }}>
+            {crNumber && (
+              <div>سجل تجاري: <span style={{ fontWeight: 'bold', direction: 'ltr', display: 'inline-block' }}>{crNumber}</span></div>
+            )}
+            {vatNumber && (
+              <div>الرقم الضريبي: <span style={{ fontWeight: 'bold', direction: 'ltr', display: 'inline-block' }}>{vatNumber}</span></div>
+            )}
+          </div>
+
+          {vatEnabled && (
+            <div style={{
+              display: 'inline-block',
+              marginTop: '6px',
+              padding: '2px 10px',
+              border: '1px solid #111',
+              borderRadius: '4px',
+              fontSize: '9px',
+              fontWeight: 'bold',
+              letterSpacing: '0.5px',
+            }}>
+              فاتورة ضريبية مبسطة — Simplified Tax Invoice
+            </div>
+          )}
+        </div>
+
+        <Divider />
+
+        {/* ── ORDER INFO ── */}
+        <div style={{ marginBottom: '2px' }}>
+          <Row label="رقم الفاتورة" value={order.order_number} bold />
+          <Row label="التاريخ" value={format(createdDate, 'dd/MM/yyyy')} />
+          <Row label="الوقت" value={format(createdDate, 'HH:mm:ss')} />
+          <Row label="الموظف" value={order.employee_name || '—'} />
+          {order.branch_name && <Row label="الفرع" value={order.branch_name} />}
+        </div>
+
+        <Divider />
+
+        {/* ── CUSTOMER ── */}
+        <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          بيانات العميل
+        </div>
+        <div>
+          <Row label="الاسم" value={order.customer_name} bold />
+          {order.customer_phone && <Row label="الجوال" value={order.customer_phone} />}
+        </div>
+
+        <Divider />
+
+        {/* ── ITEM ── */}
+        <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          تفاصيل الخدمة
+        </div>
+
+        {/* Table header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', fontWeight: 'bold', borderBottom: '1px solid #e5e7eb', paddingBottom: '3px', marginBottom: '4px' }}>
+          <span style={{ flex: 3 }}>الصنف / الخدمة</span>
+          <span style={{ flex: 1, textAlign: 'center' }}>الكمية</span>
+          <span style={{ flex: 2, textAlign: 'left' }}>السعر</span>
+        </div>
+
+        {/* Item row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+          <span style={{ flex: 3 }}>{ITEM_LABELS[order.item_type] || order.item_type}</span>
+          <span style={{ flex: 1, textAlign: 'center' }}>{order.quantity || 1}</span>
+          <span style={{ flex: 2, textAlign: 'left' }}>{subtotal?.toFixed(2)} ر.س</span>
+        </div>
+
+        {/* Delivery fee if any */}
+        {order.delivery_method === 'delivery' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+            <span style={{ flex: 3 }}>رسوم التوصيل</span>
+            <span style={{ flex: 1, textAlign: 'center' }}>1</span>
+            <span style={{ flex: 2, textAlign: 'left' }}>—</span>
+          </div>
+        )}
+
+        {/* Photos */}
+        {order.photos && order.photos.length > 0 && (
+          <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {order.photos.map((url, i) => (
+              <img key={i} src={url} alt="" crossOrigin="anonymous"
+                style={{ width: '52px', height: '52px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e5e7eb' }} />
+            ))}
+          </div>
+        )}
+
+        <Divider />
+
+        {/* ── TOTALS ── */}
+        <div>
+          {vatEnabled ? (
+            <>
+              <Row label="المجموع قبل الضريبة" value={`${subtotal?.toFixed(2)} ر.س`} />
+              <Row label="ضريبة القيمة المضافة (15%)" value={`${vatAmount?.toFixed(2)} ر.س`} />
+            </>
+          ) : (
+            <Row label="المجموع" value={`${order.total_price?.toFixed(2)} ر.س`} />
+          )}
+        </div>
+
+        {/* Grand total */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: '#111', color: '#fff', borderRadius: '6px',
+          padding: '6px 10px', marginTop: '6px', fontSize: '13px', fontWeight: 'bold'
+        }}>
+          <span>الإجمالي شامل الضريبة</span>
+          <span style={{ direction: 'ltr' }}>{order.total_price?.toFixed(2)} ر.س</span>
+        </div>
+
+        {/* Payment */}
+        <div style={{ marginTop: '6px' }}>
+          <Row
+            label="حالة الدفع"
+            value={order.payment_status === 'paid' ? '✅ مدفوع' : '⏳ غير مدفوع'}
+          />
+          {order.payment_method && (
+            <Row
+              label="طريقة الدفع"
+              value={order.payment_method === 'cash' ? 'نقد' : order.payment_method === 'network' ? 'شبكة / بطاقة' : order.payment_method}
+            />
+          )}
+          <Row
+            label="التسليم"
+            value={order.delivery_method === 'delivery' ? '🚚 توصيل' : '🏪 استلام من المحل'}
+          />
+        </div>
+
+        {order.notes && (
+          <>
+            <Divider />
+            <div style={{ fontSize: '9px', color: '#374151' }}>
+              <span style={{ fontWeight: 'bold' }}>ملاحظات: </span>{order.notes}
+            </div>
+          </>
+        )}
+
+        <Divider />
+
+        {/* ── BARCODE ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
+          <div style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '4px' }}>باركود الطلب</div>
+          <BarcodeDisplay value={order.order_number} width={230} height={45} />
+          <div style={{ fontSize: '9px', color: '#374151', marginTop: '2px', fontWeight: 'bold', letterSpacing: '1px' }}>
+            {order.order_number}
+          </div>
+        </div>
+
+        {/* ── ZATCA QR ── */}
+        {vatEnabled && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '4px' }}>
+            <div style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '4px' }}>
+              رمز QR — التحقق من الفاتورة (ZATCA)
+            </div>
+            <QRCodeSVG value={zatcaQR} size={96} bgColor="#ffffff" fgColor="#000000" level="M" />
+            {/* ZATCA submission status */}
+            {order.zatca_status && (
+              <div style={{
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                fontSize: '7px',
+                padding: '2px 6px',
+                borderRadius: '99px',
+                background: order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED'
+                  ? '#dcfce7' : order.zatca_status === 'REJECTED' ? '#fee2e2' : '#fef9c3',
+                color: order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED'
+                  ? '#15803d' : order.zatca_status === 'REJECTED' ? '#b91c1c' : '#92400e',
+              }}>
+                {order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED'
+                  ? '✓ معتمدة من زاتكا'
+                  : order.zatca_status === 'REJECTED'
+                    ? '✗ مرفوضة من زاتكا'
+                    : '◷ بانتظار الإرسال'}
+              </div>
+            )}
+            <div style={{ fontSize: '7px', color: '#9ca3af', marginTop: '3px', textAlign: 'center', maxWidth: '200px', lineHeight: '1.4' }}>
+              امسح الرمز للتحقق من صحة الفاتورة الضريبية وفق متطلبات هيئة الزكاة والضريبة والجمارك
+            </div>
+          </div>
+        )}
+
+        {terms && (
+          <>
+            <Divider />
+            <div style={{ fontSize: '8px', color: '#9ca3af', textAlign: 'center', lineHeight: '1.5' }}>{terms}</div>
+          </>
+        )}
+
+        {/* Footer */}
+        <Divider dashed={false} />
+        <div style={{ textAlign: 'center', fontSize: '9px', color: '#6b7280', lineHeight: '1.6' }}>
+          <div style={{ fontWeight: 'bold' }}>{footer}</div>
+          <div style={{ marginTop: '2px', color: '#9ca3af', fontSize: '8px' }}>
+            تم الإصدار بتاريخ: {format(createdDate, 'dd/MM/yyyy HH:mm')}
+          </div>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex justify-center gap-3">
+        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90">
+          <Printer className="w-4 h-4 ml-2" />
+          طباعة
+        </Button>
+        <Button onClick={handleDownload} variant="outline">
+          <Download className="w-4 h-4 ml-2" />
+          تنزيل صورة
+        </Button>
+      </div>
+    </div>
+  );
+}

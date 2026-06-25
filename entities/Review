@@ -1,0 +1,63 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "rating": {
+      "type": "number",
+      "description": "\u0627\u0644\u062a\u0642\u064a\u064a\u0645 \u0645\u0646 1 \u0625\u0644\u0649 5",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "text": {
+      "type": "string",
+      "description": "\u0646\u0635 \u0627\u0644\u062a\u0642\u064a\u064a\u0645"
+    },
+    "service": {
+      "type": "string",
+      "description": "\u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062a\u064a \u062a\u0645 \u062a\u0642\u064a\u064a\u0645\u0647\u0627"
+    },
+    "is_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0647\u0644 \u062a\u0645\u062a \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u0649 \u0627\u0644\u062a\u0642\u064a\u064a\u0645"
+    },
+    "order_number": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628 \u0627\u0644\u0645\u0631\u062a\u0628\u0637 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)"
+    }
+  },
+  "required": [
+    "customer_name",
+    "rating",
+    "text"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "data.is_approved": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

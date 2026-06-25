@@ -1,0 +1,78 @@
+{
+  "name": "SalesInvoice",
+  "type": "object",
+  "properties": {
+    "invoice_number": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "branch_id": {
+      "type": "string"
+    },
+    "branch_name": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "description": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a: [{item_id, item_name, qty, unit, cost_price, sell_price}]",
+      "items": {
+        "type": "object"
+      }
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "vat_amount": {
+      "type": "number"
+    },
+    "total": {
+      "type": "number"
+    },
+    "cost_total": {
+      "type": "number",
+      "description": "\u0625\u062c\u0645\u0627\u0644\u064a \u062a\u0643\u0644\u0641\u0629 \u0627\u0644\u0628\u0636\u0627\u0639\u0629 \u0627\u0644\u0645\u0628\u0627\u0639\u0629"
+    },
+    "gross_profit": {
+      "type": "number",
+      "description": "\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0631\u0628\u062d"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "network",
+        "credit"
+      ],
+      "default": "cash"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "paid",
+        "unpaid"
+      ],
+      "default": "paid"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "month_key": {
+      "type": "string",
+      "description": "YYYY-MM \u0644\u0644\u062a\u062c\u0645\u064a\u0639 \u0627\u0644\u0634\u0647\u0631\u064a"
+    },
+    "employee_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "invoice_number",
+    "branch_id",
+    "items",
+    "total"
+  ]
+}
