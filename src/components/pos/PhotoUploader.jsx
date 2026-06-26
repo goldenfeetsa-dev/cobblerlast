@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, ImagePlus, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { storage } from '@/api/supabaseApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -56,7 +56,7 @@ export default function PhotoUploader({ photos, setPhotos, maxPhotos = 5 }) {
         const sizeAfter  = (compressed.size / 1024).toFixed(0);
         console.info(`📸 ضغط: ${sizeBefore}KB → ${sizeAfter}KB`);
 
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: compressed });
+        const { file_url } = await storage.uploadFile({ file: compressed });
         setPhotos(prev => [...prev, file_url]);
       }
     } catch (err) {

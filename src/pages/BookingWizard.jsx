@@ -1,7 +1,7 @@
 import { useTrackVisit } from '@/hooks/useTrackVisit';
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/supabaseApi';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Scissors } from 'lucide-react';
 import { Link } from 'react-router-dom';

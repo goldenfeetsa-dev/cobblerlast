@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import PinPad from '@/components/pos/PinPad';
 import { setSession, getSession } from '@/lib/sessionStore';

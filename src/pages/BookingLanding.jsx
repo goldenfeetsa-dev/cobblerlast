@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTrackVisit } from '@/hooks/useTrackVisit';
 import { motion, useInView } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -239,7 +239,7 @@ function HeroSection() {
               </div>
 
               <img
-                src="https://media.base44.com/images/public/69f0f8a918786d95d64a8212/ddb209caa_5863887376168456237.jpg"
+                src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80"
                 alt="حذاء جلدي فاخر"
                 className="w-full rounded-3xl object-cover"
                 style={{ height: '460px', transform: 'rotate(-3deg)', filter: 'brightness(0.9) saturate(1.1)' }} />
@@ -271,21 +271,21 @@ const SERVICES = [
   title: 'ترميم الأحذية',
   desc: 'خياطة مخفية دقيقة وتغيير نعال بأيدي حرفيين متخصصين لتبدو كالجديد.',
   tag: 'أحذية راقية',
-  img: 'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/ddb209caa_5863887376168456237.jpg'
+  img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80'
 },
 {
   icon: Package,
   title: 'تجديد الحقائب',
   desc: 'نُعيد لحقيبتك بريقها الأصلي — ترميم الجلد وإعادة التلوين بأعلى معايير الجودة.',
   tag: 'حقائب فاخرة',
-  img: 'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/e1bab7780_5863887376168456238.jpg'
+  img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80'
 },
 {
   icon: Sparkles,
   title: 'تلميع وتلوين',
   desc: 'تقنيات أوروبية فاخرة تُعيد البريق وتُعمّق اللون — استثنائية ودائمة.',
   tag: 'عناية استثنائية',
-  img: 'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/bda5f89a2_5863887376168456239.jpg'
+  img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80'
 }];
 
 
@@ -349,10 +349,10 @@ function AboutSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <FadeIn className="grid grid-cols-2 gap-3">
             {[
-            'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/e1bab7780_5863887376168456238.jpg',
-            'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/a88554fb1_best-hermes-bags.jpg',
-            'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/ddb209caa_5863887376168456237.jpg',
-            'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/bda5f89a2_5863887376168456239.jpg'].
+            'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80',
+            'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
+            'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
+            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80'].
             map((src, i) =>
             <div key={i} className={`rounded-xl overflow-hidden ${i % 2 === 1 ? 'mt-6' : ''}`}
             style={{ border: '1px solid rgba(201,168,76,0.1)' }}>
@@ -712,9 +712,9 @@ function Footer() {
 // ── Request Service Section ────────────────────────────────────
 function RequestServiceSection() {
   const services = [
-  { title: 'ترميم الأحذية', desc: 'تغيير نعال، خياطة، تلميع، وكل أعمال الإصلاح', from: 80, img: 'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/ddb209caa_5863887376168456237.jpg', tag: 'الأكثر طلباً' },
-  { title: 'تجديد الحقائب', desc: 'تنظيف، إصلاح الخياطة، تجديد الألوان والمقابض', from: 150, img: 'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/e1bab7780_5863887376168456238.jpg', tag: 'حقائب فاخرة' },
-  { title: 'تلميع وتلوين', desc: 'تقنيات أوروبية لإعادة اللون والبريق الأصلي', from: 50, img: 'https://media.base44.com/images/public/69f0f8a918786d95d64a8212/bda5f89a2_5863887376168456239.jpg', tag: 'عناية' }];
+  { title: 'ترميم الأحذية', desc: 'تغيير نعال، خياطة، تلميع، وكل أعمال الإصلاح', from: 80, img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80', tag: 'الأكثر طلباً' },
+  { title: 'تجديد الحقائب', desc: 'تنظيف، إصلاح الخياطة، تجديد الألوان والمقابض', from: 150, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80', tag: 'حقائب فاخرة' },
+  { title: 'تلميع وتلوين', desc: 'تقنيات أوروبية لإعادة اللون والبريق الأصلي', from: 50, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80', tag: 'عناية' }];
 
 
   return (

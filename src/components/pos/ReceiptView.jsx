@@ -3,7 +3,7 @@ import BarcodeDisplay from './BarcodeDisplay';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
 import { QRCodeSVG } from 'qrcode.react';

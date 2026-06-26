@@ -25,10 +25,7 @@ cp .env.example .env
 ثم عدّل `.env` بمعلوماتك:
 
 ```env
-# Base44
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_FUNCTIONS_VERSION=prod
-VITE_BASE44_APP_BASE_URL=https://app.base44.com
+# Cobblerlast
 
 # Supabase
 VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -51,7 +48,7 @@ npm run build
 
 ```
 src/
-├── api/           # Base44 API client
+├── api/           # Cobblerlast API client
 ├── components/    # مكونات UI
 │   ├── booking/   # مكونات الحجز
 │   ├── pos/       # نظام نقاط البيع

@@ -14,7 +14,7 @@ import {
   ZATCAError,
 } from './zatcaUtils';
 import { addToLog } from '@/pages/ZATCASettings';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 
 function loadZatcaConfig() {
   try {
@@ -116,14 +116,12 @@ export function useZATCA() {
       // Update invoice record in DB with ZATCA status
       if (invoice.id) {
         try {
-          const entity = invoice.invoice_number
-            ? base44.entities.SalesInvoice
-            : base44.entities.Order;
-          await entity.update(invoice.id, {
+          const table = invoice.invoice_number ? 'sales_invoices' : 'orders';
+          await supabase.from(table).update({
             zatca_status: status,
             zatca_qr: response.qrCode || qrCode,
             zatca_submitted_at: new Date().toISOString(),
-          });
+          }).eq('id', invoice.id);
         } catch (updateErr) {
           console.warn('Could not update ZATCA status in DB:', updateErr);
         }

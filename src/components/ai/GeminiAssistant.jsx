@@ -5,7 +5,7 @@ import {
   CheckCircle, AlertTriangle, Volume2, VolumeX,
   ChevronDown, Bot, User, Trash2
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';

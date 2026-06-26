@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/supabaseApi';
 import { Calendar, Clock, Phone, Store, Truck, Search, Camera, MapPin, Send, CheckSquare, Square, MessageCircle, X, Eye } from 'lucide-react';
 import { getSession } from '@/lib/sessionStore';
 import { Badge } from '@/components/ui/badge';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, X, Loader2, ImagePlus } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { base44, storage } from '@/api/supabaseApi';
 
 const MAX_PHOTOS = 3;
 
@@ -17,7 +17,7 @@ export default function ItemPhotosUploader({ photos = [], onChange }) {
     setUploading(true);
     const uploaded = [];
     for (const file of toUpload) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await storage.uploadFile({ file });
       uploaded.push(file_url);
     }
     onChange([...photos, ...uploaded]);

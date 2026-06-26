@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/supabaseApi';
 import { Scissors, ShoppingBag, Check, Clock, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
