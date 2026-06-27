@@ -5,7 +5,7 @@ import { base44 } from '@/api/supabaseApi';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Scissors } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { format, addMinutes, parse } from 'date-fns';
+import { format } from 'date-fns';
 import StepIndicator from '@/components/booking/StepIndicator';
 import ServiceSelector from '@/components/booking/ServiceSelector';
 import CalendarPicker from '@/components/booking/CalendarPicker';

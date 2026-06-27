@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, Calendar, Clock, User, Phone, Store, Truck, Receipt, Copy } from 'lucide-react';
+import { CheckCircle, Calendar, Store, Truck, Receipt, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';

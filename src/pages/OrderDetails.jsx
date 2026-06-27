@@ -85,14 +85,14 @@ export default function OrderDetails() {
 
   const { data: orders } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 200),
+    queryFn: () => base44.entities.Order.list('-created_at', 200),
     initialData: [],
   });
 
   const order = orders.find(o => o.id === orderId);
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Order.update(id, { order_status: status }),
+    mutationFn: ({ id, status }) => base44.entities.Order.update(id, { status: status }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success('تم تحديث الحالة', {
@@ -123,7 +123,7 @@ export default function OrderDetails() {
   });
 
   const adminAction = useMutation({
-    mutationFn: ({ id, status, extra }) => base44.entities.Order.update(id, { order_status: status, ...extra }),
+    mutationFn: ({ id, status, extra }) => base44.entities.Order.update(id, { status: status, ...extra }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       const labels = { cancelled: 'إلغاء الفاتورة', returned: 'استرجاع', exchanged: 'استبدال', on_hold: 'توقيف الطلب' };
@@ -156,7 +156,7 @@ export default function OrderDetails() {
     );
   }
 
-  const createdDate = order.created_date ? new Date(order.created_date) : new Date();
+  const createdDate = order.created_at ? new Date(order.created_at) : new Date();
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -175,7 +175,7 @@ export default function OrderDetails() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select
-            value={order.order_status}
+            value={order.status}
             onValueChange={v => updateStatus.mutate({ id: order.id, status: v })}
           >
             <SelectTrigger className="w-36">
@@ -307,7 +307,7 @@ export default function OrderDetails() {
                     <div className="flex gap-1.5">
                       {order.customer_phone && (
                         <button
-                          onClick={() => sendWhatsAppNotification(order, order.order_status)}
+                          onClick={() => sendWhatsAppNotification(order, order.status)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-90 transition-opacity"
                           style={{ background: '#25D366' }}
                           title="إرسال تحديث الحالة عبر واتساب"
@@ -317,7 +317,7 @@ export default function OrderDetails() {
                       )}
                       {order.customer_email && (
                         <button
-                          onClick={() => { sendEmailNotification(order, order.order_status); toast.success('تم إرسال البريد الإلكتروني'); }}
+                          onClick={() => { sendEmailNotification(order, order.status); toast.success('تم إرسال البريد الإلكتروني'); }}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-90 transition-opacity bg-blue-500"
                           title="إرسال تحديث الحالة عبر البريد"
                         >

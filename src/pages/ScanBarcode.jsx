@@ -14,7 +14,7 @@ export default function ScanBarcode() {
 
   const { data: orders } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 500),
+    queryFn: () => base44.entities.Order.list('-created_at', 500),
     initialData: [],
   });
 

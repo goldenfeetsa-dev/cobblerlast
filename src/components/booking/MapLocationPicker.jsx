@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { MapPin, LocateFixed, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

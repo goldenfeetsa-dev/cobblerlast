@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mic, MicOff, Send, X, Sparkles, Loader2, 
-  CheckCircle, AlertTriangle, Volume2, VolumeX,
-  ChevronDown, Bot, User, Trash2
+  CheckCircle, AlertTriangle, Volume2, VolumeX, Bot, User, Trash2
 } from 'lucide-react';
 import { base44 } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
@@ -61,7 +60,7 @@ async function executeCommand(command, queryClient, navigate) {
 
   switch (action) {
     case 'UPDATE_ORDER_STATUS': {
-      const orders = await base44.entities.Order.list('-created_date', 200);
+      const orders = await base44.entities.Order.list('-created_at', 200);
       const order = orders.find(o => 
         o.id === command.orderId || 
         o.order_number === command.orderId ||
@@ -85,7 +84,7 @@ async function executeCommand(command, queryClient, navigate) {
         employee_name: session?.name,
         branch_id: session?.branch_id,
         branch_name: session?.branch_name,
-        created_date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       };
       const created = await base44.entities.Order.create(newOrder);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -93,7 +92,7 @@ async function executeCommand(command, queryClient, navigate) {
     }
 
     case 'SEARCH_ORDERS': {
-      const orders = await base44.entities.Order.list('-created_date', 200);
+      const orders = await base44.entities.Order.list('-created_at', 200);
       const q = command.query?.toLowerCase();
       const results = orders.filter(o =>
         o.customer_name?.toLowerCase().includes(q) ||
@@ -106,7 +105,7 @@ async function executeCommand(command, queryClient, navigate) {
     }
 
     case 'GET_STATS': {
-      const orders = await base44.entities.Order.list('-created_date', 200);
+      const orders = await base44.entities.Order.list('-created_at', 200);
       const stats = orders.reduce((acc, o) => {
         acc[o.status] = (acc[o.status] || 0) + 1;
         return acc;

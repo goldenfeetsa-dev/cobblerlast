@@ -44,7 +44,7 @@ export default function Orders() {
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       // إضافة ختمة تلقائياً عند إتمام الطلب
-      if (variables.data?.order_status === 'completed') {
+      if (variables.data?.status === 'completed') {
         const order = orders?.find(o => o.id === variables.id);
         if (order?.customer_phone) {
           try {
@@ -67,7 +67,7 @@ export default function Orders() {
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 200),
+    queryFn: () => base44.entities.Order.list('-created_at', 200),
     initialData: [],
   });
 
@@ -80,7 +80,7 @@ export default function Orders() {
       o.order_number?.toLowerCase().includes(search.toLowerCase()) ||
       o.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
       o.customer_phone?.includes(search);
-    const matchStatus = statusFilter === 'all' || o.order_status === statusFilter;
+    const matchStatus = statusFilter === 'all' || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -138,7 +138,7 @@ export default function Orders() {
       ) : (
         <div className="space-y-3">
           {filtered.map(order => {
-            const status = STATUS_CONFIG[order.order_status] || STATUS_CONFIG.pending;
+            const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
             const StatusIcon = status.icon;
             return (
               <Card key={order.id} className="p-4 hover:shadow-md transition-all hover:border-primary/20">
@@ -163,7 +163,7 @@ export default function Orders() {
                         {order.customer_name} • {ITEM_LABELS[order.item_type] || order.item_type} × {order.quantity || 1}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {order.created_date ? format(new Date(order.created_date), 'yyyy/MM/dd HH:mm:ss') : '—'} • {order.employee_name}
+                        {order.created_at ? format(new Date(order.created_at), 'yyyy/MM/dd HH:mm:ss') : '—'} • {order.employee_name}
                       </p>
                     </div>
                   </Link>
@@ -186,9 +186,9 @@ export default function Orders() {
                 </div>
 
                 {/* Shelf + Delivery row — shown only when status is ready or completed (with shelf) */}
-                {(order.order_status === 'ready' || (order.order_status === 'completed' && order.shelf_location)) && (
+                {(order.status === 'ready' || (order.status === 'completed' && order.shelf_location)) && (
                   <div className="mt-3 pt-3 border-t flex flex-wrap items-center gap-2" dir="rtl">
-                    {order.order_status === 'ready' && !order.shelf_location && (
+                    {order.status === 'ready' && !order.shelf_location && (
                       <>
                         <Layers className="w-4 h-4 text-amber-600 shrink-0" />
                         <Input
@@ -218,14 +218,14 @@ export default function Orders() {
                         رف: {order.shelf_location}
                       </span>
                     )}
-                    {order.order_status === 'ready' && order.shelf_location && (
+                    {order.status === 'ready' && order.shelf_location && (
                       <Button
                         size="sm"
                         className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white mr-auto"
                         disabled={updateMutation.isPending}
                         onClick={e => {
                           e.preventDefault();
-                          updateMutation.mutate({ id: order.id, data: { order_status: 'completed' } });
+                          updateMutation.mutate({ id: order.id, data: { status: 'completed' } });
                         }}
                       >
                         <Truck className="w-3 h-3 ml-1" />

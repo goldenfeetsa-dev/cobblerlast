@@ -61,7 +61,7 @@ export default function AuditLog() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders-audit'],
-    queryFn: () => base44.entities.Order.list('-created_date', 500),
+    queryFn: () => base44.entities.Order.list('-created_at', 500),
   });
 
   const { data: employees = [] } = useQuery({
@@ -79,13 +79,13 @@ export default function AuditLog() {
       if (o.branch_id && o.branch_id !== session.branch_id) return false;
     }
     if (period === 'custom') {
-      const orderDate = o.created_date ? new Date(o.created_date) : null;
+      const orderDate = o.created_at ? new Date(o.created_at) : null;
       if (customFrom && orderDate && orderDate < new Date(customFrom + 'T00:00:00')) return false;
       if (customTo && orderDate && orderDate > new Date(customTo + 'T23:59:59')) return false;
     } else {
-      if (periodStart && o.created_date && new Date(o.created_date) < periodStart) return false;
+      if (periodStart && o.created_at && new Date(o.created_at) < periodStart) return false;
     }
-    if (statusFilter !== 'all' && o.order_status !== statusFilter) return false;
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
     if (employeeFilter !== 'all' && o.employee_name !== employeeFilter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -100,7 +100,7 @@ export default function AuditLog() {
   });
 
   // Summary stats
-  const validOrders = filtered.filter(o => o.order_status !== 'cancelled' && o.order_status !== 'returned');
+  const validOrders = filtered.filter(o => o.status !== 'cancelled' && o.status !== 'returned');
   const totalRevenue = validOrders.reduce((s, o) => s + (o.total_price || 0), 0);
   const cashTotal = validOrders.filter(o => o.payment_method === 'cash').reduce((s, o) => s + (o.total_price || 0), 0);
   const networkTotal = validOrders.filter(o => o.payment_method === 'network').reduce((s, o) => s + (o.total_price || 0), 0);
@@ -238,7 +238,7 @@ export default function AuditLog() {
               </thead>
               <tbody>
                 {filtered.map((o, idx) => {
-                  const status = STATUS_LABELS[o.order_status] || { label: o.order_status, class: 'bg-gray-100 text-gray-700' };
+                  const status = STATUS_LABELS[o.status] || { label: o.status, class: 'bg-gray-100 text-gray-700' };
                   const payment = PAYMENT_LABELS[o.payment_status] || { label: o.payment_status, class: 'bg-gray-100' };
                   return (
                     <tr key={o.id} className={`border-b transition-colors hover:bg-muted/30 ${idx % 2 === 0 ? '' : 'bg-muted/10'}`}>
@@ -260,7 +260,7 @@ export default function AuditLog() {
                         <Badge className={`text-[10px] ${status.class}`}>{status.label}</Badge>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {o.created_date ? format(new Date(o.created_date), 'yyyy/MM/dd HH:mm') : '—'}
+                        {o.created_at ? format(new Date(o.created_at), 'yyyy/MM/dd HH:mm') : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <Link to={`/orders/${o.id}`} className="text-primary hover:text-primary/70 transition-colors">

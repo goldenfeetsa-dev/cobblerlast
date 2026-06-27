@@ -1,7 +1,7 @@
 import React from 'react';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Star, Check, Trash2, Eye } from 'lucide-react';
+import { Star, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getSession } from '@/lib/sessionStore';
@@ -13,7 +13,7 @@ export default function ReviewsAdmin() {
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ['reviews-all'],
-    queryFn: () => base44.entities.Review.list('-created_date'),
+    queryFn: () => base44.entities.Review.list('-created_at'),
   });
 
   const approveMutation = useMutation({

@@ -350,7 +350,7 @@ function InvoiceTab({ items, branches, session }) {
 
   const { data: invoices } = useQuery({
     queryKey: ['sales-invoices'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_date', 20),
+    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 20),
     initialData: [],
   });
 
@@ -535,7 +535,7 @@ function TransferReportTab({ movements, branches }) {
                 <td className="py-2 px-3 text-muted-foreground">{m.branch_name || m.to_location}</td>
                 <td className="py-2 px-3 text-center">{m.quantity} {UNITS[m.unit] || m.unit}</td>
                 <td className="py-2 px-3">{((m.cost_price || 0) * m.quantity).toFixed(2)} ر.س</td>
-                <td className="py-2 px-3 text-muted-foreground text-xs">{m.created_date ? format(new Date(m.created_date), 'yyyy/MM/dd') : '-'}</td>
+                <td className="py-2 px-3 text-muted-foreground text-xs">{m.created_at ? format(new Date(m.created_at), 'yyyy/MM/dd') : '-'}</td>
               </tr>
             ))}
             {transfers.length === 0 && (
@@ -554,7 +554,7 @@ export default function SalesSystem() {
 
   const { data: items } = useQuery({
     queryKey: ['inventory-items'],
-    queryFn: () => base44.entities.InventoryItem.list('-created_date', 200),
+    queryFn: () => base44.entities.InventoryItem.list('-created_at', 200),
     initialData: [],
   });
 
@@ -566,7 +566,7 @@ export default function SalesSystem() {
 
   const { data: movements } = useQuery({
     queryKey: ['stock-movements'],
-    queryFn: () => base44.entities.StockMovement.list('-created_date', 300),
+    queryFn: () => base44.entities.StockMovement.list('-created_at', 300),
     initialData: [],
   });
 
@@ -597,7 +597,7 @@ export default function SalesSystem() {
           { label: 'منتجات المبيعات', value: salesItems.length, icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'إجمالي المستودع', value: totalWarehouse + ' وحدة', icon: Warehouse, color: 'text-purple-600', bg: 'bg-purple-50' },
           { label: 'قيمة المخزون', value: warehouseValue.toFixed(0) + ' ر.س', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'حركات اليوم', value: movements.filter(m => m.created_date && format(new Date(m.created_date), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, icon: ArrowRightLeft, color: 'text-primary', bg: 'bg-primary/5' },
+          { label: 'حركات اليوم', value: movements.filter(m => m.created_at && format(new Date(m.created_at), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, icon: ArrowRightLeft, color: 'text-primary', bg: 'bg-primary/5' },
         ].map((s, i) => (
           <Card key={i}>
             <CardContent className="p-4">

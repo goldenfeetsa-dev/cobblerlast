@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/supabaseApi';
-import { Calendar, Clock, Phone, Store, Truck, Search, Camera, MapPin, Send, CheckSquare, Square, MessageCircle, X, Eye } from 'lucide-react';
+import { Calendar, Phone, Store, Truck, Search, Camera, MapPin, Send, CheckSquare, Square, MessageCircle, Eye } from 'lucide-react';
 import { getSession } from '@/lib/sessionStore';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

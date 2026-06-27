@@ -1,15 +1,13 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
-import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
@@ -181,19 +179,19 @@ function SettlementTab({ items, session }) {
 
   const { data: allCustody } = useQuery({
     queryKey: ['workshop-custody-all'],
-    queryFn: () => base44.entities.WorkshopCustody.list('-created_date', 500),
+    queryFn: () => base44.entities.WorkshopCustody.list('-created_at', 500),
     initialData: [],
   });
 
   const { data: salesInvoices } = useQuery({
     queryKey: ['sales-invoices'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_date', 500),
+    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 500),
     initialData: [],
   });
 
   const { data: settlements } = useQuery({
     queryKey: ['workshop-settlements'],
-    queryFn: () => base44.entities.WorkshopSettlement.list('-created_date', 24),
+    queryFn: () => base44.entities.WorkshopSettlement.list('-created_at', 24),
     initialData: [],
   });
 
@@ -569,7 +567,7 @@ export default function WorkshopSystem() {
 
   const { data: items } = useQuery({
     queryKey: ['inventory-items'],
-    queryFn: () => base44.entities.InventoryItem.list('-created_date', 200),
+    queryFn: () => base44.entities.InventoryItem.list('-created_at', 200),
     initialData: [],
   });
 
@@ -577,7 +575,7 @@ export default function WorkshopSystem() {
 
   const { data: allCustodyStats } = useQuery({
     queryKey: ['workshop-custody-all'],
-    queryFn: () => base44.entities.WorkshopCustody.list('-created_date', 500),
+    queryFn: () => base44.entities.WorkshopCustody.list('-created_at', 500),
     initialData: [],
   });
 

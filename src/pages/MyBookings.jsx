@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/supabaseApi';
-import { Calendar, Clock, Phone, Search, Scissors, Store, Truck, CheckCircle, XCircle, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
+import { Calendar, Search, Scissors, Store, Truck, CheckCircle, XCircle, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -101,7 +100,7 @@ export default function MyBookings() {
         )}
 
         <div className="space-y-4">
-          {bookings.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map(booking => {
+          {bookings.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map(booking => {
             const status = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
             const StatusIcon = status.icon;
             return (

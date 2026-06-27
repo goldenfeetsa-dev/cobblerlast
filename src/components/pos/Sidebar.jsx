@@ -3,10 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings,
-  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, BarChart2, ChevronDown, Shield
+  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
-import { useState as useStateForGroups } from 'react';
 
 // ─── Groups: مرتبة حسب الاستخدام الأكثر، الإعدادات دائماً آخراً
 const navGroups = [

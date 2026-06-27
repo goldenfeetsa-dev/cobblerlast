@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
@@ -15,7 +15,7 @@ export default function SiteAnalytics() {
 
   const { data: visits = [], isLoading } = useQuery({
     queryKey: ['site-visits'],
-    queryFn: () => base44.entities.SiteVisit.list('-created_date', 2000),
+    queryFn: () => base44.entities.SiteVisit.list('-created_at', 2000),
   });
 
   if (session?.role !== 'admin') return <Navigate to="/" replace />;
@@ -25,7 +25,7 @@ export default function SiteAnalytics() {
   for (let i = 13; i >= 0; i--) {
     const d = subDays(new Date(), i);
     const dateStr = format(d, 'yyyy-MM-dd');
-    const dayVisits = visits.filter(v => v.created_date && format(new Date(v.created_date), 'yyyy-MM-dd') === dateStr);
+    const dayVisits = visits.filter(v => v.created_at && format(new Date(v.created_at), 'yyyy-MM-dd') === dateStr);
     last14.push({ day: format(d, 'MM/dd'), count: dayVisits.length });
   }
 
@@ -51,7 +51,7 @@ export default function SiteAnalytics() {
 
   // Today
   const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const todayVisits = visits.filter(v => v.created_date && format(new Date(v.created_date), 'yyyy-MM-dd') === todayStr).length;
+  const todayVisits = visits.filter(v => v.created_at && format(new Date(v.created_at), 'yyyy-MM-dd') === todayStr).length;
 
   // Unique IPs (approx unique visitors)
   const uniqueIPs = new Set(visits.map(v => v.ip).filter(Boolean)).size;
@@ -225,7 +225,7 @@ export default function SiteAnalytics() {
               <tbody>
                 {visits.slice(0, 20).map(v => (
                   <tr key={v.id} className="border-b hover:bg-muted/30 transition-colors">
-                    <td className="py-2 px-3 text-muted-foreground">{v.created_date ? format(new Date(v.created_date), 'MM/dd HH:mm') : '—'}</td>
+                    <td className="py-2 px-3 text-muted-foreground">{v.created_at ? format(new Date(v.created_at), 'MM/dd HH:mm') : '—'}</td>
                     <td className="py-2 px-3">{v.country || '—'}</td>
                     <td className="py-2 px-3">{v.city || '—'}</td>
                     <td className="py-2 px-3">

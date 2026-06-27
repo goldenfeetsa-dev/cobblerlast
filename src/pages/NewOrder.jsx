@@ -294,7 +294,7 @@ function ProductsTab({ session }) {
   const [search, setSearch] = useState('');
 
   const { data: items } = useQuery({
-    queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_date', 200), initialData: [],
+    queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 200), initialData: [],
   });
   const { data: branches } = useQuery({
     queryKey: ['branches'], queryFn: () => base44.entities.Branch.list(), initialData: [],

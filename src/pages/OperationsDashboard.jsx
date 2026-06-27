@@ -6,15 +6,13 @@ import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import {
   Factory, Truck, ArrowLeftRight, CheckCircle2, Bell, Package,
-  ShieldCheck, Zap, ZapOff, Building2, TrendingUp, Clock,
+  ShieldCheck, Zap, ZapOff, Building2, TrendingUp,
   Users, ShoppingBag, AlertCircle, ChevronRight
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 
 const STAGES = [
@@ -69,9 +67,9 @@ function PlanBMasterSwitch({ plan, onToggle, loading }) {
 }
 
 function BranchCard({ branchName, orders }) {
-  const inbound  = orders.filter(o => ['pending','in_progress'].includes(o.order_status)).length;
-  const outbound = orders.filter(o => o.order_status === 'ready').length;
-  const done     = orders.filter(o => o.order_status === 'completed').length;
+  const inbound  = orders.filter(o => ['pending','in_progress'].includes(o.status)).length;
+  const outbound = orders.filter(o => o.status === 'ready').length;
+  const done     = orders.filter(o => o.status === 'completed').length;
   const revenue  = orders.reduce((s, o) => s + (o.total_price || 0), 0);
   const productivity = orders.length ? Math.round((done / orders.length) * 100) : 0;
 
@@ -226,14 +224,14 @@ export default function OperationsDashboard() {
 
   const { data: workflows, isLoading: wfLoading } = useQuery({
     queryKey: ['workflow-stages'],
-    queryFn: () => base44.entities.WorkflowStage.list('-created_date', 100),
+    queryFn: () => base44.entities.WorkflowStage.list('-created_at', 100),
     initialData: [],
     refetchInterval: 15000,
   });
 
   const { data: allOrders } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 300),
+    queryFn: () => base44.entities.Order.list('-created_at', 300),
     initialData: [],
     refetchInterval: 20000,
   });
@@ -293,8 +291,8 @@ export default function OperationsDashboard() {
   }, [activeWorkflows]);
 
   // Summary stats
-  const totalInbound  = allOrders.filter(o => ['pending','in_progress'].includes(o.order_status)).length;
-  const totalOutbound = allOrders.filter(o => o.order_status === 'ready').length;
+  const totalInbound  = allOrders.filter(o => ['pending','in_progress'].includes(o.status)).length;
+  const totalOutbound = allOrders.filter(o => o.status === 'ready').length;
   const atFactory     = workflows.filter(w => ['factory_processing','quality_check'].includes(w.stage)).length;
 
   const planMutation = useMutation({

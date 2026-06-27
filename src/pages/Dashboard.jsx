@@ -57,7 +57,7 @@ export default function Dashboard() {
 
   const { data: allOrders } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 500),
+    queryFn: () => base44.entities.Order.list('-created_at', 500),
     initialData: [],
   });
 
@@ -69,7 +69,7 @@ export default function Dashboard() {
     }
     if (period === 'custom') {
       filtered = filtered.filter(o => {
-        const d = o.created_date ? new Date(o.created_date) : null;
+        const d = o.created_at ? new Date(o.created_at) : null;
         if (!d) return false;
         if (customFrom && d < new Date(customFrom + 'T00:00:00')) return false;
         if (customTo && d > new Date(customTo + 'T23:59:59')) return false;
@@ -77,7 +77,7 @@ export default function Dashboard() {
       });
     } else {
       const start = getPeriodStart(period);
-      if (start) filtered = filtered.filter(o => o.created_date && new Date(o.created_date) >= start);
+      if (start) filtered = filtered.filter(o => o.created_at && new Date(o.created_at) >= start);
     }
     return filtered;
   }, [allOrders, session, period, customFrom, customTo]);
@@ -90,7 +90,7 @@ export default function Dashboard() {
 
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total_price || 0), 0);
   const paidOrders = orders.filter(o => o.payment_status === 'paid');
-  const pendingOrders = orders.filter(o => o.order_status === 'pending' || o.order_status === 'in_progress');
+  const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'in_progress');
 
   // Last 7 days chart
   const last7 = [];
@@ -98,7 +98,7 @@ export default function Dashboard() {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = format(d, 'yyyy-MM-dd');
-    const dayOrders = orders.filter(o => o.created_date && format(new Date(o.created_date), 'yyyy-MM-dd') === dateStr);
+    const dayOrders = orders.filter(o => o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr);
     last7.push({
       day: format(d, 'EEE'),
       orders: dayOrders.length,
@@ -141,7 +141,7 @@ export default function Dashboard() {
         <StatCard title="إجمالي الطلبات" value={orders.length} subtitle={`${pendingOrders.length} قيد الانتظار`} icon={ShoppingBag} accentClass="bg-primary" />
         <StatCard title="الإيرادات" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`${paidOrders.length} طلب مدفوع`} icon={Wallet} accentClass="bg-primary" />
         <StatCard title="العملاء" value={customers.length} icon={Users} accentClass="bg-primary" />
-        <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.order_status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
+        <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
       </div>
 
       {session?.role === 'admin' && (
@@ -189,7 +189,7 @@ export default function Dashboard() {
                   <div className="text-right">
                     <p className="text-sm font-bold">{o.total_price?.toFixed(0)} SAR</p>
                     <Badge variant="outline" className="text-[10px]">
-                      {o.order_status}
+                      {o.status}
                     </Badge>
                   </div>
                 </Link>

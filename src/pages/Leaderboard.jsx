@@ -27,7 +27,7 @@ export default function Leaderboard() {
 
   const { data: orders } = useQuery({
     queryKey: ['orders-leaderboard'],
-    queryFn: () => base44.entities.Order.list('-created_date', 1000),
+    queryFn: () => base44.entities.Order.list('-created_at', 1000),
     initialData: [],
   });
 
@@ -41,7 +41,7 @@ export default function Leaderboard() {
                : null;
 
   const filteredOrders = cutoff
-    ? orders.filter(o => o.created_date && new Date(o.created_date) >= cutoff)
+    ? orders.filter(o => o.created_at && new Date(o.created_at) >= cutoff)
     : orders;
 
   // Aggregate per employee

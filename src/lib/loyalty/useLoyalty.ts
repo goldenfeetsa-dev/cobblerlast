@@ -41,7 +41,7 @@ export function useLoyalty() {
       setCard(res.card || null);
       return res.card as LoyaltyCard | null;
     } catch (err: any) {
-      console.error('getCard error:', err);
+      // silent
       return null;
     } finally {
       setLoading(false);

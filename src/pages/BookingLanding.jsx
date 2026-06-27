@@ -5,8 +5,7 @@ import { motion, useInView } from 'framer-motion';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import {
-  Calendar, MapPin, Phone, Clock,
+import { MapPin, Phone, Clock,
   Instagram, MessageCircle, Star, Award, Shield,
   Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, FileText, Twitter } from
 'lucide-react';

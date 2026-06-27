@@ -16,8 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import {
-  Shield, CheckCircle, XCircle, AlertTriangle, RefreshCw,
-  FileText, Upload, Eye, EyeOff, Building2, Hash, Key,
+  Shield, CheckCircle, AlertTriangle, RefreshCw,
+  FileText, Upload, Building2, Hash, Key,
   Globe, ChevronRight, ChevronLeft, Smartphone, Lock
 } from 'lucide-react';
 import { validateVATNumber, checkCompliance } from '@/lib/zatca/zatcaUtils';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, X, Loader2, ImagePlus } from 'lucide-react';
-import { base44, storage } from '@/api/supabaseApi';
+import { storage } from '@/api/supabaseApi';
 
 const MAX_PHOTOS = 3;
 

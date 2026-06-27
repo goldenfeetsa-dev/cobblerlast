@@ -15,7 +15,7 @@ export default function BarcodeOnly() {
 
   const { data: orders } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 200),
+    queryFn: () => base44.entities.Order.list('-created_at', 200),
     initialData: [],
   });
 

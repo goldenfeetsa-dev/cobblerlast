@@ -17,9 +17,9 @@ export default function FinancialReport({ orders }) {
   const periodStart = PERIODS.find(p => p.key === period).fn();
 
   const validOrders = orders.filter(o => {
-    if (o.order_status === 'cancelled' || o.order_status === 'returned') return false;
-    if (!o.created_date) return false;
-    return new Date(o.created_date) >= periodStart;
+    if (o.status === 'cancelled' || o.status === 'returned') return false;
+    if (!o.created_at) return false;
+    return new Date(o.created_at) >= periodStart;
   });
 
   const cashTotal = validOrders.filter(o => o.payment_method === 'cash').reduce((s, o) => s + (o.total_price || 0), 0);

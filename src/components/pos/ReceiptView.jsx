@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import BarcodeDisplay from './BarcodeDisplay';
 import { Button } from '@/components/ui/button';
-import { Printer, Download, CheckCircle, Clock } from 'lucide-react';
+import { Printer, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
@@ -34,7 +34,7 @@ export default function ReceiptView({ order }) {
 
   const subtotal = order.subtotal || (vatEnabled ? parseFloat((order.total_price / 1.15).toFixed(2)) : order.total_price);
   const vatAmount = order.vat_amount || (vatEnabled ? parseFloat((order.total_price - subtotal).toFixed(2)) : 0);
-  const createdDate = order.created_date ? new Date(order.created_date) : new Date();
+  const createdDate = order.created_at ? new Date(order.created_at) : new Date();
 
   // Use order's stored ZATCA QR if available (Phase 2 cleared), else build Phase 1 TLV
   const zatcaQR = order.zatca_qr || buildZatcaTLV({

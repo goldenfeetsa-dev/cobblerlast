@@ -35,7 +35,7 @@ export default function Reviews() {
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['reviews-approved'],
-    queryFn: () => base44.entities.Review.filter({ is_approved: true }, '-created_date'),
+    queryFn: () => base44.entities.Review.filter({ is_approved: true }, '-created_at'),
   });
 
   const submitMutation = useMutation({

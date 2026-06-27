@@ -1,0 +1,33 @@
+{
+  "name": "إبرة وخيط الإسكافي",
+  "short_name": "إبرة وخيط",
+  "description": "نظام إدارة ورشة إصلاح الأحذية والحقائب الفاخرة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A0F00",
+  "theme_color": "#1A0F00",
+  "lang": "ar",
+  "dir": "rtl",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "طلب جديد",
+      "url": "/new-order",
+      "description": "إنشاء طلب إصلاح جديد"
+    },
+    {
+      "name": "الطلبات",
+      "url": "/orders",
+      "description": "عرض جميع الطلبات"
+    }
+  ]
+}

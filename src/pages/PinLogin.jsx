@@ -44,7 +44,7 @@ export default function PinLogin() {
       }
     } catch (err) {
       setError('حدث خطأ، حاول مجدداً.');
-      console.error('Login error:', err);
+      // silent - error shown via state
     } finally {
       setIsLoading(false);
     }

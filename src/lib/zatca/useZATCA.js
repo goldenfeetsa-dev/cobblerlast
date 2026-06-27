@@ -36,7 +36,7 @@ export function useZATCA() {
     const qrCode = buildZatcaTLV({
       sellerName: cfg.sellerName || 'إبرة وخيط الإسكافي',
       vatNumber: cfg.vatNumber || '',
-      invoiceDate: invoice.created_date ? new Date(invoice.created_date) : new Date(),
+      invoiceDate: invoice.created_at ? new Date(invoice.created_at) : new Date(),
       totalAmount: invoice.total || invoice.total_price || 0,
       vatAmount: invoice.vat_amount || 0,
     });
@@ -71,7 +71,7 @@ export function useZATCA() {
       const xmlString = generateInvoiceXML({
         invoiceNumber: invoice.invoice_number || invoice.order_number || `INV-${invoice.id}`,
         invoiceType: cfg.invoiceType || invoiceType,
-        invoiceDate: invoice.created_date ? new Date(invoice.created_date) : new Date(),
+        invoiceDate: invoice.created_at ? new Date(invoice.created_at) : new Date(),
         seller,
         buyer: {
           name: invoice.customer_name || 'عميل نقدي',

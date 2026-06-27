@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Camera, X, ImagePlus, Loader2 } from 'lucide-react';
 import { storage } from '@/api/supabaseApi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,14 +53,14 @@ export default function PhotoUploader({ photos, setPhotos, maxPhotos = 5 }) {
         const compressed = await compressImage(rawFile);
         const sizeBefore = (rawFile.size / 1024).toFixed(0);
         const sizeAfter  = (compressed.size / 1024).toFixed(0);
-        console.info(`📸 ضغط: ${sizeBefore}KB → ${sizeAfter}KB`);
+        
 
         const { file_url } = await storage.uploadFile({ file: compressed });
         setPhotos(prev => [...prev, file_url]);
       }
     } catch (err) {
       toast.error('فشل رفع الصورة، حاول مجدداً');
-      console.error('Photo upload error:', err);
+      // silent - error shown via toast
     } finally {
       setUploading(false);
       e.target.value = '';

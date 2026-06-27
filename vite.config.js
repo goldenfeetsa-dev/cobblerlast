@@ -3,25 +3,25 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: { '@': path.resolve(__dirname, './src') },
   },
   build: {
     outDir: 'dist',
-    sourcemap: false,  // Disable sourcemaps in production for security
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['framer-motion', 'lucide-react'],
-        }
-      }
-    }
+          vendor:    ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+          supabase:  ['@supabase/supabase-js'],
+          charts:    ['recharts'],
+          ui:        ['framer-motion', 'lucide-react', 'sonner', 'date-fns'],
+          misc:      ['qrcode.react', 'html2canvas', 'jspdf', 'react-hook-form', 'zod'],
+        },
+      },
+    },
   },
   server: {
     headers: {
@@ -30,6 +30,9 @@ export default defineConfig({
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
-    }
-  }
+    },
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@supabase/supabase-js'],
+  },
 })
