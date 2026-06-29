@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/supabaseApi';
@@ -50,7 +51,7 @@ function CartDrawer({ cart, onClose, onRemove }) {
             <p className="text-center py-12 text-sm" style={{ color: 'rgba(245,237,216,0.3)' }}>السلة فارغة</p>
           ) : cart.map(item => (
             <div key={item.id} className="flex gap-3 rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.08)' }}>
-              <img src={item.image_url} alt={item.name_ar} className="w-14 h-14 rounded-lg object-cover" />
+              <img src={item.image_url} alt={`${item.name_ar} — إبرة وخيط الإسكافي`} className="w-14 h-14 rounded-lg object-cover" />
               <div className="flex-1">
                 <p className="text-sm font-bold" style={{ color: '#F5EDD8' }}>{item.name_ar}</p>
                 <p className="text-xs mt-1" style={{ color: GOLD }}>{item.price} ر.س × {item.qty}</p>
@@ -92,7 +93,7 @@ function ProductCard({ product, onAdd }) {
       style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
       <div className="relative overflow-hidden" style={{ height: '200px' }}>
         <img src={product.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80'}
-          alt={product.name_ar} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          alt={`${product.name_ar} — منتج من إبرة وخيط الإسكافي`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 50%, #120A00 100%)' }} />
         {!product.in_stock && (
           <div className="absolute inset-0 flex items-center justify-center"
@@ -147,7 +148,7 @@ export default function Shop() {
 
   const { data: dbProducts = [] } = useQuery({
     queryKey: ['products-public'],
-    queryFn: () => base44.entities.Product.filter({ in_stock: true }, 'sort_order'),
+    queryFn: () => base44.entities.InventoryItem.filter({ is_active: true }, 'created_at'),
   });
 
   const products = dbProducts.length > 0 ? dbProducts : FALLBACK_PRODUCTS;
@@ -172,10 +173,54 @@ export default function Shop() {
 
   return (
     <div dir="rtl" style={{ background: '#120A00', minHeight: '100vh', fontFamily: "'Tajawal', sans-serif" }}>
+      <Helmet>
+        <title>متجر إبرة وخيط | منتجات العناية بالأحذية والحقائب الفاخرة - الرياض</title>
+        <meta name="description" content="تسوق منتجات العناية بالأحذية والحقائب الجلدية الفاخرة — نعال، كريمات تلميع، جلود، وأدوات احترافية. توصيل في الرياض." />
+        <meta name="keywords" content="متجر أحذية الرياض, كريم تلميع أحذية, نعال جلدي, صبغة جلد, منتجات العناية بالجلود, shop shoe care riyadh" />
+        <link rel="canonical" href="https://cobblerlast.com/shop" />
+        <meta property="og:title" content="متجر إبرة وخيط — منتجات العناية بالأحذية والحقائب" />
+        <meta property="og:description" content="منتجات احترافية للعناية بالأحذية والحقائب الجلدية. توصيل في الرياض." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://cobblerlast.com/shop" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "منتجات إبرة وخيط الإسكافي",
+          "url": "https://cobblerlast.com/shop",
+          "numberOfItems": filtered.length,
+          "itemListElement": filtered.slice(0, 20).map((p, i) => ({
+            "@type": "ListItem",
+            "position": i + 1,
+            "item": {
+              "@type": "Product",
+              "@id": `https://cobblerlast.com/shop#product-${p.id}`,
+              "name": p.name_ar || p.name,
+              "description": p.description || p.name_ar,
+              "image": p.image_url,
+              "sku": p.sku || String(p.id),
+              "brand": { "@type": "Brand", "name": "إبرة وخيط الإسكافي" },
+              "offers": {
+                "@type": "Offer",
+                "price": p.price,
+                "priceCurrency": "SAR",
+                "availability": p.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                "url": `https://cobblerlast.com/shop#product-${p.id}`,
+                "seller": { "@type": "Organization", "name": "إبرة وخيط الإسكافي", "url": "https://cobblerlast.com" },
+                "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+                "shippingDetails": {
+                  "@type": "OfferShippingDetails",
+                  "shippingDestination": { "@type": "DefinedRegion", "addressCountry": "SA" },
+                  "deliveryTime": { "@type": "ShippingDeliveryTime", "businessDays": { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"] }, "cutoffTime": "20:00:00+03:00", "handlingTime": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2, "unitCode": "d" }, "transitTime": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 3, "unitCode": "d" } }
+                }
+              }
+            }
+          }))
+        })}</script>
+      </Helmet>
       {/* Navbar */}
       <nav className="sticky top-0 z-40 px-6 h-16 flex items-center justify-between"
         style={{ background: 'rgba(18,10,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)' }}>
-        <Link to="/booking" className="text-xl font-black" style={{ color: GOLD }}>إبرة وخيط الإسكافي</Link>
+        <Link to="/" className="text-xl font-black" style={{ color: GOLD }}>إبرة وخيط الإسكافي</Link>
         <div className="flex items-center gap-3">
           <Link to="/book" className="hidden sm:block px-5 h-9 rounded-full text-sm font-bold text-black"
             style={{ background: `linear-gradient(135deg, ${GOLD}, #e8c96a)` }}>احجز موعد</Link>

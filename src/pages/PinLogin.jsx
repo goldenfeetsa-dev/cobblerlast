@@ -19,7 +19,7 @@ export default function PinLogin() {
   });
 
   useEffect(() => {
-    if (getSession()) navigate('/');
+    if (getSession()) navigate('/pos');
   }, [navigate]);
 
   // ── منع المتصفح من حفظ الـ PIN في التاريخ ─────────────────
@@ -29,22 +29,45 @@ export default function PinLogin() {
   }, []);
 
   const handlePin = async (pin) => {
+    // Rate limiting: max 5 attempts per minute
+    const ATTEMPTS_KEY = 'login_attempts';
+    const WINDOW_KEY   = 'login_window';
+    const now = Date.now();
+    const window = parseInt(sessionStorage.getItem(WINDOW_KEY) || '0');
+    let attempts = parseInt(sessionStorage.getItem(ATTEMPTS_KEY) || '0');
+
+    if (now - window > 60_000) {
+      // Reset after 1 minute
+      attempts = 0;
+      sessionStorage.setItem(WINDOW_KEY, String(now));
+    }
+
+    if (attempts >= 5) {
+      const remaining = Math.ceil((60_000 - (now - window)) / 1000);
+      setError(`محاولات كثيرة. انتظر ${remaining} ثانية.`);
+      setPinKey(k => k + 1);
+      return;
+    }
+
+    sessionStorage.setItem(ATTEMPTS_KEY, String(attempts + 1));
+    if (attempts === 0) sessionStorage.setItem(WINDOW_KEY, String(now));
+
     setIsLoading(true);
     setError('');
     try {
       const match = employees.find(e => e.pin === pin && e.is_active !== false);
       if (match) {
-        // setSession يحذف الـ PIN قبل التخزين
+        // نجح — أعد عداد المحاولات
+        sessionStorage.removeItem(ATTEMPTS_KEY);
+        sessionStorage.removeItem(WINDOW_KEY);
         setSession(match);
-        // navigate بـ replace حتى لا يرجع المستخدم بزر الرجوع لصفحة PIN
-        navigate('/', { replace: true });
+        navigate('/pos', { replace: true });
       } else {
-        setError('رقم PIN غير صحيح. حاول مجدداً.');
+        setError(`رقم PIN غير صحيح. المحاولة ${attempts + 1}/5.`);
         setPinKey(k => k + 1);
       }
     } catch (err) {
       setError('حدث خطأ، حاول مجدداً.');
-      // silent - error shown via state
     } finally {
       setIsLoading(false);
     }

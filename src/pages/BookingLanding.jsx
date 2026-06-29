@@ -643,6 +643,21 @@ function ContactSection() {
 
 // ── Footer ─────────────────────────────────────────────────────
 function Footer() {
+  const { data: settingsArr } = useQuery({
+    queryKey: ['app-settings-public'],
+    queryFn: async () => {
+      const { supabase } = await import('@/lib/supabaseClient');
+      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,social_snapchat,social_tiktok,phone,address').limit(1);
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const s = settingsArr?.[0] || {};
+  const instagram = s.social_instagram || 'https://www.instagram.com/ebra.kh8/';
+  const whatsapp  = s.social_whatsapp  || '966549678191';
+  const twitter   = s.social_twitter;
+  const phone     = s.phone || '0549678191';
+
   return (
     <footer className="py-16 px-6" style={{ background: '#080400' }} dir="rtl">
       <div className="max-w-6xl mx-auto">
@@ -655,23 +670,28 @@ function Footer() {
             <p className="text-sm mt-3 max-w-xs leading-relaxed" style={{ color: 'rgba(245,237,216,0.2)' }}>
               حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة — من قلب الرياض.
             </p>
-            {/* Social icons */}
+            {/* Dynamic Social icons */}
             <div className="flex gap-3 mt-5">
-              <a href="https://www.instagram.com/ebra.kh8/" target="_blank" rel="noopener noreferrer"
+              <a href={instagram} target="_blank" rel="noopener noreferrer"
+              aria-label="إنستغرام"
               className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}>
                 <Instagram className="w-4 h-4" style={{ color: '#C9A84C' }} />
               </a>
-              <a href="https://wa.me/966549678191" target="_blank" rel="noopener noreferrer"
+              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer"
+              aria-label="واتساب"
               className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}>
                 <MessageCircle className="w-4 h-4" style={{ color: '#25D366' }} />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"
+              {twitter && (
+              <a href={twitter} target="_blank" rel="noopener noreferrer"
+              aria-label="تويتر"
               className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}>
                 <Twitter className="w-4 h-4" style={{ color: '#C9A84C' }} />
               </a>
+              )}
             </div>
           </div>
 
@@ -682,26 +702,30 @@ function Footer() {
               <li><Link to="/book" className="hover:text-yellow-400 transition-colors">احجز موعدك</Link></li>
               <li><Link to="/my-bookings" className="hover:text-yellow-400 transition-colors">تتبع حجزك</Link></li>
               <li><Link to="/shop" className="hover:text-yellow-400 transition-colors flex items-center gap-1.5"><ShoppingBag className="w-3.5 h-3.5" />المتجر</Link></li>
+              <li><Link to="/about" className="hover:text-yellow-400 transition-colors">من نحن</Link></li>
               <li><Link to="/repair-policy" className="hover:text-yellow-400 transition-colors">سياسة الإصلاح</Link></li>
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Legal */}
           <div>
-            <h4 className="text-xs tracking-widest font-bold mb-4 uppercase" style={{ color: '#C9A84C' }}>خدمات</h4>
+            <h4 className="text-xs tracking-widest font-bold mb-4 uppercase" style={{ color: '#C9A84C' }}>قانوني</h4>
             <ul className="space-y-2.5 text-sm" style={{ color: 'rgba(245,237,216,0.3)' }}>
-              <li>ترميم الأحذية</li>
-              <li>تجديد الحقائب</li>
-              <li>تلميع وتلوين</li>
-              <li>زيارات منزلية</li>
+              <li><Link to="/privacy" className="hover:text-yellow-400 transition-colors">سياسة الخصوصية</Link></li>
+              <li><Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors">سياسة التوصيل</Link></li>
+              <li><a href={`tel:${phone}`} className="hover:text-yellow-400 transition-colors">{phone}</a></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
         style={{ borderColor: 'rgba(201,168,76,0.08)' }}>
-          <p className="text-sm" style={{ color: 'rgba(245,237,216,0.12)' }}>© 2025 إبرة وخيط الإسكافي. جميع الحقوق محفوظة.</p>
-          <p className="text-sm font-semibold" style={{ color: '#C9A84C' }}>صُنع بكل حب في الرياض ❤️</p>
+          <p className="text-sm" style={{ color: 'rgba(245,237,216,0.12)' }}>© {new Date().getFullYear()} إبرة وخيط الإسكافي. جميع الحقوق محفوظة.</p>
+          <div className="flex gap-4 text-xs" style={{ color: 'rgba(245,237,216,0.15)' }}>
+            <Link to="/privacy" className="hover:text-yellow-400 transition-colors">الخصوصية</Link>
+            <Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors">التوصيل</Link>
+            <Link to="/about" className="hover:text-yellow-400 transition-colors">من نحن</Link>
+          </div>
         </div>
       </div>
     </footer>);
@@ -805,27 +829,88 @@ export default function BookingLanding() {
   return (
     <div className="font-tajawal" style={{ scrollBehavior: 'smooth' }}>
       <Helmet>
-        <title>إبرة وخيط الإسكافي | إصلاح وتجديد الأحذية والحقائب الفاخرة - الرياض</title>
-        <meta name="description" content="حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض. خدمات ترميم، تلميع، تغيير النعال. احجز موعدك الآن." />
-        <meta name="keywords" content="إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, صيانة أحذية, تلميع أحذية" />
-        <link rel="canonical" href="https://cobblerlast.com/booking" />
-        <meta property="og:title" content="إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة" />
-        <meta property="og:description" content="حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض." />
-        <meta property="og:url" content="https://cobblerlast.com/booking" />
-        <meta property="og:type" content="website" />
+        <title>إبرة وخيط الإسكافي | إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض</title>
+        <meta name="description" content="إبرة وخيط الإسكافي — حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات العالمية. احجز موعدك الآن!" />
+        <meta name="keywords" content="إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, إصلاح حقيبة لويس فيتون, إصلاح حقيبة هيرمس, تغيير نعال أحذية, ترميم أحذية فاخرة الرياض, shoe repair riyadh, bag repair riyadh, leather repair, luxury shoe cobbler riyadh" />
+        <link rel="canonical" href="https://cobblerlast.com/" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta name="language" content="ar" />
+        <meta name="geo.region" content="SA-01" />
+        <meta name="geo.placename" content="الرياض" />
+        <meta name="geo.position" content="24.7136;46.6753" />
+        <meta name="ICBM" content="24.7136, 46.6753" />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="business.business" />
+        <meta property="og:title" content="إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة - الرياض" />
+        <meta property="og:description" content="حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة. خدمة استلام وتوصيل في الرياض." />
+        <meta property="og:url" content="https://cobblerlast.com/" />
+        <meta property="og:image" content="https://cobblerlast.com/og-image.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="إبرة وخيط الإسكافي — إصلاح الأحذية والحقائب الفاخرة في الرياض" />
+        <meta property="og:locale" content="ar_SA" />
+        <meta property="og:site_name" content="إبرة وخيط الإسكافي" />
+        <meta property="business:contact_data:street_address" content="الرياض" />
+        <meta property="business:contact_data:locality" content="الرياض" />
+        <meta property="business:contact_data:country_name" content="المملكة العربية السعودية" />
+        <meta property="business:contact_data:phone_number" content="+966549678191" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة" />
+        <meta name="twitter:description" content="حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض." />
+        <meta name="twitter:image" content="https://cobblerlast.com/og-image.jpg" />
+        <meta name="twitter:site" content="@ebra_kh8" />
+
+        {/* JSON-LD Structured Data */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": "إبرة وخيط الإسكافي - صفحة الحجز",
-          "description": "احجز موعد إصلاح أحذيتك أو حقيبتك مع حرفيين سعوديين متخصصين في الرياض",
-          "url": "https://cobblerlast.com/booking",
-          "breadcrumb": {
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "الرئيسية", "item": "https://cobblerlast.com" },
-              { "@type": "ListItem", "position": 2, "name": "احجز موعد", "item": "https://cobblerlast.com/booking" }
-            ]
-          }
+          "@graph": [
+            {
+              "@type": "LocalBusiness",
+              "@id": "https://cobblerlast.com/#business",
+              "name": "إبرة وخيط الإسكافي",
+              "alternateName": "Ebra Khait Al-Iskafi",
+              "description": "حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض",
+              "url": "https://cobblerlast.com",
+              "logo": "https://cobblerlast.com/favicon.svg",
+              "image": ["https://cobblerlast.com/og-image.jpg"],
+              "telephone": "+966549678191",
+              "priceRange": "$$",
+              "currenciesAccepted": "SAR",
+              "paymentAccepted": "Cash, Credit Card, Mada",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "الرياض",
+                "addressRegion": "الرياض",
+                "addressCountry": "SA"
+              },
+              "geo": { "@type": "GeoCoordinates", "latitude": "24.7136", "longitude": "46.6753" },
+              "openingHoursSpecification": [
+                { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"], "opens": "09:00", "closes": "22:00" }
+              ],
+              "sameAs": ["https://www.instagram.com/ebra.kh8/"],
+              "hasOfferCatalog": {
+                "@type": "OfferCatalog",
+                "name": "خدمات إصلاح الأحذية والحقائب",
+                "itemListElement": [
+                  { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "ترميم الأحذية", "description": "تغيير نعال، خياطة، تلميع" }, "priceSpecification": { "@type": "PriceSpecification", "price": "80", "priceCurrency": "SAR" } },
+                  { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "تجديد الحقائب الجلدية", "description": "تنظيف، إصلاح خياطة، تجديد ألوان" }, "priceSpecification": { "@type": "PriceSpecification", "price": "150", "priceCurrency": "SAR" } },
+                  { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "تلميع وتلوين" }, "priceSpecification": { "@type": "PriceSpecification", "price": "50", "priceCurrency": "SAR" } }
+                ]
+              }
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://cobblerlast.com/#website",
+              "url": "https://cobblerlast.com",
+              "name": "إبرة وخيط الإسكافي",
+              "inLanguage": "ar",
+              "potentialAction": { "@type": "SearchAction", "target": "https://cobblerlast.com/shop?q={search_term_string}", "query-input": "required name=search_term_string" }
+            }
+          ]
         })}</script>
       </Helmet>
       <Navbar />

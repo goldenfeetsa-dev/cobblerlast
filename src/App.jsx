@@ -10,6 +10,10 @@ import { runPhotoCleanup } from '@/lib/photoCleanup';
 
 import GeminiAssistant from './components/ai/GeminiAssistant';
 import ZATCASettings from './pages/ZATCASettings';
+import AboutUs from './pages/AboutUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import ShippingPolicy from './pages/ShippingPolicy';
+import SocialSettings from './pages/SocialSettings';
 import LoyaltyDashboard from './pages/LoyaltyDashboard';
 import PinLogin from './pages/PinLogin';
 import Dashboard from './pages/Dashboard';
@@ -68,41 +72,52 @@ const AuthenticatedApp = () => {
   return (
     <>
       <Routes>
+        {/* /login مخفية — لا تظهر في أي رابط، تدخل بكتابتها يدوياً */}
         <Route path="/login" element={<PinLogin />} />
-      {/* Public Booking Pages */}
-      <Route path="/booking" element={<BookingLanding />} />
-      <Route path="/book" element={<BookingWizard />} />
-      <Route path="/my-bookings" element={<MyBookings />} />
-      <Route path="/reviews" element={<Reviews />} />
-      <Route path="/shop" element={<Shop />} />
-      <Route path="/repair-policy" element={<RepairPolicy />} />
-      {/* Barcode standalone page */}
-      <Route path="/barcode/:id" element={<BarcodeOnly />} />
-      {/* POS + Admin pages inside AppLayout */}
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/new-order" element={<NewOrder />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/orders/:id" element={<OrderDetails />} />
-        <Route path="/scan" element={<ScanBarcode />} />
-        <Route path="/customers" element={<Customers />} />
-        <Route path="/employees" element={<Employees />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/admin/bookings" element={<BookingAdmin />} />
-        <Route path="/zatca" element={<ZATCASettings />} />
-        <Route path="/loyalty" element={<LoyaltyDashboard />} />
-        <Route path="/admin/services" element={<ServicesAdmin />} />
-        <Route path="/admin/working-hours" element={<WorkingHoursAdmin />} />
-        <Route path="/admin/branches" element={<BranchesAdmin />} />
-        <Route path="/audit" element={<AuditLog />} />
-        <Route path="/site-analytics" element={<SiteAnalytics />} />
-        <Route path="/admin/reviews" element={<ReviewsAdmin />} />
-        <Route path="/admin/brands" element={<BrandsAdmin />} />
-        <Route path="/admin/shop" element={<ShopAdmin />} />
-        <Route path="/operations" element={<OperationsDashboard />} />
-        <Route path="/sales" element={<SalesSystem />} />
-        <Route path="/workshop" element={<WorkshopSystem />} />
+
+        {/* الصفحة الرئيسية = صفحة الحجز */}
+        <Route path="/" element={<BookingLanding />} />
+        <Route path="/booking" element={<BookingLanding />} />
+
+        {/* Public pages */}
+        <Route path="/book" element={<BookingWizard />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/reviews" element={<Reviews />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/repair-policy" element={<RepairPolicy />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+
+        {/* Barcode standalone */}
+        <Route path="/barcode/:id" element={<BarcodeOnly />} />
+
+        {/* POS + Admin pages — محمية بـ AppLayout */}
+        <Route element={<AppLayout />}>
+          <Route path="/pos" element={<Dashboard />} />
+          <Route path="/new-order" element={<NewOrder />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetails />} />
+          <Route path="/scan" element={<ScanBarcode />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/employees" element={<Employees />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/social-settings" element={<SocialSettings />} />
+          <Route path="/admin/bookings" element={<BookingAdmin />} />
+          <Route path="/zatca" element={<ZATCASettings />} />
+          <Route path="/loyalty" element={<LoyaltyDashboard />} />
+          <Route path="/admin/services" element={<ServicesAdmin />} />
+          <Route path="/admin/working-hours" element={<WorkingHoursAdmin />} />
+          <Route path="/admin/branches" element={<BranchesAdmin />} />
+          <Route path="/audit" element={<AuditLog />} />
+          <Route path="/site-analytics" element={<SiteAnalytics />} />
+          <Route path="/admin/reviews" element={<ReviewsAdmin />} />
+          <Route path="/admin/brands" element={<BrandsAdmin />} />
+          <Route path="/admin/shop" element={<ShopAdmin />} />
+          <Route path="/operations" element={<OperationsDashboard />} />
+          <Route path="/sales" element={<SalesSystem />} />
+          <Route path="/workshop" element={<WorkshopSystem />} />
       </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

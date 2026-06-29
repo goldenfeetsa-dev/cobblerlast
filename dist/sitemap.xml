@@ -1,40 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
   <url>
     <loc>https://cobblerlast.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="ar" href="https://cobblerlast.com/"/>
+    <image:image>
+      <image:loc>https://cobblerlast.com/og-image.jpg</image:loc>
+      <image:title>إبرة وخيط الإسكافي — إصلاح الأحذية والحقائب الفاخرة في الرياض</image:title>
+      <image:caption>حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة</image:caption>
+    </image:image>
   </url>
-  <url>
-    <loc>https://cobblerlast.com/booking</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
+
   <url>
     <loc>https://cobblerlast.com/book</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.95</priority>
   </url>
+
   <url>
     <loc>https://cobblerlast.com/shop</loc>
     <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800</image:loc>
+      <image:title>نعل جلدي إيطالي فاخر</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800</image:loc>
+      <image:title>أحذية فاخرة للإصلاح</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://cobblerlast.com/about</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
   <url>
     <loc>https://cobblerlast.com/repair-policy</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://cobblerlast.com/reviews</loc>
-    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+
+  <url>
+    <loc>https://cobblerlast.com/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <url>
+    <loc>https://cobblerlast.com/shipping-policy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
   <url>
     <loc>https://cobblerlast.com/my-bookings</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+
 </urlset>

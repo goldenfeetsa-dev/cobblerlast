@@ -12,7 +12,7 @@ const navGroups = [
   {
     label: null, // no header for main ops
     items: [
-      { path: '/', icon: LayoutDashboard, label: 'لوحة التحكم', adminOnly: true },
+      { path: '/pos', icon: LayoutDashboard, label: 'لوحة التحكم', adminOnly: true },
       { path: '/new-order', icon: PlusCircle, label: 'طلب جديد' },
       { path: '/orders', icon: ListOrdered, label: 'الطلبات' },
       { path: '/scan', icon: ScanBarcode, label: 'مسح الباركود' },
@@ -60,6 +60,7 @@ const navGroups = [
       { path: '/admin/working-hours', icon: Clock, label: 'أوقات العمل', adminOnly: true },
       { path: '/admin/branches', icon: MapPin, label: 'الفروع', adminOnly: true },
       { path: '/zatca', icon: Shield, label: 'زاتكا ZATCA', adminOnly: true },
+      { path: '/social-settings', icon: Globe, label: 'التواصل الاجتماعي', adminOnly: true },
       { path: '/loyalty', icon: Star, label: 'بطاقات الولاء', adminOnly: false },
       { path: '/settings', icon: Settings, label: 'الإعدادات', adminOnly: true },
     ]
