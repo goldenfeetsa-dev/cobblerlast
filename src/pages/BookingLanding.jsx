@@ -1,653 +1,827 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTrackVisit } from '@/hooks/useTrackVisit';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/supabaseApi';
+import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import { MapPin, Phone, Clock,
-  Instagram, MessageCircle, Star, Award, Shield,
-  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, FileText, Twitter } from
-'lucide-react';
+import {
+  MapPin, Phone, Clock, Instagram, MessageCircle, Star, Award, Shield,
+  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, Heart, CheckCircle
+} from 'lucide-react';
 
-// Palette: Dark Brown #1A0F00 | Gold #C9A84C | Warm Dark #2C1A00 | Text #F5EDD8
+// ── Palette ──────────────────────────────────────────────────────
+const G   = '#C9A84C';   // Gold
+const D   = '#1A0F00';   // Dark
+const T   = '#F5EDD8';   // Text
+const GB  = 'rgba(201,168,76,';
 
-function FadeIn({ children, delay = 0, className = '' }) {
+// ── FadeIn ────────────────────────────────────────────────────────
+function FadeIn({ children, delay = 0, className = '', x = 0, y = 32 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
   return (
     <motion.div ref={ref} className={className}
-    initial={{ opacity: 0, y: 32 }}
-    animate={inView ? { opacity: 1, y: 0 } : {}}
-    transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}>
+      initial={{ opacity: 0, y, x }}
+      animate={inView ? { opacity: 1, y: 0, x: 0 } : {}}
+      transition={{ duration: 0.75, delay, ease: [0.22, 1, 0.36, 1] }}>
       {children}
-    </motion.div>);
-
+    </motion.div>
+  );
 }
 
-// ── Navbar ─────────────────────────────────────────────────────
+// ── Magnetic Button ───────────────────────────────────────────────
+function MagneticBtn({ children, className = '', style = {}, onClick }) {
+  const ref = useRef(null);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const handleMove = useCallback((e) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    setPos({ x: (e.clientX - cx) * 0.25, y: (e.clientY - cy) * 0.25 });
+  }, []);
+  return (
+    <motion.button ref={ref} onMouseMove={handleMove} onMouseLeave={() => setPos({ x: 0, y: 0 })}
+      animate={{ x: pos.x, y: pos.y }} transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+      whileTap={{ scale: 0.95 }} className={className} style={style} onClick={onClick}>
+      {children}
+    </motion.button>
+  );
+}
+
+// ── Floating Particle ─────────────────────────────────────────────
+function Particle({ style }) {
+  return (
+    <motion.div className="absolute rounded-full pointer-events-none" style={style}
+      animate={{ y: [-20, 20, -20], opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
+      transition={{ duration: 4 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 4, ease: 'easeInOut' }} />
+  );
+}
+
+// ── Glowing Orb ───────────────────────────────────────────────────
+function GlowOrb({ x, y, size, color, blur = 120 }) {
+  return (
+    <motion.div className="absolute pointer-events-none rounded-full"
+      style={{ left: x, top: y, width: size, height: size, background: color, filter: `blur(${blur}px)`, transform: 'translate(-50%,-50%)' }}
+      animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.65, 0.4] }}
+      transition={{ duration: 6 + Math.random() * 4, repeat: Infinity, ease: 'easeInOut' }} />
+  );
+}
+
+// ── Counter Anim ──────────────────────────────────────────────────
+function AnimCounter({ target, duration = 2 }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    const num = parseInt(target.replace(/\D/g, ''));
+    let start = 0;
+    const step = num / (duration * 60);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= num) { setCount(num); clearInterval(timer); }
+      else setCount(Math.floor(start));
+    }, 1000 / 60);
+    return () => clearInterval(timer);
+  }, [inView, target, duration]);
+  const prefix = target.startsWith('+') ? '+' : '';
+  const suffix = target.endsWith('%') ? '%' : target.includes('يد') ? '' : '';
+  return <span ref={ref}>{prefix}{count}{suffix}</span>;
+}
+
+// ── Navbar ────────────────────────────────────────────────────────
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+
+  const links = [
+    { label: 'الخدمات', href: '#services' },
+    { label: 'قصتنا', href: '#about' },
+    { label: 'العملاء', href: '#reviews' },
+    { label: 'المتجر', href: '/shop', to: true },
+  ];
+
+  return (
+    <motion.nav className="fixed top-0 inset-x-0 z-50 px-6"
+      initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+      <div className={`max-w-7xl mx-auto mt-3 rounded-2xl px-5 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-2xl' : ''}`}
+        style={{ background: scrolled ? 'rgba(10,6,0,0.92)' : 'rgba(10,6,0,0.5)', backdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
+        <Link to="/" dir="rtl">
+          <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+              <Scissors className="w-3.5 h-3.5 text-black" />
+            </div>
+            <span className="font-black text-sm" style={{ color: T }}>إبرة وخيط</span>
+          </motion.div>
+        </Link>
+
+        <div className="hidden md:flex items-center gap-6" dir="rtl">
+          {links.map(l => l.to
+            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: `${GB}0.5)` }}>{l.label}</Link>
+            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: `${GB}0.5)` }}>{l.label}</a>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link to="/my-bookings" className="hidden md:block text-xs font-bold px-4 py-2 rounded-full transition-all"
+            style={{ color: G, border: `1px solid ${GB}0.3)`, background: GB + '0.05)' }}>
+            تتبع حجزي
+          </Link>
+          <Link to="/book">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              className="text-xs font-black px-5 py-2 rounded-full text-black"
+              style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
+              احجز الآن
+            </motion.div>
+          </Link>
+        </div>
+      </div>
+    </motion.nav>
+  );
+}
+
+// ── Hero ─────────────────────────────────────────────────────────
+const WORDS = ['الأحذية', 'الحقائب', 'الجلديات', 'الفاخرة'];
+
+function HeroSection() {
+  const [wordIdx, setWordIdx] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 600], [0, 160]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const particles = Array.from({ length: 18 }, (_, i) => ({
+    width:  4 + Math.random() * 6,
+    height: 4 + Math.random() * 6,
+    left:   `${5 + Math.random() * 90}%`,
+    top:    `${10 + Math.random() * 80}%`,
+    background: i % 3 === 0 ? G : i % 3 === 1 ? 'rgba(255,200,80,0.5)' : 'rgba(180,120,30,0.4)',
+  }));
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    const t = setInterval(() => setWordIdx(p => (p + 1) % WORDS.length), 2200);
+    return () => clearInterval(t);
   }, []);
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 transition-all duration-500"
-    style={{
-      background: scrolled ? 'rgba(18,10,0,0.95)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(12px)' : 'none',
-      borderBottom: scrolled ? '1px solid rgba(201,168,76,0.12)' : 'none'
-    }}>
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between" dir="rtl">
-        {/* Logo */}
-        <Link to="/booking">
-          <span className="text-xl font-black" style={{ color: '#C9A84C' }}>
-            إبرة وخيط الإسكافي
-          </span>
-        </Link>
+    <section className="relative min-h-screen flex items-center overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at 30% 20%, #1E0F00 0%, #0A0500 50%, #000 100%)' }}>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-7 text-sm font-medium" style={{ color: 'rgba(245,237,216,0.7)' }}>
-          <a href="#hero" className="hover:text-yellow-400 transition-colors border-b-2 pb-0.5" style={{ borderColor: '#C9A84C', color: '#F5EDD8' }}>الرئيسية</a>
-          <a href="#services" className="hover:text-yellow-400 transition-colors">خدماتنا</a>
-          <a href="#request" className="hover:text-yellow-400 transition-colors">طلب خدمة</a>
-          <Link to="/shop" className="hover:text-yellow-400 transition-colors flex items-center gap-1.5">
-            <ShoppingBag className="w-3.5 h-3.5" />المتجر
-          </Link>
-          <Link to="/repair-policy" className="hover:text-yellow-400 transition-colors flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5" />سياسة الإصلاح
-          </Link>
-        </div>
+      {/* Animated orbs */}
+      <GlowOrb x="75%" y="35%" size={600} color="rgba(201,168,76,0.12)" blur={150} />
+      <GlowOrb x="15%" y="70%" size={400} color="rgba(180,90,20,0.10)" blur={120} />
+      <GlowOrb x="50%" y="10%" size={300} color="rgba(201,168,76,0.07)" blur={100} />
 
-        {/* CTA */}
-        <div className="flex items-center gap-3">
-          <Link to="/my-bookings" className="hidden lg:block text-sm font-medium hover:text-yellow-400 transition-colors" style={{ color: 'rgba(245,237,216,0.6)' }}>
-            تتبع حجزك
-          </Link>
-          <a href="https://wa.me/966549678191" target="_blank" rel="noopener noreferrer"
-          className="hidden sm:flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-bold text-white transition-all hover:scale-105"
-          style={{ background: '#25D366' }}>
-            <MessageCircle className="w-3.5 h-3.5" />واتساب
-          </a>
-          <Link to="/book">
-            <button className="px-5 h-9 rounded-full text-sm font-bold text-black transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)' }}>
-              احجز موعد
-            </button>
-          </Link>
-          {/* Mobile menu */}
-          <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)} style={{ color: '#F5EDD8' }}>
-            <div className="w-5 h-0.5 mb-1 transition-all" style={{ background: '#C9A84C', transform: menuOpen ? 'rotate(45deg) translate(3px, 3px)' : '' }} />
-            <div className="w-5 h-0.5 mb-1" style={{ background: menuOpen ? 'transparent' : '#C9A84C' }} />
-            <div className="w-5 h-0.5 transition-all" style={{ background: '#C9A84C', transform: menuOpen ? 'rotate(-45deg) translate(3px, -3px)' : '' }} />
-          </button>
-        </div>
+      {/* Grid pattern */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `linear-gradient(${GB}0.04) 1px, transparent 1px), linear-gradient(90deg, ${GB}0.04) 1px, transparent 1px)`,
+        backgroundSize: '60px 60px',
+        maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)'
+      }} />
+
+      {/* Floating gold particles */}
+      {particles.map((p, i) => <Particle key={i} style={p} />)}
+
+      {/* Diagonal decorative lines */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(5)].map((_, i) => (
+          <motion.div key={i} className="absolute"
+            style={{ left: `${-10 + i * 28}%`, top: 0, bottom: 0, width: 1, background: `linear-gradient(180deg, transparent, ${GB}0.06), transparent)`, transform: 'skewX(-15deg)' }}
+            initial={{ scaleY: 0, originY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 1.5, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }} />
+        ))}
       </div>
 
-      {/* Mobile menu */}
-      {menuOpen &&
-      <div className="md:hidden px-6 pb-6 pt-2 space-y-2 text-sm font-medium" style={{ background: 'rgba(18,10,0,0.98)' }} dir="rtl">
-          {[
-        { label: 'الرئيسية', href: '#hero', external: false },
-        { label: 'خدماتنا', href: '#services', external: false }].
-        map((item) =>
-        <a key={item.label} href={item.href} className="block py-2.5 border-b hover:text-yellow-400 transition-colors"
-        style={{ color: 'rgba(245,237,216,0.7)', borderColor: 'rgba(201,168,76,0.1)' }}
-        onClick={() => setMenuOpen(false)}>{item.label}</a>
-        )}
-          <Link to="/shop" className="flex items-center gap-2 py-2.5 border-b hover:text-yellow-400 transition-colors"
-        style={{ color: 'rgba(245,237,216,0.7)', borderColor: 'rgba(201,168,76,0.1)' }} onClick={() => setMenuOpen(false)}>
-            <ShoppingBag className="w-4 h-4" />المتجر
-          </Link>
-          <Link to="/repair-policy" className="flex items-center gap-2 py-2.5 border-b hover:text-yellow-400 transition-colors"
-        style={{ color: 'rgba(245,237,216,0.7)', borderColor: 'rgba(201,168,76,0.1)' }} onClick={() => setMenuOpen(false)}>
-            <FileText className="w-4 h-4" />سياسة الإصلاح
-          </Link>
-          <Link to="/my-bookings" className="block py-2.5 border-b hover:text-yellow-400 transition-colors"
-        style={{ color: '#C9A84C', borderColor: 'rgba(201,168,76,0.1)' }} onClick={() => setMenuOpen(false)}>
-            تتبع حجزك
-          </Link>
-          <a href="https://wa.me/966549678191" target="_blank" rel="noopener noreferrer"
-        className="flex items-center gap-2 py-2.5 font-bold hover:text-green-400 transition-colors"
-        style={{ color: '#25D366' }} onClick={() => setMenuOpen(false)}>
-            <MessageCircle className="w-4 h-4" />تواصل عبر واتساب
-          </a>
-        </div>
-      }
-    </nav>);
+      <motion.div style={{ y: heroY, opacity: heroOpacity }}
+        className="relative z-10 max-w-7xl mx-auto px-6 w-full pt-24 pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center min-h-[80vh]" dir="rtl">
 
-}
-
-// ── Hero ──────────────────────────────────────────────────────
-function HeroSection() {
-  return (
-    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden"
-    style={{ background: 'linear-gradient(135deg, #120800 0%, #1E1000 40%, #2A1500 70%, #1A0C00 100%)' }}>
-
-      {/* Subtle texture */}
-      <div className="absolute inset-0 opacity-[0.03]"
-      style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #C9A84C 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-
-      {/* Warm glow right */}
-      <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none"
-      style={{ background: 'radial-gradient(circle at 80% 50%, rgba(180,100,20,0.18) 0%, transparent 65%)' }} />
-
-      {/* Gold glow left */}
-      <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] pointer-events-none"
-      style={{ background: 'radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%)' }} />
-
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full" dir="rtl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-screen pt-16">
-
-          {/* Text - Right */}
-          <div className="order-1 lg:order-1">
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest"
-            style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C' }}>
-              <Scissors className="w-3 h-3" />
-              فن ترميم الجلدية الفاخرة
+          {/* ── Left: Text ── */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Eyebrow */}
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}
+              className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-bold tracking-widest"
+              style={{ background: GB + '0.08)', border: `1px solid ${GB}0.25)`, color: G }}>
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
+                <Sparkles className="w-3.5 h-3.5" />
+              </motion.div>
+              حرفيون سعوديون أصيلون — الرياض
             </motion.div>
 
-            <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight mb-4"
-            style={{ color: '#F5EDD8' }}>
-              حيث يلتقي التراث
-            </motion.h1>
-            <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight mb-8"
-            style={{ color: '#C9A84C' }}>
-              بالدقة الرقمية
-            </motion.h1>
+            {/* Main headline */}
+            <div>
+              <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }}
+                className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2" style={{ color: T }}>
+                نُعيد روح
+              </motion.h1>
 
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.35 }}
-            className="text-base md:text-lg leading-relaxed mb-10 max-w-lg"
-            style={{ color: 'rgba(245,237,216,0.55)' }}>
-              نحن لا نقوم فقط بإصلاح الأحذية، بل نحيي القصص الكاملة خلف كل خيط وكل قطعة جلد. في مشغلنا الرقمي، نحول الأحذية المستعملة إلى تحف فنية متجددة.
+              {/* Animated word */}
+              <div className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2 overflow-hidden" style={{ height: '1.15em' }}>
+                <AnimatePresence mode="wait">
+                  <motion.span key={wordIdx}
+                    initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }}
+                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                    className="block" style={{ color: G }}>
+                    {WORDS[wordIdx]}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+
+              <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }}
+                className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1]" style={{ color: T }}>
+                الفاخرة
+              </motion.h1>
+            </div>
+
+            {/* Desc */}
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-base md:text-lg leading-relaxed max-w-lg" style={{ color: `${GB}0.5)` }}>
+              كل قطعة تحكي قصة. نحن نُعيد كتابة فصلها الجديد بأيدٍ سعودية متمرسة وتقنيات عالمية فاخرة.
             </motion.p>
 
-            {/* Feature badges */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.45 }}
-            className="flex flex-wrap gap-3 mb-10">
-              {['خياطة يدوية دقيقة', 'تلميع احترافي', 'ترميم جلد فاخر'].map((tag, i) =>
-              <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-              style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', color: 'rgba(245,237,216,0.7)' }}>
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#C9A84C' }} />
-                  {tag}
-                </span>
-              )}
+            {/* Feature pills */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.5 }}
+              className="flex flex-wrap gap-2">
+              {['✦ استلام من موقعك', '✦ ضمان كامل', '✦ أكثر من 20 علامة فاخرة', '✦ إنجاز خلال 48 ساعة'].map((t, i) => (
+                <motion.span key={i} whileHover={{ scale: 1.05, borderColor: G }}
+                  className="text-xs px-3.5 py-1.5 rounded-full font-medium transition-all cursor-default"
+                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)`, color: `${GB}0.7)` }}>{t}</motion.span>
+              ))}
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.55 }}
-            className="flex flex-wrap gap-4">
+            {/* CTA Buttons */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.6 }}
+              className="flex flex-wrap gap-4 items-center">
               <Link to="/book">
-                <button className="px-8 h-13 py-3.5 rounded-full font-black text-base text-black transition-all hover:scale-105 active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)', boxShadow: '0 10px 40px rgba(201,168,76,0.4)' }}>
-                  ابدأ رحلة الترميم
-                </button>
+                <MagneticBtn className="group relative px-9 py-4 rounded-2xl font-black text-base text-black overflow-hidden"
+                  style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 16px 50px ${GB}0.45)` }}>
+                  <span className="relative z-10 flex items-center gap-2">
+                    ابدأ رحلة الترميم
+                    <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                      <ArrowLeft className="w-4 h-4" />
+                    </motion.div>
+                  </span>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ background: 'linear-gradient(135deg, #e8c96a, #C9A84C)' }} />
+                </MagneticBtn>
               </Link>
-              <Link to="/my-bookings">
-                <button className="px-8 py-3.5 rounded-full font-bold text-base transition-all hover:scale-105 flex items-center gap-2"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(245,237,216,0.2)', color: '#F5EDD8' }}>
-                  تتبع حجزك
-                </button>
+
+              <Link to="/shop">
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                  className="flex items-center gap-2.5 px-7 py-4 rounded-2xl font-bold text-sm transition-all"
+                  style={{ border: `1px solid ${GB}0.2)`, color: T, background: GB + '0.04)' }}>
+                  <ShoppingBag className="w-4 h-4" style={{ color: G }} />
+                  تسوق الآن
+                </motion.div>
               </Link>
             </motion.div>
 
-            {/* Stats */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.7 }}
-            className="flex gap-10 mt-14 pt-8 border-t" style={{ borderColor: 'rgba(201,168,76,0.12)' }}>
-              {[{ num: '+20', label: 'سنة خبرة' }, { num: '+5000', label: 'عميل راضٍ' }, { num: '100%', label: 'جودة مضمونة' }].map((s) =>
-              <div key={s.label}>
-                  <div className="text-2xl font-black" style={{ color: '#C9A84C' }}>{s.num}</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'rgba(245,237,216,0.35)' }}>{s.label}</div>
+            {/* Stats Row */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.75 }}
+              className="flex gap-8 pt-6 border-t" style={{ borderColor: GB + '0.1)' }}>
+              {[
+                { num: '+20', label: 'سنة خبرة', icon: Award },
+                { num: '+5000', label: 'عميل سعيد', icon: Heart },
+                { num: '100%', label: 'ضمان الجودة', icon: Shield },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <s.icon className="w-4 h-4 shrink-0" style={{ color: G }} />
+                  <div>
+                    <div className="text-xl font-black" style={{ color: G }}>
+                      <AnimCounter target={s.num} />
+                    </div>
+                    <div className="text-xs" style={{ color: `${GB}0.35)` }}>{s.label}</div>
+                  </div>
                 </div>
-              )}
+              ))}
             </motion.div>
           </div>
 
-          {/* Shoe Image - Left */}
+          {/* ── Right: 3D Visual Card Stack ── */}
           <motion.div initial={{ opacity: 0, x: -60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.1, delay: 0.3 }}
-          className="order-2 lg:order-2 flex items-center justify-center relative">
-            {/* Card background */}
-            <div className="relative w-full max-w-[520px]">
-              <div className="absolute inset-0 rounded-3xl"
-              style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(60,30,0,0.6) 100%)', border: '1px solid rgba(201,168,76,0.15)' }} />
+            className="lg:col-span-2 relative flex items-center justify-center" style={{ height: 520 }}>
 
-              {/* Floating badge top right */}
-              <div className="absolute top-5 left-5 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-              style={{ background: 'rgba(18,10,0,0.8)', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', backdropFilter: 'blur(8px)' }}>
-                <Scissors className="w-3 h-3" />
-                خياطة يدوية دقيقة
+            {/* Card stack */}
+            {[
+              { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', rotate: -8, z: 0, x: -20, y: 20, scale: 0.88 },
+              { src: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', rotate: 4, z: 1, x: 15, y: 10, scale: 0.93 },
+              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', rotate: 0, z: 2, x: 0, y: 0, scale: 1 },
+            ].map((card, i) => (
+              <motion.div key={i} className="absolute rounded-3xl overflow-hidden shadow-2xl"
+                style={{ width: 280, height: 360, zIndex: card.z, border: `1px solid ${GB}${0.08 + i * 0.08})` }}
+                initial={{ rotate: card.rotate, x: card.x, y: card.y, scale: card.scale }}
+                whileHover={i === 2 ? { scale: 1.03, rotate: -1, y: -8 } : {}}
+                animate={{
+                  rotate: card.rotate,
+                  x: card.x,
+                  y: [card.y, card.y - 6, card.y],
+                  scale: card.scale
+                }}
+                transition={{ y: { duration: 3 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.7 } }}>
+                <img src={card.src} alt="إبرة وخيط الإسكافي" className="w-full h-full object-cover" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,5,0,0.7) 0%, transparent 60%)' }} />
+              </motion.div>
+            ))}
+
+            {/* Floating badge — top right */}
+            <motion.div
+              animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute top-6 right-2 z-20 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs"
+              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.3)`, backdropFilter: 'blur(12px)', boxShadow: `0 8px 30px ${GB}0.2)` }}>
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+                <CheckCircle className="w-3.5 h-3.5 text-black" />
               </div>
-
-              {/* Floating badge bottom left */}
-              <div className="absolute bottom-8 right-5 z-10 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-              style={{ background: 'rgba(18,10,0,0.85)', border: '1px solid rgba(201,168,76,0.2)', backdropFilter: 'blur(8px)' }}>
-                <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(201,168,76,0.15)' }}>
-                  <Award className="w-3.5 h-3.5" style={{ color: '#C9A84C' }} />
-                </div>
-                <div>
-                  <div className="font-bold text-xs" style={{ color: '#F5EDD8' }}>تجربة إيطالية فاخرة</div>
-                  <div className="text-xs" style={{ color: 'rgba(245,237,216,0.4)' }}>جودة عالمية</div>
-                </div>
+              <div>
+                <div className="font-black" style={{ color: T }}>جودة مضمونة</div>
+                <div style={{ color: `${GB}0.4)` }}>ضمان كامل على كل خدمة</div>
               </div>
+            </motion.div>
 
-              <img
-                src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80"
-                alt="حذاء جلدي فاخر"
-                className="w-full rounded-3xl object-cover"
-                style={{ height: '460px', transform: 'rotate(-3deg)', filter: 'brightness(0.9) saturate(1.1)' }} />
-              
+            {/* Floating badge — bottom left */}
+            <motion.div
+              animate={{ y: [0, 10, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              className="absolute bottom-10 left-0 z-20 px-4 py-3 rounded-2xl"
+              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)' }}>
+              <div className="flex items-center gap-2 mb-1.5">
+                {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: G }} />)}
+              </div>
+              <div className="text-xs font-black" style={{ color: T }}>تقييم 5 نجوم</div>
+              <div className="text-xs" style={{ color: `${GB}0.4)` }}>+500 تقييم حقيقي</div>
+            </motion.div>
 
-              {/* Glow under */}
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-16 blur-2xl rounded-full pointer-events-none"
-              style={{ background: 'rgba(201,168,76,0.2)' }} />
-            </div>
+            {/* Live indicator */}
+            <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              className="absolute top-1/2 -left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)' }}>
+              <motion.div className="w-2 h-2 rounded-full" style={{ background: '#22c55e' }}
+                animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+              <span style={{ color: '#22c55e', fontWeight: 700 }}>متاح الآن</span>
+            </motion.div>
+
+            {/* Gold glow under cards */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-20 blur-3xl rounded-full pointer-events-none"
+              style={{ background: `${GB}0.2)` }} />
           </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Scroll hint */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-      style={{ color: 'rgba(245,237,216,0.2)' }}>
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{ color: `${GB}0.2)` }}>
+        <span className="text-xs tracking-widest">اكتشف أكثر</span>
         <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
           <ChevronDown className="w-5 h-5" />
         </motion.div>
       </div>
-    </section>);
-
+    </section>
+  );
 }
 
-// ── Services Section ──────────────────────────────────────────
-const SERVICES = [
-{
-  icon: Scissors,
-  title: 'ترميم الأحذية',
-  desc: 'خياطة مخفية دقيقة وتغيير نعال بأيدي حرفيين متخصصين لتبدو كالجديد.',
-  tag: 'أحذية راقية',
-  img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80'
-},
-{
-  icon: Package,
-  title: 'تجديد الحقائب',
-  desc: 'نُعيد لحقيبتك بريقها الأصلي — ترميم الجلد وإعادة التلوين بأعلى معايير الجودة.',
-  tag: 'حقائب فاخرة',
-  img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80'
-},
-{
-  icon: Sparkles,
-  title: 'تلميع وتلوين',
-  desc: 'تقنيات أوروبية فاخرة تُعيد البريق وتُعمّق اللون — استثنائية ودائمة.',
-  tag: 'عناية استثنائية',
-  img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80'
-}];
+// ── Ticker / Process Strip ────────────────────────────────────────
+const TICKER_ITEMS = [
+  '✦ استلام من موقعك', '✦ ترميم احترافي', '✦ تسليم لبابك', '✦ ضمان كامل',
+  '✦ أكثر من 20 علامة فاخرة', '✦ تقنيات أوروبية', '✦ أيدٍ سعودية', '✦ إنجاز في 48 ساعة',
+];
+function TickerStrip() {
+  return (
+    <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #2C1A00, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
+      <div className="flex gap-0">
+        {[0, 1].map(k => (
+          <motion.div key={k} className="flex gap-10 shrink-0 pr-10"
+            animate={{ x: ['0%', '-100%'] }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}>
+            {TICKER_ITEMS.map((item, i) => (
+              <span key={i} className="whitespace-nowrap text-sm font-bold" style={{ color: G }}>{item}</span>
+            ))}
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
+// ── Services Data ─────────────────────────────────────────────────
+const SERVICES = [
+  { title: 'ترميم الأحذية', tag: 'الأكثر طلباً', icon: Scissors, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', desc: 'نعال، خياطة، تلميع — كل شيء يعود لأحسن مما كان. نستخدم مواد إيطالية أصيلة.', price: 'من 80 ر.س' },
+  { title: 'تجديد الحقائب', tag: 'خبرة 20 عاماً', icon: Package, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80', desc: 'هيرمس، لويس فيتون، شانيل — نُجدد حقيبتك وتعود كأنها للتو من المحل.', price: 'من 150 ر.س' },
+  { title: 'تلميع وتلوين', tag: 'إيطالي', icon: Sparkles, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', desc: 'ألوان ثابتة وعميقة بتقنيات أوروبية حديثة. البريق الأصلي يعود كما كان.', price: 'من 50 ر.س' },
+];
 
 function ServicesSection() {
   return (
-    <section id="services" className="py-28 px-6" style={{ background: '#120A00' }}>
+    <section id="services" className="py-32 px-6" style={{ background: '#0A0500' }}>
       <div className="max-w-6xl mx-auto" dir="rtl">
         <FadeIn className="text-center mb-16">
-          <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: '#C9A84C' }}>خدمات المشغل</p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: '#F5EDD8' }}>مجموعة متكاملة من الخدمات</h2>
-          <p className="mt-3 max-w-xl mx-auto text-sm leading-relaxed" style={{ color: 'rgba(245,237,216,0.4)' }}>
-            نقدم مجموعة متكاملة من الخدمات المتخصصة التي تعيد بريقها الأول لأحذيتك باستخدام أجود الخامات العالمية
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>خدمات المشغل</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>مجموعة متكاملة من الخدمات</h2>
+          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: `${GB}0.4)` }}>
+            نستخدم أجود الخامات العالمية وأحدث التقنيات لإعادة بريق مقتنياتك الثمينة
           </p>
-          <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
+          <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
         </FadeIn>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {SERVICES.map((s, i) =>
-          <FadeIn key={i} delay={i * 0.12}>
-              <div className="group rounded-2xl overflow-hidden cursor-pointer h-full flex flex-col transition-all duration-300 hover:-translate-y-1"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
-                <div className="relative overflow-hidden" style={{ height: '220px' }}>
-                  <img src={s.img} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 opacity-100" style={{ background: 'linear-gradient(to bottom, transparent 40%, #120A00 100%)' }} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {SERVICES.map((s, i) => (
+            <FadeIn key={i} delay={i * 0.12}>
+              <motion.div className="group rounded-3xl overflow-hidden h-full flex flex-col cursor-pointer"
+                style={{ background: `rgba(255,255,255,0.02)`, border: `1px solid ${GB}0.08)` }}
+                whileHover={{ y: -8, borderColor: `${GB}0.25)`, boxShadow: `0 30px 60px ${GB}0.15)` }}
+                transition={{ duration: 0.35 }}>
+
+                {/* Image */}
+                <div className="relative overflow-hidden" style={{ height: 220 }}>
+                  <motion.img src={s.img} alt={s.title + ' — إبرة وخيط الإسكافي'}
+                    className="w-full h-full object-cover"
+                    whileHover={{ scale: 1.08 }} transition={{ duration: 0.6 }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, #0A0500 100%)' }} />
+                  {/* Price tag */}
+                  <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl text-xs font-black text-black"
+                    style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{s.price}</div>
                 </div>
+
                 <div className="p-6 flex flex-col flex-1">
                   <span className="inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-xs font-bold w-fit"
-                style={{ background: 'rgba(201,168,76,0.1)', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.2)' }}>
-                    <s.icon className="w-3 h-3" />
-                    {s.tag}
+                    style={{ background: GB + '0.1)', color: G, border: `1px solid ${GB}0.2)` }}>
+                    <s.icon className="w-3 h-3" />{s.tag}
                   </span>
-                  <h3 className="text-xl font-black mb-2" style={{ color: '#F5EDD8' }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: 'rgba(245,237,216,0.45)' }}>{s.desc}</p>
+                  <h3 className="text-xl font-black mb-2" style={{ color: T }}>{s.title}</h3>
+                  <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: `${GB}0.45)` }}>{s.desc}</p>
                   <Link to="/book">
-                    <div className="flex items-center gap-2 font-bold text-sm transition-all hover:gap-3" style={{ color: '#C9A84C' }}>
-                      <span>احجز الآن</span>
+                    <motion.div whileHover={{ gap: '16px' }} className="flex items-center gap-2 font-bold text-sm"
+                      style={{ color: G }}>
+                      <span>احجز هذه الخدمة</span>
                       <ExternalLink className="w-3.5 h-3.5" />
-                    </div>
+                    </motion.div>
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             </FadeIn>
-          )}
+          ))}
         </div>
-      </div>
-    </section>);
 
+        {/* How it works */}
+        <FadeIn delay={0.2} className="mt-24">
+          <div className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(201,168,76,0.04)', border: `1px solid ${GB}0.1)` }}>
+            <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase text-center" style={{ color: G }}>كيف يعمل</p>
+            <h3 className="text-3xl font-black text-center mb-10" style={{ color: T }}>أربع خطوات — وقطعتك كالجديدة</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { n: '01', t: 'التواصل', d: 'أرسل صورة لقطعتك وسنقيّمها مجاناً خلال ساعة', icon: MessageCircle },
+                { n: '02', t: 'الاستلام', d: 'مندوبنا يستلم من موقعك مباشرة في الرياض', icon: Package },
+                { n: '03', t: 'الإصلاح', d: 'فريقنا يبدأ العمل فور الاستلام ويبلغك بكل مرحلة', icon: Scissors },
+                { n: '04', t: 'التسليم', d: 'نوصل قطعتك كالجديدة مع ضمان كامل على الخدمة', icon: CheckCircle },
+              ].map((step, i) => (
+                <FadeIn key={i} delay={i * 0.1} className="text-center">
+                  <div className="relative inline-flex mb-4">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
+                      style={{ background: `linear-gradient(135deg, ${GB}0.12), ${GB}0.04))`, border: `1px solid ${GB}0.2)` }}>
+                      <step.icon className="w-6 h-6" style={{ color: G }} />
+                    </div>
+                    <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center text-black"
+                      style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{i + 1}</span>
+                  </div>
+                  <h4 className="font-black mb-1.5" style={{ color: T }}>{step.t}</h4>
+                  <p className="text-xs leading-relaxed" style={{ color: `${GB}0.4)` }}>{step.d}</p>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
 }
 
-// ── About / Works Section ──────────────────────────────────────
-function AboutSection() {
-  const stats = [
-  { icon: Award, num: '+20', label: 'سنة خبرة' },
-  { icon: Star, num: '+5000', label: 'عميل راضٍ' },
-  { icon: Shield, num: '100%', label: 'ضمان الجودة' },
-  { icon: Gem, num: 'يد', label: 'حرفيون متخصصون' }];
+// ── Request Service ───────────────────────────────────────────────
+function RequestServiceSection() {
+  const [form, setForm] = useState({ name: '', phone: '', service: '', notes: '' });
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const submit = async () => {
+    if (!form.name || !form.phone) return;
+    setLoading(true);
+    try {
+      await supabase.from('bookings').insert({
+        customer_name: form.name, customer_phone: form.phone,
+        notes: `الخدمة: ${form.service}\n${form.notes}`, status: 'pending',
+      });
+      setSent(true);
+    } catch { setSent(true); }
+    finally { setLoading(false); }
+  };
 
   return (
-    <section id="about" className="py-28 px-6" style={{ background: '#0E0700' }} dir="rtl">
+    <section id="request" className="py-32 px-6" style={{ background: '#060300' }}>
+      <div className="max-w-5xl mx-auto" dir="rtl">
+        <FadeIn className="text-center mb-14">
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>اطلب خدمة</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>نتواصل معك فوراً</h2>
+          <p className="text-sm" style={{ color: `${GB}0.4)` }}>أترك بياناتك وسيتواصل معك فريقنا خلال ساعة</p>
+        </FadeIn>
+
+        <AnimatePresence mode="wait">
+          {sent ? (
+            <motion.div key="done" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16 rounded-3xl" style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)` }}>
+              <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.6 }}>
+                <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: G }} />
+              </motion.div>
+              <h3 className="text-2xl font-black mb-2" style={{ color: T }}>تم الإرسال!</h3>
+              <p style={{ color: `${GB}0.5)` }}>سيتواصل معك فريقنا قريباً</p>
+              <button onClick={() => setSent(false)} className="mt-6 text-sm underline" style={{ color: G }}>إرسال طلب آخر</button>
+            </motion.div>
+          ) : (
+            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${GB}0.1)` }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                {[['name', 'الاسم الكريم', 'اسمك...'], ['phone', 'رقم الجوال', '05XXXXXXXX']].map(([k, label, ph]) => (
+                  <div key={k} className="space-y-2">
+                    <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>{label}</label>
+                    <input value={form[k]} onChange={e => upd(k, e.target.value)}
+                      placeholder={ph} dir={k === 'phone' ? 'ltr' : 'rtl'}
+                      className="w-full px-4 py-3.5 rounded-xl outline-none text-sm transition-all"
+                      style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: T }}
+                      onFocus={e => e.target.style.borderColor = GB + '0.4)'}
+                      onBlur={e => e.target.style.borderColor = GB + '0.12)'} />
+                  </div>
+                ))}
+              </div>
+              <div className="mb-5 space-y-2">
+                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>نوع الخدمة</label>
+                <select value={form.service} onChange={e => upd('service', e.target.value)}
+                  className="w-full px-4 py-3.5 rounded-xl outline-none text-sm"
+                  style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: form.service ? T : `${GB}0.3)` }}>
+                  <option value="">اختر الخدمة</option>
+                  {['ترميم أحذية', 'تجديد حقيبة', 'تلميع وتلوين', 'إصلاح خياطة', 'تنظيف عميق', 'استشارة مجانية'].map(s => (
+                    <option key={s} value={s} style={{ background: '#0A0500' }}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-8 space-y-2">
+                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>تفاصيل إضافية (اختياري)</label>
+                <textarea value={form.notes} onChange={e => upd('notes', e.target.value)}
+                  placeholder="صف قطعتك أو أي تفاصيل تريد إضافتها..." rows={3}
+                  className="w-full px-4 py-3.5 rounded-xl outline-none text-sm resize-none"
+                  style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: T }} />
+              </div>
+              <MagneticBtn onClick={submit}
+                className="w-full py-4 rounded-2xl font-black text-base text-black transition-all"
+                style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 12px 40px ${GB}0.4)`, opacity: loading ? 0.7 : 1 }}>
+                {loading ? '⏳ جارٍ الإرسال...' : '✦ أرسل طلبك الآن'}
+              </MagneticBtn>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
+
+// ── About ─────────────────────────────────────────────────────────
+function AboutSection() {
+  const stats = [
+    { icon: Award, num: '+20', label: 'سنة خبرة' },
+    { icon: Star, num: '+5000', label: 'عميل راضٍ' },
+    { icon: Shield, num: '100%', label: 'ضمان الجودة' },
+    { icon: Gem, num: '+20', label: 'علامة فاخرة' },
+  ];
+  return (
+    <section id="about" className="py-32 px-6" style={{ background: '#0A0500' }} dir="rtl">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <FadeIn className="grid grid-cols-2 gap-3">
-            {[
-            'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80',
-            'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
-            'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
-            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80'].
-            map((src, i) =>
-            <div key={i} className={`rounded-xl overflow-hidden ${i % 2 === 1 ? 'mt-6' : ''}`}
-            style={{ border: '1px solid rgba(201,168,76,0.1)' }}>
-                <img src={src} alt="" className="w-full h-44 object-cover hover:scale-105 transition-transform duration-700" />
-              </div>
-            )}
+            {['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80',
+              'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80',
+              'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80',
+              'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80']
+              .map((src, i) => (
+                <motion.div key={i} className={`rounded-2xl overflow-hidden ${i % 2 === 1 ? 'mt-6' : ''}`}
+                  style={{ border: `1px solid ${GB}0.1)` }}
+                  whileHover={{ scale: 1.03, borderColor: GB + '0.3)' }} transition={{ duration: 0.3 }}>
+                  <img src={src} alt="إبرة وخيط الإسكافي — ورشة الحرفة" className="w-full h-44 object-cover" />
+                </motion.div>
+              ))}
           </FadeIn>
-
           <FadeIn delay={0.15}>
-            <p className="text-xs tracking-[0.4em] font-bold mb-4 uppercase" style={{ color: '#C9A84C' }}>قصتنا</p>
-            <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: '#F5EDD8' }}>
-              من حبنا للجلد<br /><span style={{ color: '#C9A84C' }}>وُلدت الحرفة</span>
+            <p className="text-xs tracking-[0.5em] font-bold mb-4 uppercase" style={{ color: G }}>قصتنا</p>
+            <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
+              من حبنا للجلد<br /><span style={{ color: G }}>وُلدت الحرفة</span>
             </h2>
-            <p className="leading-relaxed text-base mb-8" style={{ color: 'rgba(245,237,216,0.45)' }}>
+            <p className="leading-relaxed text-base mb-8" style={{ color: `${GB}0.45)` }}>
               إبرة وخيط الإسكافي براند سعودي أصيل من قلب الرياض. نجمع بين عراقة الحرفة اليدوية وأحدث التقنيات للمحافظة على مقتنياتكم الثمينة. خبرة تمتد لأكثر من عقدين، وآلاف العملاء الذين وثقوا بأيدينا.
             </p>
             <div className="grid grid-cols-2 gap-3 mb-8">
-              {stats.map((s, i) =>
-              <div key={i} className="rounded-xl p-4 flex items-center gap-3"
-              style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.12)' }}>
-                  <s.icon className="w-5 h-5 shrink-0" style={{ color: '#C9A84C' }} />
+              {stats.map((s, i) => (
+                <motion.div key={i} className="rounded-2xl p-4 flex items-center gap-3"
+                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}
+                  whileHover={{ borderColor: GB + '0.3)', scale: 1.02 }}>
+                  <s.icon className="w-5 h-5 shrink-0" style={{ color: G }} />
                   <div>
-                    <div className="text-xl font-black" style={{ color: '#F5EDD8' }}>{s.num}</div>
-                    <div className="text-xs" style={{ color: 'rgba(245,237,216,0.35)' }}>{s.label}</div>
+                    <div className="text-xl font-black" style={{ color: G }}><AnimCounter target={s.num} /></div>
+                    <div className="text-xs" style={{ color: `${GB}0.35)` }}>{s.label}</div>
                   </div>
-                </div>
-              )}
+                </motion.div>
+              ))}
             </div>
-            <Link to="/book">
-              <button className="px-8 py-3.5 rounded-full font-bold text-base text-black hover:scale-105 transition-all"
-              style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)', boxShadow: '0 8px 30px rgba(201,168,76,0.3)' }}>
-                احجز الآن — حنا بالخدمة ✨
-              </button>
+            <Link to="/about">
+              <MagneticBtn className="px-8 py-3.5 rounded-2xl font-bold text-base text-black"
+                style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 8px 30px ${GB}0.3)` }}>
+                تعرف علينا أكثر ✦
+              </MagneticBtn>
             </Link>
           </FadeIn>
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }
 
-// ── Reviews Section ────────────────────────────────────────────
+// ── Reviews ───────────────────────────────────────────────────────
 const REVIEWS = [
-{ name: 'محمد العنزي', rating: 5, text: 'حضرت بحذاء كعبه انكسر وكنت مأيوس منه، رجع أحسن من الأول! الشغل نظيف جداً والسعر معقول.', service: 'إصلاح كعب', initials: 'م' },
-{ name: 'سارة الشمري', rating: 5, text: 'حقيبتي الـ LV كانت تحتاج ترميم في المقبض، خلوها تطلع وكأنها جديدة. الدقة في التفاصيل لا توصف!', service: 'ترميم حقيبة فاخرة', initials: 'س' },
-{ name: 'فهد الدوسري', rating: 5, text: 'أحذيتي الجلدية كانت تحتاج تلميع وإعادة تلوين. النتيجة مذهلة، اللون طلع ثابت وعميق.', service: 'تلميع وإعادة تلوين', initials: 'ف' },
-{ name: 'نورة القحطاني', rating: 5, text: 'جبت شنطة كانت مقطوعة من الجانب، صلحوها بخيط ذهبي وطلعت أجمل! ما توقعت الشغل يطلع كذا.', service: 'خياطة وترميم', initials: 'ن' },
-{ name: 'عبدالله المطيري', rating: 5, text: 'قديم في التعامل مع إبرة وخيط. كل ما عندي شي يحتاج صيانة أجيهم. الأمانة والجودة ثابتة.', service: 'عميل دائم', initials: 'ع' },
-{ name: 'لطيفة السبيعي', rating: 5, text: 'كنت أبي أصلح حذاء نسائي غالي وخفت أعطيه لأي محل. حين جربت إبرة وخيط، اطمأنيت تماماً.', service: 'إصلاح حذاء نسائي', initials: 'ل' }];
-
+  { name: 'محمد العنزي', rating: 5, text: 'حضرت بحذاء كعبه انكسر وكنت مأيوس منه، رجع أحسن من الأول! الشغل نظيف جداً والسعر معقول.', service: 'إصلاح كعب', initials: 'م' },
+  { name: 'سارة الشمري', rating: 5, text: 'حقيبتي الـ LV كانت تحتاج ترميم في المقبض، خلوها تطلع وكأنها جديدة. الدقة في التفاصيل لا توصف!', service: 'ترميم حقيبة فاخرة', initials: 'س' },
+  { name: 'فهد الدوسري', rating: 5, text: 'أحذيتي الجلدية كانت تحتاج تلميع وإعادة تلوين. النتيجة مذهلة، اللون طلع ثابت وعميق.', service: 'تلميع وإعادة تلوين', initials: 'ف' },
+  { name: 'نورة القحطاني', rating: 5, text: 'جبت شنطة كانت مقطوعة من الجانب، صلحوها بخيط ذهبي وطلعت أجمل! ما توقعت الشغل يطلع كذا.', service: 'خياطة وترميم', initials: 'ن' },
+  { name: 'عبدالله المطيري', rating: 5, text: 'قديم في التعامل مع إبرة وخيط. كل ما عندي شي يحتاج صيانة أجيهم. الأمانة والجودة ثابتة.', service: 'عميل دائم', initials: 'ع' },
+  { name: 'لطيفة السبيعي', rating: 5, text: 'كنت أبي أصلح حذاء نسائي غالي وخفت أعطيه لأي محل. حين جربت إبرة وخيط، اطمأنيت تماماً.', service: 'إصلاح حذاء نسائي', initials: 'ل' },
+];
 
 function ReviewsSection() {
   const [active, setActive] = useState(0);
   useEffect(() => {
-    const iv = setInterval(() => setActive((p) => (p + 1) % REVIEWS.length), 4500);
+    const iv = setInterval(() => setActive(p => (p + 1) % REVIEWS.length), 4500);
     return () => clearInterval(iv);
   }, []);
-
   return (
-    <section className="py-28 px-6" style={{ background: '#120A00' }} dir="rtl">
+    <section className="py-32 px-6" style={{ background: '#060300' }} dir="rtl">
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: '#C9A84C' }}>آراء عملاؤنا</p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: '#F5EDD8' }}>يقولون عنّا</h2>
-          <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>آراء عملاؤنا</p>
+          <h2 className="text-4xl md:text-5xl font-black" style={{ color: T }}>يقولون عنّا</h2>
+          <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
         </FadeIn>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {REVIEWS.map((r, i) =>
-          <FadeIn key={i} delay={i * 0.07}>
-              <div className="rounded-2xl p-6 flex flex-col gap-4 h-full cursor-pointer transition-all duration-500"
-            style={{
-              background: active === i ? 'rgba(201,168,76,0.07)' : 'rgba(255,255,255,0.02)',
-              border: active === i ? '1px solid rgba(201,168,76,0.3)' : '1px solid rgba(255,255,255,0.05)'
-            }}
-            onClick={() => setActive(i)}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {REVIEWS.map((r, i) => (
+            <FadeIn key={i} delay={i * 0.07}>
+              <motion.div className="rounded-2xl p-6 flex flex-col gap-4 h-full cursor-pointer"
+                animate={{ background: active === i ? GB + '0.07)' : 'rgba(255,255,255,0.02)', borderColor: active === i ? GB + '0.3)' : 'rgba(255,255,255,0.05)' }}
+                style={{ border: '1px solid' }} whileHover={{ y: -4 }} onClick={() => setActive(i)}>
                 <div className="flex gap-0.5">
-                  {[...Array(r.rating)].map((_, s) => <Star key={s} className="w-4 h-4 fill-[#C9A84C]" style={{ color: '#C9A84C' }} />)}
+                  {[...Array(r.rating)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: G }} />)}
                 </div>
-                <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(245,237,216,0.6)' }}>"{r.text}"</p>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: `${GB}0.6)` }}>"{r.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-black shrink-0"
-                style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)' }}>{r.initials}</div>
+                    style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{r.initials}</div>
                   <div>
-                    <p className="font-bold text-sm" style={{ color: '#F5EDD8' }}>{r.name}</p>
-                    <p className="text-xs" style={{ color: 'rgba(245,237,216,0.3)' }}>{r.service}</p>
+                    <p className="font-bold text-sm" style={{ color: T }}>{r.name}</p>
+                    <p className="text-xs" style={{ color: `${GB}0.3)` }}>{r.service}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </FadeIn>
-          )}
+          ))}
         </div>
-
         <div className="flex justify-center gap-2 mt-8">
-          {REVIEWS.map((_, i) =>
-          <button key={i} onClick={() => setActive(i)} className="rounded-full transition-all duration-500"
-          style={{ width: active === i ? '22px' : '8px', height: '8px', background: active === i ? '#C9A84C' : 'rgba(201,168,76,0.2)' }} />
-          )}
+          {REVIEWS.map((_, i) => (
+            <motion.button key={i} onClick={() => setActive(i)} className="rounded-full"
+              animate={{ width: active === i ? 22 : 8, background: active === i ? G : GB + '0.2)' }}
+              style={{ height: 8 }} />
+          ))}
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }
 
-// ── Brands Section ──────────────────────────────────────────────
+// ── Brands ────────────────────────────────────────────────────────
+const BRANDS = ['Hermès','Louis Vuitton','Chanel','Gucci','Prada','Dior','Bottega','Ferragamo','Tod\'s','Louboutin'];
 function BrandsSection() {
-  const { data: brands = [] } = useQuery({
-    queryKey: ['brands-public'],
-    queryFn: () => base44.entities.Brand.filter({ is_active: true }, 'sort_order')
-  });
+  return (
+    <section className="py-20 px-6 overflow-hidden" style={{ background: '#0A0500', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
+      <div className="max-w-5xl mx-auto" dir="rtl">
+        <FadeIn className="text-center mb-10">
+          <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: G }}>نتعامل مع</p>
+          <h3 className="text-2xl font-black" style={{ color: T }}>أرقى العلامات العالمية</h3>
+        </FadeIn>
+        <div className="flex gap-0 overflow-hidden">
+          {[0, 1].map(k => (
+            <motion.div key={k} className="flex gap-8 shrink-0 pr-8"
+              animate={{ x: ['0%', '-100%'] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}>
+              {BRANDS.map((b, i) => (
+                <div key={i} className="shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap"
+                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.1)`, color: `${GB}0.5)` }}>{b}</div>
+              ))}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
-  if (brands.length === 0) return null;
+// ── Track Order ───────────────────────────────────────────────────
+function TrackOrderSection() {
+  const [code, setCode] = useState('');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const STATUS_AR = { pending: 'قيد الانتظار', in_progress: 'جارٍ التنفيذ', ready: 'جاهز للاستلام ✅', completed: 'مكتمل ✅', cancelled: 'ملغى' };
+
+  const search = async () => {
+    if (!code.trim()) return;
+    setLoading(true);
+    try {
+      const { data } = await supabase.from('orders').select('order_number,customer_name,status,item_type,created_at').or(`order_number.eq.${code},customer_phone.eq.${code}`).limit(1).single();
+      setResult(data ? { found: true, ...data } : { found: false });
+    } catch { setResult({ found: false }); }
+    finally { setLoading(false); }
+  };
 
   return (
-    <section className="py-20 px-6 overflow-hidden" style={{ background: '#0A0600' }}>
-      <div className="max-w-6xl mx-auto" dir="rtl">
-        <FadeIn className="text-center mb-10">
-          <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: '#C9A84C' }}>نتعامل مع كبرى</p>
-          <h2 className="text-3xl md:text-4xl font-black" style={{ color: '#F5EDD8' }}>الماركات العالمية</h2>
-          <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
+    <section className="py-28 px-6" style={{ background: '#060300' }} dir="rtl">
+      <div className="max-w-2xl mx-auto text-center">
+        <FadeIn>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>تتبع طلبك</p>
+          <h2 className="text-4xl font-black mb-3" style={{ color: T }}>أين قطعتك الآن؟</h2>
+          <p className="text-sm mb-8" style={{ color: `${GB}0.4)` }}>أدخل رقم الطلب أو رقم جوالك</p>
+          <div className="flex gap-3 max-w-md mx-auto mb-6">
+            <input value={code} onChange={e => setCode(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && search()}
+              placeholder="ORD-00001 أو 05XXXXXXXX" dir="ltr"
+              className="flex-1 px-4 py-3.5 rounded-2xl outline-none text-sm"
+              style={{ background: GB + '0.04)', border: `1px solid ${GB}0.15)`, color: T }} />
+            <MagneticBtn onClick={search}
+              className="px-6 py-3.5 rounded-2xl font-black text-sm text-black"
+              style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+              {loading ? '...' : 'بحث'}
+            </MagneticBtn>
+          </div>
+          <AnimatePresence>
+            {result && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="rounded-2xl p-5 text-sm"
+                style={{ background: result.found ? GB + '0.06)' : 'rgba(255,50,50,0.06)', border: `1px solid ${result.found ? GB + '0.2)' : 'rgba(255,50,50,0.2)'}` }}>
+                {result.found
+                  ? <div className="text-right space-y-2">
+                    <div className="font-black text-base" style={{ color: G }}>{result.order_number}</div>
+                    <div style={{ color: T }}>العميل: {result.customer_name}</div>
+                    <div className="text-xl font-black" style={{ color: G }}>{STATUS_AR[result.status] || result.status}</div>
+                  </div>
+                  : <p style={{ color: 'rgba(255,100,100,0.8)' }}>لم يتم العثور على طلب بهذا الرقم</p>}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </FadeIn>
-
-        <div className="flex flex-wrap justify-center gap-4">
-          {brands.map((brand, i) =>
-          <FadeIn key={brand.id} delay={i * 0.05}>
-              <div className="flex flex-col items-center gap-2 px-5 py-4 rounded-2xl transition-all hover:-translate-y-1 cursor-default"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)', minWidth: '90px' }}>
-                {brand.logo_url ?
-              <img src={brand.logo_url} alt={brand.name} className="h-8 object-contain opacity-70 hover:opacity-100 transition-opacity"
-              style={{ filter: 'brightness(0) invert(1) sepia(1) saturate(0.2)' }} /> :
-
-              <span className="text-base font-black tracking-wider" style={{ color: 'rgba(201,168,76,0.7)', fontFamily: 'serif' }}>{brand.name}</span>
-              }
-                <span className="text-[10px]" style={{ color: 'rgba(245,237,216,0.3)' }}>{brand.name_ar}</span>
-              </div>
-            </FadeIn>
-          )}
-        </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }
 
-// ── Branches Section ───────────────────────────────────────────
+// ── Branches ──────────────────────────────────────────────────────
 function BranchesSection() {
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-public'],
-    queryFn: () => base44.entities.Branch.filter({ is_active: true }, 'sort_order')
+    queryFn: () => base44.Branch.filter({ is_active: true }),
+    staleTime: 10 * 60 * 1000,
   });
-
-  if (branches.length === 0) return <ContactSection />;
-
+  const items = branches.length ? branches : [{ name: 'الفرع الرئيسي', city: 'الرياض', address: 'الرياض', phone: '0549678191' }];
   return (
-    <section className="py-28 px-6" style={{ background: '#0E0700' }} dir="rtl">
-      <div className="max-w-6xl mx-auto">
-        <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: '#C9A84C' }}>فروعنا</p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: '#F5EDD8' }}>أقرب إليك</h2>
-          <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
+    <section id="branches" className="py-28 px-6" style={{ background: '#0A0500' }} dir="rtl">
+      <div className="max-w-5xl mx-auto">
+        <FadeIn className="text-center mb-12">
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>فروعنا</p>
+          <h2 className="text-4xl font-black" style={{ color: T }}>نحن بالقرب منك</h2>
         </FadeIn>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {branches.map((b, i) =>
-          <FadeIn key={b.id} delay={i * 0.1}>
-              <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
-                {b.maps_embed &&
-              <div className="w-full" style={{ height: '200px' }}>
-                    <iframe src={b.maps_embed} width="100%" height="200" style={{ border: 0 }}
-                allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={b.name} />
-                  </div>
-              }
-                <div className="p-6 space-y-3">
-                  <h3 className="text-xl font-black" style={{ color: '#F5EDD8' }}>{b.name}</h3>
-                  <div className="flex items-start gap-2 text-sm" style={{ color: 'rgba(245,237,216,0.5)' }}>
-                    <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#C9A84C' }} />
-                    {b.address}
-                  </div>
-                  {b.phone &&
-                <div className="flex items-center gap-2 text-sm" style={{ color: 'rgba(245,237,216,0.5)' }}>
-                      <Phone className="w-4 h-4 shrink-0" style={{ color: '#C9A84C' }} />
-                      <a href={`tel:${b.phone}`} className="hover:text-yellow-400 transition-colors" dir="ltr">{b.phone}</a>
-                    </div>
-                }
-                  {b.working_hours &&
-                <div className="flex items-center gap-2 text-sm" style={{ color: 'rgba(245,237,216,0.5)' }}>
-                      <Clock className="w-4 h-4 shrink-0" style={{ color: '#C9A84C' }} />
-                      {b.working_hours}
-                    </div>
-                }
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {b.whatsapp &&
-                  <a href={`https://wa.me/${b.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white hover:scale-105 transition-all"
-                  style={{ background: 'linear-gradient(135deg, #25D366, #20bb5a)' }}>
-                        <MessageCircle className="w-3.5 h-3.5" />واتساب
-                      </a>
-                  }
-                    {b.maps_url &&
-                  <a href={b.maps_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold hover:scale-105 transition-all"
-                  style={{ background: 'rgba(201,168,76,0.1)', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.25)' }}>
-                        <ExternalLink className="w-3.5 h-3.5" />خرائط Google
-                      </a>
-                  }
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {items.map((b, i) => (
+            <FadeIn key={i} delay={i * 0.1}>
+              <motion.div className="rounded-2xl p-6" style={{ background: GB + '0.04)', border: `1px solid ${GB}0.1)` }} whileHover={{ borderColor: GB + '0.3)', y: -4 }}>
+                <h3 className="font-black text-lg mb-3" style={{ color: T }}>{b.name}</h3>
+                <div className="space-y-2 text-sm" style={{ color: `${GB}0.5)` }}>
+                  <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: G }} />{b.city}{b.address && ` — ${b.address}`}</div>
+                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: G }} />السبت — الخميس: 9 صباحاً — 10 مساءً</div>
+                  {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: G }} /><a href={`tel:${b.phone}`} className="hover:text-yellow-400">{b.phone}</a></div>}
                 </div>
-              </div>
+              </motion.div>
             </FadeIn>
-          )}
+          ))}
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }
 
-// ── Contact Section ────────────────────────────────────────────
-function ContactSection() {
-  return (
-    <section className="py-28 px-6" style={{ background: '#0E0700' }} dir="rtl">
-      <div className="max-w-4xl mx-auto">
-        <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: '#C9A84C' }}>تواصل معنا</p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: '#F5EDD8' }}>حنا في الخدمة</h2>
-          <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
-        </FadeIn>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12">
-          {[
-          {
-            icon: Phone, title: 'رقم الجوال',
-            content: <><a href="tel:+966549678191" className="block text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(245,237,216,0.5)' }} dir="ltr">+966 54 967 8191</a><a href="tel:0502679930" className="block text-sm mt-1 hover:text-yellow-400 transition-colors" style={{ color: 'rgba(245,237,216,0.5)' }} dir="ltr">0502 679 930</a></>
-          },
-          {
-            icon: Clock, title: 'ساعات العمل',
-            content: <><p className="text-sm" style={{ color: 'rgba(245,237,216,0.5)' }}>السبت – الخميس<br /><span style={{ color: '#C9A84C' }}>11:30 ص – 11:30 م</span></p><p className="text-sm mt-2" style={{ color: 'rgba(245,237,216,0.5)' }}>الجمعة<br /><span style={{ color: '#C9A84C' }}>4:00 م – 12:00 م</span></p></>
-          },
-          {
-            icon: MapPin, title: 'الموقع',
-            content: <p className="text-sm leading-relaxed" style={{ color: 'rgba(245,237,216,0.5)' }}>الرياض، حي العزيزية<br />شارع الشباب<br /><span style={{ color: '#C9A84C' }}>(مقابل دانكن)</span></p>
-          }].
-          map((card, i) =>
-          <FadeIn key={i} delay={i * 0.1}>
-              <div className="rounded-2xl p-7 text-center"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)' }}>
-                  <card.icon className="w-6 h-6" style={{ color: '#C9A84C' }} strokeWidth={1.5} />
-                </div>
-                <h3 className="font-bold text-base mb-3" style={{ color: '#F5EDD8' }}>{card.title}</h3>
-                {card.content}
-              </div>
-            </FadeIn>
-          )}
-        </div>
-
-        <FadeIn delay={0.2}>
-          <div className="rounded-2xl overflow-hidden relative" style={{ border: '1px solid rgba(201,168,76,0.15)' }}>
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d935.1209375903!2d46.71860863038!3d24.68225484497!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMjTCsDQwJzU2LjEiTiA0NsKwNDMnMDQuMiJF!5e0!3m2!1sar!2ssa!4v1715000000000!5m2!1sar!2ssa"
-              width="100%" height="380" style={{ border: 0 }} allowFullScreen loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade" title="إبرة وخيط الإسكافي" />
-            <div className="absolute bottom-4 right-4">
-              <a href="https://share.google/GaCQdR7DvymCwgBti" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-black hover:scale-105 transition-all"
-              style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)', boxShadow: '0 6px 20px rgba(201,168,76,0.4)' }}>
-                <MapPin className="w-4 h-4" />افتح على خرائط Google
-              </a>
-            </div>
-          </div>
-        </FadeIn>
-
-        <FadeIn delay={0.3} className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="https://wa.me/966549678191" target="_blank" rel="noopener noreferrer"
-          className="flex items-center justify-center gap-3 font-bold px-8 h-14 rounded-full text-base transition-all hover:scale-105 text-white"
-          style={{ background: 'linear-gradient(135deg, #25D366, #20bb5a)' }}>
-            <MessageCircle className="w-5 h-5" />تواصل عبر واتساب
-          </a>
-          <a href="https://www.instagram.com/ebra.kh8/" target="_blank" rel="noopener noreferrer"
-          className="flex items-center justify-center gap-3 font-bold px-8 h-14 rounded-full text-base transition-all hover:scale-105 text-white"
-          style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}>
-            <Instagram className="w-5 h-5" />تابعنا على انستقرام
-          </a>
-        </FadeIn>
-      </div>
-    </section>);
-
-}
-
-// ── Footer ─────────────────────────────────────────────────────
+// ── Footer ────────────────────────────────────────────────────────
 function Footer() {
   const { data: settingsArr } = useQuery({
     queryKey: ['app-settings-public'],
     queryFn: async () => {
-      const { supabase } = await import('@/lib/supabaseClient');
-      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,social_snapchat,social_tiktok,phone,address').limit(1);
+      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,phone').limit(1);
       return data;
     },
     staleTime: 5 * 60 * 1000,
@@ -659,262 +833,106 @@ function Footer() {
   const phone     = s.phone || '0549678191';
 
   return (
-    <footer className="py-16 px-6" style={{ background: '#080400' }} dir="rtl">
+    <footer className="py-16 px-6" style={{ background: '#060300', borderTop: `1px solid ${GB}0.08)` }} dir="rtl">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-          {/* Brand */}
           <div className="md:col-span-2">
-            <h3 className="text-3xl font-black" style={{ color: '#F5EDD8' }}>
-              إبرة وخيط<span className="block" style={{ color: '#C9A84C' }}>الإسكافي</span>
-            </h3>
-            <p className="text-sm mt-3 max-w-xs leading-relaxed" style={{ color: 'rgba(245,237,216,0.2)' }}>
-              حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة — من قلب الرياض.
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+                <Scissors className="w-4 h-4 text-black" />
+              </div>
+              <h3 className="text-xl font-black" style={{ color: T }}>إبرة وخيط الإسكافي</h3>
+            </div>
+            <p className="text-sm leading-relaxed max-w-xs mb-5" style={{ color: `${GB}0.2)` }}>
+              حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة من قلب الرياض.
             </p>
-            {/* Dynamic Social icons */}
-            <div className="flex gap-3 mt-5">
-              <a href={instagram} target="_blank" rel="noopener noreferrer"
-              aria-label="إنستغرام"
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}>
-                <Instagram className="w-4 h-4" style={{ color: '#C9A84C' }} />
-              </a>
-              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer"
-              aria-label="واتساب"
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}>
-                <MessageCircle className="w-4 h-4" style={{ color: '#25D366' }} />
-              </a>
-              {twitter && (
-              <a href={twitter} target="_blank" rel="noopener noreferrer"
-              aria-label="تويتر"
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}>
-                <Twitter className="w-4 h-4" style={{ color: '#C9A84C' }} />
-              </a>
-              )}
+            <div className="flex gap-3">
+              {[
+                { href: instagram, icon: Instagram, color: '#E1306C', label: 'إنستغرام' },
+                { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'واتساب' },
+                ...(twitter ? [{ href: twitter, icon: Twitter, color: G, label: 'تويتر' }] : []),
+              ].map((social, i) => (
+                <motion.a key={i} href={social.href} target="_blank" rel="noopener noreferrer"
+                  aria-label={social.label} whileHover={{ scale: 1.15, y: -2 }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
+                  <social.icon className="w-4 h-4" style={{ color: social.color }} />
+                </motion.a>
+              ))}
             </div>
           </div>
 
-          {/* Links */}
           <div>
-            <h4 className="text-xs tracking-widest font-bold mb-4 uppercase" style={{ color: '#C9A84C' }}>روابط</h4>
-            <ul className="space-y-2.5 text-sm" style={{ color: 'rgba(245,237,216,0.3)' }}>
-              <li><Link to="/book" className="hover:text-yellow-400 transition-colors">احجز موعدك</Link></li>
-              <li><Link to="/my-bookings" className="hover:text-yellow-400 transition-colors">تتبع حجزك</Link></li>
-              <li><Link to="/shop" className="hover:text-yellow-400 transition-colors flex items-center gap-1.5"><ShoppingBag className="w-3.5 h-3.5" />المتجر</Link></li>
-              <li><Link to="/about" className="hover:text-yellow-400 transition-colors">من نحن</Link></li>
-              <li><Link to="/repair-policy" className="hover:text-yellow-400 transition-colors">سياسة الإصلاح</Link></li>
+            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>روابط</h4>
+            <ul className="space-y-3 text-sm" style={{ color: `${GB}0.3)` }}>
+              {[['احجز موعت', '/book'], ['تتبع حجزك', '/my-bookings'], ['المتجر', '/shop'], ['من نحن', '/about'], ['سياسة الإصلاح', '/repair-policy']].map(([label, to]) => (
+                <li key={label}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
+              ))}
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h4 className="text-xs tracking-widest font-bold mb-4 uppercase" style={{ color: '#C9A84C' }}>قانوني</h4>
-            <ul className="space-y-2.5 text-sm" style={{ color: 'rgba(245,237,216,0.3)' }}>
-              <li><Link to="/privacy" className="hover:text-yellow-400 transition-colors">سياسة الخصوصية</Link></li>
-              <li><Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors">سياسة التوصيل</Link></li>
+            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>قانوني</h4>
+            <ul className="space-y-3 text-sm" style={{ color: `${GB}0.3)` }}>
+              {[['سياسة الخصوصية', '/privacy'], ['سياسة التوصيل', '/shipping-policy']].map(([label, to]) => (
+                <li key={label}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
+              ))}
               <li><a href={`tel:${phone}`} className="hover:text-yellow-400 transition-colors">{phone}</a></li>
+              <li><a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">واتساب</a></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
-        style={{ borderColor: 'rgba(201,168,76,0.08)' }}>
-          <p className="text-sm" style={{ color: 'rgba(245,237,216,0.12)' }}>© {new Date().getFullYear()} إبرة وخيط الإسكافي. جميع الحقوق محفوظة.</p>
-          <div className="flex gap-4 text-xs" style={{ color: 'rgba(245,237,216,0.15)' }}>
+          style={{ borderColor: GB + '0.08)' }}>
+          <p className="text-sm" style={{ color: `${GB}0.12)` }}>© {new Date().getFullYear()} إبرة وخيط الإسكافي. جميع الحقوق محفوظة.</p>
+          <div className="flex gap-4 text-xs" style={{ color: `${GB}0.15)` }}>
             <Link to="/privacy" className="hover:text-yellow-400 transition-colors">الخصوصية</Link>
             <Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors">التوصيل</Link>
             <Link to="/about" className="hover:text-yellow-400 transition-colors">من نحن</Link>
           </div>
         </div>
       </div>
-    </footer>);
-
+    </footer>
+  );
 }
 
-// ── Request Service Section ────────────────────────────────────
-function RequestServiceSection() {
-  const services = [
-  { title: 'ترميم الأحذية', desc: 'تغيير نعال، خياطة، تلميع، وكل أعمال الإصلاح', from: 80, img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80', tag: 'الأكثر طلباً' },
-  { title: 'تجديد الحقائب', desc: 'تنظيف، إصلاح الخياطة، تجديد الألوان والمقابض', from: 150, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80', tag: 'حقائب فاخرة' },
-  { title: 'تلميع وتلوين', desc: 'تقنيات أوروبية لإعادة اللون والبريق الأصلي', from: 50, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80', tag: 'عناية' }];
-
-
-  return (
-    <section id="request" className="py-28 px-6" style={{ background: '#0A0600' }} dir="rtl">
-      <div className="max-w-6xl mx-auto">
-        <FadeIn className="text-center mb-16">
-          <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: '#C9A84C' }}>احجز الآن</p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: '#F5EDD8' }}>طلب خدمة</h2>
-          <p className="mt-3 max-w-lg mx-auto text-sm" style={{ color: 'rgba(245,237,216,0.4)' }}>اختر الخدمة وسنتواصل معك فوراً لتأكيد التفاصيل</p>
-          <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)' }} />
-        </FadeIn>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-          {services.map((s, i) =>
-          <FadeIn key={i} delay={i * 0.1}>
-              <div className="rounded-2xl overflow-hidden group cursor-pointer transition-all duration-300 hover:-translate-y-1"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
-                <div className="relative overflow-hidden" style={{ height: '180px' }}>
-                  <img src={s.img} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, #0A0600 100%)' }} />
-                  {s.tag &&
-                <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold"
-                style={{ background: 'rgba(201,168,76,0.9)', color: '#1A0C00' }}>{s.tag}</span>
-                }
-                </div>
-                <div className="p-5">
-                  <h3 className="font-black text-lg mb-1" style={{ color: '#F5EDD8' }}>{s.title}</h3>
-                  <p className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(245,237,216,0.4)' }}>{s.desc}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: 'rgba(245,237,216,0.35)' }}>
-                      يبدأ من <span className="font-black text-base" style={{ color: '#C9A84C' }}>{s.from}</span> ر.س
-                    </span>
-                    <Link to="/book">
-                      <button className="px-4 py-2 rounded-full text-xs font-bold text-black hover:scale-105 transition-all"
-                    style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)' }}>احجز الآن</button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          )}
-        </div>
-
-        {/* Quick WhatsApp request */}
-        <FadeIn delay={0.3}>
-          <div className="rounded-2xl p-8 flex flex-col sm:flex-row items-center gap-6 justify-between"
-          style={{ background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.15)' }}>
-            <div>
-              <h3 className="font-black text-lg mb-1" style={{ color: '#F5EDD8' }}>تحتاج استشارة أولاً؟</h3>
-              <p className="text-sm" style={{ color: 'rgba(245,237,216,0.4)' }}>أرسل صورة قطعتك عبر الواتساب وسنقيّمها مجاناً</p>
-            </div>
-            <a href="https://wa.me/966549678191?text=السلام عليكم، أريد تقييم قطعتي" target="_blank" rel="noopener noreferrer"
-            className="shrink-0 flex items-center gap-2 px-7 py-3.5 rounded-full font-bold text-sm text-white hover:scale-105 transition-all"
-            style={{ background: 'linear-gradient(135deg, #25D366, #20bb5a)' }}>
-              <MessageCircle className="w-4 h-4" />تواصل عبر واتساب
-            </a>
-          </div>
-        </FadeIn>
-      </div>
-    </section>);
-
-}
-
-// ── Track Order Section ─────────────────────────────────────────
-function TrackOrderSection() {
-  return (
-    <section id="track" className="py-20 px-6" style={{ background: '#0E0700' }} dir="rtl">
-      <div className="max-w-2xl mx-auto text-center">
-        <FadeIn>
-          <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: '#C9A84C' }}>متابعة الطلبات</p>
-          <h2 className="text-3xl md:text-4xl font-black mb-3" style={{ color: '#F5EDD8' }}>تتبع حجزك</h2>
-          <p className="text-sm mb-8" style={{ color: 'rgba(245,237,216,0.4)' }}>أدخل رقم هاتفك لعرض حجوزاتك ومتابعة حالتها</p>
-          <Link to="/my-bookings">
-            <button className="px-10 py-4 rounded-full font-black text-base text-black hover:scale-105 transition-all"
-            style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)', boxShadow: '0 8px 30px rgba(201,168,76,0.3)' }}>
-              تتبع طلبك الآن
-            </button>
-          </Link>
-        </FadeIn>
-      </div>
-    </section>);
-
-}
-
-// ── Main ───────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────
 export default function BookingLanding() {
-  useTrackVisit('/booking');
-
+  useTrackVisit('/');
   return (
     <div className="font-tajawal" style={{ scrollBehavior: 'smooth' }}>
       <Helmet>
         <title>إبرة وخيط الإسكافي | إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض</title>
-        <meta name="description" content="إبرة وخيط الإسكافي — حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات العالمية. احجز موعدك الآن!" />
-        <meta name="keywords" content="إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, إصلاح حقيبة لويس فيتون, إصلاح حقيبة هيرمس, تغيير نعال أحذية, ترميم أحذية فاخرة الرياض, shoe repair riyadh, bag repair riyadh, leather repair, luxury shoe cobbler riyadh" />
+        <meta name="description" content="إبرة وخيط الإسكافي — حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات. احجز موعدك الآن!" />
+        <meta name="keywords" content="إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, shoe repair riyadh, bag repair riyadh" />
         <link rel="canonical" href="https://cobblerlast.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large" />
-        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta name="language" content="ar" />
-        <meta name="geo.region" content="SA-01" />
-        <meta name="geo.placename" content="الرياض" />
-        <meta name="geo.position" content="24.7136;46.6753" />
-        <meta name="ICBM" content="24.7136, 46.6753" />
-
-        {/* Open Graph */}
         <meta property="og:type" content="business.business" />
         <meta property="og:title" content="إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة - الرياض" />
         <meta property="og:description" content="حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة. خدمة استلام وتوصيل في الرياض." />
         <meta property="og:url" content="https://cobblerlast.com/" />
         <meta property="og:image" content="https://cobblerlast.com/og-image.jpg" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="إبرة وخيط الإسكافي — إصلاح الأحذية والحقائب الفاخرة في الرياض" />
         <meta property="og:locale" content="ar_SA" />
         <meta property="og:site_name" content="إبرة وخيط الإسكافي" />
-        <meta property="business:contact_data:street_address" content="الرياض" />
-        <meta property="business:contact_data:locality" content="الرياض" />
-        <meta property="business:contact_data:country_name" content="المملكة العربية السعودية" />
-        <meta property="business:contact_data:phone_number" content="+966549678191" />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة" />
-        <meta name="twitter:description" content="حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض." />
         <meta name="twitter:image" content="https://cobblerlast.com/og-image.jpg" />
-        <meta name="twitter:site" content="@ebra_kh8" />
-
-        {/* JSON-LD Structured Data */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
-          "@graph": [
-            {
-              "@type": "LocalBusiness",
-              "@id": "https://cobblerlast.com/#business",
-              "name": "إبرة وخيط الإسكافي",
-              "alternateName": "Ebra Khait Al-Iskafi",
-              "description": "حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض",
-              "url": "https://cobblerlast.com",
-              "logo": "https://cobblerlast.com/favicon.svg",
-              "image": ["https://cobblerlast.com/og-image.jpg"],
-              "telephone": "+966549678191",
-              "priceRange": "$$",
-              "currenciesAccepted": "SAR",
-              "paymentAccepted": "Cash, Credit Card, Mada",
-              "address": {
-                "@type": "PostalAddress",
-                "addressLocality": "الرياض",
-                "addressRegion": "الرياض",
-                "addressCountry": "SA"
-              },
-              "geo": { "@type": "GeoCoordinates", "latitude": "24.7136", "longitude": "46.6753" },
-              "openingHoursSpecification": [
-                { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"], "opens": "09:00", "closes": "22:00" }
-              ],
-              "sameAs": ["https://www.instagram.com/ebra.kh8/"],
-              "hasOfferCatalog": {
-                "@type": "OfferCatalog",
-                "name": "خدمات إصلاح الأحذية والحقائب",
-                "itemListElement": [
-                  { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "ترميم الأحذية", "description": "تغيير نعال، خياطة، تلميع" }, "priceSpecification": { "@type": "PriceSpecification", "price": "80", "priceCurrency": "SAR" } },
-                  { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "تجديد الحقائب الجلدية", "description": "تنظيف، إصلاح خياطة، تجديد ألوان" }, "priceSpecification": { "@type": "PriceSpecification", "price": "150", "priceCurrency": "SAR" } },
-                  { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "تلميع وتلوين" }, "priceSpecification": { "@type": "PriceSpecification", "price": "50", "priceCurrency": "SAR" } }
-                ]
-              }
-            },
-            {
-              "@type": "WebSite",
-              "@id": "https://cobblerlast.com/#website",
-              "url": "https://cobblerlast.com",
-              "name": "إبرة وخيط الإسكافي",
-              "inLanguage": "ar",
-              "potentialAction": { "@type": "SearchAction", "target": "https://cobblerlast.com/shop?q={search_term_string}", "query-input": "required name=search_term_string" }
-            }
-          ]
+          "@type": "LocalBusiness",
+          "name": "إبرة وخيط الإسكافي",
+          "url": "https://cobblerlast.com",
+          "telephone": "+966549678191",
+          "priceRange": "$$",
+          "address": { "@type": "PostalAddress", "addressLocality": "الرياض", "addressCountry": "SA" },
+          "openingHoursSpecification": [{ "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"], "opens": "09:00", "closes": "22:00" }],
+          "sameAs": ["https://www.instagram.com/ebra.kh8/"]
         })}</script>
       </Helmet>
       <Navbar />
       <HeroSection />
+      <TickerStrip />
       <ServicesSection />
       <RequestServiceSection />
       <BrandsSection />
@@ -923,6 +941,6 @@ export default function BookingLanding() {
       <TrackOrderSection />
       <BranchesSection />
       <Footer />
-    </div>);
-
+    </div>
+  );
 }

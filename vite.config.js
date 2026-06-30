@@ -10,15 +10,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor:    ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-          supabase:  ['@supabase/supabase-js'],
-          charts:    ['recharts'],
-          ui:        ['framer-motion', 'lucide-react', 'sonner', 'date-fns'],
-          misc:      ['qrcode.react', 'html2canvas', 'jspdf', 'react-hook-form', 'zod'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
         },
       },
     },
