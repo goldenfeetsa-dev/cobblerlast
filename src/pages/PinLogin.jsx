@@ -33,17 +33,17 @@ export default function PinLogin() {
     const ATTEMPTS_KEY = 'login_attempts';
     const WINDOW_KEY   = 'login_window';
     const now = Date.now();
-    const window = parseInt(sessionStorage.getItem(WINDOW_KEY) || '0');
+    const windowStart = parseInt(sessionStorage.getItem(WINDOW_KEY) || '0');
     let attempts = parseInt(sessionStorage.getItem(ATTEMPTS_KEY) || '0');
 
-    if (now - window > 60_000) {
+    if (now - windowStart > 60_000) {
       // Reset after 1 minute
       attempts = 0;
       sessionStorage.setItem(WINDOW_KEY, String(now));
     }
 
     if (attempts >= 5) {
-      const remaining = Math.ceil((60_000 - (now - window)) / 1000);
+      const remaining = Math.ceil((60_000 - (now - windowStart)) / 1000);
       setError(`محاولات كثيرة. انتظر ${remaining} ثانية.`);
       setPinKey(k => k + 1);
       return;
