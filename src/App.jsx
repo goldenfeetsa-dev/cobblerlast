@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { runPhotoCleanup } from '@/lib/photoCleanup';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import GeminiAssistant from './components/ai/GeminiAssistant';
 
@@ -146,6 +147,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <SpeedInsights />
       </QueryClientProvider>
     </AuthProvider>
   )
