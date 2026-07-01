@@ -11,11 +11,13 @@ export default function PinLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [pinKey, setPinKey] = useState(0);
 
-  const { data: employees = [] } = useQuery({
+  const { data: employees = [], isLoading: empLoading } = useQuery({
     queryKey: ['employees-login'],
     queryFn: () => base44.entities.Employee.list(),
     initialData: [],
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,  // 5 دقائق - مافي داعي تعيد الجلب كثيراً
+    gcTime: 10 * 60_000,
+    retry: 2,
   });
 
   useEffect(() => {

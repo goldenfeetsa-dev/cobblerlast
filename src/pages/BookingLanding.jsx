@@ -310,7 +310,7 @@ function HeroSection() {
             {[
               { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', rotate: -8, z: 0, x: -20, y: 20, scale: 0.88 },
               { src: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', rotate: 4, z: 1, x: 15, y: 10, scale: 0.93 },
-              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', rotate: 0, z: 2, x: 0, y: 0, scale: 1 },
+              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', priority: true, rotate: 0, z: 2, x: 0, y: 0, scale: 1 },
             ].map((card, i) => (
               <motion.div key={i} className="absolute rounded-3xl overflow-hidden shadow-2xl"
                 style={{ width: 280, height: 360, zIndex: card.z, border: `1px solid ${GB}${0.08 + i * 0.08})` }}
@@ -434,7 +434,7 @@ function ServicesSection() {
                 {/* Image */}
                 <div className="relative overflow-hidden" style={{ height: 220 }}>
                   <motion.img src={s.img} alt={s.title + ' — إبرة وخيط الإسكافي'}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover" loading="lazy"
                     whileHover={{ scale: 1.08 }} transition={{ duration: 0.6 }} />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, #0A0500 100%)' }} />
                   {/* Price tag */}
@@ -603,7 +603,7 @@ function AboutSection() {
                 <motion.div key={i} className={`rounded-2xl overflow-hidden ${i % 2 === 1 ? 'mt-6' : ''}`}
                   style={{ border: `1px solid ${GB}0.1)` }}
                   whileHover={{ scale: 1.03, borderColor: GB + '0.3)' }} transition={{ duration: 0.3 }}>
-                  <img src={src} alt="إبرة وخيط الإسكافي — ورشة الحرفة" className="w-full h-44 object-cover" />
+                  <img src={src} alt="إبرة وخيط الإسكافي — ورشة الحرفة" className="w-full h-44 object-cover" loading="lazy" />
                 </motion.div>
               ))}
           </FadeIn>

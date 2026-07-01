@@ -9,42 +9,45 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { runPhotoCleanup } from '@/lib/photoCleanup';
 
 import GeminiAssistant from './components/ai/GeminiAssistant';
-import ZATCASettings from './pages/ZATCASettings';
-import AboutUs from './pages/AboutUs';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import ShippingPolicy from './pages/ShippingPolicy';
-import SocialSettings from './pages/SocialSettings';
-import LoyaltyDashboard from './pages/LoyaltyDashboard';
-import PinLogin from './pages/PinLogin';
-import Dashboard from './pages/Dashboard';
-import NewOrder from './pages/NewOrder';
-import Orders from './pages/Orders';
-import OrderDetails from './pages/OrderDetails';
-import ScanBarcode from './pages/ScanBarcode';
-import Customers from './pages/Customers';
-import Employees from './pages/Employees';
-import Leaderboard from './pages/Leaderboard';
+
+// ── Lazy loaded pages (code splitting) ──────────────
+const ZATCASettings = lazy(() => import('./pages/ZATCASettings'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
+const SocialSettings = lazy(() => import('./pages/SocialSettings'));
+const LoyaltyDashboard = lazy(() => import('./pages/LoyaltyDashboard'));
+const PinLogin = lazy(() => import('./pages/PinLogin'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const NewOrder = lazy(() => import('./pages/NewOrder'));
+const Orders = lazy(() => import('./pages/Orders'));
+const OrderDetails = lazy(() => import('./pages/OrderDetails'));
+const ScanBarcode = lazy(() => import('./pages/ScanBarcode'));
+const Customers = lazy(() => import('./pages/Customers'));
+const Employees = lazy(() => import('./pages/Employees'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const Settings = lazy(() => import('./pages/Settings'));
+const BarcodeOnly = lazy(() => import('./pages/BarcodeOnly'));
+const BookingWizard = lazy(() => import('./pages/BookingWizard'));
+const MyBookings = lazy(() => import('./pages/MyBookings'));
+const BookingAdmin = lazy(() => import('./pages/BookingAdmin'));
+const ServicesAdmin = lazy(() => import('./pages/ServicesAdmin'));
+const WorkingHoursAdmin = lazy(() => import('./pages/WorkingHoursAdmin'));
+const BranchesAdmin = lazy(() => import('./pages/BranchesAdmin'));
+const AuditLog = lazy(() => import('./pages/AuditLog'));
+const SiteAnalytics = lazy(() => import('./pages/SiteAnalytics'));
+const Reviews = lazy(() => import('./pages/Reviews'));
+const ReviewsAdmin = lazy(() => import('./pages/ReviewsAdmin'));
+const BrandsAdmin = lazy(() => import('./pages/BrandsAdmin'));
+const Shop = lazy(() => import('./pages/Shop'));
+const ShopAdmin = lazy(() => import('./pages/ShopAdmin'));
+const RepairPolicy = lazy(() => import('./pages/RepairPolicy'));
+const OperationsDashboard = lazy(() => import('./pages/OperationsDashboard'));
+const SalesSystem = lazy(() => import('./pages/SalesSystem'));
+const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
+
 import AppLayout from './components/pos/AppLayout';
-import Settings from './pages/Settings';
-import BarcodeOnly from './pages/BarcodeOnly';
 import BookingLanding from './pages/BookingLanding';
-import BookingWizard from './pages/BookingWizard';
-import MyBookings from './pages/MyBookings';
-import BookingAdmin from './pages/BookingAdmin';
-import ServicesAdmin from './pages/ServicesAdmin';
-import WorkingHoursAdmin from './pages/WorkingHoursAdmin';
-import BranchesAdmin from './pages/BranchesAdmin';
-import AuditLog from './pages/AuditLog';
-import SiteAnalytics from './pages/SiteAnalytics';
-import Reviews from './pages/Reviews';
-import ReviewsAdmin from './pages/ReviewsAdmin';
-import BrandsAdmin from './pages/BrandsAdmin';
-import Shop from './pages/Shop';
-import ShopAdmin from './pages/ShopAdmin';
-import RepairPolicy from './pages/RepairPolicy';
-import OperationsDashboard from './pages/OperationsDashboard';
-import SalesSystem from './pages/SalesSystem';
-import WorkshopSystem from './pages/WorkshopSystem';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -71,6 +74,14 @@ const AuthenticatedApp = () => {
 
   return (
     <>
+      <Suspense fallback={
+        <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#060300' }}>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 rounded-full border-2 border-yellow-500 border-t-transparent animate-spin" />
+            <p className="text-xs font-bold tracking-widest" style={{ color: '#C9A84C' }}>إبرة وخيط</p>
+          </div>
+        </div>
+      }>
       <Routes>
         {/* /login مخفية — لا تظهر في أي رابط، تدخل بكتابتها يدوياً */}
         <Route path="/login" element={<PinLogin />} />
@@ -121,6 +132,7 @@ const AuthenticatedApp = () => {
       </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      </Suspense>
       <GeminiAssistant />
     </>
   );
