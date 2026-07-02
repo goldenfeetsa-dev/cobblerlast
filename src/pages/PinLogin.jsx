@@ -1,75 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/supabaseApi';
-import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabaseClient';
 import PinPad from '@/components/pos/PinPad';
 import { setSession, getSession } from '@/lib/sessionStore';
 
 export default function PinLogin() {
-  const navigate = useNavigate();
-  const [error, setError] = useState('');
+  const navigate  = useNavigate();
+  const [error, setError]       = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [pinKey, setPinKey] = useState(0);
-
-  const { data: employees = [], isLoading: empLoading } = useQuery({
-    queryKey: ['employees-login'],
-    queryFn: () => base44.entities.Employee.list(),
-    initialData: [],
-    staleTime: 5 * 60_000,  // 5 دقائق - مافي داعي تعيد الجلب كثيراً
-    gcTime: 10 * 60_000,
-    retry: 2,
-  });
+  const [pinKey, setPinKey]     = useState(0);
+  const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
-    if (getSession()) navigate('/pos');
+    if (getSession()) { navigate('/pos'); return; }
+    window.history.replaceState(null, '', '/login');
+
+    // جلب الموظفين مباشرة من Supabase (بدون React Query)
+    supabase.from('employees').select('*').eq('is_active', true)
+      .then(({ data, error: err }) => {
+        if (err) console.warn('employees fetch error:', err.message);
+        if (data?.length) setEmployees(data);
+      });
   }, [navigate]);
 
-  // ── منع المتصفح من حفظ الـ PIN في التاريخ ─────────────────
-  useEffect(() => {
-    // نبدّل الـ URL لصفحة login بـ replaceState حتى لا يُسجَّل في history
-    window.history.replaceState(null, '', '/login');
-  }, []);
-
   const handlePin = async (pin) => {
-    // Rate limiting: max 5 attempts per minute
-    const ATTEMPTS_KEY = 'login_attempts';
-    const WINDOW_KEY   = 'login_window';
+    // Rate limiting
     const now = Date.now();
-    const windowStart = parseInt(sessionStorage.getItem(WINDOW_KEY) || '0');
-    let attempts = parseInt(sessionStorage.getItem(ATTEMPTS_KEY) || '0');
+    const windowStart = parseInt(sessionStorage.getItem('lw') || '0');
+    let attempts     = parseInt(sessionStorage.getItem('la') || '0');
 
     if (now - windowStart > 60_000) {
-      // Reset after 1 minute
       attempts = 0;
-      sessionStorage.setItem(WINDOW_KEY, String(now));
+      sessionStorage.setItem('lw', String(now));
     }
-
     if (attempts >= 5) {
-      const remaining = Math.ceil((60_000 - (now - windowStart)) / 1000);
-      setError(`محاولات كثيرة. انتظر ${remaining} ثانية.`);
+      const rem = Math.ceil((60_000 - (now - windowStart)) / 1000);
+      setError(`محاولات كثيرة — انتظر ${rem} ثانية`);
       setPinKey(k => k + 1);
       return;
     }
-
-    sessionStorage.setItem(ATTEMPTS_KEY, String(attempts + 1));
-    if (attempts === 0) sessionStorage.setItem(WINDOW_KEY, String(now));
+    sessionStorage.setItem('la', String(attempts + 1));
+    if (attempts === 0) sessionStorage.setItem('lw', String(now));
 
     setIsLoading(true);
     setError('');
+
     try {
-      const match = employees.find(e => e.pin === pin && e.is_active !== false);
+      // جلب مباشر من Supabase بالـ PIN
+      const { data, error: dbErr } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('pin', pin)
+        .eq('is_active', true)
+        .limit(1);
+
+      if (dbErr) throw dbErr;
+
+      const match = data?.[0];
       if (match) {
-        // نجح — أعد عداد المحاولات
-        sessionStorage.removeItem(ATTEMPTS_KEY);
-        sessionStorage.removeItem(WINDOW_KEY);
+        sessionStorage.removeItem('la');
+        sessionStorage.removeItem('lw');
         setSession(match);
         navigate('/pos', { replace: true });
       } else {
-        setError(`رقم PIN غير صحيح. المحاولة ${attempts + 1}/5.`);
+        setError(`رقم PIN غير صحيح — المحاولة ${attempts + 1}/5`);
         setPinKey(k => k + 1);
       }
     } catch (err) {
-      setError('حدث خطأ، حاول مجدداً.');
+      setError('خطأ في الاتصال — حاول مجدداً');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +75,11 @@ export default function PinLogin() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-black" style={{ color: '#1A0F00' }}>إبرة وخيط الإسكافي</h1>
+          <p className="text-sm text-muted-foreground mt-1">أدخل رقم PIN للدخول</p>
+        </div>
         <PinPad key={pinKey} onSubmit={handlePin} error={error} isLoading={isLoading} />
       </div>
     </div>
