@@ -15,6 +15,7 @@ const navGroups = [
       { path: '/pos', icon: LayoutDashboard, label: 'لوحة التحكم', adminOnly: true },
       { path: '/new-order', icon: PlusCircle, label: 'طلب جديد' },
       { path: '/orders', icon: ListOrdered, label: 'الطلبات' },
+      { path: '/calendar', icon: CalendarDays, label: 'الجدولة المرئية' },
       { path: '/scan', icon: ScanBarcode, label: 'مسح الباركود' },
     ]
   },

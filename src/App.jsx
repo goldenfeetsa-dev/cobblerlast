@@ -11,6 +11,7 @@ import { runPhotoCleanup } from '@/lib/photoCleanup';
 import GeminiAssistant from './components/ai/GeminiAssistant';
 
 // ── Lazy loaded pages (code splitting) ──────────────
+const CalendarView = lazy(() => import('./pages/CalendarView'));
 const ZATCASettings = lazy(() => import('./pages/ZATCASettings'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
@@ -118,6 +119,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/bookings" element={<BookingAdmin />} />
           <Route path="/zatca" element={<ZATCASettings />} />
           <Route path="/loyalty" element={<LoyaltyDashboard />} />
+          <Route path="/calendar" element={<CalendarView />} />
           <Route path="/admin/services" element={<ServicesAdmin />} />
           <Route path="/admin/working-hours" element={<WorkingHoursAdmin />} />
           <Route path="/admin/branches" element={<BranchesAdmin />} />
