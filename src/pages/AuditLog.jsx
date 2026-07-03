@@ -69,13 +69,13 @@ export default function AuditLog() {
     queryFn: () => base44.entities.Employee.list(),
   });
 
-  if (session?.role !== 'admin') return <Navigate to="/" replace />;
+  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
 
   const periodStart = getPeriodStart(period);
 
   const filtered = orders.filter(o => {
     // Branch filter for staff
-    if (session?.role !== 'admin' && session?.branch_id) {
+    if (!['admin','owner','manager'].includes(session?.role) && session?.branch_id) {
       if (o.branch_id && o.branch_id !== session.branch_id) return false;
     }
     if (period === 'custom') {

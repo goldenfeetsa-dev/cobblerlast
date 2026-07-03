@@ -18,7 +18,7 @@ export default function SiteAnalytics() {
     queryFn: () => base44.entities.SiteVisit.list('-created_at', 2000),
   });
 
-  if (session?.role !== 'admin') return <Navigate to="/" replace />;
+  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
 
   // Last 14 days chart
   const last14 = [];

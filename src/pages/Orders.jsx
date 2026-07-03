@@ -73,7 +73,7 @@ export default function Orders() {
 
   const filtered = orders.filter(o => {
     // Branch filter: staff sees only their branch, admin sees all
-    if (session?.role !== 'admin' && session?.branch_id) {
+    if (!['admin','owner','manager'].includes(session?.role) && session?.branch_id) {
       if (o.branch_id && o.branch_id !== session.branch_id) return false;
     }
     const matchSearch = !search || 

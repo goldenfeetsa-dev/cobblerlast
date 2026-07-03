@@ -326,7 +326,7 @@ export default function OperationsDashboard() {
     },
   });
 
-  if (session?.role !== 'admin') return <Navigate to="/" replace />;
+  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
 
   const handleAdvance = (wf) => {
     setAdvancingId(wf.id);

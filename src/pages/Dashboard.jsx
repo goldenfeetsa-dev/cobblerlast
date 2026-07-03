@@ -64,7 +64,7 @@ export default function Dashboard() {
   // Branch filter + period filter
   const orders = useMemo(() => {
     let filtered = allOrders;
-    if (session?.role !== 'admin' && session?.branch_id) {
+    if (!['admin','owner','manager'].includes(session?.role) && session?.branch_id) {
       filtered = filtered.filter(o => !o.branch_id || o.branch_id === session.branch_id);
     }
     if (period === 'custom') {

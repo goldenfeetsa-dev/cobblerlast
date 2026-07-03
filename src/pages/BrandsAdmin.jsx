@@ -39,7 +39,7 @@ export default function BrandsAdmin() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['brands-admin'] }),
   });
 
-  if (session?.role !== 'admin') return <Navigate to="/" replace />;
+  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
 
   const handleOpen = (brand = null) => {
     if (brand) { setEditing(brand); setForm({ name: brand.name, name_ar: brand.name_ar, logo_url: brand.logo_url || '', sort_order: brand.sort_order || 0, is_active: brand.is_active !== false }); }

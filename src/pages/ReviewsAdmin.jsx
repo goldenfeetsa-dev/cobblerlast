@@ -26,7 +26,7 @@ export default function ReviewsAdmin() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reviews-all'] }),
   });
 
-  if (session?.role !== 'admin') return <Navigate to="/" replace />;
+  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
 
   const pending = reviews.filter(r => !r.is_approved);
   const approved = reviews.filter(r => r.is_approved);

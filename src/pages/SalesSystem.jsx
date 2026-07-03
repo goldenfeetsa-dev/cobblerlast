@@ -570,7 +570,7 @@ export default function SalesSystem() {
     initialData: [],
   });
 
-  if (session?.role !== 'admin' && session?.role !== 'staff') return <Navigate to="/login" replace />;
+  if (!session) return <Navigate to="/login" replace />;
 
   const isAdmin = ['admin','owner','manager'].includes(session?.role);
 

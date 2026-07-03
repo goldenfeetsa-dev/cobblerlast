@@ -107,7 +107,7 @@ export default function ShopAdmin() {
 
   const toggleStock = (p) => updateMut.mutate({ id: p.id, in_stock: !p.in_stock });
 
-  if (session?.role !== 'admin') return <div className="p-8 text-center text-muted-foreground">غير مصرح لك بالوصول</div>;
+  if (!['admin','owner','manager'].includes(session?.role)) return <div className="p-8 text-center text-muted-foreground">غير مصرح لك بالوصول</div>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto" dir="rtl">
