@@ -79,7 +79,7 @@ export default function OrderDetails() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const session = getSession();
-  const isAdmin = session?.role === 'admin';
+  const isAdmin = ['admin','owner','manager'].includes(session?.role);
   const [holdDialogOpen, setHoldDialogOpen] = useState(false);
   const [holdReason, setHoldReason] = useState('');
 

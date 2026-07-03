@@ -18,7 +18,7 @@ export default function Customers() {
   const [whatsappOpen, setWhatsappOpen] = useState(false);
   const [msgTemplate, setMsgTemplate] = useState('يا هلا {اسم العميل}! 👋\nعروض خاصة من إبرة وخيط الإسكافي تنتظرك.\nاحجز موعدك الآن: https://wa.me/966549678191');
   const session = getSession();
-  const isAdmin = session?.role === 'admin';
+  const isAdmin = ['admin','owner','manager'].includes(session?.role);
   const { toast } = useToast();
 
   const { data: customers, isLoading } = useQuery({

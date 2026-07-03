@@ -79,7 +79,7 @@ function Steps({ current, steps }) {
 // ── Main ─────────────────────────────────────────────────────────
 export default function ZATCASettings() {
   const session = getSession();
-  const isAdmin = session?.role === 'admin';
+  const isAdmin = ['admin','owner','manager'].includes(session?.role);
   const [config, setConfig] = useState(() => loadConfig());
   const [step, setStep] = useState(() => {
     const cfg = loadConfig();

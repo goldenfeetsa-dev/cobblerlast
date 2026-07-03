@@ -571,7 +571,7 @@ export default function WorkshopSystem() {
     initialData: [],
   });
 
-  const isAdmin = session?.role === 'admin';
+  const isAdmin = ['admin','owner','manager'].includes(session?.role);
 
   const { data: allCustodyStats } = useQuery({
     queryKey: ['workshop-custody-all'],

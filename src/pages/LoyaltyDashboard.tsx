@@ -16,7 +16,7 @@ import { getSession } from '@/lib/sessionStore';
 
 export default function LoyaltyDashboard() {
   const session  = getSession();
-  const isAdmin  = session?.role === 'admin';
+  const isAdmin  = ['admin','owner','manager'].includes(session?.role);
 
   const [cards, setCards]       = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});

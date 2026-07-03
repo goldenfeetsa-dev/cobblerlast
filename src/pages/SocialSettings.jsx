@@ -10,7 +10,7 @@ import { Instagram, MessageCircle, Twitter, Globe, Phone, MapPin, Save, Loader2,
 
 export default function SocialSettings() {
   const session = getSession();
-  const isAdmin = session?.role === 'admin' || session?.role === 'owner' || session?.role === 'manager';
+  const isAdmin = ['admin','owner','manager'].includes(session?.role) || session?.role === 'owner' || session?.role === 'manager';
   const [settings, setSettings] = useState({});
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);

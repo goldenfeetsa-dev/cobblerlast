@@ -572,7 +572,7 @@ export default function SalesSystem() {
 
   if (session?.role !== 'admin' && session?.role !== 'staff') return <Navigate to="/login" replace />;
 
-  const isAdmin = session?.role === 'admin';
+  const isAdmin = ['admin','owner','manager'].includes(session?.role);
 
   // Summary
   const salesItems = items.filter(i => i.category !== 'workshop');

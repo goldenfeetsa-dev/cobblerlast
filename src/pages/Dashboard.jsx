@@ -144,7 +144,7 @@ export default function Dashboard() {
         <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
       </div>
 
-      {session?.role === 'admin' && (
+      {['admin','owner','manager'].includes(session?.role) && (
         <div className="mb-8">
           <FinancialReport orders={orders} />
         </div>

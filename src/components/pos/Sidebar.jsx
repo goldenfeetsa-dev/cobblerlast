@@ -71,7 +71,7 @@ const navGroups = [
 export default function Sidebar() {
   const location = useLocation();
   const session = getSession();
-  const isAdmin = session?.role === 'admin';
+  const isAdmin = ['admin', 'owner', 'manager'].includes(session?.role);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
