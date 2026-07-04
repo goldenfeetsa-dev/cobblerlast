@@ -1,7 +1,3 @@
-/**
- * AuthContext — مبني على PIN login محلي (بدون Base44 auth)
- * الـ session يُحفظ في sessionStore بدون PIN
- */
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { supabase } from '@/lib/supabaseClient';
@@ -9,39 +5,24 @@ import { supabase } from '@/lib/supabaseClient';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isLoadingAuth, setIsLoadingAuth]                   = useState(false);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
-  const [appPublicSettings, setAppPublicSettings]           = useState(null);
-  const [authError]                                         = useState(null);
+  // ⚡ لا نوقف التطبيق بسبب app_settings - نبدأ فوراً
+  const [isLoadingPublicSettings] = useState(false);
+  const [appPublicSettings, setAppPublicSettings] = useState({});
+  const [authError] = useState(null);
 
   useEffect(() => {
-    loadPublicSettings();
+    // نجلب الإعدادات في الخلفية بدون توقف
+    supabase.from('app_settings').select('*').limit(1)
+      .then(({ data }) => { if (data?.[0]) setAppPublicSettings(data[0]); })
+      .catch(() => {});
   }, []);
 
-  const loadPublicSettings = async () => {
-    try {
-      const { data } = await supabase
-        .from('app_settings').select('*').limit(1);
-      setAppPublicSettings(data?.[0] || {});
-    } catch {
-      setAppPublicSettings({});
-    } finally {
-      setIsLoadingPublicSettings(false);
-    }
-  };
-
-  const logout = () => {
-    clearSession();
-    window.location.replace('/login');
-  };
-
-  const navigateToLogin = () => {
-    window.location.replace('/login');
-  };
+  const logout = () => { clearSession(); window.location.replace('/login'); };
+  const navigateToLogin = () => { window.location.replace('/login'); };
 
   return (
     <AuthContext.Provider value={{
-      isLoadingAuth,
+      isLoadingAuth: false,
       isLoadingPublicSettings,
       authError,
       appPublicSettings,

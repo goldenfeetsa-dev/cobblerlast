@@ -14,6 +14,7 @@ const navGroups = [
     items: [
       { path: '/pos', icon: LayoutDashboard, label: 'لوحة التحكم', adminOnly: true },
       { path: '/new-order', icon: PlusCircle, label: 'طلب جديد' },
+      { path: '/staff', icon: Scissors, label: 'مهامي 🔧', staffOnly: true },
       { path: '/orders', icon: ListOrdered, label: 'الطلبات' },
       { path: '/calendar', icon: CalendarDays, label: 'الجدولة المرئية' },
       { path: '/scan', icon: ScanBarcode, label: 'مسح الباركود' },
@@ -70,8 +71,9 @@ const navGroups = [
 
 export default function Sidebar() {
   const location = useLocation();
-  const session = getSession();
-  const isAdmin = ['admin', 'owner', 'manager'].includes(session?.role);
+  const session  = getSession();
+  const isAdmin  = ['admin', 'owner', 'manager'].includes(session?.role);
+  const isStaff  = ['staff', 'cashier'].includes(session?.role);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
@@ -98,7 +100,11 @@ export default function Sidebar() {
       <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-0.5">
         {navGroups.map((group, gi) => {
           if (group.adminOnly && !isAdmin) return null;
-          const visibleItems = group.items.filter(item => !item.adminOnly || isAdmin);
+          const visibleItems = group.items.filter(item => {
+            if (item.adminOnly && !isAdmin) return false;
+            if (item.staffOnly && !isStaff) return false; // مهامي - للعمال فقط
+            return true;
+          });
           if (visibleItems.length === 0) return null;
           return (
             <div key={gi} className={gi > 0 ? 'pt-2' : ''}>

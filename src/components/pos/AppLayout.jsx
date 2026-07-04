@@ -1,14 +1,28 @@
 import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import OrderNotifications from './OrderNotifications';
 import { getSession } from '@/lib/sessionStore';
 
-export default function AppLayout() {
-  const session = getSession();
+const ADMIN_ROLES  = ['admin', 'owner', 'manager', 'accountant'];
+const STAFF_ROLES  = ['staff', 'cashier'];
 
-  if (!session) {
-    return <Navigate to="/login" replace />;
+// صفحات مسموحة للعامل فقط
+const STAFF_ALLOWED = ['/staff', '/scan', '/orders'];
+
+export default function AppLayout() {
+  const session  = getSession();
+  const location = useLocation();
+
+  // غير مسجّل → login
+  if (!session) return <Navigate to="/login" replace />;
+
+  const isAdmin = ADMIN_ROLES.includes(session.role);
+  const isStaff = STAFF_ROLES.includes(session.role);
+
+  // العامل يُحوَّل لصفحته إذا حاول فتح صفحة إدارة
+  if (isStaff && !STAFF_ALLOWED.some(p => location.pathname.startsWith(p))) {
+    return <Navigate to="/staff" replace />;
   }
 
   return (

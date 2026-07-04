@@ -14,6 +14,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { UserCog, Plus, Pencil, Trash2, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
 
+
+const ROLE_LABELS = {
+  owner:      { label: 'مالك',     color: 'bg-purple-100 text-purple-700' },
+  manager:    { label: 'مدير',     color: 'bg-blue-100 text-blue-700' },
+  admin:      { label: 'مدير',     color: 'bg-blue-100 text-blue-700' },
+  accountant: { label: 'محاسب',   color: 'bg-green-100 text-green-700' },
+  cashier:    { label: 'كاشير',   color: 'bg-amber-100 text-amber-700' },
+  staff:      { label: 'عامل',    color: 'bg-gray-100 text-gray-700' },
+};
+
 export default function Employees() {
   const session = getSession();
   const queryClient = useQueryClient();
@@ -135,8 +145,11 @@ export default function Employees() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">مدير (يرى كل الفروع)</SelectItem>
-                    <SelectItem value="staff">موظف</SelectItem>
+                    <SelectItem value="owner">مالك — كامل الصلاحيات</SelectItem>
+                    <SelectItem value="manager">مدير — يرى كل الفروع</SelectItem>
+                    <SelectItem value="accountant">محاسب — يرى التقارير المالية</SelectItem>
+                    <SelectItem value="cashier">كاشير — مبيعات وطلبات</SelectItem>
+                    <SelectItem value="staff">عامل — يرى مهامه فقط بدون أسعار</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -211,6 +224,11 @@ export default function Employees() {
                   <span>{emp.total_orders || 0} طلب</span>
                   <span>{(emp.total_revenue || 0).toFixed(0)} ر.س</span>
                 </div>
+                {emp.role && (
+                  <Badge variant="outline" className={`text-[10px] ${(ROLE_LABELS[emp.role]||ROLE_LABELS.staff).color}`}>
+                    {(ROLE_LABELS[emp.role]||ROLE_LABELS.staff).label}
+                  </Badge>
+                )}
                 {emp.branch_name && (
                   <div className="mt-2">
                     <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">

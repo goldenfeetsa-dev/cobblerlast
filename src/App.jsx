@@ -12,6 +12,7 @@ import { runPhotoCleanup } from '@/lib/photoCleanup';
 import GeminiAssistant from './components/ai/GeminiAssistant';
 
 // ── Lazy loaded pages (code splitting) ──────────────
+const StaffOrders = lazy(() => import('./pages/StaffOrders'));
 const CalendarView = lazy(() => import('./pages/CalendarView'));
 const ZATCASettings = lazy(() => import('./pages/ZATCASettings'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
@@ -52,18 +53,10 @@ import AppLayout from './components/pos/AppLayout';
 import BookingLanding from './pages/BookingLanding';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { authError, navigateToLogin } = useAuth();
 
   // تنظيف صور الطلبات المكتملة بعد أسبوعين — يعمل مرة يومياً
   useEffect(() => { runPhotoCleanup(); }, []);
-
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   if (authError) {
     if (authError.type === 'user_not_registered') {
@@ -121,6 +114,7 @@ const AuthenticatedApp = () => {
           <Route path="/zatca" element={<ZATCASettings />} />
           <Route path="/loyalty" element={<LoyaltyDashboard />} />
           <Route path="/calendar" element={<CalendarView />} />
+          <Route path="/staff" element={<StaffOrders />} />
           <Route path="/admin/services" element={<ServicesAdmin />} />
           <Route path="/admin/working-hours" element={<WorkingHoursAdmin />} />
           <Route path="/admin/branches" element={<BranchesAdmin />} />
