@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
         <meta name="description" content={isAr
           ? 'سياسة الخصوصية لموقع إبرة وخيط الإسكافي — كيف نتعامل مع بياناتك الشخصية ونحمي خصوصيتك.'
           : 'Privacy Policy for Ebra & Khait Cobbler — how we handle your personal data and protect your privacy.'} />
-        <link rel="canonical" href="https://cobblerlast.com/privacy" />
+        <link rel="canonical" href="https://needlecobbler.com/privacy" />
         <meta name="robots" content="index, follow" />
       </Helmet>
 

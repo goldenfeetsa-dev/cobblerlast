@@ -917,24 +917,24 @@ export default function BookingLanding() {
         <meta name="keywords" content={isAr
           ? 'إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, تبديل نعل, خياطة حذاء جلد, تنظيف حقائب جلدية, إصلاح سحاب حقيبة, إصلاح أحذية فاخرة, أفضل إسكافي في الرياض, إسكافي منزلي الرياض, اسكافي قريب مني, وين الاقي اسكافي زين, تصليح كوتشي, تصليح جزمة, تصليح صرمايه, صيانة احذيه, تصليح شنطة جلد, تصليح بسطار عسكري, صيانة بسطار الجيش, تبديل نعل بسطار عسكري, اصلاح جزمة عسكرية, تصليح بوت عسكري, بسطار الجيش السعودي, إصلاح أحذية العليا, إصلاح أحذية الملز, إصلاح أحذية النخيل, إصلاح أحذية حي السفارات, تصليح حذاء جلد أصلي, تلوين جلد, صيانة حقائب فاخرة, استلام وتوصيل إصلاح أحذية, حجز موعد إسكافي, shoe repair riyadh, leather bag repair riyadh, luxury shoe restoration, cobbler riyadh, shoe sole replacement riyadh, leather shine and polish, military boot repair riyadh'
           : 'shoe repair riyadh, cobbler riyadh, leather bag repair riyadh, luxury shoe restoration, shoe sole replacement riyadh, sneaker repair riyadh, military boot repair riyadh, army boot resole saudi arabia, handbag repair saudi arabia, leather care riyadh, best cobbler riyadh, shoe shine riyadh, luxury handbag restoration riyadh, zipper repair riyadh'} />
-        <link rel="canonical" href="https://cobblerlast.com/" />
+        <link rel="canonical" href="https://needlecobbler.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large" />
         <meta property="og:type" content="business.business" />
         <meta property="og:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة - الرياض' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair — Riyadh'} />
         <meta property="og:description" content={isAr ? 'حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة. خدمة استلام وتوصيل في الرياض.' : 'Saudi craftsmen specialized in repairing luxury shoes and leather bags. Pickup & delivery service in Riyadh.'} />
-        <meta property="og:url" content="https://cobblerlast.com/" />
-        <meta property="og:image" content="https://cobblerlast.com/og-image.jpg" />
+        <meta property="og:url" content="https://needlecobbler.com/" />
+        <meta property="og:image" content="https://needlecobbler.com/og-image.jpg" />
         <meta property="og:locale" content={isAr ? 'ar_SA' : 'en_US'} />
         <meta property="og:site_name" content={isAr ? 'إبرة وخيط الإسكافي' : 'Ebra & Khait Cobbler'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair'} />
-        <meta name="twitter:image" content="https://cobblerlast.com/og-image.jpg" />
+        <meta name="twitter:image" content="https://needlecobbler.com/og-image.jpg" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
           "name": "إبرة وخيط الإسكافي",
           "alternateName": "Ebra & Khait Cobbler",
-          "url": "https://cobblerlast.com",
+          "url": "https://needlecobbler.com",
           "telephone": "+966549678191",
           "priceRange": "$$",
           "address": { "@type": "PostalAddress", "addressLocality": "الرياض", "addressCountry": "SA" },

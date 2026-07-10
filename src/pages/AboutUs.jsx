@@ -46,16 +46,16 @@ export default function AboutUs() {
         <meta name="keywords" content={isAr
           ? 'من نحن, إبرة وخيط الإسكافي, حرفيون سعوديون, إصلاح أحذية الرياض, تاريخ الشركة, ورشة إصلاح أحذية سعودية, خبرة إصلاح جلود, فريق حرفيين متخصصين الرياض'
           : 'about us, ebra khait cobbler, saudi craftsmen, shoe repair riyadh, company history, saudi shoe repair workshop, leather repair expertise, specialized craftsmen team riyadh'} />
-        <link rel="canonical" href="https://cobblerlast.com/about" />
+        <link rel="canonical" href="https://needlecobbler.com/about" />
         <meta property="og:title" content={isAr ? 'من نحن | إبرة وخيط الإسكافي' : 'About Us | Ebra & Khait Cobbler'} />
         <meta property="og:description" content={isAr ? 'حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض.' : 'Saudi craftsmen specialized in repairing luxury shoes and leather bags in Riyadh.'} />
-        <meta property="og:url" content="https://cobblerlast.com/about" />
+        <meta property="og:url" content="https://needlecobbler.com/about" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "AboutPage",
           "name": "من نحن — إبرة وخيط الإسكافي",
-          "url": "https://cobblerlast.com/about",
+          "url": "https://needlecobbler.com/about",
           "description": "قصة وتاريخ إبرة وخيط الإسكافي",
           "mainEntity": {
             "@type": "LocalBusiness",

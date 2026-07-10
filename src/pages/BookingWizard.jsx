@@ -137,12 +137,12 @@ export default function BookingWizard() {
         <meta name="keywords" content={isAr
           ? 'حجز موعد إصلاح أحذية, حجز إسكافي الرياض, حجز تجديد حقيبة جلدية, طلب إصلاح حذاء أونلاين, استلام وتوصيل إصلاح أحذية الرياض'
           : 'book shoe repair appointment, book cobbler riyadh, book leather bag renewal, online shoe repair request, shoe repair pickup delivery riyadh'} />
-        <link rel="canonical" href="https://cobblerlast.com/book" />
+        <link rel="canonical" href="https://needlecobbler.com/book" />
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={isAr ? 'احجز موعد إصلاح | إبرة وخيط الإسكافي' : 'Book a Repair Appointment | Ebra & Khait Cobbler'} />
         <meta property="og:description" content={isAr ? 'احجز موعدك الآن لإصلاح أو تجديد حذائك أو حقيبتك الجلدية الفاخرة في الرياض.' : 'Book now to repair or restore your luxury shoe or leather bag in Riyadh.'} />
-        <meta property="og:url" content="https://cobblerlast.com/book" />
+        <meta property="og:url" content="https://needlecobbler.com/book" />
       </Helmet>
       <div className="max-w-2xl mx-auto">
         {/* Header */}

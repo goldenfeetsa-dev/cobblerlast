@@ -55,7 +55,7 @@ export default function MyBookings() {
         <meta name="description" content={isAr
           ? 'تابع حالة طلب إصلاح حذائك أو حقيبتك الجلدية في إبرة وخيط الإسكافي عبر إدخال رقم جوالك.'
           : 'Track the status of your shoe or leather bag repair order at Ebra & Khait Cobbler by entering your phone number.'} />
-        <link rel="canonical" href="https://cobblerlast.com/my-bookings" />
+        <link rel="canonical" href="https://needlecobbler.com/my-bookings" />
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       {/* Subtle texture */}

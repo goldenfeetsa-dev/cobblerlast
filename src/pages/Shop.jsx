@@ -203,23 +203,23 @@ export default function Shop() {
         <meta name="keywords" content={isAr
           ? 'متجر أحذية الرياض, كريم تلميع أحذية, نعال جلدي, صبغة جلد, منتجات العناية بالجلود, فرشاة تلميع أحذية, واقي جلد, ملمع أحذية فاخر, أدوات صيانة الحقائب الجلدية, مستلزمات تصليح بسطار عسكري, shop shoe care riyadh, leather care products riyadh'
           : 'shop shoe care riyadh, leather care products riyadh, shoe polish cream, leather sole, leather dye, shoe care accessories, military boot supplies riyadh'} />
-        <link rel="canonical" href="https://cobblerlast.com/shop" />
+        <link rel="canonical" href="https://needlecobbler.com/shop" />
         <meta property="og:title" content={isAr ? 'متجر إبرة وخيط — منتجات العناية بالأحذية والحقائب' : "Cobbler's Shop — Shoe & Bag Care Products"} />
         <meta property="og:description" content={isAr ? 'منتجات احترافية للعناية بالأحذية والحقائب الجلدية. توصيل في الرياض.' : 'Professional products for shoe and leather bag care. Delivery in Riyadh.'} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://cobblerlast.com/shop" />
+        <meta property="og:url" content="https://needlecobbler.com/shop" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "ItemList",
           "name": "منتجات إبرة وخيط الإسكافي",
-          "url": "https://cobblerlast.com/shop",
+          "url": "https://needlecobbler.com/shop",
           "numberOfItems": filtered.length,
           "itemListElement": filtered.slice(0, 20).map((p, i) => ({
             "@type": "ListItem",
             "position": i + 1,
             "item": {
               "@type": "Product",
-              "@id": `https://cobblerlast.com/shop#product-${p.id}`,
+              "@id": `https://needlecobbler.com/shop#product-${p.id}`,
               "name": p.name_ar || p.name,
               "description": p.description || p.name_ar,
               "image": p.image_url,
@@ -230,8 +230,8 @@ export default function Shop() {
                 "price": p.price,
                 "priceCurrency": "SAR",
                 "availability": p.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                "url": `https://cobblerlast.com/shop#product-${p.id}`,
-                "seller": { "@type": "Organization", "name": "إبرة وخيط الإسكافي", "url": "https://cobblerlast.com" },
+                "url": `https://needlecobbler.com/shop#product-${p.id}`,
+                "seller": { "@type": "Organization", "name": "إبرة وخيط الإسكافي", "url": "https://needlecobbler.com" },
                 "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
               }
             }

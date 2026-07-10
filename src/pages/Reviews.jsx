@@ -69,18 +69,18 @@ export default function Reviews() {
         <meta name="keywords" content={isAr
           ? 'تقييمات إسكافي الرياض, آراء العملاء إصلاح أحذية, مراجعات تجديد حقائب جلدية, أفضل إسكافي الرياض تقييمات'
           : 'cobbler reviews riyadh, shoe repair customer reviews, leather bag repair reviews, best cobbler riyadh reviews'} />
-        <link rel="canonical" href="https://cobblerlast.com/reviews" />
+        <link rel="canonical" href="https://needlecobbler.com/reviews" />
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={isAr ? 'تقييمات وآراء العملاء | إبرة وخيط الإسكافي' : 'Customer Reviews | Ebra & Khait Cobbler'} />
         <meta property="og:description" content={isAr ? 'اطّلع على تجارب عملائنا الحقيقية وشاركنا رأيك في خدمة إصلاح الأحذية والحقائب الجلدية الفاخرة.' : 'See real experiences from our customers and share your feedback on our luxury shoe and bag repair service.'} />
-        <meta property="og:url" content="https://cobblerlast.com/reviews" />
+        <meta property="og:url" content="https://needlecobbler.com/reviews" />
         {reviews.length > 0 && (
           <script type="application/ld+json">{JSON.stringify({
             "@context": "https://schema.org",
             "@type": "LocalBusiness",
             "name": "إبرة وخيط الإسكافي",
-            "url": "https://cobblerlast.com",
+            "url": "https://needlecobbler.com",
             "aggregateRating": {
               "@type": "AggregateRating",
               "ratingValue": avgRating.toFixed(1),

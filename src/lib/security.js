@@ -93,7 +93,7 @@ export const isSafeRedirectUrl = (url) => {
     const parsed = new URL(url, window.location.origin);
     const allowedOrigins = [
       window.location.origin,
-      'https://cobblerlast.com',
+      'https://needlecobbler.com',
     ];
     return allowedOrigins.includes(parsed.origin);
   } catch {

@@ -49,4 +49,4 @@ Disallow: /my-bookings
 User-agent: Googlebot-Image
 Allow: /
 
-Sitemap: https://cobblerlast.com/sitemap.xml
+Sitemap: https://needlecobbler.com/sitemap.xml

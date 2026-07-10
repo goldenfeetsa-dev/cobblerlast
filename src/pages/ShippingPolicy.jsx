@@ -36,7 +36,7 @@ export default function ShippingPolicy() {
         <meta name="keywords" content={isAr
           ? 'استلام وتوصيل إصلاح أحذية, توصيل مجاني إصلاح أحذية الرياض, استلام حذاء من المنزل, خدمة توصيل تجديد حقائب جلدية الرياض'
           : 'shoe repair pickup delivery, free shoe repair delivery riyadh, home shoe pickup, leather bag renewal delivery riyadh'} />
-        <link rel="canonical" href="https://cobblerlast.com/shipping-policy" />
+        <link rel="canonical" href="https://needlecobbler.com/shipping-policy" />
         <meta name="robots" content="index, follow" />
       </Helmet>
 

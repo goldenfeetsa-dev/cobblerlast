@@ -51,19 +51,19 @@ export default function RepairPolicy() {
         <meta name="keywords" content={isAr
           ? 'سياسة إصلاح الأحذية, ضمان إصلاح الأحذية, مدة تصليح الحذاء, أسعار إصلاح الأحذية الرياض, ضمان تجديد الحقائب, شروط استلام القطع الجلدية'
           : 'shoe repair policy, shoe repair warranty, shoe repair turnaround time, shoe repair prices riyadh, bag renewal warranty, leather item intake terms'} />
-        <link rel="canonical" href="https://cobblerlast.com/repair-policy" />
+        <link rel="canonical" href="https://needlecobbler.com/repair-policy" />
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={isAr ? 'سياسة الإصلاح والضمان | إبرة وخيط الإسكافي' : 'Repair & Warranty Policy | Ebra & Khait Cobbler'} />
         <meta property="og:description" content={isAr ? 'الشفافية أولاً — تعرف على سياسة الاستلام، مدة التسليم، وضمان الجودة قبل حجز موعدك.' : 'Transparency first — learn about our intake policy, delivery time, and quality guarantee before booking.'} />
-        <meta property="og:url" content="https://cobblerlast.com/repair-policy" />
+        <meta property="og:url" content="https://needlecobbler.com/repair-policy" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Service",
           "name": "خدمة إصلاح وترميم الأحذية والحقائب الجلدية",
           "provider": { "@type": "LocalBusiness", "name": "إبرة وخيط الإسكافي", "address": { "@type": "PostalAddress", "addressLocality": "الرياض", "addressCountry": "SA" } },
           "areaServed": "الرياض",
-          "termsOfService": "https://cobblerlast.com/repair-policy",
+          "termsOfService": "https://needlecobbler.com/repair-policy",
         })}</script>
       </Helmet>
       {/* Navbar */}
