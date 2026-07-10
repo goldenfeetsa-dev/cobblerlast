@@ -113,6 +113,7 @@ function CobblerTab({ session }) {
       toast.success('تم إنشاء الطلب بنجاح!');
       navigate(`/orders/${order.id}`);
     },
+    onError: (e) => toast.error(`فشل حفظ الطلب: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const handleSubmit = (e) => {
@@ -138,7 +139,7 @@ function CobblerTab({ session }) {
       subtotal, vat_amount: vatAmount, total_price: price,
       payment_status: form.payment_status,
       payment_method: form.payment_method,
-      order_status: 'pending',
+      status: 'pending',
       notes: form.notes,
       points_earned: Math.floor(price / 10),
     });
