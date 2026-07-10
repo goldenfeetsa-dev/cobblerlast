@@ -6,8 +6,11 @@ Allow: /about
 Allow: /repair-policy
 Allow: /privacy
 Allow: /shipping-policy
-Allow: /my-bookings
 Allow: /reviews
+
+# صفحة متابعة الحجز الشخصية — تحتوي بيانات ديناميكية خاصة بالعميل
+# ولا تحمل قيمة فهرسة (مُعلَّمة noindex داخل الصفحة نفسها)
+Disallow: /my-bookings
 
 # منع الوصول لكل صفحات الإدارة والنظام
 Disallow: /login
@@ -30,6 +33,8 @@ Disallow: /barcode/
 Disallow: /leaderboard
 Disallow: /site-analytics
 Disallow: /operations
+Disallow: /calendar
+Disallow: /staff
 
 # Google Bot
 User-agent: Googlebot
@@ -38,6 +43,7 @@ Allow: /shop
 Disallow: /login
 Disallow: /pos
 Disallow: /admin/
+Disallow: /my-bookings
 
 # Google Image Bot
 User-agent: Googlebot-Image

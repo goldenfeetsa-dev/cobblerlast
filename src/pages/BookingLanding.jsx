@@ -6,9 +6,11 @@ import { base44 } from '@/api/supabaseApi';
 import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
   MapPin, Phone, Clock, Instagram, MessageCircle, Star, Award, Shield,
-  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, Heart, CheckCircle
+  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle
 } from 'lucide-react';
 
 // ── Palette ──────────────────────────────────────────────────────
@@ -88,14 +90,14 @@ function AnimCounter({ target, duration = 2 }) {
     return () => clearInterval(timer);
   }, [inView, target, duration]);
   const prefix = target.startsWith('+') ? '+' : '';
-  const suffix = target.endsWith('%') ? '%' : target.includes('يد') ? '' : '';
+  const suffix = target.endsWith('%') ? '%' : '';
   return <span ref={ref}>{prefix}{count}{suffix}</span>;
 }
 
 // ── Navbar ────────────────────────────────────────────────────────
 function Navbar() {
+  const { t, dir } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', fn, { passive: true });
@@ -103,10 +105,10 @@ function Navbar() {
   }, []);
 
   const links = [
-    { label: 'الخدمات', href: '#services' },
-    { label: 'قصتنا', href: '#about' },
-    { label: 'العملاء', href: '#reviews' },
-    { label: 'المتجر', href: '/shop', to: true },
+    { label: t('common.nav.services'), href: '#services' },
+    { label: t('common.nav.story'), href: '#about' },
+    { label: t('common.nav.customers'), href: '#reviews' },
+    { label: t('common.nav.shop'), href: '/shop', to: true },
   ];
 
   return (
@@ -114,16 +116,16 @@ function Navbar() {
       initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
       <div className={`max-w-7xl mx-auto mt-3 rounded-2xl px-5 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-2xl' : ''}`}
         style={{ background: scrolled ? 'rgba(10,6,0,0.92)' : 'rgba(10,6,0,0.5)', backdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
-        <Link to="/" dir="rtl">
+        <Link to="/" dir={dir}>
           <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
               <Scissors className="w-3.5 h-3.5 text-black" />
             </div>
-            <span className="font-black text-sm" style={{ color: T }}>إبرة وخيط</span>
+            <span className="font-black text-sm" style={{ color: T }}>{t('common.brandShort')}</span>
           </motion.div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6" dir="rtl">
+        <div className="hidden md:flex items-center gap-6" dir={dir}>
           {links.map(l => l.to
             ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: `${GB}0.5)` }}>{l.label}</Link>
             : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: `${GB}0.5)` }}>{l.label}</a>
@@ -131,15 +133,16 @@ function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
           <Link to="/my-bookings" className="hidden md:block text-xs font-bold px-4 py-2 rounded-full transition-all"
             style={{ color: G, border: `1px solid ${GB}0.3)`, background: GB + '0.05)' }}>
-            تتبع حجزي
+            {t('common.nav.trackBooking')}
           </Link>
           <Link to="/book">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               className="text-xs font-black px-5 py-2 rounded-full text-black"
               style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
-              احجز الآن
+              {t('common.nav.bookNow')}
             </motion.div>
           </Link>
         </div>
@@ -149,9 +152,9 @@ function Navbar() {
 }
 
 // ── Hero ─────────────────────────────────────────────────────────
-const WORDS = ['الأحذية', 'الحقائب', 'الجلديات', 'الفاخرة'];
-
 function HeroSection() {
+  const { t, dir, lang } = useLanguage();
+  const words = t('home.hero.words');
   const [wordIdx, setWordIdx] = useState(0);
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 600], [0, 160]);
@@ -165,9 +168,14 @@ function HeroSection() {
   }));
 
   useEffect(() => {
-    const t = setInterval(() => setWordIdx(p => (p + 1) % WORDS.length), 2200);
-    return () => clearInterval(t);
-  }, []);
+    setWordIdx(0);
+    const t2 = setInterval(() => setWordIdx(p => (p + 1) % words.length), 2200);
+    return () => clearInterval(t2);
+  }, [lang]);
+
+  const stats = t('home.hero.stats');
+  const statIcons = [Award, Heart, Shield];
+  const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden"
@@ -199,7 +207,7 @@ function HeroSection() {
 
       <motion.div style={{ y: heroY, opacity: heroOpacity }}
         className="relative z-10 max-w-7xl mx-auto px-6 w-full pt-24 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center min-h-[80vh]" dir="rtl">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center min-h-[80vh]" dir={dir}>
 
           {/* ── Left: Text ── */}
           <div className="lg:col-span-3 space-y-8">
@@ -210,47 +218,49 @@ function HeroSection() {
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
                 <Sparkles className="w-3.5 h-3.5" />
               </motion.div>
-              حرفيون سعوديون أصيلون — الرياض
+              {t('home.hero.eyebrow')}
             </motion.div>
 
             {/* Main headline */}
             <div>
               <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }}
                 className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2" style={{ color: T }}>
-                نُعيد روح
+                {t('home.hero.titleStart')}
               </motion.h1>
 
               {/* Animated word */}
               <div className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2 overflow-hidden" style={{ height: '1.15em' }}>
                 <AnimatePresence mode="wait">
-                  <motion.span key={wordIdx}
+                  <motion.span key={lang + wordIdx}
                     initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }}
                     transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                     className="block" style={{ color: G }}>
-                    {WORDS[wordIdx]}
+                    {words[wordIdx]}
                   </motion.span>
                 </AnimatePresence>
               </div>
 
-              <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }}
-                className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1]" style={{ color: T }}>
-                الفاخرة
-              </motion.h1>
+              {t('home.hero.titleEnd') && (
+                <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }}
+                  className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1]" style={{ color: T }}>
+                  {t('home.hero.titleEnd')}
+                </motion.h1>
+              )}
             </div>
 
             {/* Desc */}
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}
               className="text-base md:text-lg leading-relaxed max-w-lg" style={{ color: `${GB}0.5)` }}>
-              كل قطعة تحكي قصة. نحن نُعيد كتابة فصلها الجديد بأيدٍ سعودية متمرسة وتقنيات عالمية فاخرة.
+              {t('home.hero.desc')}
             </motion.p>
 
             {/* Feature pills */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.5 }}
               className="flex flex-wrap gap-2">
-              {['✦ استلام من موقعك', '✦ ضمان كامل', '✦ أكثر من 20 علامة فاخرة', '✦ إنجاز خلال 48 ساعة'].map((t, i) => (
+              {t('home.hero.pills').map((p, i) => (
                 <motion.span key={i} whileHover={{ scale: 1.05, borderColor: G }}
                   className="text-xs px-3.5 py-1.5 rounded-full font-medium transition-all cursor-default"
-                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)`, color: `${GB}0.7)` }}>{t}</motion.span>
+                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)`, color: `${GB}0.7)` }}>{p}</motion.span>
               ))}
             </motion.div>
 
@@ -261,9 +271,9 @@ function HeroSection() {
                 <MagneticBtn className="group relative px-9 py-4 rounded-2xl font-black text-base text-black overflow-hidden"
                   style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 16px 50px ${GB}0.45)` }}>
                   <span className="relative z-10 flex items-center gap-2">
-                    ابدأ رحلة الترميم
-                    <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                      <ArrowLeft className="w-4 h-4" />
+                    {t('home.hero.ctaPrimary')}
+                    <motion.div animate={{ x: dir === 'rtl' ? [0, 4, 0] : [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                      <ArrowIcon className="w-4 h-4" />
                     </motion.div>
                   </span>
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -276,7 +286,7 @@ function HeroSection() {
                   className="flex items-center gap-2.5 px-7 py-4 rounded-2xl font-bold text-sm transition-all"
                   style={{ border: `1px solid ${GB}0.2)`, color: T, background: GB + '0.04)' }}>
                   <ShoppingBag className="w-4 h-4" style={{ color: G }} />
-                  تسوق الآن
+                  {t('home.hero.ctaSecondary')}
                 </motion.div>
               </Link>
             </motion.div>
@@ -284,21 +294,20 @@ function HeroSection() {
             {/* Stats Row */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.75 }}
               className="flex gap-8 pt-6 border-t" style={{ borderColor: GB + '0.1)' }}>
-              {[
-                { num: '+20', label: 'سنة خبرة', icon: Award },
-                { num: '+5000', label: 'عميل سعيد', icon: Heart },
-                { num: '100%', label: 'ضمان الجودة', icon: Shield },
-              ].map((s, i) => (
-                <div key={i} className="flex items-center gap-2.5">
-                  <s.icon className="w-4 h-4 shrink-0" style={{ color: G }} />
-                  <div>
-                    <div className="text-xl font-black" style={{ color: G }}>
-                      <AnimCounter target={s.num} />
+              {stats.map((s, i) => {
+                const Icon = statIcons[i];
+                return (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4 shrink-0" style={{ color: G }} />
+                    <div>
+                      <div className="text-xl font-black" style={{ color: G }}>
+                        <AnimCounter target={s.num} />
+                      </div>
+                      <div className="text-xs" style={{ color: `${GB}0.35)` }}>{s.label}</div>
                     </div>
-                    <div className="text-xs" style={{ color: `${GB}0.35)` }}>{s.label}</div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </motion.div>
           </div>
 
@@ -308,9 +317,9 @@ function HeroSection() {
 
             {/* Card stack */}
             {[
-              { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', rotate: -8, z: 0, x: -20, y: 20, scale: 0.88 },
-              { src: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', rotate: 4, z: 1, x: 15, y: 10, scale: 0.93 },
-              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', priority: true, rotate: 0, z: 2, x: 0, y: 0, scale: 1 },
+              { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', alt: 'إصلاح وترميم أحذية جلدية فاخرة في الرياض', rotate: -8, z: 0, x: -20, y: 20, scale: 0.88 },
+              { src: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', alt: 'تجديد وتنظيف حقائب جلدية فاخرة', rotate: 4, z: 1, x: 15, y: 10, scale: 0.93 },
+              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', alt: 'ورشة إبرة وخيط الإسكافي المتخصصة في الرياض', priority: true, rotate: 0, z: 2, x: 0, y: 0, scale: 1 },
             ].map((card, i) => (
               <motion.div key={i} className="absolute rounded-3xl overflow-hidden shadow-2xl"
                 style={{ width: 280, height: 360, zIndex: card.z, border: `1px solid ${GB}${0.08 + i * 0.08})` }}
@@ -323,7 +332,7 @@ function HeroSection() {
                   scale: card.scale
                 }}
                 transition={{ y: { duration: 3 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.7 } }}>
-                <img src={card.src} alt="إبرة وخيط الإسكافي" className="w-full h-full object-cover" />
+                <img src={card.src} alt={card.alt} className="w-full h-full object-cover" />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,5,0,0.7) 0%, transparent 60%)' }} />
               </motion.div>
             ))}
@@ -337,8 +346,8 @@ function HeroSection() {
                 <CheckCircle className="w-3.5 h-3.5 text-black" />
               </div>
               <div>
-                <div className="font-black" style={{ color: T }}>جودة مضمونة</div>
-                <div style={{ color: `${GB}0.4)` }}>ضمان كامل على كل خدمة</div>
+                <div className="font-black" style={{ color: T }}>{t('home.hero.badgeQuality')}</div>
+                <div style={{ color: `${GB}0.4)` }}>{t('home.hero.badgeQualitySub')}</div>
               </div>
             </motion.div>
 
@@ -350,8 +359,8 @@ function HeroSection() {
               <div className="flex items-center gap-2 mb-1.5">
                 {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: G }} />)}
               </div>
-              <div className="text-xs font-black" style={{ color: T }}>تقييم 5 نجوم</div>
-              <div className="text-xs" style={{ color: `${GB}0.4)` }}>+500 تقييم حقيقي</div>
+              <div className="text-xs font-black" style={{ color: T }}>{t('home.hero.badgeRating')}</div>
+              <div className="text-xs" style={{ color: `${GB}0.4)` }}>{t('home.hero.badgeRatingSub')}</div>
             </motion.div>
 
             {/* Live indicator */}
@@ -360,7 +369,7 @@ function HeroSection() {
               style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)' }}>
               <motion.div className="w-2 h-2 rounded-full" style={{ background: '#22c55e' }}
                 animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
-              <span style={{ color: '#22c55e', fontWeight: 700 }}>متاح الآن</span>
+              <span style={{ color: '#22c55e', fontWeight: 700 }}>{t('home.hero.liveNow')}</span>
             </motion.div>
 
             {/* Gold glow under cards */}
@@ -372,7 +381,7 @@ function HeroSection() {
 
       {/* Scroll hint */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{ color: `${GB}0.2)` }}>
-        <span className="text-xs tracking-widest">اكتشف أكثر</span>
+        <span className="text-xs tracking-widest">{t('home.hero.scrollHint')}</span>
         <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
           <ChevronDown className="w-5 h-5" />
         </motion.div>
@@ -382,18 +391,16 @@ function HeroSection() {
 }
 
 // ── Ticker / Process Strip ────────────────────────────────────────
-const TICKER_ITEMS = [
-  '✦ استلام من موقعك', '✦ ترميم احترافي', '✦ تسليم لبابك', '✦ ضمان كامل',
-  '✦ أكثر من 20 علامة فاخرة', '✦ تقنيات أوروبية', '✦ أيدٍ سعودية', '✦ إنجاز في 48 ساعة',
-];
 function TickerStrip() {
+  const { t } = useLanguage();
+  const items = t('home.ticker');
   return (
     <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #2C1A00, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
       <div className="flex gap-0">
         {[0, 1].map(k => (
           <motion.div key={k} className="flex gap-10 shrink-0 pr-10"
             animate={{ x: ['0%', '-100%'] }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}>
-            {TICKER_ITEMS.map((item, i) => (
+            {items.map((item, i) => (
               <span key={i} className="whitespace-nowrap text-sm font-bold" style={{ color: G }}>{item}</span>
             ))}
           </motion.div>
@@ -403,28 +410,32 @@ function TickerStrip() {
   );
 }
 
-// ── Services Data ─────────────────────────────────────────────────
-const SERVICES = [
-  { title: 'ترميم الأحذية', tag: 'الأكثر طلباً', icon: Scissors, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', desc: 'نعال، خياطة، تلميع — كل شيء يعود لأحسن مما كان. نستخدم مواد إيطالية أصيلة.', price: 'من 80 ر.س' },
-  { title: 'تجديد الحقائب', tag: 'خبرة 20 عاماً', icon: Package, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80', desc: 'هيرمس، لويس فيتون، شانيل — نُجدد حقيبتك وتعود كأنها للتو من المحل.', price: 'من 150 ر.س' },
-  { title: 'تلميع وتلوين', tag: 'إيطالي', icon: Sparkles, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', desc: 'ألوان ثابتة وعميقة بتقنيات أوروبية حديثة. البريق الأصلي يعود كما كان.', price: 'من 50 ر.س' },
+// ── Services ─────────────────────────────────────────────────────
+const SERVICE_META = [
+  { icon: Scissors, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80' },
+  { icon: Package, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80' },
+  { icon: Sparkles, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80' },
 ];
+const STEP_ICONS = [MessageCircle, Package, Scissors, CheckCircle];
 
 function ServicesSection() {
+  const { t, dir } = useLanguage();
+  const services = t('home.services.items');
+  const steps = t('home.services.steps');
   return (
     <section id="services" className="py-32 px-6" style={{ background: '#0A0500' }}>
-      <div className="max-w-6xl mx-auto" dir="rtl">
+      <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>خدمات المشغل</p>
-          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>مجموعة متكاملة من الخدمات</h2>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.services.eyebrow')}</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.services.title')}</h2>
           <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: `${GB}0.4)` }}>
-            نستخدم أجود الخامات العالمية وأحدث التقنيات لإعادة بريق مقتنياتك الثمينة
+            {t('home.services.desc')}
           </p>
           <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
         </FadeIn>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {SERVICES.map((s, i) => (
+          {services.map((s, i) => (
             <FadeIn key={i} delay={i * 0.12}>
               <motion.div className="group rounded-3xl overflow-hidden h-full flex flex-col cursor-pointer"
                 style={{ background: `rgba(255,255,255,0.02)`, border: `1px solid ${GB}0.08)` }}
@@ -433,7 +444,7 @@ function ServicesSection() {
 
                 {/* Image */}
                 <div className="relative overflow-hidden" style={{ height: 220 }}>
-                  <motion.img src={s.img} alt={s.title + ' — إبرة وخيط الإسكافي'}
+                  <motion.img src={SERVICE_META[i].img} alt={s.title + ' — إبرة وخيط الإسكافي'}
                     className="w-full h-full object-cover" loading="lazy"
                     whileHover={{ scale: 1.08 }} transition={{ duration: 0.6 }} />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, #0A0500 100%)' }} />
@@ -445,14 +456,14 @@ function ServicesSection() {
                 <div className="p-6 flex flex-col flex-1">
                   <span className="inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-xs font-bold w-fit"
                     style={{ background: GB + '0.1)', color: G, border: `1px solid ${GB}0.2)` }}>
-                    <s.icon className="w-3 h-3" />{s.tag}
+                    {React.createElement(SERVICE_META[i].icon, { className: 'w-3 h-3' })}{s.tag}
                   </span>
                   <h3 className="text-xl font-black mb-2" style={{ color: T }}>{s.title}</h3>
                   <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: `${GB}0.45)` }}>{s.desc}</p>
                   <Link to="/book">
                     <motion.div whileHover={{ gap: '16px' }} className="flex items-center gap-2 font-bold text-sm"
                       style={{ color: G }}>
-                      <span>احجز هذه الخدمة</span>
+                      <span>{t('home.services.bookThis')}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </motion.div>
                   </Link>
@@ -465,20 +476,15 @@ function ServicesSection() {
         {/* How it works */}
         <FadeIn delay={0.2} className="mt-24">
           <div className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(201,168,76,0.04)', border: `1px solid ${GB}0.1)` }}>
-            <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase text-center" style={{ color: G }}>كيف يعمل</p>
-            <h3 className="text-3xl font-black text-center mb-10" style={{ color: T }}>أربع خطوات — وقطعتك كالجديدة</h3>
+            <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase text-center" style={{ color: G }}>{t('home.services.howItWorks')}</p>
+            <h3 className="text-3xl font-black text-center mb-10" style={{ color: T }}>{t('home.services.howItWorksTitle')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                { n: '01', t: 'التواصل', d: 'أرسل صورة لقطعتك وسنقيّمها مجاناً خلال ساعة', icon: MessageCircle },
-                { n: '02', t: 'الاستلام', d: 'مندوبنا يستلم من موقعك مباشرة في الرياض', icon: Package },
-                { n: '03', t: 'الإصلاح', d: 'فريقنا يبدأ العمل فور الاستلام ويبلغك بكل مرحلة', icon: Scissors },
-                { n: '04', t: 'التسليم', d: 'نوصل قطعتك كالجديدة مع ضمان كامل على الخدمة', icon: CheckCircle },
-              ].map((step, i) => (
+              {steps.map((step, i) => (
                 <FadeIn key={i} delay={i * 0.1} className="text-center">
                   <div className="relative inline-flex mb-4">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
                       style={{ background: `linear-gradient(135deg, ${GB}0.12), ${GB}0.04))`, border: `1px solid ${GB}0.2)` }}>
-                      <step.icon className="w-6 h-6" style={{ color: G }} />
+                      {React.createElement(STEP_ICONS[i], { className: 'w-6 h-6', style: { color: G } })}
                     </div>
                     <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center text-black"
                       style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{i + 1}</span>
@@ -497,6 +503,7 @@ function ServicesSection() {
 
 // ── Request Service ───────────────────────────────────────────────
 function RequestServiceSection() {
+  const { t, dir } = useLanguage();
   const [form, setForm] = useState({ name: '', phone: '', service: '', notes: '' });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -508,7 +515,7 @@ function RequestServiceSection() {
     try {
       await supabase.from('bookings').insert({
         customer_name: form.name, customer_phone: form.phone,
-        notes: `الخدمة: ${form.service}\n${form.notes}`, status: 'pending',
+        notes: `${t('home.request.serviceLabel')}: ${form.service}\n${form.notes}`, status: 'pending',
       });
       setSent(true);
     } catch { setSent(true); }
@@ -517,11 +524,11 @@ function RequestServiceSection() {
 
   return (
     <section id="request" className="py-32 px-6" style={{ background: '#060300' }}>
-      <div className="max-w-5xl mx-auto" dir="rtl">
+      <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>اطلب خدمة</p>
-          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>نتواصل معك فوراً</h2>
-          <p className="text-sm" style={{ color: `${GB}0.4)` }}>أترك بياناتك وسيتواصل معك فريقنا خلال ساعة</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.request.eyebrow')}</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.request.title')}</h2>
+          <p className="text-sm" style={{ color: `${GB}0.4)` }}>{t('home.request.desc')}</p>
         </FadeIn>
 
         <AnimatePresence mode="wait">
@@ -531,19 +538,19 @@ function RequestServiceSection() {
               <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.6 }}>
                 <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: G }} />
               </motion.div>
-              <h3 className="text-2xl font-black mb-2" style={{ color: T }}>تم الإرسال!</h3>
-              <p style={{ color: `${GB}0.5)` }}>سيتواصل معك فريقنا قريباً</p>
-              <button onClick={() => setSent(false)} className="mt-6 text-sm underline" style={{ color: G }}>إرسال طلب آخر</button>
+              <h3 className="text-2xl font-black mb-2" style={{ color: T }}>{t('home.request.doneTitle')}</h3>
+              <p style={{ color: `${GB}0.5)` }}>{t('home.request.doneDesc')}</p>
+              <button onClick={() => setSent(false)} className="mt-6 text-sm underline" style={{ color: G }}>{t('home.request.sendAnother')}</button>
             </motion.div>
           ) : (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${GB}0.1)` }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                {[['name', 'الاسم الكريم', 'اسمك...'], ['phone', 'رقم الجوال', '05XXXXXXXX']].map(([k, label, ph]) => (
+                {[['name', t('home.request.nameLabel'), t('home.request.namePh')], ['phone', t('home.request.phoneLabel'), '05XXXXXXXX']].map(([k, label, ph]) => (
                   <div key={k} className="space-y-2">
                     <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>{label}</label>
                     <input value={form[k]} onChange={e => upd(k, e.target.value)}
-                      placeholder={ph} dir={k === 'phone' ? 'ltr' : 'rtl'}
+                      placeholder={ph} dir={k === 'phone' ? 'ltr' : dir}
                       className="w-full px-4 py-3.5 rounded-xl outline-none text-sm transition-all"
                       style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: T }}
                       onFocus={e => e.target.style.borderColor = GB + '0.4)'}
@@ -552,27 +559,27 @@ function RequestServiceSection() {
                 ))}
               </div>
               <div className="mb-5 space-y-2">
-                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>نوع الخدمة</label>
+                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>{t('home.request.serviceLabel')}</label>
                 <select value={form.service} onChange={e => upd('service', e.target.value)}
                   className="w-full px-4 py-3.5 rounded-xl outline-none text-sm"
                   style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: form.service ? T : `${GB}0.3)` }}>
-                  <option value="">اختر الخدمة</option>
-                  {['ترميم أحذية', 'تجديد حقيبة', 'تلميع وتلوين', 'إصلاح خياطة', 'تنظيف عميق', 'استشارة مجانية'].map(s => (
+                  <option value="">{t('home.request.chooseService')}</option>
+                  {t('home.request.serviceOptions').map(s => (
                     <option key={s} value={s} style={{ background: '#0A0500' }}>{s}</option>
                   ))}
                 </select>
               </div>
               <div className="mb-8 space-y-2">
-                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>تفاصيل إضافية (اختياري)</label>
+                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>{t('home.request.notesLabel')}</label>
                 <textarea value={form.notes} onChange={e => upd('notes', e.target.value)}
-                  placeholder="صف قطعتك أو أي تفاصيل تريد إضافتها..." rows={3}
+                  placeholder={t('home.request.notesPh')} rows={3}
                   className="w-full px-4 py-3.5 rounded-xl outline-none text-sm resize-none"
                   style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: T }} />
               </div>
               <MagneticBtn onClick={submit}
                 className="w-full py-4 rounded-2xl font-black text-base text-black transition-all"
                 style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 12px 40px ${GB}0.4)`, opacity: loading ? 0.7 : 1 }}>
-                {loading ? '⏳ جارٍ الإرسال...' : '✦ أرسل طلبك الآن'}
+                {loading ? t('home.request.sending') : t('home.request.send')}
               </MagneticBtn>
             </motion.div>
           )}
@@ -583,44 +590,42 @@ function RequestServiceSection() {
 }
 
 // ── About ─────────────────────────────────────────────────────────
+const ABOUT_STAT_ICONS = [Award, Star, Shield, Gem];
 function AboutSection() {
-  const stats = [
-    { icon: Award, num: '+20', label: 'سنة خبرة' },
-    { icon: Star, num: '+5000', label: 'عميل راضٍ' },
-    { icon: Shield, num: '100%', label: 'ضمان الجودة' },
-    { icon: Gem, num: '+20', label: 'علامة فاخرة' },
-  ];
+  const { t, dir } = useLanguage();
+  const stats = t('home.about.stats');
   return (
-    <section id="about" className="py-32 px-6" style={{ background: '#0A0500' }} dir="rtl">
+    <section id="about" className="py-32 px-6" style={{ background: '#0A0500' }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <FadeIn className="grid grid-cols-2 gap-3">
-            {['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80',
-              'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80',
-              'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80',
-              'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80']
-              .map((src, i) => (
+            {[
+              { src: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', alt: 'حرفي متخصص يصلح حقيبة جلدية فاخرة' },
+              { src: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80', alt: 'أدوات وخيوط ورشة إصلاح الأحذية' },
+              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', alt: 'ورشة إبرة وخيط الإسكافي في الرياض' },
+              { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', alt: 'تبديل نعل حذاء جلدي فاخر' },
+            ].map((img, i) => (
                 <motion.div key={i} className={`rounded-2xl overflow-hidden ${i % 2 === 1 ? 'mt-6' : ''}`}
                   style={{ border: `1px solid ${GB}0.1)` }}
                   whileHover={{ scale: 1.03, borderColor: GB + '0.3)' }} transition={{ duration: 0.3 }}>
-                  <img src={src} alt="إبرة وخيط الإسكافي — ورشة الحرفة" className="w-full h-44 object-cover" loading="lazy" />
+                  <img src={img.src} alt={img.alt} className="w-full h-44 object-cover" loading="lazy" />
                 </motion.div>
               ))}
           </FadeIn>
           <FadeIn delay={0.15}>
-            <p className="text-xs tracking-[0.5em] font-bold mb-4 uppercase" style={{ color: G }}>قصتنا</p>
+            <p className="text-xs tracking-[0.5em] font-bold mb-4 uppercase" style={{ color: G }}>{t('home.about.eyebrow')}</p>
             <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
-              من حبنا للجلد<br /><span style={{ color: G }}>وُلدت الحرفة</span>
+              {t('home.about.titleLine1')}<br /><span style={{ color: G }}>{t('home.about.titleLine2')}</span>
             </h2>
             <p className="leading-relaxed text-base mb-8" style={{ color: `${GB}0.45)` }}>
-              إبرة وخيط الإسكافي براند سعودي أصيل من قلب الرياض. نجمع بين عراقة الحرفة اليدوية وأحدث التقنيات للمحافظة على مقتنياتكم الثمينة. خبرة تمتد لأكثر من عقدين، وآلاف العملاء الذين وثقوا بأيدينا.
+              {t('home.about.desc')}
             </p>
             <div className="grid grid-cols-2 gap-3 mb-8">
               {stats.map((s, i) => (
                 <motion.div key={i} className="rounded-2xl p-4 flex items-center gap-3"
                   style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}
                   whileHover={{ borderColor: GB + '0.3)', scale: 1.02 }}>
-                  <s.icon className="w-5 h-5 shrink-0" style={{ color: G }} />
+                  {React.createElement(ABOUT_STAT_ICONS[i], { className: 'w-5 h-5 shrink-0', style: { color: G } })}
                   <div>
                     <div className="text-xl font-black" style={{ color: G }}><AnimCounter target={s.num} /></div>
                     <div className="text-xs" style={{ color: `${GB}0.35)` }}>{s.label}</div>
@@ -631,7 +636,7 @@ function AboutSection() {
             <Link to="/about">
               <MagneticBtn className="px-8 py-3.5 rounded-2xl font-bold text-base text-black"
                 style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 8px 30px ${GB}0.3)` }}>
-                تعرف علينا أكثر ✦
+                {t('home.about.cta')}
               </MagneticBtn>
             </Link>
           </FadeIn>
@@ -642,42 +647,35 @@ function AboutSection() {
 }
 
 // ── Reviews ───────────────────────────────────────────────────────
-const REVIEWS = [
-  { name: 'محمد العنزي', rating: 5, text: 'حضرت بحذاء كعبه انكسر وكنت مأيوس منه، رجع أحسن من الأول! الشغل نظيف جداً والسعر معقول.', service: 'إصلاح كعب', initials: 'م' },
-  { name: 'سارة الشمري', rating: 5, text: 'حقيبتي الـ LV كانت تحتاج ترميم في المقبض، خلوها تطلع وكأنها جديدة. الدقة في التفاصيل لا توصف!', service: 'ترميم حقيبة فاخرة', initials: 'س' },
-  { name: 'فهد الدوسري', rating: 5, text: 'أحذيتي الجلدية كانت تحتاج تلميع وإعادة تلوين. النتيجة مذهلة، اللون طلع ثابت وعميق.', service: 'تلميع وإعادة تلوين', initials: 'ف' },
-  { name: 'نورة القحطاني', rating: 5, text: 'جبت شنطة كانت مقطوعة من الجانب، صلحوها بخيط ذهبي وطلعت أجمل! ما توقعت الشغل يطلع كذا.', service: 'خياطة وترميم', initials: 'ن' },
-  { name: 'عبدالله المطيري', rating: 5, text: 'قديم في التعامل مع إبرة وخيط. كل ما عندي شي يحتاج صيانة أجيهم. الأمانة والجودة ثابتة.', service: 'عميل دائم', initials: 'ع' },
-  { name: 'لطيفة السبيعي', rating: 5, text: 'كنت أبي أصلح حذاء نسائي غالي وخفت أعطيه لأي محل. حين جربت إبرة وخيط، اطمأنيت تماماً.', service: 'إصلاح حذاء نسائي', initials: 'ل' },
-];
-
 function ReviewsSection() {
+  const { t, dir } = useLanguage();
+  const reviews = t('home.reviews.items');
   const [active, setActive] = useState(0);
   useEffect(() => {
-    const iv = setInterval(() => setActive(p => (p + 1) % REVIEWS.length), 4500);
+    const iv = setInterval(() => setActive(p => (p + 1) % reviews.length), 4500);
     return () => clearInterval(iv);
-  }, []);
+  }, [reviews.length]);
   return (
-    <section className="py-32 px-6" style={{ background: '#060300' }} dir="rtl">
+    <section className="py-32 px-6" style={{ background: '#060300' }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>آراء عملاؤنا</p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: T }}>يقولون عنّا</h2>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.reviews.eyebrow')}</p>
+          <h2 className="text-4xl md:text-5xl font-black" style={{ color: T }}>{t('home.reviews.title')}</h2>
           <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
         </FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {REVIEWS.map((r, i) => (
+          {reviews.map((r, i) => (
             <FadeIn key={i} delay={i * 0.07}>
               <motion.div className="rounded-2xl p-6 flex flex-col gap-4 h-full cursor-pointer"
                 animate={{ background: active === i ? GB + '0.07)' : 'rgba(255,255,255,0.02)', borderColor: active === i ? GB + '0.3)' : 'rgba(255,255,255,0.05)' }}
                 style={{ border: '1px solid' }} whileHover={{ y: -4 }} onClick={() => setActive(i)}>
                 <div className="flex gap-0.5">
-                  {[...Array(r.rating)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: G }} />)}
+                  {[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: G }} />)}
                 </div>
                 <p className="text-sm leading-relaxed flex-1" style={{ color: `${GB}0.6)` }}>"{r.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-black shrink-0"
-                    style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{r.initials}</div>
+                    style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{r.name[0]}</div>
                   <div>
                     <p className="font-bold text-sm" style={{ color: T }}>{r.name}</p>
                     <p className="text-xs" style={{ color: `${GB}0.3)` }}>{r.service}</p>
@@ -688,7 +686,7 @@ function ReviewsSection() {
           ))}
         </div>
         <div className="flex justify-center gap-2 mt-8">
-          {REVIEWS.map((_, i) => (
+          {reviews.map((_, i) => (
             <motion.button key={i} onClick={() => setActive(i)} className="rounded-full"
               animate={{ width: active === i ? 22 : 8, background: active === i ? G : GB + '0.2)' }}
               style={{ height: 8 }} />
@@ -702,12 +700,13 @@ function ReviewsSection() {
 // ── Brands ────────────────────────────────────────────────────────
 const BRANDS = ['Hermès','Louis Vuitton','Chanel','Gucci','Prada','Dior','Bottega','Ferragamo','Tod\'s','Louboutin'];
 function BrandsSection() {
+  const { t, dir } = useLanguage();
   return (
     <section className="py-20 px-6 overflow-hidden" style={{ background: '#0A0500', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
-      <div className="max-w-5xl mx-auto" dir="rtl">
+      <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-10">
-          <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: G }}>نتعامل مع</p>
-          <h3 className="text-2xl font-black" style={{ color: T }}>أرقى العلامات العالمية</h3>
+          <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: G }}>{t('home.brands.eyebrow')}</p>
+          <h3 className="text-2xl font-black" style={{ color: T }}>{t('home.brands.title')}</h3>
         </FadeIn>
         <div className="flex gap-0 overflow-hidden">
           {[0, 1].map(k => (
@@ -727,10 +726,11 @@ function BrandsSection() {
 
 // ── Track Order ───────────────────────────────────────────────────
 function TrackOrderSection() {
+  const { t, dir } = useLanguage();
   const [code, setCode] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const STATUS_AR = { pending: 'قيد الانتظار', in_progress: 'جارٍ التنفيذ', ready: 'جاهز للاستلام ✅', completed: 'مكتمل ✅', cancelled: 'ملغى' };
+  const STATUS = t('home.track.status');
 
   const search = async () => {
     if (!code.trim()) return;
@@ -743,22 +743,22 @@ function TrackOrderSection() {
   };
 
   return (
-    <section className="py-28 px-6" style={{ background: '#060300' }} dir="rtl">
+    <section className="py-28 px-6" style={{ background: '#060300' }} dir={dir}>
       <div className="max-w-2xl mx-auto text-center">
         <FadeIn>
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>تتبع طلبك</p>
-          <h2 className="text-4xl font-black mb-3" style={{ color: T }}>أين قطعتك الآن؟</h2>
-          <p className="text-sm mb-8" style={{ color: `${GB}0.4)` }}>أدخل رقم الطلب أو رقم جوالك</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.track.eyebrow')}</p>
+          <h2 className="text-4xl font-black mb-3" style={{ color: T }}>{t('home.track.title')}</h2>
+          <p className="text-sm mb-8" style={{ color: `${GB}0.4)` }}>{t('home.track.desc')}</p>
           <div className="flex gap-3 max-w-md mx-auto mb-6">
             <input value={code} onChange={e => setCode(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()}
-              placeholder="ORD-00001 أو 05XXXXXXXX" dir="ltr"
+              placeholder={t('home.track.placeholder')} dir="ltr"
               className="flex-1 px-4 py-3.5 rounded-2xl outline-none text-sm"
               style={{ background: GB + '0.04)', border: `1px solid ${GB}0.15)`, color: T }} />
             <MagneticBtn onClick={search}
               className="px-6 py-3.5 rounded-2xl font-black text-sm text-black"
               style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
-              {loading ? '...' : 'بحث'}
+              {loading ? t('home.track.loading') : t('home.track.search')}
             </MagneticBtn>
           </div>
           <AnimatePresence>
@@ -769,10 +769,10 @@ function TrackOrderSection() {
                 {result.found
                   ? <div className="text-right space-y-2">
                     <div className="font-black text-base" style={{ color: G }}>{result.order_number}</div>
-                    <div style={{ color: T }}>العميل: {result.customer_name}</div>
-                    <div className="text-xl font-black" style={{ color: G }}>{STATUS_AR[result.status] || result.status}</div>
+                    <div style={{ color: T }}>{t('home.track.customer')}: {result.customer_name}</div>
+                    <div className="text-xl font-black" style={{ color: G }}>{STATUS[result.status] || result.status}</div>
                   </div>
-                  : <p style={{ color: 'rgba(255,100,100,0.8)' }}>لم يتم العثور على طلب بهذا الرقم</p>}
+                  : <p style={{ color: 'rgba(255,100,100,0.8)' }}>{t('home.track.notFound')}</p>}
               </motion.div>
             )}
           </AnimatePresence>
@@ -784,18 +784,19 @@ function TrackOrderSection() {
 
 // ── Branches ──────────────────────────────────────────────────────
 function BranchesSection() {
+  const { t, dir } = useLanguage();
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-public'],
     queryFn: () => base44.Branch.filter({ is_active: true }),
     staleTime: 10 * 60 * 1000,
   });
-  const items = branches.length ? branches : [{ name: 'الفرع الرئيسي', city: 'الرياض', address: 'الرياض', phone: '0549678191' }];
+  const items = branches.length ? branches : [{ name: t('home.branches.mainBranch'), city: t('home.branches.city'), address: t('home.branches.city'), phone: '0549678191' }];
   return (
-    <section id="branches" className="py-28 px-6" style={{ background: '#0A0500' }} dir="rtl">
+    <section id="branches" className="py-28 px-6" style={{ background: '#0A0500' }} dir={dir}>
       <div className="max-w-5xl mx-auto">
         <FadeIn className="text-center mb-12">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>فروعنا</p>
-          <h2 className="text-4xl font-black" style={{ color: T }}>نحن بالقرب منك</h2>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.branches.eyebrow')}</p>
+          <h2 className="text-4xl font-black" style={{ color: T }}>{t('home.branches.title')}</h2>
         </FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((b, i) => (
@@ -804,7 +805,7 @@ function BranchesSection() {
                 <h3 className="font-black text-lg mb-3" style={{ color: T }}>{b.name}</h3>
                 <div className="space-y-2 text-sm" style={{ color: `${GB}0.5)` }}>
                   <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: G }} />{b.city}{b.address && ` — ${b.address}`}</div>
-                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: G }} />السبت — الخميس: 9 صباحاً — 10 مساءً</div>
+                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: G }} />{t('home.branches.hours')}</div>
                   {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: G }} /><a href={`tel:${b.phone}`} className="hover:text-yellow-400">{b.phone}</a></div>}
                 </div>
               </motion.div>
@@ -818,6 +819,7 @@ function BranchesSection() {
 
 // ── Footer ────────────────────────────────────────────────────────
 function Footer() {
+  const { t, dir } = useLanguage();
   const { data: settingsArr } = useQuery({
     queryKey: ['app-settings-public'],
     queryFn: async () => {
@@ -833,7 +835,7 @@ function Footer() {
   const phone     = s.phone || '0549678191';
 
   return (
-    <footer className="py-16 px-6" style={{ background: '#060300', borderTop: `1px solid ${GB}0.08)` }} dir="rtl">
+    <footer className="py-16 px-6" style={{ background: '#060300', borderTop: `1px solid ${GB}0.08)` }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div className="md:col-span-2">
@@ -841,16 +843,16 @@ function Footer() {
               <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
                 <Scissors className="w-4 h-4 text-black" />
               </div>
-              <h3 className="text-xl font-black" style={{ color: T }}>إبرة وخيط الإسكافي</h3>
+              <h3 className="text-xl font-black" style={{ color: T }}>{t('common.brand')}</h3>
             </div>
             <p className="text-sm leading-relaxed max-w-xs mb-5" style={{ color: `${GB}0.2)` }}>
-              حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة من قلب الرياض.
+              {t('common.footer.tagline')}
             </p>
             <div className="flex gap-3">
               {[
-                { href: instagram, icon: Instagram, color: '#E1306C', label: 'إنستغرام' },
-                { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'واتساب' },
-                ...(twitter ? [{ href: twitter, icon: Twitter, color: G, label: 'تويتر' }] : []),
+                { href: instagram, icon: Instagram, color: '#E1306C', label: 'Instagram' },
+                { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'WhatsApp' },
+                ...(twitter ? [{ href: twitter, icon: Twitter, color: G, label: 'Twitter' }] : []),
               ].map((social, i) => (
                 <motion.a key={i} href={social.href} target="_blank" rel="noopener noreferrer"
                   aria-label={social.label} whileHover={{ scale: 1.15, y: -2 }}
@@ -863,33 +865,33 @@ function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>روابط</h4>
+            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.linksTitle')}</h4>
             <ul className="space-y-3 text-sm" style={{ color: `${GB}0.3)` }}>
-              {[['احجز موعت', '/book'], ['تتبع حجزك', '/my-bookings'], ['المتجر', '/shop'], ['من نحن', '/about'], ['سياسة الإصلاح', '/repair-policy']].map(([label, to]) => (
-                <li key={label}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
+              {[[t('common.footer.book'), '/book'], [t('common.footer.trackBooking'), '/my-bookings'], [t('common.footer.shop'), '/shop'], [t('common.footer.about'), '/about'], [t('common.footer.repairPolicy'), '/repair-policy']].map(([label, to]) => (
+                <li key={to}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
               ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>قانوني</h4>
+            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.legalTitle')}</h4>
             <ul className="space-y-3 text-sm" style={{ color: `${GB}0.3)` }}>
-              {[['سياسة الخصوصية', '/privacy'], ['سياسة التوصيل', '/shipping-policy']].map(([label, to]) => (
-                <li key={label}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
+              {[[t('common.footer.privacy'), '/privacy'], [t('common.footer.shipping'), '/shipping-policy']].map(([label, to]) => (
+                <li key={to}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
               ))}
               <li><a href={`tel:${phone}`} className="hover:text-yellow-400 transition-colors">{phone}</a></li>
-              <li><a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">واتساب</a></li>
+              <li><a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">{t('common.footer.whatsapp')}</a></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderColor: GB + '0.08)' }}>
-          <p className="text-sm" style={{ color: `${GB}0.12)` }}>© {new Date().getFullYear()} إبرة وخيط الإسكافي. جميع الحقوق محفوظة.</p>
+          <p className="text-sm" style={{ color: `${GB}0.12)` }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
           <div className="flex gap-4 text-xs" style={{ color: `${GB}0.15)` }}>
-            <Link to="/privacy" className="hover:text-yellow-400 transition-colors">الخصوصية</Link>
-            <Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors">التوصيل</Link>
-            <Link to="/about" className="hover:text-yellow-400 transition-colors">من نحن</Link>
+            <Link to="/privacy" className="hover:text-yellow-400 transition-colors">{t('common.footer.privacy')}</Link>
+            <Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors">{t('common.footer.shipping')}</Link>
+            <Link to="/about" className="hover:text-yellow-400 transition-colors">{t('common.footer.about')}</Link>
           </div>
         </div>
       </div>
@@ -900,28 +902,38 @@ function Footer() {
 // ── Main ──────────────────────────────────────────────────────────
 export default function BookingLanding() {
   useTrackVisit('/');
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
   return (
     <div className="font-tajawal" style={{ scrollBehavior: 'smooth' }}>
       <Helmet>
-        <title>إبرة وخيط الإسكافي | إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض</title>
-        <meta name="description" content="إبرة وخيط الإسكافي — حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات. احجز موعدك الآن!" />
-        <meta name="keywords" content="إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, shoe repair riyadh, bag repair riyadh" />
+        <html lang={isAr ? 'ar' : 'en'} />
+        <title>{isAr
+          ? 'إبرة وخيط الإسكافي | إصلاح وتجديد الأحذية والحقائب الجلدية والبسطار العسكري في الرياض'
+          : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair in Riyadh, Saudi Arabia'}</title>
+        <meta name="description" content={isAr
+          ? 'إبرة وخيط الإسكافي — حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة والبسطار العسكري في الرياض. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات. احجز موعدك الآن!'
+          : 'Ebra & Khait Cobbler — Saudi craftsmen specialized in repairing and restoring luxury shoes, leather bags, sneakers, and military boots in Riyadh. Restoration, polishing, sole replacement for top brands. Book now!'} />
+        <meta name="keywords" content={isAr
+          ? 'إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, تبديل نعل, خياطة حذاء جلد, تنظيف حقائب جلدية, إصلاح سحاب حقيبة, إصلاح أحذية فاخرة, أفضل إسكافي في الرياض, إسكافي منزلي الرياض, اسكافي قريب مني, وين الاقي اسكافي زين, تصليح كوتشي, تصليح جزمة, تصليح صرمايه, صيانة احذيه, تصليح شنطة جلد, تصليح بسطار عسكري, صيانة بسطار الجيش, تبديل نعل بسطار عسكري, اصلاح جزمة عسكرية, تصليح بوت عسكري, بسطار الجيش السعودي, إصلاح أحذية العليا, إصلاح أحذية الملز, إصلاح أحذية النخيل, إصلاح أحذية حي السفارات, تصليح حذاء جلد أصلي, تلوين جلد, صيانة حقائب فاخرة, استلام وتوصيل إصلاح أحذية, حجز موعد إسكافي, shoe repair riyadh, leather bag repair riyadh, luxury shoe restoration, cobbler riyadh, shoe sole replacement riyadh, leather shine and polish, military boot repair riyadh'
+          : 'shoe repair riyadh, cobbler riyadh, leather bag repair riyadh, luxury shoe restoration, shoe sole replacement riyadh, sneaker repair riyadh, military boot repair riyadh, army boot resole saudi arabia, handbag repair saudi arabia, leather care riyadh, best cobbler riyadh, shoe shine riyadh, luxury handbag restoration riyadh, zipper repair riyadh'} />
         <link rel="canonical" href="https://cobblerlast.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large" />
         <meta property="og:type" content="business.business" />
-        <meta property="og:title" content="إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة - الرياض" />
-        <meta property="og:description" content="حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة. خدمة استلام وتوصيل في الرياض." />
+        <meta property="og:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة - الرياض' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair — Riyadh'} />
+        <meta property="og:description" content={isAr ? 'حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة. خدمة استلام وتوصيل في الرياض.' : 'Saudi craftsmen specialized in repairing luxury shoes and leather bags. Pickup & delivery service in Riyadh.'} />
         <meta property="og:url" content="https://cobblerlast.com/" />
         <meta property="og:image" content="https://cobblerlast.com/og-image.jpg" />
-        <meta property="og:locale" content="ar_SA" />
-        <meta property="og:site_name" content="إبرة وخيط الإسكافي" />
+        <meta property="og:locale" content={isAr ? 'ar_SA' : 'en_US'} />
+        <meta property="og:site_name" content={isAr ? 'إبرة وخيط الإسكافي' : 'Ebra & Khait Cobbler'} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة" />
+        <meta name="twitter:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair'} />
         <meta name="twitter:image" content="https://cobblerlast.com/og-image.jpg" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
           "name": "إبرة وخيط الإسكافي",
+          "alternateName": "Ebra & Khait Cobbler",
           "url": "https://cobblerlast.com",
           "telephone": "+966549678191",
           "priceRange": "$$",

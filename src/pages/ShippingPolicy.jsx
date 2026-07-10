@@ -2,9 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Truck, Clock, MapPin, Package, CheckCircle, Phone } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const GOLD = '#C9A84C';
 const TEXT = '#F5EDD8';
+const STEP_ICONS = [Phone, Truck, Package, CheckCircle];
 
 function Section({ title, children }) {
   return (
@@ -16,18 +19,23 @@ function Section({ title, children }) {
 }
 
 export default function ShippingPolicy() {
-  const steps = [
-    { icon: Phone, title: 'التواصل والتقييم', desc: 'أرسل صوراً لقطعتك عبر الواتساب وسنقيّمها مجاناً خلال ساعة.' },
-    { icon: Truck, title: 'الاستلام من منزلك', desc: 'نرسل مندوبنا لاستلام القطعة من موقعك مباشرة داخل الرياض.' },
-    { icon: Package, title: 'الإصلاح والتجديد', desc: 'يبدأ فريقنا العمل فور الاستلام. نُبلغك بكل مرحلة.' },
-    { icon: CheckCircle, title: 'التسليم لبابك', desc: 'نعيد قطعتك كالجديدة تماماً مع ضمان كامل على الخدمة.' },
-  ];
+  const { t, dir, lang } = useLanguage();
+  const isAr = lang === 'ar';
+  const steps = t('shippingPolicy.steps');
+  const fees = t('shippingPolicy.fees');
+  const trackItems = t('shippingPolicy.trackItems');
+  const footer = t('shippingPolicy.footer');
 
   return (
-    <div className="min-h-screen font-tajawal" style={{ background: '#060300', color: TEXT }}>
+    <div className="min-h-screen font-tajawal" style={{ background: '#060300', color: TEXT }} dir={dir}>
       <Helmet>
-        <title>سياسة التوصيل والاستلام | إبرة وخيط الإسكافي</title>
-        <meta name="description" content="تعرف على سياسة التوصيل والاستلام في إبرة وخيط الإسكافي — نستلم من موقعك ونوصل لبابك داخل الرياض." />
+        <title>{isAr ? 'سياسة التوصيل والاستلام | إبرة وخيط الإسكافي' : 'Shipping & Pickup Policy | Ebra & Khait Cobbler'}</title>
+        <meta name="description" content={isAr
+          ? 'تعرف على سياسة التوصيل والاستلام في إبرة وخيط الإسكافي — نستلم من موقعك ونوصل لبابك داخل الرياض.'
+          : 'Learn about our shipping and pickup policy at Ebra & Khait Cobbler — we pick up from your location and deliver to your door in Riyadh.'} />
+        <meta name="keywords" content={isAr
+          ? 'استلام وتوصيل إصلاح أحذية, توصيل مجاني إصلاح أحذية الرياض, استلام حذاء من المنزل, خدمة توصيل تجديد حقائب جلدية الرياض'
+          : 'shoe repair pickup delivery, free shoe repair delivery riyadh, home shoe pickup, leather bag renewal delivery riyadh'} />
         <link rel="canonical" href="https://cobblerlast.com/shipping-policy" />
         <meta name="robots" content="index, follow" />
       </Helmet>
@@ -35,18 +43,21 @@ export default function ShippingPolicy() {
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 h-16 flex items-center px-6"
         style={{ background: 'rgba(6,3,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)' }}>
-        <div className="max-w-4xl mx-auto w-full flex items-center justify-between" dir="rtl">
-          <Link to="/" className="text-lg font-black" style={{ color: GOLD }}>إبرة وخيط الإسكافي</Link>
-          <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(245,237,216,0.5)' }}>الرئيسية</Link>
+        <div className="max-w-4xl mx-auto w-full flex items-center justify-between" dir={dir}>
+          <Link to="/" className="text-lg font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(245,237,216,0.5)' }}>{t('common.nav.home')}</Link>
+          </div>
         </div>
       </nav>
 
-      <div className="pt-28 pb-20 px-6 max-w-4xl mx-auto" dir="rtl">
+      <div className="pt-28 pb-20 px-6 max-w-4xl mx-auto" dir={dir}>
         <div className="flex items-center gap-3 mb-10">
           <Truck className="w-8 h-8" style={{ color: GOLD }} />
           <div>
-            <h1 className="text-3xl font-black" style={{ color: TEXT }}>سياسة التوصيل والاستلام</h1>
-            <p className="text-sm mt-1" style={{ color: 'rgba(245,237,216,0.3)' }}>نصل إليك أينما كنت في الرياض</p>
+            <h1 className="text-3xl font-black" style={{ color: TEXT }}>{t('shippingPolicy.title')}</h1>
+            <p className="text-sm mt-1" style={{ color: 'rgba(245,237,216,0.3)' }}>{t('shippingPolicy.subtitle')}</p>
           </div>
         </div>
 
@@ -55,7 +66,7 @@ export default function ShippingPolicy() {
           {steps.map((s, i) => (
             <div key={i} className="p-5 rounded-2xl flex gap-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(201,168,76,0.1)' }}>
-                <s.icon className="w-5 h-5" style={{ color: GOLD }} />
+                {React.createElement(STEP_ICONS[i], { className: 'w-5 h-5', style: { color: GOLD } })}
               </div>
               <div>
                 <h3 className="font-black mb-1" style={{ color: TEXT }}>{i + 1}. {s.title}</h3>
@@ -65,34 +76,30 @@ export default function ShippingPolicy() {
           ))}
         </div>
 
-        <Section title="منطقة التغطية">
+        <Section title={t('shippingPolicy.coverageTitle')}>
           <div className="flex items-start gap-2">
             <MapPin className="w-4 h-4 mt-0.5 shrink-0" style={{ color: GOLD }} />
             <div>
-              <p><strong style={{ color: TEXT }}>داخل الرياض:</strong> خدمة الاستلام والتوصيل متاحة في جميع أحياء الرياض.</p>
-              <p><strong style={{ color: TEXT }}>خارج الرياض:</strong> يمكن إرسال القطع عبر أرامكس أو شركات الشحن. التواصل مسبقاً ضروري.</p>
+              <p><strong style={{ color: TEXT }}>{t('shippingPolicy.coverageInside')}</strong> {t('shippingPolicy.coverageInsideDesc')}</p>
+              <p><strong style={{ color: TEXT }}>{t('shippingPolicy.coverageOutside')}</strong> {t('shippingPolicy.coverageOutsideDesc')}</p>
             </div>
           </div>
         </Section>
 
-        <Section title="مواعيد الاستلام والتوصيل">
+        <Section title={t('shippingPolicy.timesTitle')}>
           <div className="flex items-start gap-2">
             <Clock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: GOLD }} />
             <div>
-              <p><strong style={{ color: TEXT }}>أيام العمل:</strong> السبت — الخميس (9 صباحاً — 10 مساءً)</p>
-              <p><strong style={{ color: TEXT }}>وقت الاستجابة:</strong> يتم التنسيق لموعد الاستلام خلال ساعتين من التواصل.</p>
-              <p><strong style={{ color: TEXT }}>وقت الإنجاز:</strong> يعتمد على نوع الخدمة — من يوم واحد حتى 7 أيام.</p>
+              <p><strong style={{ color: TEXT }}>{t('shippingPolicy.workDays')}</strong> {t('shippingPolicy.workDaysDesc')}</p>
+              <p><strong style={{ color: TEXT }}>{t('shippingPolicy.responseTime')}</strong> {t('shippingPolicy.responseTimeDesc')}</p>
+              <p><strong style={{ color: TEXT }}>{t('shippingPolicy.completionTime')}</strong> {t('shippingPolicy.completionTimeDesc')}</p>
             </div>
           </div>
         </Section>
 
-        <Section title="رسوم التوصيل">
+        <Section title={t('shippingPolicy.feesTitle')}>
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.1)' }}>
-            {[
-              { zone: 'داخل الرياض (شمال وجنوب)', price: 'مجاناً عند الطلبات فوق 200 ر.س' },
-              { zone: 'داخل الرياض (أقل من 200 ر.س)', price: '30 ر.س' },
-              { zone: 'خارج الرياض', price: 'حسب شركة الشحن' },
-            ].map((r, i) => (
+            {fees.map((r, i) => (
               <div key={i} className="flex justify-between items-center px-5 py-3 text-sm"
                 style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(201,168,76,0.06)' }}>
                 <span style={{ color: 'rgba(245,237,216,0.6)' }}>{r.zone}</span>
@@ -102,37 +109,35 @@ export default function ShippingPolicy() {
           </div>
         </Section>
 
-        <Section title="تتبع الطلب">
-          <p>يمكنك متابعة حالة طلبك في أي وقت من خلال:</p>
+        <Section title={t('shippingPolicy.trackTitle')}>
+          <p>{t('shippingPolicy.trackDesc')}</p>
           <ul className="list-disc list-inside space-y-1 mr-4">
-            <li>صفحة تتبع الطلبات على موقعنا</li>
-            <li>رسائل واتساب التلقائية عند كل مرحلة</li>
-            <li>التواصل المباشر مع فريقنا</li>
+            {trackItems.map((it, i) => <li key={i}>{it}</li>)}
           </ul>
         </Section>
 
-        <Section title="التواصل معنا">
-          <p>لأي استفسار بشأن التوصيل أو تحديد موعد استلام:</p>
+        <Section title={t('shippingPolicy.contactTitle')}>
+          <p>{t('shippingPolicy.contactDesc')}</p>
           <div className="flex flex-wrap gap-3 mt-3">
             <a href="https://wa.me/966549678191" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
               style={{ background: 'rgba(37,211,102,0.15)', color: '#25D366', border: '1px solid rgba(37,211,102,0.2)' }}>
-              واتساب: 0549678191
+              WhatsApp: 0549678191
             </a>
           </div>
         </Section>
       </div>
 
-      <footer className="py-6 px-6 border-t text-center text-sm" dir="rtl"
+      <footer className="py-6 px-6 border-t text-center text-sm" dir={dir}
         style={{ borderColor: 'rgba(201,168,76,0.08)', color: 'rgba(245,237,216,0.2)', background: '#060300' }}>
         <div className="flex flex-wrap justify-center gap-4 mb-3">
-          <Link to="/" className="hover:text-yellow-400 transition-colors">الرئيسية</Link>
-          <Link to="/about" className="hover:text-yellow-400 transition-colors">من نحن</Link>
-          <Link to="/privacy" className="hover:text-yellow-400 transition-colors">سياسة الخصوصية</Link>
-          <Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors" style={{ color: GOLD }}>سياسة التوصيل</Link>
-          <Link to="/repair-policy" className="hover:text-yellow-400 transition-colors">سياسة الإصلاح</Link>
+          <Link to="/" className="hover:text-yellow-400 transition-colors">{t('common.nav.home')}</Link>
+          <Link to="/about" className="hover:text-yellow-400 transition-colors">{footer.about}</Link>
+          <Link to="/privacy" className="hover:text-yellow-400 transition-colors">{footer.privacy}</Link>
+          <Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors" style={{ color: GOLD }}>{footer.shipping}</Link>
+          <Link to="/repair-policy" className="hover:text-yellow-400 transition-colors">{footer.repair}</Link>
         </div>
-        <p>© {new Date().getFullYear()} إبرة وخيط الإسكافي</p>
+        <p>© {new Date().getFullYear()} {t('common.brand')}</p>
       </footer>
     </div>
   );

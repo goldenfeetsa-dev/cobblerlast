@@ -102,6 +102,7 @@ export const db = {
   Customer:         createEntity('customers'),
   Branch:           createEntity('branches'),
   InventoryItem:    createEntity('inventory_items'),
+  Product:          createEntity('products'),
   SalesInvoice:     createEntity('sales_invoices'),
   Expense:          createEntity('expenses'),
   AuditLog:         createEntity('audit_logs'),

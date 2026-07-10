@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { runPhotoCleanup } from '@/lib/photoCleanup';
 
@@ -139,11 +140,13 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-        <SpeedInsights />
+        <LanguageProvider>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+          <SpeedInsights />
+        </LanguageProvider>
       </QueryClientProvider>
     </AuthProvider>
   )

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Package, Star, ToggleLeft, ToggleRight } from 'lucide-react';
+import ProductImageUploader from '@/components/shop/ProductImageUploader';
 
 const CATEGORIES = {
   soles: 'نعال وأكواع',
@@ -52,9 +53,8 @@ function ProductForm({ initial, onSave, onCancel }) {
           <label className="text-xs font-bold text-muted-foreground mb-1 block">السعر قبل الخصم</label>
           <Input type="number" value={form.original_price} onChange={e => set('original_price', e.target.value)} placeholder="120" />
         </div>
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">رابط الصورة</label>
-          <Input value={form.image_url} onChange={e => set('image_url', e.target.value)} placeholder="https://..." />
+        <div className="sm:col-span-2">
+          <ProductImageUploader value={form.image_url} onChange={(url) => set('image_url', url)} />
         </div>
         <div className="sm:col-span-2">
           <label className="text-xs font-bold text-muted-foreground mb-1 block">الوصف</label>
@@ -71,8 +71,11 @@ function ProductForm({ initial, onSave, onCancel }) {
           </label>
         </div>
       </div>
+      {!form.image_url && (
+        <p className="text-xs text-amber-600 mb-3">⚠️ بدون صورة حقيقية، لن يظهر المنتج في نتائج بحث الصور بجوجل، وسيُستبدل بصورة عامة مؤقتة في المتجر.</p>
+      )}
       <div className="flex gap-3">
-        <Button onClick={() => onSave(form)} className="bg-primary">حفظ</Button>
+        <Button onClick={() => onSave(form)} className="bg-primary" disabled={!form.name_ar || !form.price}>حفظ</Button>
         <Button variant="outline" onClick={onCancel}>إلغاء</Button>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { base44 } from '@/api/supabaseApi';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Scissors } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { format } from 'date-fns';
 import StepIndicator from '@/components/booking/StepIndicator';
 import ServiceSelector from '@/components/booking/ServiceSelector';
@@ -14,6 +15,8 @@ import LiveInvoice from '@/components/booking/LiveInvoice';
 import CustomerForm from '@/components/booking/CustomerForm';
 import BookingConfirmation from '@/components/booking/BookingConfirmation';
 import ItemPhotosUploader from '@/components/booking/ItemPhotosUploader';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const VAT_RATE = 0.15;
 
@@ -38,6 +41,9 @@ function timeToMinutes(t) {
 
 export default function BookingWizard() {
   useTrackVisit('/book');
+  const { t, dir, lang } = useLanguage();
+  const isAr = lang === 'ar';
+  const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const [step, setStep] = useState(1);
   const [service, setService] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -61,9 +67,9 @@ export default function BookingWizard() {
 
   const validateStep3 = () => {
     const errs = {};
-    if (!customer.name.trim()) errs.name = 'الاسم مطلوب';
-    if (!customer.phone.trim()) errs.phone = 'رقم الجوال مطلوب';
-    else if (!/^05\d{8}$/.test(customer.phone.trim())) errs.phone = 'رقم الجوال غير صحيح (يبدأ بـ 05)';
+    if (!customer.name.trim()) errs.name = t('bookingWizard.errors.nameRequired');
+    if (!customer.phone.trim()) errs.phone = t('bookingWizard.errors.phoneRequired');
+    else if (!/^05\d{8}$/.test(customer.phone.trim())) errs.phone = t('bookingWizard.errors.phoneInvalid');
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -113,7 +119,7 @@ export default function BookingWizard() {
 
   if (step === 5 && confirmedBooking) {
     return (
-      <div className="min-h-screen bg-stone-50 py-8 px-4" dir="rtl">
+      <div className="min-h-screen bg-stone-50 py-8 px-4" dir={dir}>
         <div className="max-w-md mx-auto bg-white rounded-3xl shadow-xl p-8">
           <BookingConfirmation booking={confirmedBooking} />
         </div>
@@ -122,17 +128,35 @@ export default function BookingWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-8 px-4" dir="rtl">
+    <div className="min-h-screen bg-stone-50 py-8 px-4" dir={dir}>
+      <Helmet>
+        <title>{isAr ? 'احجز موعد إصلاح | إبرة وخيط الإسكافي — الرياض' : 'Book a Repair Appointment | Ebra & Khait Cobbler — Riyadh'}</title>
+        <meta name="description" content={isAr
+          ? 'احجز موعدك الآن لإصلاح أو تجديد حذائك أو حقيبتك الجلدية الفاخرة. اختر الخدمة، حدد الموعد، واستلم قطعتك في أفضل حالة — استلام وتوصيل داخل الرياض.'
+          : 'Book your appointment now to repair or restore your luxury shoe or leather bag. Choose the service, pick a time, and get your item back in the best condition — pickup and delivery within Riyadh.'} />
+        <meta name="keywords" content={isAr
+          ? 'حجز موعد إصلاح أحذية, حجز إسكافي الرياض, حجز تجديد حقيبة جلدية, طلب إصلاح حذاء أونلاين, استلام وتوصيل إصلاح أحذية الرياض'
+          : 'book shoe repair appointment, book cobbler riyadh, book leather bag renewal, online shoe repair request, shoe repair pickup delivery riyadh'} />
+        <link rel="canonical" href="https://cobblerlast.com/book" />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={isAr ? 'احجز موعد إصلاح | إبرة وخيط الإسكافي' : 'Book a Repair Appointment | Ebra & Khait Cobbler'} />
+        <meta property="og:description" content={isAr ? 'احجز موعدك الآن لإصلاح أو تجديد حذائك أو حقيبتك الجلدية الفاخرة في الرياض.' : 'Book now to repair or restore your luxury shoe or leather bag in Riyadh.'} />
+        <meta property="og:url" content="https://cobblerlast.com/book" />
+      </Helmet>
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/booking" className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-700 text-sm mb-4">
-            <ArrowRight className="w-4 h-4" />
-            العودة للموقع
-          </Link>
+          <div className="flex items-center justify-between mb-4">
+            <Link to="/booking" className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-700 text-sm">
+              <BackIcon className="w-4 h-4" />
+              {t('bookingWizard.backHome')}
+            </Link>
+            <LanguageSwitcher dark={false} />
+          </div>
           <h1 className="text-2xl font-black text-stone-800 flex items-center justify-center gap-2">
             <Scissors className="w-6 h-6 text-amber-500" />
-            حجز موعد جديد
+            {t('bookingWizard.pageTitle')}
           </h1>
         </div>
 
@@ -158,7 +182,7 @@ export default function BookingWizard() {
                     bookingType={bookingType}
                     address={address}
                     location={location}
-                    onTypeChange={t => { setBookingType(t); setAddress(''); setLocation(null); }}
+                    onTypeChange={tp => { setBookingType(tp); setAddress(''); setLocation(null); }}
                     onAddressChange={setAddress}
                     onLocationChange={setLocation}
                   />
@@ -175,35 +199,35 @@ export default function BookingWizard() {
             )}
             {step === 4 && (
               <div>
-                <h2 className="text-xl font-bold text-stone-800 mb-1">مراجعة الحجز</h2>
-                <p className="text-stone-500 text-sm mb-6">تأكد من البيانات قبل الإتمام</p>
+                <h2 className="text-xl font-bold text-stone-800 mb-1">{t('bookingWizard.reviewTitle')}</h2>
+                <p className="text-stone-500 text-sm mb-6">{t('bookingWizard.reviewDesc')}</p>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">الخدمة</span>
+                    <span className="text-stone-500">{t('bookingWizard.service')}</span>
                     <span className="font-bold text-stone-800">{service?.name_ar}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">الموعد</span>
+                    <span className="text-stone-500">{t('bookingWizard.date')}</span>
                     <span className="font-bold text-stone-800">
                       {selectedDate && format(selectedDate, 'yyyy/MM/dd')} — {selectedTime}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">نوع الخدمة</span>
-                    <span className="font-bold text-stone-800">{bookingType === 'home_visit' ? 'زيارة منزلية' : 'استلام من المحل'}</span>
+                    <span className="text-stone-500">{t('bookingWizard.bookingTypeLabel')}</span>
+                    <span className="font-bold text-stone-800">{bookingType === 'home_visit' ? t('bookingWizard.homeVisit') : t('bookingWizard.inStore')}</span>
                   </div>
                   {address && (
                     <div className="flex justify-between py-2 border-b border-stone-100">
-                      <span className="text-stone-500">العنوان</span>
+                      <span className="text-stone-500">{t('bookingWizard.address')}</span>
                       <span className="font-bold text-stone-800">{address}</span>
                     </div>
                   )}
                   <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">الاسم</span>
+                    <span className="text-stone-500">{t('bookingWizard.name')}</span>
                     <span className="font-bold text-stone-800">{customer.name}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">الجوال</span>
+                    <span className="text-stone-500">{t('bookingWizard.phone')}</span>
                     <span className="font-bold text-stone-800">{customer.phone}</span>
                   </div>
                 </div>
@@ -218,8 +242,8 @@ export default function BookingWizard() {
                 disabled={step === 1}
                 className="gap-2"
               >
-                <ArrowRight className="w-4 h-4" />
-                السابق
+                <BackIcon className="w-4 h-4" />
+                {t('bookingWizard.prev')}
               </Button>
               {step < 4 ? (
                 <Button
@@ -227,8 +251,8 @@ export default function BookingWizard() {
                   disabled={!canGoNext()}
                   className="bg-amber-500 hover:bg-amber-400 text-stone-900 font-bold gap-2"
                 >
-                  التالي
-                  <ArrowLeft className="w-4 h-4" />
+                  {t('bookingWizard.next')}
+                  {dir === 'rtl' ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                 </Button>
               ) : (
                 <Button
@@ -236,7 +260,7 @@ export default function BookingWizard() {
                   disabled={submitting}
                   className="bg-green-600 hover:bg-green-500 text-white font-bold px-8"
                 >
-                  {submitting ? 'جارٍ الحجز...' : 'تأكيد الحجز'}
+                  {submitting ? t('bookingWizard.booking') : t('bookingWizard.confirm')}
                 </Button>
               )}
             </div>
@@ -249,7 +273,7 @@ export default function BookingWizard() {
                 <LiveInvoice service={service} bookingType={bookingType} />
                 {selectedDate && selectedTime && (
                   <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-right">
-                    <p className="font-bold text-amber-800 mb-1">موعدك المختار</p>
+                    <p className="font-bold text-amber-800 mb-1">{t('bookingWizard.chosenDate')}</p>
                     <p className="text-amber-700">{format(selectedDate, 'yyyy/MM/dd')} — {selectedTime}</p>
                   </div>
                 )}
