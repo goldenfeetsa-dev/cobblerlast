@@ -1,5 +1,6 @@
 import { useTrackVisit } from '@/hooks/useTrackVisit';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/supabaseApi';
 import { Button } from '@/components/ui/button';
@@ -109,12 +110,17 @@ export default function BookingWizard() {
       notes: customer.notes.trim(),
     };
 
-    const created = await base44.entities.Booking.create(bookingData);
-    qc.invalidateQueries({ queryKey: ['bookings-calendar'] });
-    qc.invalidateQueries({ queryKey: ['bookings'] });
-    setConfirmedBooking(created);
-    setSubmitting(false);
-    setStep(5);
+    try {
+      const created = await base44.entities.Booking.create(bookingData);
+      qc.invalidateQueries({ queryKey: ['bookings-calendar'] });
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      setConfirmedBooking(created);
+      setStep(5);
+    } catch (err) {
+      toast.error(`تعذّر تأكيد الحجز: ${err.message || 'حاول مرة أخرى'}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (step === 5 && confirmedBooking) {

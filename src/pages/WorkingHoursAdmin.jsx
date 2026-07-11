@@ -52,18 +52,23 @@ export default function WorkingHoursAdmin() {
 
   const handleSave = async () => {
     setSaving(true);
-    for (const dayHour of hours) {
-      const existing = existingHours.find(wh => wh.day_of_week === dayHour.day_of_week);
-      if (existing) {
-        await base44.entities.WorkingHours.update(existing.id, dayHour);
-      } else {
-        await base44.entities.WorkingHours.create(dayHour);
+    try {
+      for (const dayHour of hours) {
+        const existing = existingHours.find(wh => wh.day_of_week === dayHour.day_of_week);
+        if (existing) {
+          await base44.entities.WorkingHours.update(existing.id, dayHour);
+        } else {
+          await base44.entities.WorkingHours.create(dayHour);
+        }
       }
+      qc.invalidateQueries({ queryKey: ['working-hours'] });
+      qc.invalidateQueries({ queryKey: ['working-hours-admin'] });
+      toast({ title: 'تم حفظ أوقات العمل بنجاح' });
+    } catch (err) {
+      toast({ title: 'فشل حفظ أوقات العمل', description: err.message || 'حاول مرة أخرى', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
-    qc.invalidateQueries({ queryKey: ['working-hours'] });
-    qc.invalidateQueries({ queryKey: ['working-hours-admin'] });
-    setSaving(false);
-    toast({ title: 'تم حفظ أوقات العمل بنجاح' });
   };
 
   return (

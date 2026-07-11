@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -9,8 +10,6 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { runPhotoCleanup } from '@/lib/photoCleanup';
-
-import GeminiAssistant from './components/ai/GeminiAssistant';
 
 // ── Lazy loaded pages (code splitting) ──────────────
 const StaffOrders = lazy(() => import('./pages/StaffOrders'));
@@ -51,7 +50,7 @@ const SalesSystem = lazy(() => import('./pages/SalesSystem'));
 const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
 
 import AppLayout from './components/pos/AppLayout';
-import BookingLanding from './pages/BookingLanding';
+const BookingLanding = lazy(() => import('./pages/BookingLanding'));
 
 const AuthenticatedApp = () => {
   const { authError, navigateToLogin } = useAuth();
@@ -131,7 +130,6 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
       </Routes>
       </Suspense>
-      <GeminiAssistant />
     </>
   );
 };
@@ -145,6 +143,7 @@ function App() {
             <AuthenticatedApp />
           </Router>
           <Toaster />
+          <SonnerToaster position="top-center" richColors closeButton />
           <SpeedInsights />
         </LanguageProvider>
       </QueryClientProvider>

@@ -69,7 +69,7 @@ export default function AboutUs() {
 
       {/* Navbar */}
       <nav className="fixed top-0 inset-x-0 z-50 h-16 flex items-center px-6"
-        style={{ background: 'rgba(6,3,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(6,3,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="max-w-6xl mx-auto w-full flex items-center justify-between" dir={dir}>
           <Link to="/" className="text-lg font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
           <div className="flex items-center gap-4">

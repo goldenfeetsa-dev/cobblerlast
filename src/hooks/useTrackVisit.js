@@ -5,7 +5,12 @@ export function useTrackVisit(page = '/booking') {
   useEffect(() => {
     async function track() {
       try {
-        const geo = await fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => ({}));
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const geo = await fetch('https://ipapi.co/json/', { signal: controller.signal })
+          .then(r => r.json())
+          .catch(() => ({}))
+          .finally(() => clearTimeout(timeoutId));
         const ua  = navigator.userAgent;
         await supabase.from('site_visits').insert({
           page,

@@ -115,7 +115,7 @@ function Navbar() {
     <motion.nav className="fixed top-0 inset-x-0 z-50 px-6"
       initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
       <div className={`max-w-7xl mx-auto mt-3 rounded-2xl px-5 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-2xl' : ''}`}
-        style={{ background: scrolled ? 'rgba(10,6,0,0.92)' : 'rgba(10,6,0,0.5)', backdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
+        style={{ background: scrolled ? 'rgba(10,6,0,0.92)' : 'rgba(10,6,0,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
         <Link to="/" dir={dir}>
           <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
@@ -190,7 +190,7 @@ function HeroSection() {
       <div className="absolute inset-0 pointer-events-none" style={{
         backgroundImage: `linear-gradient(${GB}0.04) 1px, transparent 1px), linear-gradient(90deg, ${GB}0.04) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',
-        maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)'
+        maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)'
       }} />
 
       {/* Floating gold particles */}
@@ -341,7 +341,7 @@ function HeroSection() {
             <motion.div
               animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute top-6 right-2 z-20 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs"
-              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.3)`, backdropFilter: 'blur(12px)', boxShadow: `0 8px 30px ${GB}0.2)` }}>
+              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: `0 8px 30px ${GB}0.2)` }}>
               <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
                 <CheckCircle className="w-3.5 h-3.5 text-black" />
               </div>
@@ -355,7 +355,7 @@ function HeroSection() {
             <motion.div
               animate={{ y: [0, 10, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
               className="absolute bottom-10 left-0 z-20 px-4 py-3 rounded-2xl"
-              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)' }}>
+              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <div className="flex items-center gap-2 mb-1.5">
                 {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: G }} />)}
               </div>
@@ -366,7 +366,7 @@ function HeroSection() {
             {/* Live indicator */}
             <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
               className="absolute top-1/2 -left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)' }}>
+              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <motion.div className="w-2 h-2 rounded-full" style={{ background: '#22c55e' }}
                 animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
               <span style={{ color: '#22c55e', fontWeight: 700 }}>{t('home.hero.liveNow')}</span>
@@ -507,19 +507,25 @@ function RequestServiceSection() {
   const [form, setForm] = useState({ name: '', phone: '', service: '', notes: '' });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const submit = async () => {
     if (!form.name || !form.phone) return;
     setLoading(true);
+    setError('');
     try {
-      await supabase.from('bookings').insert({
+      const { error: dbError } = await supabase.from('bookings').insert({
         customer_name: form.name, customer_phone: form.phone,
         notes: `${t('home.request.serviceLabel')}: ${form.service}\n${form.notes}`, status: 'pending',
       });
+      if (dbError) throw dbError;
       setSent(true);
-    } catch { setSent(true); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err?.message || t('home.request.error') || 'حدث خطأ أثناء الإرسال، حاول مرة أخرى');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -576,6 +582,11 @@ function RequestServiceSection() {
                   className="w-full px-4 py-3.5 rounded-xl outline-none text-sm resize-none"
                   style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: T }} />
               </div>
+              {error && (
+                <p className="mb-4 text-sm text-center rounded-xl py-3 px-4" style={{ color: '#ff6b6b', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.25)' }}>
+                  {error}
+                </p>
+              )}
               <MagneticBtn onClick={submit}
                 className="w-full py-4 rounded-2xl font-black text-base text-black transition-all"
                 style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 12px 40px ${GB}0.4)`, opacity: loading ? 0.7 : 1 }}>
@@ -787,8 +798,9 @@ function BranchesSection() {
   const { t, dir } = useLanguage();
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-public'],
-    queryFn: () => base44.Branch.filter({ is_active: true }),
+    queryFn: () => base44.entities.Branch.filter({ is_active: true }, 'sort_order'),
     staleTime: 10 * 60 * 1000,
+    retry: 1,
   });
   const items = branches.length ? branches : [{ name: t('home.branches.mainBranch'), city: t('home.branches.city'), address: t('home.branches.city'), phone: '0549678191' }];
   return (

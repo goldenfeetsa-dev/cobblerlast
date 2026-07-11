@@ -68,7 +68,7 @@ export default function RepairPolicy() {
       </Helmet>
       {/* Navbar */}
       <nav className="sticky top-0 z-50 px-6 h-16 flex items-center justify-between"
-        style={{ background: 'rgba(18,10,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(18,10,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <Link to="/booking" className="text-xl font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
         <div className="flex items-center gap-3">
           <LanguageSwitcher />

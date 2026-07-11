@@ -102,7 +102,7 @@ export default function OrderDetails() {
         },
         duration: 8000,
       });
-      if (order?.customer_email) sendEmailNotification(order, vars.status);
+      if (order?.customer_email) sendEmailNotification(order, vars.status).catch(() => {});
     },
   });
 
@@ -134,7 +134,7 @@ export default function OrderDetails() {
         },
         duration: 8000,
       });
-      if (order?.customer_email) sendEmailNotification(order, vars.status);
+      if (order?.customer_email) sendEmailNotification(order, vars.status).catch(() => {});
     },
   });
 
@@ -317,7 +317,14 @@ export default function OrderDetails() {
                       )}
                       {order.customer_email && (
                         <button
-                          onClick={() => { sendEmailNotification(order, order.status); toast.success('تم إرسال البريد الإلكتروني'); }}
+                          onClick={async () => {
+                            try {
+                              await sendEmailNotification(order, order.status);
+                              toast.success('تم إرسال البريد الإلكتروني');
+                            } catch (err) {
+                              toast.error('تعذّر إرسال البريد الإلكتروني: ميزة إرسال الإيميل تحتاج ربط خدمة بريد فعلية (لم تُفعّل بعد)');
+                            }
+                          }}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-90 transition-opacity bg-blue-500"
                           title="إرسال تحديث الحالة عبر البريد"
                         >
