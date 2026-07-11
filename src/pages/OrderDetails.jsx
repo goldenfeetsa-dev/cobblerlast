@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import PhotoCarousel from '@/components/pos/PhotoCarousel';
 import ReceiptView from '@/components/pos/ReceiptView';
 import { getSession } from '@/lib/sessionStore';
 import { shouldHidePhotos } from '@/lib/photoCleanup';
-import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, RefreshCw, XCircle, PauseCircle, MessageCircle, Mail } from 'lucide-react';
+import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, RefreshCw, XCircle, PauseCircle, MessageCircle, Mail, CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
@@ -77,6 +77,8 @@ export default function OrderDetails() {
   const orderId = pathParts[pathParts.length - 1];
   
   const navigate = useNavigate();
+  const location = useLocation();
+  const justCreated = location.state?.justCreated === true;
   const queryClient = useQueryClient();
   const session = getSession();
   const isAdmin = ['admin','owner','manager'].includes(session?.role);
@@ -266,7 +268,7 @@ export default function OrderDetails() {
         </div>
       </div>
 
-      <Tabs defaultValue="details" className="space-y-6">
+      <Tabs defaultValue={justCreated ? 'receipt' : 'details'} className="space-y-6">
         <TabsList>
           <TabsTrigger value="details">التفاصيل</TabsTrigger>
           <TabsTrigger value="receipt">الفاتورة والباركود</TabsTrigger>
@@ -360,6 +362,17 @@ export default function OrderDetails() {
                       {order.delivery_address && <p className="text-sm text-muted-foreground">{order.delivery_address}</p>}
                     </div>
                   </div>
+                  <div className="flex items-center gap-3">
+                    <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">تاريخ التسليم</p>
+                      <p className="font-medium">
+                        {order.delivery_date
+                          ? format(new Date(order.delivery_date), 'EEEE d MMMM yyyy')
+                          : 'غير محدد'}
+                      </p>
+                    </div>
+                  </div>
                   {order.hold_reason && (
                     <div className="pt-2 border-t border-yellow-200 bg-yellow-50 rounded-lg p-2 mt-2">
                       <p className="text-xs text-yellow-700 font-bold mb-1">⏸ سبب التوقف</p>
@@ -424,7 +437,7 @@ export default function OrderDetails() {
         </TabsContent>
 
         <TabsContent value="receipt">
-          <ReceiptView order={order} />
+          <ReceiptView order={order} autoPrint={justCreated} />
         </TabsContent>
       </Tabs>
 

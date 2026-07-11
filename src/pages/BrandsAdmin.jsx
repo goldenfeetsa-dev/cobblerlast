@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44, storage } from '@/api/supabaseApi';
+import { base44 } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -7,7 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Tag, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Tag } from 'lucide-react';
+import ImageUploader from '@/components/common/ImageUploader';
 
 const EMPTY = { name: '', name_ar: '', logo_url: '', sort_order: 0, is_active: true };
 
@@ -17,7 +18,6 @@ export default function BrandsAdmin() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
-  const [uploading, setUploading] = useState(false);
 
   const { data: brands = [], isLoading } = useQuery({
     queryKey: ['brands-admin'],
@@ -51,15 +51,6 @@ export default function BrandsAdmin() {
     e.preventDefault();
     if (editing) updateMutation.mutate({ id: editing.id, data: form });
     else createMutation.mutate(form);
-  };
-
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    const { file_url } = await storage.uploadFile({ file });
-    setForm(f => ({ ...f, logo_url: file_url }));
-    setUploading(false);
   };
 
   return (
@@ -136,19 +127,12 @@ export default function BrandsAdmin() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">شعار الماركة</label>
-              {form.logo_url && (
-                <img src={form.logo_url} alt="logo preview" className="h-16 object-contain mb-2 rounded border p-1 bg-white" />
-              )}
-              <div className="flex gap-2">
-                <Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="رابط الشعار (اختياري)" />
-                <label className="cursor-pointer">
-                  <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-                  <Button type="button" variant="outline" disabled={uploading}>
-                    {uploading ? <div className="w-4 h-4 border-2 border-t-primary rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
-                  </Button>
-                </label>
-              </div>
+              <ImageUploader
+                value={form.logo_url}
+                onChange={(url) => setForm(f => ({ ...f, logo_url: url }))}
+                bucket="brands"
+                label="شعار الماركة"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

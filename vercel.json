@@ -20,5 +20,8 @@
   ],
   "env": {
     "VITE_SUPABASE_URL": "https://bwuvldnlfgobqpdfhyql.supabase.co"
-  }
+  },
+  "crons": [
+    { "path": "/api/zatca/retry-worker", "schedule": "*/10 * * * *" }
+  ]
 }

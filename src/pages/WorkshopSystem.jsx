@@ -189,6 +189,13 @@ function SettlementTab({ items, session }) {
     initialData: [],
   });
 
+  // طلبات الإصلاح — كانت مفقودة تماماً من حساب صافي الربح سابقاً
+  const { data: repairOrders } = useQuery({
+    queryKey: ['orders-for-settlement'],
+    queryFn: () => base44.entities.Order.list('-created_at', 1000),
+    initialData: [],
+  });
+
   const { data: settlements } = useQuery({
     queryKey: ['workshop-settlements'],
     queryFn: () => base44.entities.WorkshopSettlement.list('-created_at', 24),
@@ -226,8 +233,20 @@ function SettlementTab({ items, session }) {
   const totalWorkshopCost = settleItems.reduce((s, si) => s + (si.total_cost || 0), 0);
 
   const monthSales = salesInvoices.filter(inv => inv.month_key === selectedMonth);
-  const totalSalesRevenue = monthSales.reduce((s, inv) => s + (inv.subtotal || 0), 0);
-  const totalSalesCost = monthSales.reduce((s, inv) => s + (inv.cost_total || 0), 0);
+  const totalProductRevenue = monthSales.reduce((s, inv) => s + (inv.subtotal || 0), 0);
+  const totalProductCost = monthSales.reduce((s, inv) => s + (inv.cost_total || 0), 0);
+
+  // طلبات الإصلاح لنفس الشهر — لا يوجد month_key عليها فنقارن بالتاريخ الفعلي.
+  // تكلفة موادها مُحاسَبة أصلاً ضمن totalWorkshopCost (مسحوبات الورشة)،
+  // فما ندخل تكلفة إضافية هنا حتى لا نطرحها مرتين.
+  const monthRepairs = repairOrders.filter(o => {
+    if (!o.created_at) return false;
+    return format(new Date(o.created_at), 'yyyy-MM') === selectedMonth;
+  });
+  const totalRepairRevenue = monthRepairs.reduce((s, o) => s + (o.subtotal ?? (o.total_price || 0) / 1.15), 0);
+
+  const totalSalesRevenue = totalProductRevenue + totalRepairRevenue;
+  const totalSalesCost = totalProductCost; // تكلفة الإصلاح مشمولة بالفعل في totalWorkshopCost
   const grossProfit = totalSalesRevenue - totalSalesCost;
   const netProfit = grossProfit - totalWorkshopCost;
 
@@ -242,7 +261,7 @@ function SettlementTab({ items, session }) {
       `مدين: حساب مصروفات الورشة   ${data.totalWorkshopCost.toFixed(2)} ر.س`,
       `دائن: حساب مخزون الورشة      ${data.totalWorkshopCost.toFixed(2)} ر.س`,
       `─────────────────────────────────`,
-      `إجمالي مبيعات الشهر:   ${data.totalSalesRevenue.toFixed(2)} ر.س`,
+      `إجمالي إيراد الشهر (منتجات + طلبات إصلاح): ${data.totalSalesRevenue.toFixed(2)} ر.س`,
       `تكلفة البضاعة المباعة: ${data.totalSalesCost.toFixed(2)} ر.س`,
       `إجمالي ربح المبيعات:   ${data.grossProfit.toFixed(2)} ر.س`,
       `(-) تكاليف الورشة:    ${data.totalWorkshopCost.toFixed(2)} ر.س`,

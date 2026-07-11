@@ -11,6 +11,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
+    "@fidm/x509": "^1.2.1",
+    "xmldsigjs": "^2.5.0",
+    "xmldom": "^0.6.0",
+    "zatca-xml-js": "^0.1.9",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
     "@radix-ui/react-accordion": "^1.2.3",

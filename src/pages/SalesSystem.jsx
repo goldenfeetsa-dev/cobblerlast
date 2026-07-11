@@ -18,6 +18,8 @@ import {
   FileText, Warehouse, Building2, TrendingUp, Search, AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
+import ReceiptView from '@/components/pos/ReceiptView';
+import { salesInvoiceToReceipt } from '@/lib/invoiceAdapter';
 
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
@@ -270,6 +272,7 @@ function InvoiceTab({ items, branches, session }) {
   const [selectedBranch, setSelectedBranch] = useState(session?.branch_id || '');
   const [payMethod, setPayMethod] = useState('cash');
   const [search, setSearch] = useState('');
+  const [printInvoice, setPrintInvoice] = useState(null);
 
   const branchItems = useMemo(() => {
     if (!selectedBranch) return [];
@@ -334,16 +337,21 @@ function InvoiceTab({ items, branches, session }) {
           created_by_name: session?.name,
         });
       }
-      // ── ZATCA Phase 1 + 2 ──────────────────────────────────
-      await submitInvoice(invoice, 'simplified');
-      return invoice;
+      // ── ZATCA Phase 2 — الإرسال الرسمي الحقيقي (خادم آمن) ──
+      const zatcaResult = await submitInvoice('sale', invoice.id);
+      return { ...invoice, _zatca: zatcaResult };
     },
-    onSuccess: () => {
+    onSuccess: (invoice) => {
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       queryClient.invalidateQueries({ queryKey: ['sales-invoices'] });
       toast.success('تم إصدار الفاتورة وخصم المخزون ✅');
       setCart([]);
       setCustomer({ name: '', phone: '' });
+      setPrintInvoice({
+        ...invoice,
+        zatca_qr: invoice._zatca?.qr || invoice.zatca_qr,
+        zatca_status: invoice._zatca?.zatcaStatus || invoice.zatca_status,
+      }); // يفتح نافذة الفاتورة ويطبعها فوراً — بالـ QR الرسمي من زاتكا
     },
     onError: (e) => toast.error(e.message),
   });
@@ -498,6 +506,18 @@ function InvoiceTab({ items, branches, session }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* نافذة الفاتورة — تُفتح وتُطبع تلقائياً فور إصدار فاتورة منتج جديدة */}
+      <Dialog open={!!printInvoice} onOpenChange={(open) => !open && setPrintInvoice(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>الفاتورة #{printInvoice?.invoice_number}</DialogTitle>
+          </DialogHeader>
+          {printInvoice && (
+            <ReceiptView order={salesInvoiceToReceipt(printInvoice)} autoPrint />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   Scissors, ShoppingCart, Plus, Minus, Trash2, Search
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useZATCA } from '@/lib/zatca/useZATCA';
 
 const ITEM_TYPES = [
   { value: 'shoes', label: 'أحذية' },
@@ -42,7 +43,7 @@ function CobblerTab({ session }) {
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState({
     customer_name: '', customer_phone: '', item_type: '', quantity: 1,
-    delivery_method: 'pickup', delivery_address: '', total_price: '',
+    delivery_method: 'pickup', delivery_address: '', delivery_date: '', total_price: '',
     payment_status: 'unpaid', payment_method: 'cash', notes: '',
   });
 
@@ -56,6 +57,7 @@ function CobblerTab({ session }) {
     queryKey: ['operations-plan'], queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],
   });
 
+  const { submitInvoice } = useZATCA();
   const shopSettings = settingsList[0] || {};
   const freeAfterUI = planList2[0]?.loyalty_free_after || 3;
   const knownCustomer = form.customer_phone.length >= 9
@@ -104,20 +106,34 @@ function CobblerTab({ session }) {
           });
         }
       }
-      return order;
+
+      // ── ZATCA Phase 2 — طلبات الإصلاح تُفوتر رسمياً مثل المبيعات تماماً ──
+      // (سابقاً: طلبات الإصلاح ما كانت تولّد فاتورة إلكترونية معتمدة إطلاقاً)
+      const zatcaResult = await submitInvoice('order', order.id);
+      return { ...order, _zatca: zatcaResult };
     },
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast.success('تم إنشاء الطلب بنجاح!');
-      navigate(`/orders/${order.id}`);
+      if (order._zatca?.zatcaStatus === 'REPORTED') {
+        toast.success('تم إنشاء الطلب وإبلاغه لزاتكا رسمياً ✅');
+      } else {
+        toast.success('تم إنشاء الطلب — لكن إرسال زاتكا واجه مشكلة، راجع سجل زاتكا');
+      }
+      navigate(`/orders/${order.id}`, { state: { justCreated: true } });
     },
     onError: (e) => toast.error(`فشل حفظ الطلب: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!form.delivery_date) {
+      toast.error('تاريخ التسليم مطلوب — لازم تحدده قبل حفظ الطلب');
+      return;
+    }
+
     const price = parseFloat(form.total_price) || 0;
     const vatEnabled = shopSettings.vat_enabled !== false;
     const vatAmount = vatEnabled ? parseFloat((price - price / 1.15).toFixed(2)) : 0;
@@ -136,6 +152,7 @@ function CobblerTab({ session }) {
       photos,
       delivery_method: form.delivery_method,
       delivery_address: form.delivery_method === 'delivery' ? form.delivery_address : '',
+      delivery_date: form.delivery_date,
       subtotal, vat_amount: vatAmount, total_price: price,
       payment_status: form.payment_status,
       payment_method: form.payment_method,
@@ -240,6 +257,12 @@ function CobblerTab({ session }) {
               <Input value={form.delivery_address} onChange={e => update('delivery_address', e.target.value)} placeholder="العنوان الكامل" />
             </div>
           )}
+          <div className="space-y-2">
+            <Label>تاريخ التسليم *</Label>
+            <Input type="date" min={format(new Date(), 'yyyy-MM-dd')} value={form.delivery_date}
+              onChange={e => update('delivery_date', e.target.value)} required />
+            <p className="text-xs text-muted-foreground">يظهر الطلب في صفحة التقويم/المهام باليوم المحدد هنا</p>
+          </div>
         </CardContent>
       </Card>
 

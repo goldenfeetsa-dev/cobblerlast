@@ -6,7 +6,7 @@ export function useTrackVisit(page = '/booking') {
     async function track() {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const geo = await fetch('https://ipapi.co/json/', { signal: controller.signal })
           .then(r => r.json())
           .catch(() => ({}))
@@ -23,6 +23,16 @@ export function useTrackVisit(page = '/booking') {
         });
       } catch { /* silent */ }
     }
-    track();
+
+    // نؤجل استدعاء خدمة تحديد الموقع الخارجية (ipapi.co) حتى تصبح الصفحة جاهزة للتفاعل،
+    // حتى لا تتنافس مع تحميل الصفحة الرئيسية على الشبكة (كانت أحد أسباب البطء).
+    // كما أن بعض المتصفحات/الإضافات (مانعات الإعلانات، حماية التتبع في Chrome) تحظر
+    // نطاق ipapi.co أحياناً — الكود هنا يتعامل مع ذلك بصمت دون التأثير على عرض الصفحة.
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(track, { timeout: 2000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(track, 500);
+    return () => clearTimeout(t);
   }, [page]);
 }

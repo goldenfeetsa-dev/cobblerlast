@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings,
-  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays
+  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 
@@ -16,6 +16,7 @@ const navGroups = [
       { path: '/new-order', icon: PlusCircle, label: 'طلب جديد' },
       { path: '/staff', icon: Scissors, label: 'مهامي 🔧', staffOnly: true },
       { path: '/orders', icon: ListOrdered, label: 'الطلبات' },
+      { path: '/invoices', icon: Receipt, label: 'الفواتير', adminOnly: true },
       { path: '/calendar', icon: CalendarDays, label: 'الجدولة المرئية' },
       { path: '/scan', icon: ScanBarcode, label: 'مسح الباركود' },
     ]
@@ -40,6 +41,7 @@ const navGroups = [
     label: 'التقارير',
     adminOnly: true,
     items: [
+      { path: '/financial-reports', icon: Wallet, label: 'التقارير المالية', adminOnly: true },
       { path: '/audit', icon: ClipboardList, label: 'لوحة التدقيق', adminOnly: true },
       { path: '/site-analytics', icon: Globe, label: 'إحصائيات الموقع', adminOnly: true },
     ]

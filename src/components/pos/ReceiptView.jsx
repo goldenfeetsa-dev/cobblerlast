@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import BarcodeDisplay from './BarcodeDisplay';
 import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
@@ -14,8 +14,15 @@ const ITEM_LABELS = {
   jacket: 'جاكيت', pants: 'بنطال', shirt: 'قميص', other: 'أخرى'
 };
 
-export default function ReceiptView({ order }) {
+// autoPrint: إذا كانت true، تُفتح نافذة الطباعة تلقائياً بمجرد جاهزية الفاتورة
+// (تُستخدم مباشرة بعد إصدار طلب/فاتورة جديدة، بدون أي ضغطة إضافية من الموظف)
+export default function ReceiptView({ order, autoPrint = false }) {
   const receiptRef = useRef(null);
+  const hasAutoPrinted = useRef(false);
+
+  // فاتورة منتج (من نظام المبيعات) لها مصفوفة items، بخلاف فاتورة الإصلاح
+  // التي تحتوي خدمة واحدة فقط — نفرّق بينهما لعرض الأصناف بشكل صحيح
+  const isProductInvoice = Array.isArray(order.items) && order.items.length > 0;
 
   const { data: settingsList } = useQuery({
     queryKey: ['shop-settings'],
@@ -49,37 +56,27 @@ export default function ReceiptView({ order }) {
     if (!receiptRef.current) return;
     const canvas = await html2canvas(receiptRef.current, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
     const link = document.createElement('a');
-    link.download = `فاتورة-${order.order_number}.png`;
+    link.download = `فاتورة-${order.order_number || order.invoice_number}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
 
-  const handlePrint = async () => {
-    if (!receiptRef.current) return;
-    const canvas = await html2canvas(receiptRef.current, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html>
-      <head>
-        <meta charset="utf-8"/>
-        <title>فاتورة ${order.order_number}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { background: white; display:flex; justify-content:center; }
-          img { width: 80mm; display: block; }
-          @media print { body { width: 80mm; } }
-        </style>
-      </head>
-      <body>
-        <img src="${imgData}" />
-        <script>window.onload = function() { window.print(); window.close(); }</script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
+  // طباعة مباشرة عبر نافذة الطباعة الأصلية للمتصفح (window.print) بدل فتح
+  // نافذة/تبويب جديد — هذا يتفادى مانع النوافذ المنبثقة (popup blocker) الذي
+  // يمنع فتح نوافذ جديدة تلقائياً، ويسمح بتفعيل "الطباعة الفورية" مباشرة
+  // بعد إنشاء الطلب/الفاتورة دون أي ضغطة إضافية من الموظف.
+  const handlePrint = () => {
+    window.print();
   };
+
+  // الطباعة الفورية — تُفعَّل تلقائياً مرة واحدة فقط عند فتح الفاتورة بعد
+  // إنشائها مباشرة (autoPrint=true)، بعد تأخير بسيط لضمان تحميل الشعار والصور
+  useEffect(() => {
+    if (!autoPrint || hasAutoPrinted.current) return;
+    hasAutoPrinted.current = true;
+    const timer = setTimeout(() => window.print(), 550);
+    return () => clearTimeout(timer);
+  }, [autoPrint]);
 
   const Divider = ({ dashed = true }) => (
     <div style={{ borderTop: dashed ? '1px dashed #d1d5db' : '2px solid #111', margin: '10px 0' }} />
@@ -94,8 +91,19 @@ export default function ReceiptView({ order }) {
 
   return (
     <div className="space-y-4">
+      {/* أنماط خاصة بالطباعة فقط — تُظهر الفاتورة وتُخفي كل شيء آخر بالصفحة */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #pos-receipt-print, #pos-receipt-print * { visibility: visible; }
+          #pos-receipt-print { position: fixed; inset: 0; width: 80mm; margin: 0 auto; box-shadow: none !important; }
+          .receipt-no-print { display: none !important; }
+          @page { size: 80mm auto; margin: 0; }
+        }
+      `}</style>
       {/* Receipt */}
       <div
+        id="pos-receipt-print"
         ref={receiptRef}
         style={{
           background: '#ffffff',
@@ -152,7 +160,8 @@ export default function ReceiptView({ order }) {
 
         {/* ── ORDER INFO ── */}
         <div style={{ marginBottom: '2px' }}>
-          <Row label="رقم الفاتورة" value={order.order_number} bold />
+          <Row label="رقم الفاتورة" value={order.order_number || order.invoice_number} bold />
+          <Row label="نوع الفاتورة" value={isProductInvoice ? 'بيع منتج 🛍️' : 'خدمة إصلاح 🔧'} />
           <Row label="التاريخ" value={format(createdDate, 'dd/MM/yyyy')} />
           <Row label="الوقت" value={format(createdDate, 'HH:mm:ss')} />
           <Row label="الموظف" value={order.employee_name || '—'} />
@@ -172,9 +181,9 @@ export default function ReceiptView({ order }) {
 
         <Divider />
 
-        {/* ── ITEM ── */}
+        {/* ── ITEMS ── */}
         <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          تفاصيل الخدمة
+          {isProductInvoice ? 'الأصناف المباعة' : 'تفاصيل الخدمة'}
         </div>
 
         {/* Table header */}
@@ -184,12 +193,23 @@ export default function ReceiptView({ order }) {
           <span style={{ flex: 2, textAlign: 'left' }}>السعر</span>
         </div>
 
-        {/* Item row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
-          <span style={{ flex: 3 }}>{ITEM_LABELS[order.item_type] || order.item_type}</span>
-          <span style={{ flex: 1, textAlign: 'center' }}>{order.quantity || 1}</span>
-          <span style={{ flex: 2, textAlign: 'left' }}>{subtotal?.toFixed(2)} ر.س</span>
-        </div>
+        {isProductInvoice ? (
+          // فاتورة منتج — عدة أصناف
+          order.items.map((line, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+              <span style={{ flex: 3 }}>{line.item_name}</span>
+              <span style={{ flex: 1, textAlign: 'center' }}>{line.qty}</span>
+              <span style={{ flex: 2, textAlign: 'left' }}>{(line.sell_price * line.qty).toFixed(2)} ر.س</span>
+            </div>
+          ))
+        ) : (
+          // فاتورة خدمة إصلاح — صنف واحد
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+            <span style={{ flex: 3 }}>{ITEM_LABELS[order.item_type] || order.item_type}</span>
+            <span style={{ flex: 1, textAlign: 'center' }}>{order.quantity || 1}</span>
+            <span style={{ flex: 2, textAlign: 'left' }}>{subtotal?.toFixed(2)} ر.س</span>
+          </div>
+        )}
 
         {/* Delivery fee if any */}
         {order.delivery_method === 'delivery' && (
@@ -325,7 +345,7 @@ export default function ReceiptView({ order }) {
       </div>
 
       {/* Action buttons */}
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-3 receipt-no-print">
         <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90">
           <Printer className="w-4 h-4 ml-2" />
           طباعة

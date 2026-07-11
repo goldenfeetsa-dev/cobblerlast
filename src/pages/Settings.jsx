@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { Settings2, Save, Loader2, Building2, Receipt } from 'lucide-react';
+import ImageUploader from '@/components/common/ImageUploader';
 
 export default function Settings() {
   const [settings, setSettings] = useState({});
@@ -72,8 +73,13 @@ export default function Settings() {
             <Switch checked={settings.vat_enabled !== false} onCheckedChange={v => upd('vat_enabled', v)} />
           </div>
           <div className="space-y-1.5">
-            <Label>رابط الشعار (URL)</Label>
-            <Input value={settings.logo_url || ''} onChange={e => upd('logo_url', e.target.value)} dir="ltr" />
+            <ImageUploader
+              value={settings.logo_url || ''}
+              onChange={(url) => upd('logo_url', url)}
+              bucket="branding"
+              label="شعار المتجر"
+              hint="يُرفع الشعار مباشرة إلى Supabase — لا حاجة لأي رابط خارجي"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>مفتاح Moyasar (للدفع الإلكتروني)</Label>

@@ -53,15 +53,6 @@ function MagneticBtn({ children, className = '', style = {}, onClick }) {
   );
 }
 
-// ── Floating Particle ─────────────────────────────────────────────
-function Particle({ style }) {
-  return (
-    <motion.div className="absolute rounded-full pointer-events-none" style={style}
-      animate={{ y: [-20, 20, -20], opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
-      transition={{ duration: 4 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 4, ease: 'easeInOut' }} />
-  );
-}
-
 // ── Glowing Orb ───────────────────────────────────────────────────
 function GlowOrb({ x, y, size, color, blur = 120 }) {
   return (
@@ -159,13 +150,6 @@ function HeroSection() {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 600], [0, 160]);
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
-  const particles = Array.from({ length: 18 }, (_, i) => ({
-    width:  4 + Math.random() * 6,
-    height: 4 + Math.random() * 6,
-    left:   `${5 + Math.random() * 90}%`,
-    top:    `${10 + Math.random() * 80}%`,
-    background: i % 3 === 0 ? G : i % 3 === 1 ? 'rgba(255,200,80,0.5)' : 'rgba(180,120,30,0.4)',
-  }));
 
   useEffect(() => {
     setWordIdx(0);
@@ -181,10 +165,8 @@ function HeroSection() {
     <section className="relative min-h-screen flex items-center overflow-hidden"
       style={{ background: 'radial-gradient(ellipse at 30% 20%, #1E0F00 0%, #0A0500 50%, #000 100%)' }}>
 
-      {/* Animated orbs */}
-      <GlowOrb x="75%" y="35%" size={600} color="rgba(201,168,76,0.12)" blur={150} />
-      <GlowOrb x="15%" y="70%" size={400} color="rgba(180,90,20,0.10)" blur={120} />
-      <GlowOrb x="50%" y="10%" size={300} color="rgba(201,168,76,0.07)" blur={100} />
+      {/* Animated orb — تم تخفيفها من 3 دوائر متحركة لدائرة واحدة لتقليل العبء على الرسوميات */}
+      <GlowOrb x="75%" y="35%" size={500} color="rgba(201,168,76,0.10)" blur={130} />
 
       {/* Grid pattern */}
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -192,9 +174,6 @@ function HeroSection() {
         backgroundSize: '60px 60px',
         maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)'
       }} />
-
-      {/* Floating gold particles */}
-      {particles.map((p, i) => <Particle key={i} style={p} />)}
 
       {/* Diagonal decorative lines */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">

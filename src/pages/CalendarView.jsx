@@ -114,14 +114,14 @@ export default function CalendarView() {
   const { data: orders = [] } = useQuery({
     queryKey: ['orders-calendar', format(currentMonth, 'yyyy-MM')],
     queryFn: async () => {
-      const start = startOfMonth(currentMonth).toISOString();
-      const end   = endOfMonth(currentMonth).toISOString();
+      const start = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
+      const end   = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
       const { data } = await supabase
         .from('orders')
-        .select('id, order_number, customer_name, status, created_at, item_type, total_price')
-        .gte('created_at', start)
-        .lte('created_at', end)
-        .order('created_at');
+        .select('id, order_number, customer_name, status, created_at, delivery_date, item_type, total_price')
+        .gte('delivery_date', start)
+        .lte('delivery_date', end)
+        .order('delivery_date');
       return data || [];
     },
     staleTime: 60_000,
@@ -129,11 +129,12 @@ export default function CalendarView() {
 
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
 
-  // توزيع الطلبات على الأيام
+  // توزيع الطلبات على الأيام حسب تاريخ التسليم (وليس تاريخ الإنشاء)
   const ordersByDay = useMemo(() => {
     const map = {};
     orders.forEach(o => {
-      const key = format(parseISO(o.created_at), 'yyyy-MM-dd');
+      if (!o.delivery_date) return; // طلبات قديمة بدون تاريخ تسليم لا تُحسب هنا
+      const key = o.delivery_date; // عمود delivery_date من نوع date أصلاً بصيغة yyyy-MM-dd
       if (!map[key]) map[key] = [];
       map[key].push(o);
     });
@@ -289,7 +290,7 @@ export default function CalendarView() {
               <div className="divide-y divide-gray-50">
                 {selectedOrders.map((order, i) => {
                   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
-                  const isLate = (new Date() - new Date(order.created_at)) / (1000*60*60*24) > 3
+                  const isLate = order.delivery_date < format(new Date(), 'yyyy-MM-dd')
                     && order.status !== 'completed' && order.status !== 'cancelled';
                   return (
                     <motion.div key={order.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}

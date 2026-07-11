@@ -15,6 +15,7 @@ import { runPhotoCleanup } from '@/lib/photoCleanup';
 const StaffOrders = lazy(() => import('./pages/StaffOrders'));
 const CalendarView = lazy(() => import('./pages/CalendarView'));
 const ZATCASettings = lazy(() => import('./pages/ZATCASettings'));
+const FinancialReports = lazy(() => import('./pages/FinancialReports'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
@@ -47,6 +48,7 @@ const ShopAdmin = lazy(() => import('./pages/ShopAdmin'));
 const RepairPolicy = lazy(() => import('./pages/RepairPolicy'));
 const OperationsDashboard = lazy(() => import('./pages/OperationsDashboard'));
 const SalesSystem = lazy(() => import('./pages/SalesSystem'));
+const Invoices = lazy(() => import('./pages/Invoices'));
 const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
 
 import AppLayout from './components/pos/AppLayout';
@@ -104,6 +106,7 @@ const AuthenticatedApp = () => {
           <Route path="/new-order" element={<NewOrder />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetails />} />
+          <Route path="/invoices" element={<Invoices />} />
           <Route path="/scan" element={<ScanBarcode />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/employees" element={<Employees />} />
@@ -112,6 +115,7 @@ const AuthenticatedApp = () => {
           <Route path="/social-settings" element={<SocialSettings />} />
           <Route path="/admin/bookings" element={<BookingAdmin />} />
           <Route path="/zatca" element={<ZATCASettings />} />
+          <Route path="/financial-reports" element={<FinancialReports />} />
           <Route path="/loyalty" element={<LoyaltyDashboard />} />
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/staff" element={<StaffOrders />} />

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/supabaseApi';
-import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,24 +9,26 @@ import { toast } from 'sonner';
 
 export default function ScanBarcode() {
   const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { data: orders } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_at', 500),
-    initialData: [],
-  });
-
-  const handleScan = (e) => {
+  const handleScan = async (e) => {
     e.preventDefault();
     const trimmed = code.trim();
     if (!trimmed) return;
 
-    const order = orders.find(o => o.order_number === trimmed);
-    if (order) {
-      navigate(`/orders/${order.id}`);
-    } else {
-      toast.error('لم يتم العثور على طلب بهذا الباركود');
+    setLoading(true);
+    try {
+      const matches = await base44.entities.Order.filter({ order_number: trimmed }, '-created_at', 1);
+      if (matches?.[0]) {
+        navigate(`/orders/${matches[0].id}`);
+      } else {
+        toast.error('لم يتم العثور على طلب بهذا الباركود');
+      }
+    } catch {
+      toast.error('تعذّر البحث، تحقق من الاتصال');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,6 +56,7 @@ export default function ScanBarcode() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 autoFocus
+                data-scanner-safe="true"
                 value={code}
                 onChange={e => setCode(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -62,8 +64,8 @@ export default function ScanBarcode() {
                 className="pl-11 h-14 text-lg font-mono"
               />
             </div>
-            <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90" disabled={!code.trim()}>
-              بحث عن الطلب
+            <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90" disabled={!code.trim() || loading}>
+              {loading ? 'جارٍ البحث...' : 'بحث عن الطلب'}
               <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
             </Button>
           </form>

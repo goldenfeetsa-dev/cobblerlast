@@ -87,6 +87,17 @@ async function uploadFile({ file, bucket = 'order-photos' }) {
   return { file_url: publicUrl };
 }
 
+// يحذف ملفاً من التخزين اعتماداً على رابطه العام الكامل
+async function deleteFile(publicUrl, bucket = 'order-photos') {
+  if (!publicUrl) return;
+  const marker = `/object/public/${bucket}/`;
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return; // ليس رابط تخزين معروف — تجاهل بأمان
+  const path = publicUrl.slice(idx + marker.length);
+  const { error } = await supabase.storage.from(bucket).remove([path]);
+  if (error) throw new Error(error.message);
+}
+
 // ── Edge Function caller ───────────────────────────────────────
 async function invokeFunction(name, body = {}) {
   const { data, error } = await supabase.functions.invoke(name, { body });
@@ -127,7 +138,7 @@ export const db = {
 };
 
 // ── Storage ────────────────────────────────────────────────────
-export const storage = { uploadFile };
+export const storage = { uploadFile, deleteFile };
 
 // ── Functions ──────────────────────────────────────────────────
 export const functions = { invoke: invokeFunction };
