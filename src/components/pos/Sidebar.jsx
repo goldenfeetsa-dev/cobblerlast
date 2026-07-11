@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings,
-  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet
+  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 
@@ -66,6 +66,7 @@ const navGroups = [
       { path: '/zatca', icon: Shield, label: 'زاتكا ZATCA', adminOnly: true },
       { path: '/social-settings', icon: Globe, label: 'التواصل الاجتماعي', adminOnly: true },
       { path: '/loyalty', icon: Star, label: 'بطاقات الولاء', adminOnly: false },
+      { path: '/loyalty-members', icon: Award, label: 'برنامج الولاء (النقاط)', adminOnly: false },
       { path: '/settings', icon: Settings, label: 'الإعدادات', adminOnly: true },
     ]
   },

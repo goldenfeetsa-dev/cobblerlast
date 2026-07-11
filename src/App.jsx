@@ -21,6 +21,8 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
 const SocialSettings = lazy(() => import('./pages/SocialSettings'));
 const LoyaltyDashboard = lazy(() => import('./pages/LoyaltyDashboard'));
+const LoyaltyMembersAdmin = lazy(() => import('./pages/LoyaltyMembersAdmin'));
+const MyLoyalty = lazy(() => import('./pages/MyLoyalty'));
 const PinLogin = lazy(() => import('./pages/PinLogin'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NewOrder = lazy(() => import('./pages/NewOrder'));
@@ -90,6 +92,7 @@ const AuthenticatedApp = () => {
         {/* Public pages */}
         <Route path="/book" element={<BookingWizard />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/my-loyalty" element={<MyLoyalty />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/repair-policy" element={<RepairPolicy />} />
@@ -117,6 +120,7 @@ const AuthenticatedApp = () => {
           <Route path="/zatca" element={<ZATCASettings />} />
           <Route path="/financial-reports" element={<FinancialReports />} />
           <Route path="/loyalty" element={<LoyaltyDashboard />} />
+          <Route path="/loyalty-members" element={<LoyaltyMembersAdmin />} />
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/staff" element={<StaffOrders />} />
           <Route path="/admin/services" element={<ServicesAdmin />} />

@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import LoyaltyCardWidget from '@/components/loyalty/LoyaltyCardWidget';
-import ImageUploader from '@/components/common/ImageUploader';
 import {
   Star, Users, Gift, Settings, Bell, Search,
   TrendingUp, Phone, RefreshCw, Loader2
@@ -253,12 +252,12 @@ export default function LoyaltyDashboard() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>شعار برنامج الولاء</Label>
-                    <ImageUploader
+                    <Label>رابط الشعار</Label>
+                    <Input
                       value={settings.brand_logo_url || ''}
-                      onChange={(url: string) => setSettings((s: any) => ({ ...s, brand_logo_url: url }))}
-                      bucket="branding"
-                      label=""
+                      onChange={e => setSettings((s: any) => ({ ...s, brand_logo_url: e.target.value }))}
+                      placeholder="https://..."
+                      dir="ltr"
                     />
                   </div>
                 </div>

@@ -122,6 +122,11 @@ export const db = {
   LoyaltyCard:      createEntity('loyalty_cards'),
   LoyaltyStamp:     createEntity('loyalty_stamps'),
   LoyaltySettings:  createEntity('loyalty_settings'),
+  // Loyalty — برنامج النقاط والعضويات (نظام جديد ومستقل)
+  LoyaltyMember:            createEntity('loyalty_members'),
+  LoyaltyPointsTransaction: createEntity('loyalty_points_transactions'),
+  LoyaltyMemberNotification: createEntity('loyalty_member_notifications'),
+  LoyaltyMembershipSettings: createEntity('loyalty_membership_settings'),
   // Other (booking, reviews, etc.) — kept for compatibility
   Booking:          createEntity('bookings'),
   Service:          createEntity('services'),
