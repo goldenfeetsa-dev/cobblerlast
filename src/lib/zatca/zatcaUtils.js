@@ -38,8 +38,8 @@ export const buildZatcaTLV = ({ sellerName, vatNumber, invoiceDate, totalAmount,
     : new Date().toISOString().replace('.000', '');
 
   const parts = [
-    encode(1, sellerName || 'إبرة وخيط الإسكافي'),
-    encode(2, vatNumber || '000000000000000'),
+    encode(1, sellerName || 'مؤسسة إبرة وخيط الإسكافي للتجارة'),
+    encode(2, vatNumber || '314151483700003'),
     encode(3, timestamp),
     encode(4, Number(totalAmount || 0).toFixed(2)),
     encode(5, Number(vatAmount || 0).toFixed(2)),

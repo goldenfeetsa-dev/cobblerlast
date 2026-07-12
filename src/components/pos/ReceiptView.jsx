@@ -7,7 +7,7 @@ import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
 import { QRCodeSVG } from 'qrcode.react';
-import { buildZatcaTLV } from '@/lib/zatca/zatcaUtils';
+import { buildZatcaTLV, validateVATNumber } from '@/lib/zatca/zatcaUtils';
 
 const ITEM_LABELS = {
   shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
@@ -30,14 +30,19 @@ export default function ReceiptView({ order, autoPrint = false }) {
     initialData: [],
   });
   const settings = settingsList[0] || {};
-  const shopName = settings.shop_name || 'إبرة وخيط الإسكافي';
+  const shopName = settings.shop_name || 'مؤسسة إبرة وخيط الإسكافي للتجارة';
   const logoUrl = settings.logo_url || '';
   const header = settings.receipt_header || 'خدمات التصليح والخياطة للأحذية والحقائب الجلدية';
   const footer = settings.receipt_footer || 'شكراً لثقتكم بنا — نسعد بخدمتكم دائماً';
   const terms = settings.terms_conditions || '';
-  const vatNumber = settings.vat_number || '';
-  const crNumber = settings.cr_number || '';
+  const vatNumber = settings.vat_number || '314151483700003';
+  const crNumber = settings.cr_number || '7051288830';
   const vatEnabled = settings.vat_enabled !== false;
+  // رقم ضريبي سعودي صحيح: 15 رقم، يبدأ وينتهي بـ 3 — إذا فشل هذا الشرط
+  // (فاضي أو خاطئ) فسيولّد الكود أدناه رقم "000000000000000" داخل QR،
+  // وهذا بالضبط سبب رفض تطبيق زاتكا للفاتورة. نعرض تنبيهاً للموظف هنا
+  // (لا يظهر عند الطباعة) بدل ما يكتشفه العميل بنفسه بعد المسح.
+  const vatNumberValid = validateVATNumber(vatNumber);
 
   const subtotal = order.subtotal || (vatEnabled ? parseFloat((order.total_price / 1.15).toFixed(2)) : order.total_price);
   const vatAmount = order.vat_amount || (vatEnabled ? parseFloat((order.total_price - subtotal).toFixed(2)) : 0);
@@ -101,6 +106,23 @@ export default function ReceiptView({ order, autoPrint = false }) {
           @page { size: 80mm auto; margin: 0; }
         }
       `}</style>
+
+      {/* تنبيه للموظف فقط — لا يظهر أبداً على الفاتورة المطبوعة أو المُنزّلة */}
+      {vatEnabled && !vatNumberValid && (
+        <div
+          className="receipt-no-print"
+          style={{
+            maxWidth: '320px', margin: '0 auto', padding: '10px 14px',
+            background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+            color: '#991b1b', fontSize: '12px', textAlign: 'center', lineHeight: '1.6',
+          }}
+        >
+          الرقم الضريبي غير مُدخل أو غير صحيح — سيظهر في رمز QR كـ 000000000000000
+          وسيُرفض من تطبيق زاتكا. الرجاء تعبئة الرقم الضريبي الصحيح (15 رقم، يبدأ وينتهي بـ 3)
+          من صفحة الإعدادات قبل الطباعة.
+        </div>
+      )}
+
       {/* Receipt */}
       <div
         id="pos-receipt-print"
@@ -130,14 +152,21 @@ export default function ReceiptView({ order, autoPrint = false }) {
             <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{header}</div>
           )}
 
-          {/* ZATCA required fields */}
-          <div style={{ marginTop: '6px', fontSize: '9px', color: '#374151', lineHeight: '1.6' }}>
+          {/* ZATCA required fields — نعرضها بالعربي والإنجليزي معاً، وهذا هو
+              الشكل المعتمد في أغلب الفواتير الضريبية المبسّطة بالسعودية */}
+          <div style={{ marginTop: '6px', fontSize: '9px', color: '#374151', lineHeight: '1.7' }}>
             {crNumber && (
-              <div>سجل تجاري: <span style={{ fontWeight: 'bold', direction: 'ltr', display: 'inline-block' }}>{crNumber}</span></div>
+              <div>
+                <span>السجل التجاري / CR No: </span>
+                <span style={{ fontWeight: 'bold', direction: 'ltr', display: 'inline-block' }}>{crNumber}</span>
+              </div>
             )}
-            {vatNumber && (
-              <div>الرقم الضريبي: <span style={{ fontWeight: 'bold', direction: 'ltr', display: 'inline-block' }}>{vatNumber}</span></div>
-            )}
+            <div>
+              <span>الرقم الضريبي / VAT No: </span>
+              <span style={{ fontWeight: 'bold', direction: 'ltr', display: 'inline-block' }}>
+                {vatNumber || '—'}
+              </span>
+            </div>
           </div>
 
           {vatEnabled && (
@@ -160,10 +189,9 @@ export default function ReceiptView({ order, autoPrint = false }) {
 
         {/* ── ORDER INFO ── */}
         <div style={{ marginBottom: '2px' }}>
-          <Row label="رقم الفاتورة" value={order.order_number || order.invoice_number} bold />
-          <Row label="نوع الفاتورة" value={isProductInvoice ? 'بيع منتج 🛍️' : 'خدمة إصلاح 🔧'} />
-          <Row label="التاريخ" value={format(createdDate, 'dd/MM/yyyy')} />
-          <Row label="الوقت" value={format(createdDate, 'HH:mm:ss')} />
+          <Row label="رقم الفاتورة / Invoice No" value={order.order_number || order.invoice_number} bold />
+          <Row label="نوع الفاتورة" value={isProductInvoice ? 'بيع منتج' : 'خدمة إصلاح'} />
+          <Row label="التاريخ والوقت / Date & Time" value={`${format(createdDate, 'dd/MM/yyyy')} — ${format(createdDate, 'HH:mm:ss')}`} />
           <Row label="الموظف" value={order.employee_name || '—'} />
           {order.branch_name && <Row label="الفرع" value={order.branch_name} />}
         </div>
@@ -258,7 +286,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         <div style={{ marginTop: '6px' }}>
           <Row
             label="حالة الدفع"
-            value={order.payment_status === 'paid' ? '✅ مدفوع' : '⏳ غير مدفوع'}
+            value={order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
           />
           {order.payment_method && (
             <Row
@@ -268,7 +296,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
           )}
           <Row
             label="التسليم"
-            value={order.delivery_method === 'delivery' ? '🚚 توصيل' : '🏪 استلام من المحل'}
+            value={order.delivery_method === 'delivery' ? 'توصيل' : 'استلام من المحل'}
           />
         </div>
 
@@ -315,10 +343,10 @@ export default function ReceiptView({ order, autoPrint = false }) {
                   ? '#15803d' : order.zatca_status === 'REJECTED' ? '#b91c1c' : '#92400e',
               }}>
                 {order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED'
-                  ? '✓ معتمدة من زاتكا'
+                  ? 'معتمدة من زاتكا'
                   : order.zatca_status === 'REJECTED'
-                    ? '✗ مرفوضة من زاتكا'
-                    : '◷ بانتظار الإرسال'}
+                    ? 'مرفوضة من زاتكا'
+                    : 'بانتظار الإرسال'}
               </div>
             )}
             <div style={{ fontSize: '7px', color: '#9ca3af', marginTop: '3px', textAlign: 'center', maxWidth: '200px', lineHeight: '1.4' }}>

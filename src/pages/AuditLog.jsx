@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Search, ExternalLink, Calendar } from 'lucide-react';
+import { ClipboardList, Search, ExternalLink, Calendar, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { unifyTransactions } from '@/lib/analytics';
 
 const STATUS_LABELS = {
   pending: { label: 'قيد الانتظار', class: 'bg-amber-100 text-amber-700' },
@@ -27,9 +28,9 @@ const PAYMENT_LABELS = {
   unpaid: { label: 'غير مدفوع', class: 'bg-red-100 text-red-700' },
 };
 
-const ITEM_LABELS = {
-  shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
-  jacket: 'جاكيت', pants: 'بنطال', shirt: 'قميص', other: 'أخرى'
+const KIND_LABELS = {
+  repair: { label: 'إصلاح', class: 'bg-indigo-100 text-indigo-700' },
+  sale: { label: 'بيع منتج', class: 'bg-cyan-100 text-cyan-700' },
 };
 
 const PERIODS = [
@@ -56,58 +57,76 @@ export default function AuditLog() {
   const [period, setPeriod] = useState('today');
   const [statusFilter, setStatusFilter] = useState('all');
   const [employeeFilter, setEmployeeFilter] = useState('all');
+  const [branchFilter, setBranchFilter] = useState('all');
+  const [kindFilter, setKindFilter] = useState('all');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
 
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders-audit'],
     queryFn: () => base44.entities.Order.list('-created_at', 500),
   });
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list(),
+  // فواتير بيع المنتجات — كانت مفقودة بالكامل من هذي اللوحة سابقاً، مع أنها
+  // إيراد فعلي للمتجر مثل طلبات الإصلاح تماماً
+  const { data: salesInvoices = [], isLoading: salesLoading } = useQuery({
+    queryKey: ['sales-invoices-audit'],
+    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 500),
   });
 
   if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
 
+  const isLoading = ordersLoading || salesLoading;
   const periodStart = getPeriodStart(period);
 
-  const filtered = orders.filter(o => {
-    // Branch filter for staff
+  // كل العمليات (إصلاح + بيع) موحّدة بمصفوفة واحدة — هذا أساس دقة الأرقام
+  const allTransactions = useMemo(
+    () => unifyTransactions(orders, salesInvoices),
+    [orders, salesInvoices]
+  );
+
+  const branches = [...new Set(allTransactions.map(t => t.branch_name).filter(Boolean))];
+  const uniqueEmployees = [...new Set(allTransactions.map(t => t.employee_name).filter(Boolean))];
+
+  const filtered = allTransactions.filter(t => {
+    // فلترة الفرع للموظفين غير الإداريين — كل موظف يرى فرعه فقط
     if (!['admin','owner','manager'].includes(session?.role) && session?.branch_id) {
-      if (o.branch_id && o.branch_id !== session.branch_id) return false;
+      if (t.branch_id && t.branch_id !== session.branch_id) return false;
     }
+    if (branchFilter !== 'all' && t.branch_name !== branchFilter) return false;
+    if (kindFilter !== 'all' && t.kind !== kindFilter) return false;
+
     if (period === 'custom') {
-      const orderDate = o.created_at ? new Date(o.created_at) : null;
-      if (customFrom && orderDate && orderDate < new Date(customFrom + 'T00:00:00')) return false;
-      if (customTo && orderDate && orderDate > new Date(customTo + 'T23:59:59')) return false;
-    } else {
-      if (periodStart && o.created_at && new Date(o.created_at) < periodStart) return false;
+      const d = t.created_at ? new Date(t.created_at) : null;
+      if (customFrom && d && d < new Date(customFrom + 'T00:00:00')) return false;
+      if (customTo && d && d > new Date(customTo + 'T23:59:59')) return false;
+    } else if (periodStart && t.created_at && new Date(t.created_at) < periodStart) {
+      return false;
     }
-    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
-    if (employeeFilter !== 'all' && o.employee_name !== employeeFilter) return false;
+
+    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+    if (employeeFilter !== 'all' && t.employee_name !== employeeFilter) return false;
+
     if (search) {
       const q = search.toLowerCase();
       return (
-        o.order_number?.toLowerCase().includes(q) ||
-        o.customer_name?.toLowerCase().includes(q) ||
-        o.customer_phone?.includes(q) ||
-        o.employee_name?.toLowerCase().includes(q)
+        t.number?.toLowerCase().includes(q) ||
+        t.raw.customer_name?.toLowerCase().includes(q) ||
+        t.raw.customer_phone?.includes(q) ||
+        t.employee_name?.toLowerCase().includes(q)
       );
     }
     return true;
   });
 
-  // Summary stats
-  const validOrders = filtered.filter(o => o.status !== 'cancelled' && o.status !== 'returned');
-  const totalRevenue = validOrders.reduce((s, o) => s + (o.total_price || 0), 0);
-  const cashTotal = validOrders.filter(o => o.payment_method === 'cash').reduce((s, o) => s + (o.total_price || 0), 0);
-  const networkTotal = validOrders.filter(o => o.payment_method === 'network').reduce((s, o) => s + (o.total_price || 0), 0);
-  const paidCount = filtered.filter(o => o.payment_status === 'paid').length;
-  const unpaidCount = filtered.filter(o => o.payment_status === 'unpaid').length;
-
-  const uniqueEmployees = [...new Set(orders.map(o => o.employee_name).filter(Boolean))];
+  // ملخص دقيق — يشمل الآن إيراد المبيعات مع إيراد الإصلاح معاً
+  const totalRevenue = filtered.reduce((s, t) => s + (t.amount || 0), 0);
+  const cashTotal = filtered.filter(t => t.payment_method === 'cash').reduce((s, t) => s + (t.amount || 0), 0);
+  const networkTotal = filtered.filter(t => t.payment_method === 'network').reduce((s, t) => s + (t.amount || 0), 0);
+  const paidCount = filtered.filter(t => t.payment_status === 'paid').length;
+  const unpaidCount = filtered.filter(t => t.payment_status === 'unpaid').length;
+  const repairRevenue = filtered.filter(t => t.kind === 'repair').reduce((s, t) => s + (t.amount || 0), 0);
+  const saleRevenue = filtered.filter(t => t.kind === 'sale').reduce((s, t) => s + (t.amount || 0), 0);
 
   return (
     <div>
@@ -117,22 +136,22 @@ export default function AuditLog() {
         </div>
         <div>
           <h1 className="text-2xl font-bold">لوحة التدقيق</h1>
-          <p className="text-sm text-muted-foreground">مراجعة شاملة لجميع الطلبات والعمليات</p>
+          <p className="text-sm text-muted-foreground">مراجعة شاملة لكل عمليات الإصلاح والبيع معاً</p>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-black text-primary">{filtered.length}</p>
-            <p className="text-xs text-muted-foreground mt-1">إجمالي الطلبات</p>
+            <p className="text-xs text-muted-foreground mt-1">إجمالي العمليات</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-black text-emerald-600">{totalRevenue.toFixed(0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">الإيراد (ر.س)</p>
+            <p className="text-xs text-muted-foreground mt-1">الإيراد الكلي (ر.س)</p>
           </CardContent>
         </Card>
         <Card>
@@ -145,6 +164,22 @@ export default function AuditLog() {
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-black text-blue-600">{networkTotal.toFixed(0)}</p>
             <p className="text-xs text-muted-foreground mt-1">شبكة (ر.س)</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Revenue split — repair vs sale, so nothing is hidden anymore */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <Card className="border-indigo-100">
+          <CardContent className="p-3 text-center">
+            <p className="text-lg font-black text-indigo-700">{repairRevenue.toFixed(0)} ر.س</p>
+            <p className="text-xs text-muted-foreground mt-0.5">إيراد الإصلاح</p>
+          </CardContent>
+        </Card>
+        <Card className="border-cyan-100">
+          <CardContent className="p-3 text-center">
+            <p className="text-lg font-black text-cyan-700">{saleRevenue.toFixed(0)} ر.س</p>
+            <p className="text-xs text-muted-foreground mt-0.5">إيراد بيع المنتجات</p>
           </CardContent>
         </Card>
       </div>
@@ -178,6 +213,27 @@ export default function AuditLog() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="بحث..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Select value={kindFilter} onValueChange={setKindFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="نوع العملية" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الأنواع</SelectItem>
+            <SelectItem value="repair">إصلاح فقط</SelectItem>
+            <SelectItem value="sale">بيع منتج فقط</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={branchFilter} onValueChange={setBranchFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="الفرع" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الفروع</SelectItem>
+            {branches.map(b => (
+              <SelectItem key={b} value={b}>{b}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="الحالة" />
@@ -225,10 +281,11 @@ export default function AuditLog() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/50 border-b">
-                  <th className="text-right px-4 py-3 font-semibold text-muted-foreground">رقم الطلب</th>
+                  <th className="text-right px-4 py-3 font-semibold text-muted-foreground">رقم العملية</th>
+                  <th className="text-right px-4 py-3 font-semibold text-muted-foreground">النوع</th>
                   <th className="text-right px-4 py-3 font-semibold text-muted-foreground">العميل</th>
+                  <th className="text-right px-4 py-3 font-semibold text-muted-foreground">الفرع</th>
                   <th className="text-right px-4 py-3 font-semibold text-muted-foreground">الموظف</th>
-                  <th className="text-right px-4 py-3 font-semibold text-muted-foreground">القطعة</th>
                   <th className="text-right px-4 py-3 font-semibold text-muted-foreground">المبلغ</th>
                   <th className="text-right px-4 py-3 font-semibold text-muted-foreground">الدفع</th>
                   <th className="text-right px-4 py-3 font-semibold text-muted-foreground">الحالة</th>
@@ -237,33 +294,42 @@ export default function AuditLog() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((o, idx) => {
-                  const status = STATUS_LABELS[o.status] || { label: o.status, class: 'bg-gray-100 text-gray-700' };
-                  const payment = PAYMENT_LABELS[o.payment_status] || { label: o.payment_status, class: 'bg-gray-100' };
+                {filtered.map((t, idx) => {
+                  const status = STATUS_LABELS[t.status] || { label: t.status || '—', class: 'bg-gray-100 text-gray-700' };
+                  const payment = PAYMENT_LABELS[t.payment_status] || { label: t.payment_status || '—', class: 'bg-gray-100' };
+                  const kind = KIND_LABELS[t.kind];
+                  const detailLink = t.kind === 'repair' ? `/orders/${t.raw.id}` : '/invoices';
                   return (
-                    <tr key={o.id} className={`border-b transition-colors hover:bg-muted/30 ${idx % 2 === 0 ? '' : 'bg-muted/10'}`}>
-                      <td className="px-4 py-3 font-mono font-bold text-xs">{o.order_number}</td>
+                    <tr key={t.id} className={`border-b transition-colors hover:bg-muted/30 ${idx % 2 === 0 ? '' : 'bg-muted/10'}`}>
+                      <td className="px-4 py-3 font-mono font-bold text-xs">{t.number}</td>
                       <td className="px-4 py-3">
-                        <div className="font-medium">{o.customer_name}</div>
-                        {o.customer_phone && <div className="text-xs text-muted-foreground" dir="ltr">{o.customer_phone}</div>}
+                        <Badge className={`text-[10px] ${kind.class}`}>{kind.label}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{o.employee_name || '—'}</td>
-                      <td className="px-4 py-3">{ITEM_LABELS[o.item_type] || o.item_type} × {o.quantity || 1}</td>
-                      <td className="px-4 py-3 font-bold">{o.total_price?.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">ر.س</span></td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium">{t.raw.customer_name || '—'}</div>
+                        {t.raw.customer_phone && <div className="text-xs text-muted-foreground" dir="ltr">{t.raw.customer_phone}</div>}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />{t.branch_name}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.employee_name || '—'}</td>
+                      <td className="px-4 py-3 font-bold">{t.amount?.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">ر.س</span></td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1">
                           <Badge className={`text-[10px] w-fit ${payment.class}`}>{payment.label}</Badge>
-                          <span className="text-[10px] text-muted-foreground">{o.payment_method === 'cash' ? 'نقد' : o.payment_method === 'network' ? 'شبكة' : '—'}</span>
+                          <span className="text-[10px] text-muted-foreground">{t.payment_method === 'cash' ? 'نقد' : t.payment_method === 'network' ? 'شبكة' : '—'}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <Badge className={`text-[10px] ${status.class}`}>{status.label}</Badge>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {o.created_at ? format(new Date(o.created_at), 'yyyy/MM/dd HH:mm') : '—'}
+                        {t.created_at ? format(new Date(t.created_at), 'yyyy/MM/dd HH:mm') : '—'}
                       </td>
                       <td className="px-4 py-3">
-                        <Link to={`/orders/${o.id}`} className="text-primary hover:text-primary/70 transition-colors">
+                        <Link to={detailLink} className="text-primary hover:text-primary/70 transition-colors">
                           <ExternalLink className="w-4 h-4" />
                         </Link>
                       </td>

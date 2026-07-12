@@ -5,11 +5,12 @@ import { getSession } from '@/lib/sessionStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ShoppingBag, Wallet, Users, TrendingUp, Calendar } from 'lucide-react';
+import { ShoppingBag, Wallet, Users, TrendingUp, Calendar, Building2, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import FinancialReport from '@/components/dashboard/FinancialReport';
+import { unifyTransactions, summarizeByBranch } from '@/lib/analytics';
 
 const PERIODS = [
   { key: 'today', label: 'اليوم' },
@@ -61,6 +62,14 @@ export default function Dashboard() {
     initialData: [],
   });
 
+  // فواتير بيع المنتجات — كانت غائبة تماماً عن لوحة التحكم، فتُخفي جزءاً
+  // كاملاً من الإيراد الفعلي لأي فرع يبيع منتجات وليس فقط يصلّح
+  const { data: allSalesInvoices } = useQuery({
+    queryKey: ['sales-invoices-dashboard'],
+    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 500),
+    initialData: [],
+  });
+
   // Branch filter + period filter
   const orders = useMemo(() => {
     let filtered = allOrders;
@@ -82,14 +91,43 @@ export default function Dashboard() {
     return filtered;
   }, [allOrders, session, period, customFrom, customTo]);
 
+  const salesInvoices = useMemo(() => {
+    let filtered = allSalesInvoices;
+    if (!['admin','owner','manager'].includes(session?.role) && session?.branch_id) {
+      filtered = filtered.filter(s => !s.branch_id || s.branch_id === session.branch_id);
+    }
+    if (period === 'custom') {
+      filtered = filtered.filter(s => {
+        const d = s.created_at ? new Date(s.created_at) : null;
+        if (!d) return false;
+        if (customFrom && d < new Date(customFrom + 'T00:00:00')) return false;
+        if (customTo && d > new Date(customTo + 'T23:59:59')) return false;
+        return true;
+      });
+    } else {
+      const start = getPeriodStart(period);
+      if (start) filtered = filtered.filter(s => s.created_at && new Date(s.created_at) >= start);
+    }
+    return filtered;
+  }, [allSalesInvoices, session, period, customFrom, customTo]);
+
+  // كل العمليات موحّدة (إصلاح + بيع) — الأساس لكل رقم دقيق بهذي الصفحة
+  const transactions = useMemo(
+    () => unifyTransactions(orders, salesInvoices),
+    [orders, salesInvoices]
+  );
+  const branchSummary = useMemo(() => summarizeByBranch(transactions), [transactions]);
+  const topBranch = branchSummary[0];
+  const showBranches = ['admin','owner','manager'].includes(session?.role) && branchSummary.length > 1;
+
   const { data: customers } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list(),
     initialData: [],
   });
 
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.total_price || 0), 0);
-  const paidOrders = orders.filter(o => o.payment_status === 'paid');
+  const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+  const paidOrders = transactions.filter(t => t.payment_status === 'paid');
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'in_progress');
 
   // Last 7 days chart
@@ -98,15 +136,17 @@ export default function Dashboard() {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = format(d, 'yyyy-MM-dd');
-    const dayOrders = orders.filter(o => o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr);
+    const dayTx = transactions.filter(t => t.created_at && format(new Date(t.created_at), 'yyyy-MM-dd') === dateStr);
     last7.push({
       day: format(d, 'EEE'),
-      orders: dayOrders.length,
-      revenue: dayOrders.reduce((s, o) => s + (o.total_price || 0), 0),
+      orders: dayTx.length,
+      revenue: dayTx.reduce((s, t) => s + (t.amount || 0), 0),
     });
   }
 
-  const recentOrders = orders.slice(0, 5);
+  const recentOrders = [...transactions]
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    .slice(0, 5);
 
   return (
     <div>
@@ -138,15 +178,49 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="إجمالي الطلبات" value={orders.length} subtitle={`${pendingOrders.length} قيد الانتظار`} icon={ShoppingBag} accentClass="bg-primary" />
-        <StatCard title="الإيرادات" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`${paidOrders.length} طلب مدفوع`} icon={Wallet} accentClass="bg-primary" />
+        <StatCard title="إجمالي العمليات" value={transactions.length} subtitle={`${pendingOrders.length} إصلاح قيد الانتظار`} icon={ShoppingBag} accentClass="bg-primary" />
+        <StatCard title="الإيرادات" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`${paidOrders.length} عملية مدفوعة`} icon={Wallet} accentClass="bg-primary" />
         <StatCard title="العملاء" value={customers.length} icon={Users} accentClass="bg-primary" />
         <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
       </div>
 
+      {/* مقارنة الفروع — أي فرع يحقق أعلى إيراد، ظاهرة فقط للإدارة ولو فيه أكثر من فرع */}
+      {showBranches && (
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary" />
+              الإيراد حسب الفرع
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {branchSummary.map((b, i) => (
+                <div
+                  key={b.branch_name}
+                  className={`rounded-xl p-4 border ${i === 0 ? 'border-primary/40 bg-primary/5' : 'border-border bg-muted/20'}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-sm truncate">{b.branch_name}</span>
+                    {i === 0 && <Crown className="w-4 h-4 text-amber-500 shrink-0" />}
+                  </div>
+                  <p className="text-xl font-black">{b.revenue.toFixed(0)} <span className="text-xs font-normal text-muted-foreground">ر.س</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {b.count} عملية — {b.repairCount} إصلاح · {b.saleCount} بيع
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {['admin','owner','manager'].includes(session?.role) && (
         <div className="mb-8">
-          <FinancialReport orders={orders} />
+          <FinancialReport orders={transactions.map(t => ({
+            total_price: t.amount, payment_method: t.payment_method,
+            status: t.status, created_at: t.created_at,
+          }))} />
         </div>
       )}
 
@@ -180,16 +254,20 @@ export default function Dashboard() {
             {recentOrders.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">لا توجد طلبات بعد</p>
             ) : (
-              recentOrders.map(o => (
-                <Link key={o.id} to={`/orders/${o.id}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors">
+              recentOrders.map(t => (
+                <Link
+                  key={t.id}
+                  to={t.kind === 'repair' ? `/orders/${t.raw.id}` : '/invoices'}
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"
+                >
                   <div>
-                    <p className="text-sm font-medium">{o.customer_name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{o.order_number}</p>
+                    <p className="text-sm font-medium">{t.raw.customer_name || '—'}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{t.number}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold">{o.total_price?.toFixed(0)} SAR</p>
+                    <p className="text-sm font-bold">{t.amount?.toFixed(0)} SAR</p>
                     <Badge variant="outline" className="text-[10px]">
-                      {o.status}
+                      {t.kind === 'repair' ? (t.status || '—') : 'بيع منتج'}
                     </Badge>
                   </div>
                 </Link>

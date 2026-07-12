@@ -38,6 +38,11 @@ export default function Settings() {
 
   const upd = (k, v) => setSettings(s => ({ ...s, [k]: v }));
 
+  // رقم ضريبي سعودي صحيح: 15 رقم، يبدأ وينتهي بـ 3. إذا تُرك فاضي أو خاطئ
+  // فسيظهر داخل رمز QR كـ "000000000000000" وتُرفض الفاتورة من زاتكا.
+  const vatNumber = settings.vat_number || '';
+  const isVatValid = /^3\d{13}3$/.test(vatNumber);
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin" /></div>;
 
   return (
@@ -58,7 +63,24 @@ export default function Settings() {
             ].map(([k, label]) => (
               <div key={k} className="space-y-1.5">
                 <Label>{label}</Label>
-                <Input value={settings[k] || ''} onChange={e => upd(k, e.target.value)} />
+                <Input
+                  value={settings[k] || ''}
+                  onChange={e => upd(k, e.target.value)}
+                  dir={k === 'vat_number' || k === 'cr_number' ? 'ltr' : undefined}
+                  placeholder={k === 'vat_number' ? '314151483700003' : undefined}
+                />
+                {k === 'vat_number' && vatNumber && !isVatValid && (
+                  <p className="text-xs text-red-600">
+                    الرقم الضريبي غير صحيح — يجب أن يكون 15 رقماً ويبدأ وينتهي بالرقم 3.
+                    سيظهر داخل رمز QR بشكل خاطئ وتُرفض الفاتورة من زاتكا.
+                  </p>
+                )}
+                {k === 'vat_number' && !vatNumber && (
+                  <p className="text-xs text-amber-600">
+                    لم تُدخل رقماً ضريبياً بعد — بدونه سيظهر في رمز QR كـ 000000000000000
+                    وتُرفض الفاتورة من زاتكا.
+                  </p>
+                )}
               </div>
             ))}
           </div>
