@@ -85,7 +85,7 @@ export default function Employees() {
       toast.error('الاسم ورقم PIN مطلوبان');
       return;
     }
-    saveMutation.mutate({ name: form.name, pin: form.pin, role: form.role, is_active: true, branch_id: form.branch_id, branch_name: form.branch_name });
+    saveMutation.mutate({ name: form.name, pin: form.pin, role: form.role, is_active: true, branch_id: form.branch_id || null, branch_name: form.branch_name });
   };
 
   const onBranchChange = (branchId) => {

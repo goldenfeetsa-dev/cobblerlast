@@ -141,9 +141,9 @@ function CobblerTab({ session }) {
 
     createOrder.mutate({
       order_number: generateOrderNumber(),
-      employee_id: session?.id || '',
+      employee_id: session?.id || null,
       employee_name: session?.name || '',
-      branch_id: session?.branch_id || '',
+      branch_id: session?.branch_id || null,
       branch_name: session?.branch_name || '',
       customer_name: form.customer_name,
       customer_phone: form.customer_phone,
