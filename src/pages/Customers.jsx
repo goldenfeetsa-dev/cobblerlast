@@ -28,8 +28,8 @@ export default function Customers() {
   });
 
   const { data: settingsList } = useQuery({
-    queryKey: ['shop-settings'],
-    queryFn: () => base44.entities.ShopSettings.list(),
+    queryKey: ['app-settings'],
+    queryFn: () => base44.entities.AppSettings.list(),
     initialData: [],
   });
   const stampsRequired = settingsList[0]?.stamps_required || 10;

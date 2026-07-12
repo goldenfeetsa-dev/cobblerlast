@@ -25,8 +25,8 @@ export default function ReceiptView({ order, autoPrint = false }) {
   const isProductInvoice = Array.isArray(order.items) && order.items.length > 0;
 
   const { data: settingsList } = useQuery({
-    queryKey: ['shop-settings'],
-    queryFn: () => base44.entities.ShopSettings.list(),
+    queryKey: ['app-settings'],
+    queryFn: () => base44.entities.AppSettings.list(),
     initialData: [],
   });
   const settings = settingsList[0] || {};
@@ -36,7 +36,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
   const footer = settings.receipt_footer || 'شكراً لثقتكم بنا — نسعد بخدمتكم دائماً';
   const terms = settings.terms_conditions || '';
   const vatNumber = settings.vat_number || '';
-  const crNumber = settings.commercial_registration || '';
+  const crNumber = settings.cr_number || '';
   const vatEnabled = settings.vat_enabled !== false;
 
   const subtotal = order.subtotal || (vatEnabled ? parseFloat((order.total_price / 1.15).toFixed(2)) : order.total_price);
