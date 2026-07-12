@@ -688,9 +688,18 @@ function ReviewsSection() {
 }
 
 // ── Brands ────────────────────────────────────────────────────────
-const BRANDS = ['Hermès','Louis Vuitton','Chanel','Gucci','Prada','Dior','Bottega','Ferragamo','Tod\'s','Louboutin'];
 function BrandsSection() {
   const { t, dir } = useLanguage();
+  const { data: brands = [] } = useQuery({
+    queryKey: ['brands-public'],
+    queryFn: () => base44.entities.Brand.filter({ is_active: true }, 'sort_order'),
+    staleTime: 5 * 60 * 1000,
+  });
+  const list = brands.length ? brands : [
+    { name_ar: 'Hermès' }, { name_ar: 'Louis Vuitton' }, { name_ar: 'Chanel' }, { name_ar: 'Gucci' },
+    { name_ar: 'Prada' }, { name_ar: 'Dior' }, { name_ar: 'Bottega' }, { name_ar: 'Ferragamo' },
+    { name_ar: "Tod's" }, { name_ar: 'Louboutin' },
+  ];
   return (
     <section className="py-20 px-6 overflow-hidden" style={{ background: '#0A0500', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
@@ -702,9 +711,12 @@ function BrandsSection() {
           {[0, 1].map(k => (
             <motion.div key={k} className="flex gap-8 shrink-0 pr-8"
               animate={{ x: ['0%', '-100%'] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}>
-              {BRANDS.map((b, i) => (
-                <div key={i} className="shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap"
-                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.1)`, color: `${GB}0.5)` }}>{b}</div>
+              {list.map((b, i) => (
+                <div key={i} className="shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap flex items-center gap-2"
+                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.1)`, color: `${GB}0.5)` }}>
+                  {b.logo_url && <img src={b.logo_url} alt={b.name_ar || b.name} className="w-5 h-5 object-contain rounded" />}
+                  {b.name_ar || b.name}
+                </div>
               ))}
             </motion.div>
           ))}
@@ -798,6 +810,15 @@ function BranchesSection() {
                   <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: G }} />{b.city}{b.address && ` — ${b.address}`}</div>
                   <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: G }} />{t('home.branches.hours')}</div>
                   {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: G }} /><a href={`tel:${b.phone}`} className="hover:text-yellow-400">{b.phone}</a></div>}
+                  {b.maps_url && (
+                    <div className="pt-2">
+                      <a href={b.maps_url} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg"
+                        style={{ background: GB + '0.08)', color: G, border: `1px solid ${GB}0.15)` }}>
+                        <MapPin className="w-3.5 h-3.5" /> {t('home.branches.viewMap') || 'فتح الموقع على الخريطة'}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </FadeIn>
@@ -814,7 +835,7 @@ function Footer() {
   const { data: settingsArr } = useQuery({
     queryKey: ['app-settings-public'],
     queryFn: async () => {
-      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,phone').limit(1);
+      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,phone,vat_number').limit(1);
       return data;
     },
     staleTime: 5 * 60 * 1000,
@@ -872,6 +893,7 @@ function Footer() {
               ))}
               <li><a href={`tel:${phone}`} className="hover:text-yellow-400 transition-colors">{phone}</a></li>
               <li><a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">{t('common.footer.whatsapp')}</a></li>
+              {s.vat_number && <li className="pt-1" style={{ color: `${GB}0.25)` }}>الرقم الضريبي: {s.vat_number}</li>}
             </ul>
           </div>
         </div>
