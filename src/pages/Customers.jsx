@@ -29,7 +29,7 @@ export default function Customers() {
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => base44.entities.AppSettings.list(),
+    queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
   const stampsRequired = settingsList[0]?.stamps_required || 10;

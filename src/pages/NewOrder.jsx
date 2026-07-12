@@ -51,7 +51,7 @@ function CobblerTab({ session }) {
     queryKey: ['customers'], queryFn: () => base44.entities.Customer.list(), initialData: [],
   });
   const { data: settingsList = [] } = useQuery({
-    queryKey: ['app-settings'], queryFn: () => base44.entities.AppSettings.list(),
+    queryKey: ['app-settings'], queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
   });
   const { data: planList2 } = useQuery({
     queryKey: ['operations-plan'], queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],

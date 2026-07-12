@@ -244,7 +244,7 @@ export default function OperationsDashboard() {
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => base44.entities.AppSettings.list(),
+    queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
   const freeAfter = plan?.loyalty_free_after || settingsList[0]?.stamps_required || 3;

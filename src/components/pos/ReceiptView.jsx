@@ -24,9 +24,9 @@ export default function ReceiptView({ order, autoPrint = false }) {
   // التي تحتوي خدمة واحدة فقط — نفرّق بينهما لعرض الأصناف بشكل صحيح
   const isProductInvoice = Array.isArray(order.items) && order.items.length > 0;
 
-  const { data: settingsList } = useQuery({
+  const { data: settingsList, isFetched: settingsFetched } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => base44.entities.AppSettings.list(),
+    queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
   const settings = settingsList[0] || {};
@@ -72,11 +72,11 @@ export default function ReceiptView({ order, autoPrint = false }) {
   // الطباعة الفورية — تُفعَّل تلقائياً مرة واحدة فقط عند فتح الفاتورة بعد
   // إنشائها مباشرة (autoPrint=true)، بعد تأخير بسيط لضمان تحميل الشعار والصور
   useEffect(() => {
-    if (!autoPrint || hasAutoPrinted.current) return;
+    if (!autoPrint || hasAutoPrinted.current || !settingsFetched) return;
     hasAutoPrinted.current = true;
     const timer = setTimeout(() => window.print(), 550);
     return () => clearTimeout(timer);
-  }, [autoPrint]);
+  }, [autoPrint, settingsFetched]);
 
   const Divider = ({ dashed = true }) => (
     <div style={{ borderTop: dashed ? '1px dashed #d1d5db' : '2px solid #111', margin: '10px 0' }} />
