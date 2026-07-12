@@ -69,11 +69,15 @@ function CobblerTab({ session }) {
   const createOrder = useMutation({
     mutationFn: async (orderData) => {
       const order = await base44.entities.Order.create(orderData);
-      const existingCustomer = customers.find(c => c.phone === form.customer_phone);
       const price = parseFloat(form.total_price) || 0;
       const pointsEarned = Math.floor(price / 10);
       const planList = await base44.entities.OperationsPlan.list();
       const freeAfter = planList[0]?.loyalty_free_after || 3;
+
+      // نتأكد من القاعدة مباشرة (مو من الكاش المحلي) لتفادي محاولة إنشاء
+      // عميل مكرر برقم جوال موجود أصلاً (customers_phone_key)
+      const freshMatches = await base44.entities.Customer.filter({ phone: form.customer_phone });
+      const existingCustomer = freshMatches?.[0];
 
       if (existingCustomer) {
         const newStamps = (existingCustomer.stamps || 0) + 1;
@@ -90,10 +94,25 @@ function CobblerTab({ session }) {
           setTimeout(() => window.open(`https://wa.me/${phone}?text=${msg}`, '_blank'), 2000);
         }
       } else {
-        await base44.entities.Customer.create({
-          name: form.customer_name, phone: form.customer_phone,
-          loyalty_points: pointsEarned, stamps: 1, total_orders: 1, total_spent: price,
-        });
+        try {
+          await base44.entities.Customer.create({
+            name: form.customer_name, phone: form.customer_phone,
+            loyalty_points: pointsEarned, stamps: 1, total_orders: 1, total_spent: price,
+          });
+        } catch (custErr) {
+          // تعارض نادر (Race Condition): نفس الرقم انسجل بلحظة موازية — نحدّثه بدل ما نفشل الطلب كامل
+          const retryMatch = (await base44.entities.Customer.filter({ phone: form.customer_phone }))?.[0];
+          if (retryMatch) {
+            await base44.entities.Customer.update(retryMatch.id, {
+              loyalty_points: (retryMatch.loyalty_points || 0) + pointsEarned,
+              stamps: (retryMatch.stamps || 0) + 1,
+              total_orders: (retryMatch.total_orders || 0) + 1,
+              total_spent: (retryMatch.total_spent || 0) + price,
+            });
+          } else {
+            throw custErr;
+          }
+        }
       }
 
       if (session?.id) {
