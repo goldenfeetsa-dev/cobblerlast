@@ -6,12 +6,10 @@ import { getSession } from '@/lib/sessionStore';
 import { useGlobalBarcodeScanner } from '@/hooks/useGlobalBarcodeScanner';
 import { base44 } from '@/api/supabaseApi';
 import { toast } from 'sonner';
-
-const ADMIN_ROLES  = ['admin', 'owner', 'manager', 'accountant'];
-const STAFF_ROLES  = ['staff', 'cashier'];
-
-// صفحات مسموحة للعامل فقط
-const STAFF_ALLOWED = ['/staff', '/scan', '/orders'];
+import {
+  isFullAdmin, isFinanceUser, isCashier, isWorker,
+  getHomePath, WORKER_ALLOWED_PREFIXES, CASHIER_DENIED_PREFIXES,
+} from '@/lib/roles';
 
 export default function AppLayout() {
   const session  = getSession();
@@ -37,12 +35,15 @@ export default function AppLayout() {
   // غير مسجّل → login
   if (!session) return <Navigate to="/login" replace />;
 
-  const isAdmin = ADMIN_ROLES.includes(session.role);
-  const isStaff = STAFF_ROLES.includes(session.role);
-
-  // العامل يُحوَّل لصفحته إذا حاول فتح صفحة إدارة
-  if (isStaff && !STAFF_ALLOWED.some(p => location.pathname.startsWith(p))) {
+  // ── العامل (staff): يُحوَّل لصفحة مهامه فقط إذا حاول فتح صفحة إدارية ──
+  if (isWorker(session.role) && !WORKER_ALLOWED_PREFIXES.some(p => location.pathname.startsWith(p))) {
     return <Navigate to="/staff" replace />;
+  }
+
+  // ── الكاشير: له كل صفحات التشغيل اليومي (طلب جديد، طلبات، عملاء، مبيعات...)
+  //    وممنوع فقط من صفحات الإدارة/التقارير/الإعدادات ──
+  if (isCashier(session.role) && CASHIER_DENIED_PREFIXES.some(p => location.pathname.startsWith(p))) {
+    return <Navigate to="/new-order" replace />;
   }
 
   return (

@@ -13,13 +13,11 @@ export default function BarcodeOnly() {
   const pathParts = window.location.pathname.split('/');
   const orderId = pathParts[pathParts.length - 1];
 
-  const { data: orders } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_at', 200),
-    initialData: [],
+  const { data: order } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: () => base44.entities.Order.get(orderId),
+    enabled: !!orderId,
   });
-
-  const order = orders.find(o => o.id === orderId);
 
   const handleDownload = async () => {
     if (!barcodeRef.current) return;

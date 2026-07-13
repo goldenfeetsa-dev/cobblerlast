@@ -42,7 +42,7 @@ export default function Orders() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Order.update(id, data),
     onSuccess: async (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] }); // ينطبق على كل مفاتيح orders.* (list/dashboard/operations)
       // إضافة ختمة تلقائياً عند إتمام الطلب
       if (variables.data?.status === 'completed') {
         const order = orders?.find(o => o.id === variables.id);
@@ -66,8 +66,9 @@ export default function Orders() {
   });
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_at', 200),
+    queryKey: ['orders', 'list'],
+    queryFn: () => base44.entities.Order.list('-created_at', 200,
+      'id, order_number, customer_name, customer_phone, employee_name, item_type, quantity, shelf_location, status, payment_status, payment_method, total_price, photos, created_at, branch_id, delivery_method'),
     initialData: [],
   });
 

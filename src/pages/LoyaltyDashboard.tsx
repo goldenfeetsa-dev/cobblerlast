@@ -13,10 +13,11 @@ import {
   TrendingUp, Phone, RefreshCw, Loader2
 } from 'lucide-react';
 import { getSession } from '@/lib/sessionStore';
+import { isFullAdmin } from '@/lib/roles';
 
 export default function LoyaltyDashboard() {
   const session  = getSession();
-  const isAdmin  = ['admin','owner','manager'].includes(session?.role);
+  const isAdmin = isFullAdmin(session?.role);
 
   const [cards, setCards]       = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});

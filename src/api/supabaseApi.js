@@ -8,12 +8,12 @@ import { supabase } from '@/lib/supabaseClient';
 // يحاكي base44.entities.X.list() / .create() / .update() / .filter()
 function createEntity(tableName) {
   return {
-    async list(orderBy = '-created_at', limit = 200) {
+    async list(orderBy = '-created_at', limit = 200, columns = '*') {
       const col = orderBy.startsWith('-') ? orderBy.slice(1) : orderBy;
       const asc = !orderBy.startsWith('-');
       const { data, error } = await supabase
         .from(tableName)
-        .select('*')
+        .select(columns)
         .order(col, { ascending: asc })
         .limit(limit);
       if (error) throw new Error(error.message);
@@ -113,6 +113,8 @@ export const db = {
   Customer:         createEntity('customers'),
   Branch:           createEntity('branches'),
   InventoryItem:    createEntity('inventory_items'),
+  Supplier:         createEntity('suppliers'),
+  SupplierProduct:  createEntity('supplier_products'),
   Product:          createEntity('products'),
   SalesInvoice:     createEntity('sales_invoices'),
   Expense:          createEntity('expenses'),

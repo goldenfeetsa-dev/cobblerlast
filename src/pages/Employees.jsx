@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
+import { isFullAdmin, getHomePath } from '@/lib/roles';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,7 @@ export default function Employees() {
     },
   });
 
-  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
+  if (!isFullAdmin(session?.role)) return <Navigate to={getHomePath(session?.role)} replace />;
 
   const openEdit = (emp) => {
     setEditingEmployee(emp);

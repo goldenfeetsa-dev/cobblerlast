@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings,
-  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award
+  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
+import { isFullAdmin, isFinanceUser, isWorker } from '@/lib/roles';
 
 // ─── Groups: مرتبة حسب الاستخدام الأكثر، الإعدادات دائماً آخراً
 const navGroups = [
@@ -14,9 +16,9 @@ const navGroups = [
     items: [
       { path: '/pos', icon: LayoutDashboard, label: 'لوحة التحكم', adminOnly: true },
       { path: '/new-order', icon: PlusCircle, label: 'طلب جديد' },
-      { path: '/staff', icon: Scissors, label: 'مهامي 🔧', staffOnly: true },
+      { path: '/staff', icon: Scissors, label: 'مهامي 🔧', workerOnly: true },
       { path: '/orders', icon: ListOrdered, label: 'الطلبات' },
-      { path: '/invoices', icon: Receipt, label: 'الفواتير', adminOnly: true },
+      { path: '/invoices', icon: Receipt, label: 'الفواتير', financeOnly: true },
       { path: '/calendar', icon: CalendarDays, label: 'الجدولة المرئية' },
       { path: '/scan', icon: ScanBarcode, label: 'مسح الباركود' },
     ]
@@ -25,6 +27,7 @@ const navGroups = [
     label: 'الأنظمة',
     items: [
       { path: '/sales', icon: ShoppingCart, label: 'المبيعات والمخازن' },
+      { path: '/suppliers', icon: Truck, label: 'الموردون', financeOnly: true },
       { path: '/workshop', icon: Wrench, label: 'العهدة والورشة' },
       { path: '/operations', icon: Factory, label: 'الخطة الثانية ⚡', adminOnly: true },
     ]
@@ -39,9 +42,9 @@ const navGroups = [
   },
   {
     label: 'التقارير',
-    adminOnly: true,
+    financeOnly: true,
     items: [
-      { path: '/financial-reports', icon: Wallet, label: 'التقارير المالية', adminOnly: true },
+      { path: '/financial-reports', icon: Wallet, label: 'التقارير المالية', financeOnly: true },
       { path: '/audit', icon: ClipboardList, label: 'لوحة التدقيق', adminOnly: true },
       { path: '/site-analytics', icon: Globe, label: 'إحصائيات الموقع', adminOnly: true },
     ]
@@ -63,7 +66,7 @@ const navGroups = [
       { path: '/admin/services', icon: Wrench, label: 'إدارة الخدمات', adminOnly: true },
       { path: '/admin/working-hours', icon: Clock, label: 'أوقات العمل', adminOnly: true },
       { path: '/admin/branches', icon: MapPin, label: 'الفروع', adminOnly: true },
-      { path: '/zatca', icon: Shield, label: 'زاتكا ZATCA', adminOnly: true },
+      { path: '/zatca', icon: Shield, label: 'زاتكا ZATCA', financeOnly: true },
       { path: '/social-settings', icon: Globe, label: 'التواصل الاجتماعي', adminOnly: true },
       { path: '/loyalty', icon: Star, label: 'بطاقات الولاء', adminOnly: false },
       { path: '/loyalty-members', icon: Award, label: 'برنامج الولاء (النقاط)', adminOnly: false },
@@ -74,14 +77,17 @@ const navGroups = [
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const session  = getSession();
-  const isAdmin  = ['admin', 'owner', 'manager'].includes(session?.role);
-  const isStaff  = ['staff', 'cashier'].includes(session?.role);
+  const isAdmin  = isFullAdmin(session?.role);   // owner/admin/manager فقط
+  const isFinance = isFinanceUser(session?.role); // isAdmin + محاسب
+  const isWorkerRole = isWorker(session?.role);   // العامل فقط (وليس الكاشير)
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
     clearSession();
-    window.location.href = '/login';
+    // تنقّل ناعم عبر الراوتر بدل إعادة تحميل الصفحة بالكامل (أخف وأسرع على الجهاز)
+    navigate('/login', { replace: true });
   };
 
   const sidebarContent = (
@@ -103,9 +109,11 @@ export default function Sidebar() {
       <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-0.5">
         {navGroups.map((group, gi) => {
           if (group.adminOnly && !isAdmin) return null;
+          if (group.financeOnly && !isFinance) return null;
           const visibleItems = group.items.filter(item => {
             if (item.adminOnly && !isAdmin) return false;
-            if (item.staffOnly && !isStaff) return false; // مهامي - للعمال فقط
+            if (item.financeOnly && !isFinance) return false; // تقارير/زاتكا/فواتير/موردين - إدارة + محاسب
+            if (item.workerOnly && !isWorkerRole) return false; // مهامي - للعامل فقط (وليس الكاشير)
             return true;
           });
           if (visibleItems.length === 0) return null;
@@ -185,17 +193,32 @@ export default function Sidebar() {
       </div>
 
       {/* Mobile overlay */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col">
-            <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 p-1 text-sidebar-foreground/50">
-              <X className="w-5 h-5" />
-            </button>
-            {sidebarContent}
-          </aside>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="lg:hidden fixed inset-0 z-50">
+            <motion.div
+              className="absolute inset-0 bg-black/50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 }}
+            >
+              <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 p-1 text-sidebar-foreground/50">
+                <X className="w-5 h-5" />
+              </button>
+              {sidebarContent}
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex-col z-50">

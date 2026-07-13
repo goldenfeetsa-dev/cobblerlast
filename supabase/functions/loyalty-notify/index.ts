@@ -57,7 +57,21 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { mode = 'pending' } = body; // 'pending' | 'single'
+    const { mode = 'pending' } = body; // 'pending' | 'single' | 'direct'
+
+    // ── إرسال مباشر لرقم جوال بدون الحاجة لبطاقة ولاء مسجّلة ──
+    // يُستخدم من صفحة "طلب جديد" لإشعار العميل تلقائياً بنقاطه أو
+    // استحقاقه للخدمة المجانية بضغطة زر واحدة، بدون خطوات يدوية.
+    if (mode === 'direct') {
+      const { phone, message } = body;
+      if (!phone || !message) {
+        return new Response(JSON.stringify({ error: 'phone و message مطلوبين' }), { status: 400, headers: cors });
+      }
+      const ok = await sendSMS(phone, message);
+      return new Response(JSON.stringify({ sent: ok }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
 
     // ── إرسال إشعار واحد بـ ID ──────────────────────────
     if (mode === 'single' && body.notification_id) {

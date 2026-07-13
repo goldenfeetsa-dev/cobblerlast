@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import PhotoCarousel from '@/components/pos/PhotoCarousel';
 import ReceiptView from '@/components/pos/ReceiptView';
 import { getSession } from '@/lib/sessionStore';
+import { isFullAdmin } from '@/lib/roles';
 import { shouldHidePhotos } from '@/lib/photoCleanup';
 import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, RefreshCw, XCircle, PauseCircle, MessageCircle, Mail, CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
@@ -81,22 +82,21 @@ export default function OrderDetails() {
   const justCreated = location.state?.justCreated === true;
   const queryClient = useQueryClient();
   const session = getSession();
-  const isAdmin = ['admin','owner','manager'].includes(session?.role);
+  const isAdmin = isFullAdmin(session?.role);
   const [holdDialogOpen, setHoldDialogOpen] = useState(false);
   const [holdReason, setHoldReason] = useState('');
 
-  const { data: orders } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_at', 200),
-    initialData: [],
+  const { data: order, isLoading: orderLoading } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: () => base44.entities.Order.get(orderId),
+    enabled: !!orderId,
   });
-
-  const order = orders.find(o => o.id === orderId);
 
   const updateStatus = useMutation({
     mutationFn: ({ id, status }) => base44.entities.Order.update(id, { status: status }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       toast.success('تم تحديث الحالة', {
         action: {
           label: '📱 أبلغ العميل واتساب',
@@ -112,6 +112,7 @@ export default function OrderDetails() {
     mutationFn: ({ id, status }) => base44.entities.Order.update(id, { payment_status: status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       toast.success('تم تحديث حالة الدفع');
     },
   });
@@ -120,6 +121,7 @@ export default function OrderDetails() {
     mutationFn: ({ id, method }) => base44.entities.Order.update(id, { payment_method: method }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       toast.success('تم تحديث طريقة الدفع');
     },
   });
@@ -128,6 +130,7 @@ export default function OrderDetails() {
     mutationFn: ({ id, status, extra }) => base44.entities.Order.update(id, { status: status, ...extra }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       const labels = { cancelled: 'إلغاء الفاتورة', returned: 'استرجاع', exchanged: 'استبدال', on_hold: 'توقيف الطلب' };
       toast.success(`تم تنفيذ: ${labels[vars.status] || 'تحديث'}`, {
         action: {
@@ -145,6 +148,14 @@ export default function OrderDetails() {
     setHoldDialogOpen(false);
     setHoldReason('');
   };
+
+  if (orderLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!order) {
     return (

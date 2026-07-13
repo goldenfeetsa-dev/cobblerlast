@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Users, Search, Star, ShoppingBag, Wallet, MessageCircle, CheckSquare, Square, Send } from 'lucide-react';
 import StampCard from '@/components/pos/StampCard';
 import { getSession } from '@/lib/sessionStore';
+import { isFullAdmin } from '@/lib/roles';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function Customers() {
@@ -18,7 +19,7 @@ export default function Customers() {
   const [whatsappOpen, setWhatsappOpen] = useState(false);
   const [msgTemplate, setMsgTemplate] = useState('يا هلا {اسم العميل}! 👋\nعروض خاصة من إبرة وخيط الإسكافي تنتظرك.\nاحجز موعدك الآن: https://wa.me/966549678191');
   const session = getSession();
-  const isAdmin = ['admin','owner','manager'].includes(session?.role);
+  const isAdmin = isFullAdmin(session?.role);
   const { toast } = useToast();
 
   const { data: customers, isLoading } = useQuery({
@@ -32,7 +33,13 @@ export default function Customers() {
     queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
-  const stampsRequired = settingsList[0]?.stamps_required || 10;
+  const { data: planList } = useQuery({
+    queryKey: ['operations-plan'],
+    queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],
+  });
+  // نفس المصدر المستخدم فعلياً عند إنشاء الطلب (NewOrder) — كانت الصفحتين
+  // تقرآن من جدولين مختلفين فيطلع رقم مختلف بالبطاقة عن الرقم الحقيقي المُطبَّق
+  const stampsRequired = planList[0]?.loyalty_free_after || settingsList[0]?.stamps_required || 4;
 
   const filtered = customers.filter(c => {
     if (!search) return true;

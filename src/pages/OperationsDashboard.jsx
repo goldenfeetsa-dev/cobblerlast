@@ -230,7 +230,7 @@ export default function OperationsDashboard() {
   });
 
   const { data: allOrders } = useQuery({
-    queryKey: ['orders'],
+    queryKey: ['orders', 'operations'],
     queryFn: () => base44.entities.Order.list('-created_at', 300),
     initialData: [],
     refetchInterval: 20000,
@@ -247,7 +247,7 @@ export default function OperationsDashboard() {
     queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
-  const freeAfter = plan?.loyalty_free_after || settingsList[0]?.stamps_required || 3;
+  const freeAfter = plan?.loyalty_free_after || settingsList[0]?.stamps_required || 4;
 
   // Group orders by branch
   const branchMap = useMemo(() => {

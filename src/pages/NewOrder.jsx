@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useZATCA } from '@/lib/zatca/useZATCA';
+import { notifyCustomerDirect } from '@/lib/notifyCustomer';
 
 const ITEM_TYPES = [
   { value: 'shoes', label: 'أحذية' },
@@ -59,7 +60,7 @@ function CobblerTab({ session }) {
 
   const { submitInvoice } = useZATCA();
   const shopSettings = settingsList[0] || {};
-  const freeAfterUI = planList2[0]?.loyalty_free_after || 3;
+  const freeAfterUI = planList2[0]?.loyalty_free_after || 4;
   const knownCustomer = form.customer_phone.length >= 9
     ? customers.find(c => c.phone === form.customer_phone)
     : null;
@@ -72,7 +73,7 @@ function CobblerTab({ session }) {
       const price = parseFloat(form.total_price) || 0;
       const pointsEarned = Math.floor(price / 10);
       const planList = await base44.entities.OperationsPlan.list();
-      const freeAfter = planList[0]?.loyalty_free_after || 3;
+      const freeAfter = planList[0]?.loyalty_free_after || 4;
 
       // نتأكد من القاعدة مباشرة (مو من الكاش المحلي) لتفادي محاولة إنشاء
       // عميل مكرر برقم جوال موجود أصلاً (customers_phone_key)
@@ -88,10 +89,12 @@ function CobblerTab({ session }) {
           total_orders: (existingCustomer.total_orders || 0) + 1,
           total_spent: (existingCustomer.total_spent || 0) + price,
         });
-        if (resetStamps && existingCustomer.phone) {
-          const phone = existingCustomer.phone.replace(/^0/, '966').replace(/\D/g, '');
-          const msg = encodeURIComponent(`يا هلا ${existingCustomer.name}! 🎉\nتهانينا! لقد أكملت ${freeAfter} خدمات وحصلت على خدمتك المجانية القادمة! ✂️\nإبرة وخيط الإسكافي`);
-          setTimeout(() => window.open(`https://wa.me/${phone}?text=${msg}`, '_blank'), 2000);
+        // إشعار مباشر بجوال العميل — بدون أي خطوة يدوية إضافية
+        if (existingCustomer.phone) {
+          const msg = resetStamps
+            ? `يا هلا ${existingCustomer.name}! 🎉 تهانينا! أكملت ${freeAfter} خدمات وحصلت على خدمتك المجانية القادمة! ✂️ إبرة وخيط الإسكافي`
+            : `يا هلا ${existingCustomer.name}! أضفنا ${pointsEarned} نقطة لحسابك (${newStamps}/${freeAfter} نحو خدمتك المجانية القادمة) ✂️ إبرة وخيط الإسكافي`;
+          notifyCustomerDirect(existingCustomer.phone, msg);
         }
       } else {
         try {
@@ -99,6 +102,10 @@ function CobblerTab({ session }) {
             name: form.customer_name, phone: form.customer_phone,
             loyalty_points: pointsEarned, stamps: 1, total_orders: 1, total_spent: price,
           });
+          if (form.customer_phone) {
+            notifyCustomerDirect(form.customer_phone,
+              `يا هلا ${form.customer_name}! سجّلناك ببرنامج الولاء وأضفنا ${pointsEarned} نقطة لحسابك (1/${freeAfter} نحو خدمتك المجانية القادمة) ✂️ إبرة وخيط الإسكافي`);
+          }
         } catch (custErr) {
           // تعارض نادر (Race Condition): نفس الرقم انسجل بلحظة موازية — نحدّثه بدل ما نفشل الطلب كامل
           const retryMatch = (await base44.entities.Customer.filter({ phone: form.customer_phone }))?.[0];
@@ -177,6 +184,7 @@ function CobblerTab({ session }) {
       payment_method: form.payment_method,
       status: 'pending',
       notes: form.notes,
+      description: form.notes,
       points_earned: Math.floor(price / 10),
     });
   };
@@ -248,8 +256,9 @@ function CobblerTab({ session }) {
           </div>
           <PhotoUploader photos={photos} setPhotos={setPhotos} maxPhotos={5} />
           <div className="space-y-2">
-            <Label>ملاحظات</Label>
-            <Textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="تعليمات خاصة..." className="h-20" />
+            <Label>وصف الشغلة المطلوبة (يظهر للعامل) *</Label>
+            <Textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="مثال: تبديل نعل كامل + تلميع، انتبه للخيط الجانبي..." className="h-20" required />
+            <p className="text-xs text-muted-foreground">هذا الوصف هو اللي بيشوفه العامل بالضبط في صفحة «مهامي» — اكتبه واضح.</p>
           </div>
         </CardContent>
       </Card>
@@ -319,7 +328,7 @@ function CobblerTab({ session }) {
         </CardContent>
       </Card>
 
-      <Button type="submit" disabled={createOrder.isPending || !form.customer_name || !form.item_type || !form.total_price}
+      <Button type="submit" disabled={createOrder.isPending || !form.customer_name || !form.item_type || !form.total_price || !form.notes.trim()}
         className="w-full h-14 text-lg font-bold">
         {createOrder.isPending ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'إنشاء الطلب'}
       </Button>
@@ -337,11 +346,15 @@ function ProductsTab({ session }) {
   const [search, setSearch] = useState('');
 
   const { data: items } = useQuery({
-    queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 200), initialData: [],
+    queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 500), initialData: [],
   });
   const { data: branches } = useQuery({
     queryKey: ['branches'], queryFn: () => base44.entities.Branch.list(), initialData: [],
   });
+  const { data: planList } = useQuery({
+    queryKey: ['operations-plan'], queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],
+  });
+  const freeAfter = planList[0]?.loyalty_free_after || 4;
 
   const salesBranches = branches.filter(b => b.is_active);
 
@@ -415,6 +428,36 @@ function ProductsTab({ session }) {
           created_by_name: session?.name,
         });
       }
+      // ── ربط برنامج الولاء بفاتورة المنتجات (كان مفعّل فقط بطلبات الإصلاح) ──
+      if (customer.phone) {
+        const pointsEarned = Math.floor(total / 10);
+        const freshMatches = await base44.entities.Customer.filter({ phone: customer.phone });
+        const existingCustomer = freshMatches?.[0];
+        if (existingCustomer) {
+          const newStamps = (existingCustomer.stamps || 0) + 1;
+          const resetStamps = newStamps >= freeAfter;
+          await base44.entities.Customer.update(existingCustomer.id, {
+            loyalty_points: (existingCustomer.loyalty_points || 0) + pointsEarned,
+            stamps: resetStamps ? 0 : newStamps,
+            total_orders: (existingCustomer.total_orders || 0) + 1,
+            total_spent: (existingCustomer.total_spent || 0) + total,
+          });
+          const msg = resetStamps
+            ? `يا هلا ${existingCustomer.name}! 🎉 تهانينا! أكملت ${freeAfter} خدمات وحصلت على خدمتك المجانية القادمة! ✂️ إبرة وخيط الإسكافي`
+            : `يا هلا ${existingCustomer.name}! أضفنا ${pointsEarned} نقطة لحسابك (${newStamps}/${freeAfter} نحو خدمتك المجانية القادمة) ✂️ إبرة وخيط الإسكافي`;
+          notifyCustomerDirect(existingCustomer.phone, msg);
+        } else {
+          try {
+            await base44.entities.Customer.create({
+              name: customer.name || 'عميل نقدي', phone: customer.phone,
+              loyalty_points: pointsEarned, stamps: 1, total_orders: 1, total_spent: total,
+            });
+            notifyCustomerDirect(customer.phone,
+              `يا هلا ${customer.name || ''}! سجّلناك ببرنامج الولاء وأضفنا ${pointsEarned} نقطة لحسابك (1/${freeAfter} نحو خدمتك المجانية القادمة) ✂️ إبرة وخيط الإسكافي`);
+          } catch { /* رقم مكرر بلحظة موازية — نتجاهل، مو حرج بفاتورة بيع */ }
+        }
+      }
+
       return invoice;
     },
     onSuccess: () => {

@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { getSession } from '@/lib/sessionStore';
+import { isFullAdmin } from '@/lib/roles';
 import { Instagram, MessageCircle, Twitter, Globe, Phone, MapPin, Save, Loader2, ExternalLink } from 'lucide-react';
 
 export default function SocialSettings() {
   const session = getSession();
-  const isAdmin = ['admin','owner','manager'].includes(session?.role) || session?.role === 'owner' || session?.role === 'manager';
+  const isAdmin = isFullAdmin(session?.role);
   const [settings, setSettings] = useState({});
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);

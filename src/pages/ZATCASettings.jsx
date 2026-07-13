@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { getSession } from '@/lib/sessionStore';
+import { isFinanceUser } from '@/lib/roles';
 
 const validateVATNumber = (vat) => /^3\d{13}3$/.test(vat || '');
 
@@ -45,7 +46,7 @@ const ENV_LABELS = {
 
 export default function ZATCASettings() {
   const session = getSession();
-  const isAdmin = ['admin', 'owner', 'manager'].includes(session?.role);
+  const isAdmin = isFinanceUser(session?.role);
 
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -108,10 +109,24 @@ export default function ZATCASettings() {
   const update = (key, val) => setSettings((prev) => ({ ...prev, [key]: val }));
 
   const isVATValid = !settings.vat_number || validateVATNumber(settings.vat_number);
-  const infoComplete = settings.vat_number && settings.cr_number && isVATValid && settings.seller_name && settings.city;
+  // ⚠️ كل هذي الحقول إلزامية بمعيار زاتكا للفاتورة المبسطة (عنوان المنشأة كامل)
+  // كانت الشاشة توافق حتى لو الحي/الشارع/الرمز البريدي/رقم المبنى فاضية،
+  // وهذا بالضبط سبب شائع لرفض الفاتورة (بيانات إلزامية ناقصة) بدون ما ينتبه له أحد
+  const missingFields = [
+    !settings.vat_number && 'الرقم الضريبي',
+    !settings.cr_number && 'السجل التجاري',
+    !settings.seller_name && 'اسم المنشأة',
+    !settings.city && 'المدينة',
+    !settings.district && 'الحي',
+    !settings.street && 'الشارع',
+    !settings.postal_code && 'الرمز البريدي',
+    !settings.building_number && 'رقم المبنى',
+    settings.vat_number && !isVATValid && 'صيغة الرقم الضريبي غير صحيحة (لازم يبدأ وينتهي بـ 3 ويكون 15 رقم)',
+  ].filter(Boolean);
+  const infoComplete = missingFields.length === 0;
 
   const save = async () => {
-    if (!infoComplete) { toast.error('أكمل بيانات المنشأة أولاً'); return; }
+    if (!infoComplete) { toast.error(`أكمل بيانات المنشأة أولاً — ناقص: ${missingFields.join('، ')}`); return; }
     setSaving(true);
     const { error } = await supabase.from('zatca_settings').update({
       seller_name: settings.seller_name,
@@ -149,6 +164,13 @@ export default function ZATCASettings() {
             : <Badge className="bg-amber-100 text-amber-700 px-3 py-1">⚠️ غير جاهز</Badge>}
         </div>
       </div>
+
+      {missingFields.length > 0 && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
+          <span className="font-bold shrink-0">⚠️ ناقص:</span>
+          <span>{missingFields.join('، ')} — زاتكا يرفض الفاتورة لو أي من هالحقول فاضي، خصوصاً بيانات العنوان.</span>
+        </div>
+      )}
 
       <Tabs defaultValue="settings">
         <TabsList className="grid w-full grid-cols-3">

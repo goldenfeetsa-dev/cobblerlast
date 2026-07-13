@@ -14,6 +14,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { base44 } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
+import { isFinanceUser } from '@/lib/roles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,7 +52,7 @@ const PRESETS = {
 
 export default function FinancialReports() {
   const session = getSession();
-  const isAdmin = ['admin', 'owner', 'manager'].includes(session?.role);
+  const isAdmin = isFinanceUser(session?.role);
 
   const [range, setRange] = useState(PRESETS.thisMonth());
   const [preset, setPreset] = useState('thisMonth');

@@ -6,6 +6,25 @@ import { translations } from './translations';
 const LanguageContext = createContext(null);
 const STORAGE_KEY = 'cobbler_lang';
 
+// ── توقيت ستارة الانتقال — مرتبط رياضياً بين JS والأنيميشن بالأسفل ──
+// كل عمود: مدته BAR_DURATION_MS، ويبدأ إغلاقه فوراً ويكتمل عند
+// BAR_CLOSE_FRAC، ويبدأ يفتح عند BAR_OPEN_FRAC، وينتهي عند 1.
+// كل عمود متأخر عن الثاني بمقدار BAR_STAGGER_MS.
+const BARS_COUNT = 7;
+const BAR_DURATION_MS = 950;
+const BAR_STAGGER_MS = 40;
+const BAR_CLOSE_FRAC = 0.35; // نسبة اكتمال الإغلاق من مدة العمود
+const BAR_OPEN_FRAC = 0.78;  // نسبة بداية الفتح من مدة العمود
+
+// لحظة اكتمال تغطية كل الأعمدة معاً (آخر عمود يكمل إغلاقه)
+const CURTAIN_ALL_CLOSED_MS = (BARS_COUNT - 1) * BAR_STAGGER_MS + BAR_CLOSE_FRAC * BAR_DURATION_MS;
+// لحظة أول عمود يبدأ يفتح (نهاية نافذة التغطية الكاملة)
+const CURTAIN_FIRST_OPENS_MS = BAR_OPEN_FRAC * BAR_DURATION_MS;
+// نغيّر المحتوى في منتصف نافذة التغطية الكاملة (هامش أمان بالطرفين)
+const CURTAIN_FULL_COVER_AT_MS = Math.round((CURTAIN_ALL_CLOSED_MS + CURTAIN_FIRST_OPENS_MS) / 2);
+// نهاية الأنيميشن بالكامل (آخر عمود ينتهي فتحه)
+const CURTAIN_TOTAL_MS = (BARS_COUNT - 1) * BAR_STAGGER_MS + BAR_DURATION_MS + 60;
+
 function getInitialLang() {
   if (typeof window === 'undefined') return 'ar';
   try {
@@ -51,13 +70,16 @@ export function LanguageProvider({ children }) {
   useEffect(() => {
     if (!incomingLang) return;
     setTransitioning(true);
+    // مهم: هذا التوقيت مربوط رياضياً بتوقيت الأعمدة بالأسفل (CURTAIN_*).
+    // لازم setLangState يصير بالضبط لما الشاشة مغطاة بالكامل، وإلا
+    // تشوف الصفحة القديمة/الجديدة "تومض" من بين فجوات الأعمدة.
     const revealTimer = setTimeout(() => {
       setLangState(incomingLang);
-    }, 430);
+    }, CURTAIN_FULL_COVER_AT_MS);
     const endTimer = setTimeout(() => {
       setTransitioning(false);
       setIncomingLang(null);
-    }, 980);
+    }, CURTAIN_TOTAL_MS);
     return () => { clearTimeout(revealTimer); clearTimeout(endTimer); };
   }, [incomingLang]);
 
@@ -85,7 +107,7 @@ export function LanguageProvider({ children }) {
 
 // ── ستارة الانتقال الذهبية بين اللغتين ──────────────────────────────
 function LanguageTransitionCurtain({ targetLang }) {
-  const bars = Array.from({ length: 7 });
+  const bars = Array.from({ length: BARS_COUNT });
   return (
     <motion.div
       className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden"
@@ -106,9 +128,9 @@ function LanguageTransitionCurtain({ targetLang }) {
             initial={{ scaleY: 0 }}
             animate={{ scaleY: [0, 1, 1, 0] }}
             transition={{
-              duration: 0.95,
-              delay: i * 0.045,
-              times: [0, 0.42, 0.62, 1],
+              duration: BAR_DURATION_MS / 1000,
+              delay: i * (BAR_STAGGER_MS / 1000),
+              times: [0, BAR_CLOSE_FRAC, BAR_OPEN_FRAC, 1],
               ease: [0.76, 0, 0.24, 1],
             }}
           />

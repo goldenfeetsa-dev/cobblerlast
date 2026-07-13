@@ -57,7 +57,7 @@ export default function Dashboard() {
   const [customTo, setCustomTo] = useState('');
 
   const { data: allOrders } = useQuery({
-    queryKey: ['orders'],
+    queryKey: ['orders', 'dashboard'],
     queryFn: () => base44.entities.Order.list('-created_at', 500),
     initialData: [],
   });

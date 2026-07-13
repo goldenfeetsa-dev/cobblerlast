@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
+import { isFullAdmin } from '@/lib/roles';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -586,11 +587,11 @@ export default function WorkshopSystem() {
 
   const { data: items } = useQuery({
     queryKey: ['inventory-items'],
-    queryFn: () => base44.entities.InventoryItem.list('-created_at', 200),
+    queryFn: () => base44.entities.InventoryItem.list('-created_at', 500),
     initialData: [],
   });
 
-  const isAdmin = ['admin','owner','manager'].includes(session?.role);
+  const isAdmin = isFullAdmin(session?.role);
 
   const { data: allCustodyStats } = useQuery({
     queryKey: ['workshop-custody-all'],

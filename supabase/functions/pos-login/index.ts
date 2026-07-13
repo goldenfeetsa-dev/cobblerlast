@@ -78,7 +78,7 @@ serve(async (req: Request) => {
     // ── التحقق من الـ PIN (service role — يتجاوز أي RLS) ─────
     const { data: match } = await supabase
       .from('employees')
-      .select('id, name, role, avatar_url, is_active')
+      .select('id, name, role, avatar_url, is_active, branch_id, branch_name')
       .eq('pin', pin)
       .eq('is_active', true)
       .limit(1)

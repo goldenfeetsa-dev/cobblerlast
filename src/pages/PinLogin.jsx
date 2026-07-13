@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PinPad from '@/components/pos/PinPad';
 import { setSession, getSession } from '@/lib/sessionStore';
+import { getHomePath } from '@/lib/roles';
 
 // رابط دالة الحافة (Edge Function) — تتحقق من الـ PIN وتقيّد المحاولات حسب IP على السيرفر
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bwuvldnlfgobqpdfhyql.supabase.co';
@@ -14,7 +15,8 @@ export default function PinLogin() {
   const [pinKey, setPinKey]     = useState(0);
 
   useEffect(() => {
-    if (getSession()) { navigate('/pos'); return; }
+    const existing = getSession();
+    if (existing) { navigate(getHomePath(existing.role), { replace: true }); return; }
     window.history.replaceState(null, '', '/login');
     // ملاحظة: لا يوجد أي جلب لبيانات الموظفين أو أرقام الـ PIN هنا —
     // التحقق يتم بالكامل على السيرفر عبر pos-login حتى لا تُفتح أي بيانات حساسة للمتصفح.
@@ -41,7 +43,7 @@ export default function PinLogin() {
 
       if (result.success && result.employee) {
         setSession(result.employee);
-        navigate('/pos', { replace: true });
+        navigate(getHomePath(result.employee.role), { replace: true });
         return;
       }
 

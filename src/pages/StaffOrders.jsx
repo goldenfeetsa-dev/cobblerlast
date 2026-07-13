@@ -8,7 +8,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSession } from '@/lib/sessionStore';
 import { toast } from 'sonner';
-import { Scissors, Package, CheckCircle, Clock, Search, Filter } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Scissors, Package, CheckCircle, Clock, Search, Filter, CalendarDays } from 'lucide-react';
 
 const ITEM_LABELS = {
   shoes: 'أحذية 👟', bag: 'حقيبة 👜', dress: 'فستان 👗',
@@ -35,7 +36,7 @@ export default function StaffOrders() {
     queryFn: async () => {
       let q = supabase
         .from('orders')
-        .select('id, order_number, item_type, description, status, created_at, shelf_location, photos')
+        .select('id, order_number, item_type, description, notes, status, created_at, shelf_location, photos')
         .order('created_at', { ascending: true });
 
       if (session?.branch_id) q = q.eq('branch_id', session.branch_id);
@@ -70,14 +71,20 @@ export default function StaffOrders() {
   return (
     <div className="space-y-5 max-w-2xl mx-auto" dir="rtl">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-          <Scissors className="w-5 h-5 text-blue-600" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <Scissors className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black">مهامك اليوم</h1>
+            <p className="text-sm text-gray-500">مرحباً {session?.name || 'موظف'}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-black">مهامك اليوم</h1>
-          <p className="text-sm text-gray-500">مرحباً {session?.name || 'موظف'}</p>
-        </div>
+        <Link to="/calendar" className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
+          <CalendarDays className="w-3.5 h-3.5" />
+          الجدول المرئي
+        </Link>
       </div>
 
       {/* Stats */}
@@ -159,9 +166,9 @@ export default function StaffOrders() {
                     </div>
 
                     {/* Description */}
-                    {order.description && (
+                    {(order.description || order.notes) && (
                       <div className="text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2 leading-relaxed">
-                        {order.description}
+                        {order.description || order.notes}
                       </div>
                     )}
 
