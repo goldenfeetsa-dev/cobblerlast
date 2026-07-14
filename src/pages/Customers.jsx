@@ -7,20 +7,37 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Users, Search, Star, ShoppingBag, Wallet, MessageCircle, CheckSquare, Square, Send } from 'lucide-react';
+import { Users, Search, Star, ShoppingBag, Wallet, MessageCircle, CheckSquare, Square, Send, History, Package, Clock } from 'lucide-react';
 import StampCard from '@/components/pos/StampCard';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
 import { useToast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
+
+const ORDER_STATUS_LABELS = {
+  pending: 'قيد الانتظار', in_progress: 'جارٍ التنفيذ', ready: 'جاهز',
+  completed: 'مكتمل', cancelled: 'ملغى', returned: 'مُسترجع',
+  exchanged: 'مُستبدَل', on_hold: 'متوقف',
+};
 
 export default function Customers() {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [historyCustomer, setHistoryCustomer] = useState(null); // العميل المفتوح حالياً بسجل الطلبات
   const [msgTemplate, setMsgTemplate] = useState('يا هلا {اسم العميل}! 👋\nعروض خاصة من إبرة وخيط الإسكافي تنتظرك.\nاحجز موعدك الآن: https://wa.me/966549678191');
   const session = getSession();
   const isAdmin = isFullAdmin(session?.role);
   const { toast } = useToast();
+
+  // سجل طلبات العميل المفتوح حالياً — كانت الصفحة قبل ما تعرض أي تفاصيل
+  // لطلبات العميل إطلاقاً، والضغط على البطاقة كان يُستخدم فقط لتحديدها
+  // لإرسال واتساب جماعي (وهذا سبب شكوى "التتبع" من طرف الموظف)
+  const { data: customerOrders = [], isLoading: loadingOrders } = useQuery({
+    queryKey: ['customer-orders', historyCustomer?.phone],
+    queryFn: () => base44.entities.Order.filter({ customer_phone: historyCustomer.phone }, '-created_at', 100),
+    enabled: !!historyCustomer?.phone,
+  });
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
@@ -137,18 +154,23 @@ export default function Customers() {
             return (
               <Card
                 key={c.id}
-                className={`hover:shadow-md transition-all cursor-pointer ${isAdmin && c.phone ? 'hover:border-primary/30' : ''} ${isSelected ? 'border-primary ring-1 ring-primary/20' : ''}`}
-                onClick={() => isAdmin && c.phone && toggleSelect(c.id)}
+                className={`hover:shadow-md transition-all cursor-pointer hover:border-primary/30 ${isSelected ? 'border-primary ring-1 ring-primary/20' : ''}`}
+                onClick={() => setHistoryCustomer(c)}
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2 flex-1">
                       {isAdmin && c.phone && (
-                        <div className="flex-shrink-0">
+                        <button
+                          type="button"
+                          className="flex-shrink-0"
+                          title="تحديد للإرسال الجماعي"
+                          onClick={e => { e.stopPropagation(); toggleSelect(c.id); }}
+                        >
                           {isSelected
                             ? <CheckSquare className="w-4 h-4 text-primary" />
                             : <Square className="w-4 h-4 text-muted-foreground/40" />}
-                        </div>
+                        </button>
                       )}
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-lg truncate">{c.name}</h3>
@@ -191,6 +213,55 @@ export default function Customers() {
           })}
         </div>
       )}
+
+      {/* Customer Order History Dialog — سجل كل طلبات العميل، حتى لو عنده أكثر من طلب */}
+      <Dialog open={!!historyCustomer} onOpenChange={(o) => !o && setHistoryCustomer(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5 text-primary" />
+              سجل طلبات {historyCustomer?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto space-y-2 pr-1">
+            {loadingOrders ? (
+              <div className="flex justify-center py-10">
+                <div className="w-6 h-6 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : customerOrders.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-10">لا توجد طلبات مسجلة لهذا العميل</p>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground mb-1">{customerOrders.length} طلب إجمالاً</p>
+                {customerOrders.map(o => (
+                  <a
+                    key={o.id}
+                    href={`/orders/${o.id}`}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold font-mono">{o.order_number}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {o.created_at ? format(new Date(o.created_at), 'yyyy/MM/dd HH:mm') : '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-left shrink-0">
+                      <p className="text-sm font-bold">{o.total_price?.toFixed(0)} ر.س</p>
+                      <Badge variant="outline" className="text-[10px] mt-0.5">
+                        {ORDER_STATUS_LABELS[o.status] || o.status}
+                      </Badge>
+                    </div>
+                  </a>
+                ))}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* WhatsApp Bulk Dialog */}
       <Dialog open={whatsappOpen} onOpenChange={setWhatsappOpen}>

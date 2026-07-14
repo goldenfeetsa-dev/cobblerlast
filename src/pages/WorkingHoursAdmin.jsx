@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { logAudit } from '@/lib/auditLog';
 
 const DAYS = [
   { day: 0, label: 'الأحد' },
@@ -51,24 +52,52 @@ export default function WorkingHoursAdmin() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      for (const dayHour of hours) {
-        const existing = existingHours.find(wh => wh.day_of_week === dayHour.day_of_week);
-        if (existing) {
-          await base44.entities.WorkingHours.update(existing.id, dayHour);
-        } else {
-          await base44.entities.WorkingHours.create(dayHour);
-        }
-      }
-      qc.invalidateQueries({ queryKey: ['working-hours'] });
-      qc.invalidateQueries({ queryKey: ['working-hours-admin'] });
-      toast({ title: 'تم حفظ أوقات العمل بنجاح' });
-    } catch (err) {
-      toast({ title: 'فشل حفظ أوقات العمل', description: err.message || 'حاول مرة أخرى', variant: 'destructive' });
-    } finally {
-      setSaving(false);
+    // تحقق منطقي قبل الإرسال — يمنع حفظ وقت إغلاق قبل وقت الفتح
+    const invalidDay = hours.find(h => h.is_open && h.open_time >= h.close_time);
+    if (invalidDay) {
+      toast({
+        title: 'تحقق من الأوقات',
+        description: `وقت الإغلاق ليوم ${invalidDay.day_name_ar} يجب أن يكون بعد وقت الفتح`,
+        variant: 'destructive',
+      });
+      return;
     }
+
+    setSaving(true);
+    // نستخدم Promise.allSettled بدل حلقة تتابعية — فشل يوم واحد (شبكة/صلاحيات)
+    // ما يعود يوقف حفظ بقية الأيام بصمت، وتحصل تقرير دقيق بعدد الأيام
+    // اللي فعلاً انحفظت وأيها فشل ولماذا
+    const results = await Promise.allSettled(hours.map(dayHour => {
+      const existing = existingHours.find(wh => wh.day_of_week === dayHour.day_of_week);
+      return existing
+        ? base44.entities.WorkingHours.update(existing.id, dayHour)
+        : base44.entities.WorkingHours.create(dayHour);
+    }));
+
+    const failed = results
+      .map((r, i) => ({ r, day: hours[i].day_name_ar }))
+      .filter(x => x.r.status === 'rejected');
+
+    qc.invalidateQueries({ queryKey: ['working-hours'] });
+    qc.invalidateQueries({ queryKey: ['working-hours-admin'] });
+    logAudit({ action: 'update', page: 'أوقات العمل', entity: 'working_hours', details: { hours } });
+
+    if (failed.length === 0) {
+      toast({ title: 'تم حفظ أوقات العمل بنجاح — كل الأيام' });
+    } else if (failed.length === hours.length) {
+      toast({
+        title: 'فشل حفظ أوقات العمل بالكامل',
+        description: failed[0].r.reason?.message || 'حاول مرة أخرى',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: `تم حفظ ${hours.length - failed.length} من ${hours.length} أيام`,
+        description: `فشل حفظ: ${failed.map(f => f.day).join('، ')} — ${failed[0].r.reason?.message || ''}`,
+        variant: 'destructive',
+      });
+    }
+    setSaving(false);
   };
 
   return (

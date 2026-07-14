@@ -51,7 +51,14 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
   const isDayAvailable = (date) => {
     if (isBefore(date, today)) return false;
     const wh = getWorkingHoursForDay(date);
-    return wh?.is_open !== false;
+    // لو ما فيه صف محفوظ لهذا اليوم أصلاً في أوقات العمل، اليوم يُعتبر
+    // مغلقاً — مطابق تماماً لمنطق getAvailableSlots تحت (كان قبل يعتبره
+    // "مفتوح" بالتقويم فيظهر قابل للاختيار، لكن بعد الاختيار ما تطلع
+    // له أي أوقات، وكأن الحفظ "ما اتعيّن" فعلياً).
+    // الاستثناء الوحيد: لو الجدول فاضي بالكامل (المحل ما ضبط أوقات
+    // العمل نهائياً بعد) نخلي كل الأيام مفتوحة كافتراضي معقول.
+    if (workingHours.length === 0) return true;
+    return !!wh && wh.is_open !== false;
   };
 
   const getAvailableSlots = (date) => {

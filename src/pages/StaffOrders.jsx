@@ -36,7 +36,7 @@ export default function StaffOrders() {
     queryFn: async () => {
       let q = supabase
         .from('orders')
-        .select('id, order_number, item_type, description, notes, status, created_at, shelf_location, photos')
+        .select('id, order_number, item_type, description, notes, status, created_at, shelf_location, photos, order_items')
         .order('created_at', { ascending: true });
 
       if (session?.branch_id) q = q.eq('branch_id', session.branch_id);
@@ -164,6 +164,29 @@ export default function StaffOrders() {
                       <span className="text-lg">{ITEM_LABELS[order.item_type]?.split(' ')[1] || '📦'}</span>
                       <span className="font-bold text-gray-900">{ITEM_LABELS[order.item_type]?.split(' ')[0] || 'قطعة'}</span>
                     </div>
+
+                    {/* تفصيل كل قطعة على حدة — الخدمة المطلوبة والفني
+                        المسؤول عنها، بدل وصف عام واحد يجمع كل القطع */}
+                    {Array.isArray(order.order_items) && order.order_items.length > 0 && (
+                      <div className="space-y-1.5">
+                        {order.order_items.map((it, i) => (
+                          <div key={i} className="text-sm bg-blue-50/60 rounded-lg px-3 py-2 border border-blue-100">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-gray-800">قطعة {i + 1} — {ITEM_LABELS[it.item_type]?.split(' ')[0] || it.item_type}</span>
+                              {it.technician_name && <span className="text-xs text-blue-700 font-medium">👤 {it.technician_name}</span>}
+                            </div>
+                            {it.services?.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {it.services.map((s, si) => (
+                                  <span key={si} className="text-[11px] bg-white px-2 py-0.5 rounded-full border">{s}</span>
+                                ))}
+                              </div>
+                            )}
+                            {it.description && <p className="text-xs text-gray-600 mt-1">{it.description}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Description */}
                     {(order.description || order.notes) && (

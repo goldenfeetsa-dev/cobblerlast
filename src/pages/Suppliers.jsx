@@ -10,7 +10,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
-import { isFinanceUser } from '@/lib/roles';
+import { ROLES } from '@/lib/roles';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,8 @@ export default function Suppliers() {
     queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 500),
   });
 
-  if (!isFinanceUser(session?.role)) return <Navigate to="/pos" replace />;
+  // بناءً على طلب صريح: الموردون تظهر للمالك فقط، مو لكل أدوار الإدارة/المحاسب
+  if (session?.role !== ROLES.OWNER) return <Navigate to="/pos" replace />;
 
   const saveMutation = useMutation({
     mutationFn: (data) => editingSupplier

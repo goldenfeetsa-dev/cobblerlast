@@ -209,6 +209,16 @@ export default function FinancialReports() {
         body: JSON.stringify({ start: start.toISOString(), end: end.toISOString() }),
       });
       if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'فشل التصدير'); }
+
+      // تحقق دفاعي: لو رجع رد بصيغة غير صحيحة (مثلاً صفحة HTML بدل ملف
+      // إكسل فعلي — يحصل هذا لو المسار ما وصل الدالة الصحيحة) كنا نحمّله
+      // مباشرة باسم .xlsx فيفشل إكسل بفتحه بدون أي تفسير للمستخدم عن السبب
+      const contentType = res.headers.get('content-type') || '';
+      const isSpreadsheet = contentType.includes('spreadsheetml') || contentType.includes('application/vnd.openxmlformats');
+      if (!isSpreadsheet) {
+        throw new Error('الخادم رجّع رد غير متوقع (مو ملف إكسل) — تأكد إن دالة /api/reports/export-excel شغالة على الاستضافة، أو تواصل مع الدعم');
+      }
+
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

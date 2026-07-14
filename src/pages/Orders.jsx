@@ -12,6 +12,7 @@ import { getSession } from '@/lib/sessionStore';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
+import { logAudit } from '@/lib/auditLog';
 
 const STATUS_CONFIG = {
   pending: { label: 'قيد الانتظار', icon: Clock, class: 'bg-amber-100 text-amber-700 border-amber-200' },
@@ -43,6 +44,11 @@ export default function Orders() {
     mutationFn: ({ id, data }) => base44.entities.Order.update(id, data),
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] }); // ينطبق على كل مفاتيح orders.* (list/dashboard/operations)
+      const order = orders?.find(o => o.id === variables.id);
+      logAudit({
+        action: 'update', page: 'الطلبات', entity: 'order', entity_id: variables.id,
+        details: { order_number: order?.order_number, changes: variables.data },
+      });
       // إضافة ختمة تلقائياً عند إتمام الطلب
       if (variables.data?.status === 'completed') {
         const order = orders?.find(o => o.id === variables.id);

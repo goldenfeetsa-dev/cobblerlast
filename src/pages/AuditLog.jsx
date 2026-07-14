@@ -8,9 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Search, ExternalLink, Calendar, Building2 } from 'lucide-react';
+import { ClipboardList, Search, ExternalLink, Calendar, Building2, User, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { unifyTransactions } from '@/lib/analytics';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const ACTION_LABELS = {
+  create: { label: 'إنشاء', class: 'bg-emerald-100 text-emerald-700' },
+  update: { label: 'تعديل', class: 'bg-blue-100 text-blue-700' },
+  delete: { label: 'حذف', class: 'bg-red-100 text-red-700' },
+  status_change: { label: 'تغيير حالة', class: 'bg-amber-100 text-amber-700' },
+};
 
 const STATUS_LABELS = {
   pending: { label: 'قيد الانتظار', class: 'bg-amber-100 text-amber-700' },
@@ -72,6 +80,13 @@ export default function AuditLog() {
   const { data: salesInvoices = [], isLoading: salesLoading } = useQuery({
     queryKey: ['sales-invoices-audit'],
     queryFn: () => base44.entities.SalesInvoice.list('-created_at', 500),
+  });
+
+  // سجل النشاط الحقيقي — كل حركة (إنشاء/تعديل/حذف) مسجّلة بمعرفة مين
+  // سواها وبأي صفحة، بعكس الجدول المالي تحت اللي يعرض فقط الطلبات والفواتير
+  const { data: activityLogs = [], isLoading: activityLoading } = useQuery({
+    queryKey: ['activity-logs'],
+    queryFn: () => base44.entities.AuditLog.list('-created_at', 300),
   });
 
   if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
@@ -139,6 +154,14 @@ export default function AuditLog() {
           <p className="text-sm text-muted-foreground">مراجعة شاملة لكل عمليات الإصلاح والبيع معاً</p>
         </div>
       </div>
+
+      <Tabs defaultValue="financial" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="financial" className="gap-1.5"><ClipboardList className="w-4 h-4" />الحركات المالية</TabsTrigger>
+          <TabsTrigger value="activity" className="gap-1.5"><Activity className="w-4 h-4" />سجل النشاط ({activityLogs.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="financial">
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
@@ -341,6 +364,63 @@ export default function AuditLog() {
           </div>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="activity">
+          {activityLoading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            </div>
+          ) : activityLogs.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground">
+              <Activity className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p>ما فيه حركات مسجّلة بعد</p>
+              <p className="text-xs mt-1">سيبدأ التسجيل تلقائياً مع أي إنشاء/تعديل/حذف جديد بالنظام</p>
+            </div>
+          ) : (
+            <div className="rounded-xl border overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/50 border-b">
+                      <th className="text-right px-4 py-3 font-semibold text-muted-foreground">الحساب</th>
+                      <th className="text-right px-4 py-3 font-semibold text-muted-foreground">الدور</th>
+                      <th className="text-right px-4 py-3 font-semibold text-muted-foreground">الصفحة</th>
+                      <th className="text-right px-4 py-3 font-semibold text-muted-foreground">نوع الحركة</th>
+                      <th className="text-right px-4 py-3 font-semibold text-muted-foreground">العنصر</th>
+                      <th className="text-right px-4 py-3 font-semibold text-muted-foreground">التاريخ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activityLogs.map((log, idx) => {
+                      const action = ACTION_LABELS[log.action] || { label: log.action || '—', class: 'bg-gray-100 text-gray-700' };
+                      return (
+                        <tr key={log.id} className={`border-b transition-colors hover:bg-muted/30 ${idx % 2 === 0 ? '' : 'bg-muted/10'}`}>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <User className="w-3.5 h-3.5 text-muted-foreground" />
+                              {log.employee_name || '—'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs">{log.employee_role || '—'}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{log.page || '—'}</td>
+                          <td className="px-4 py-3"><Badge className={`text-[10px] ${action.class}`}>{action.label}</Badge></td>
+                          <td className="px-4 py-3 text-xs text-muted-foreground">
+                            {log.entity || '—'}{log.entity_id ? ` · ${String(log.entity_id).slice(0, 8)}` : ''}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                            {log.created_at ? format(new Date(log.created_at), 'yyyy/MM/dd HH:mm') : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
   Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
-import { isFullAdmin, isFinanceUser, isWorker } from '@/lib/roles';
+import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';
 
 // ─── Groups: مرتبة حسب الاستخدام الأكثر، الإعدادات دائماً آخراً
 const navGroups = [
@@ -27,7 +27,7 @@ const navGroups = [
     label: 'الأنظمة',
     items: [
       { path: '/sales', icon: ShoppingCart, label: 'المبيعات والمخازن' },
-      { path: '/suppliers', icon: Truck, label: 'الموردون', financeOnly: true },
+      { path: '/suppliers', icon: Truck, label: 'الموردون', ownerOnly: true },
       { path: '/workshop', icon: Wrench, label: 'العهدة والورشة' },
       { path: '/operations', icon: Factory, label: 'الخطة الثانية ⚡', adminOnly: true },
     ]
@@ -112,7 +112,8 @@ export default function Sidebar() {
           if (group.financeOnly && !isFinance) return null;
           const visibleItems = group.items.filter(item => {
             if (item.adminOnly && !isAdmin) return false;
-            if (item.financeOnly && !isFinance) return false; // تقارير/زاتكا/فواتير/موردين - إدارة + محاسب
+            if (item.financeOnly && !isFinance) return false; // تقارير/زاتكا/فواتير - إدارة + محاسب
+            if (item.ownerOnly && session?.role !== ROLES.OWNER) return false; // الموردون - المالك فقط
             if (item.workerOnly && !isWorkerRole) return false; // مهامي - للعامل فقط (وليس الكاشير)
             return true;
           });
@@ -181,18 +182,20 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar text-sidebar-foreground flex items-center px-4 z-50 border-b border-sidebar-border">
+      {/* Mobile header — الموقع RTL بالكامل (dir="rtl" على html)، فزر الهمبرغر
+          والقائمة المنسدلة لازم يكونوا على اليمين مثل باقي الواجهة، مو اليسار */}
+      <div className="lg:hidden fixed top-0 right-0 left-0 h-14 bg-sidebar text-sidebar-foreground flex items-center px-4 z-50 border-b border-sidebar-border">
         <button onClick={() => setMobileOpen(true)} className="p-2">
           <Menu className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2 ml-2">
+        <div className="flex items-center gap-2 mr-2">
           <Scissors className="w-4 h-4 text-primary" />
           <span className="font-bold text-sm">إبرة وخيط الإسكافي</span>
         </div>
       </div>
 
-      {/* Mobile overlay */}
+      {/* Mobile overlay — تنزلق القائمة من اليمين (مطابقة لاتجاه RTL)
+          بدل اليسار، عشان تفتح من نفس جهة زر الهمبرغر ولا تربك المستخدم */}
       <AnimatePresence>
         {mobileOpen && (
           <div className="lg:hidden fixed inset-0 z-50">
@@ -205,13 +208,13 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
-              className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col"
-              initial={{ x: '-100%' }}
+              className="absolute right-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col"
+              initial={{ x: '100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              exit={{ x: '100%' }}
               transition={{ type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 }}
             >
-              <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 p-1 text-sidebar-foreground/50">
+              <button onClick={() => setMobileOpen(false)} className="absolute top-4 left-4 p-1 text-sidebar-foreground/50">
                 <X className="w-5 h-5" />
               </button>
               {sidebarContent}
@@ -221,7 +224,7 @@ export default function Sidebar() {
       </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex-col z-50">
+      <aside className="hidden lg:flex fixed right-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex-col z-50">
         {sidebarContent}
       </aside>
     </>

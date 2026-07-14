@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import OrderNotifications from './OrderNotifications';
+import RealtimeSync from './RealtimeSync';
 import { getSession } from '@/lib/sessionStore';
 import { useGlobalBarcodeScanner } from '@/hooks/useGlobalBarcodeScanner';
 import { base44 } from '@/api/supabaseApi';
@@ -48,9 +49,10 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
+      <RealtimeSync />
       <OrderNotifications />
       <Sidebar />
-      <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
+      <main className="lg:mr-64 min-h-screen pt-14 lg:pt-0">
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>

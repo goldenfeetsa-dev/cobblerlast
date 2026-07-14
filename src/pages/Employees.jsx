@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { UserCog, Plus, Pencil, Trash2, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { logAudit } from '@/lib/auditLog';
 
 
 const ROLE_LABELS = {
@@ -45,7 +46,9 @@ export default function Employees() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Employee.delete(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      const emp = employees?.find(e => e.id === id);
+      logAudit({ action: 'delete', page: 'الموظفون', entity: 'employee', entity_id: id, details: { name: emp?.name, role: emp?.role } });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       toast.success('تم حذف الموظف');
     },
@@ -58,7 +61,14 @@ export default function Employees() {
       }
       return base44.entities.Employee.create(data);
     },
-    onSuccess: () => {
+    onSuccess: (result, data) => {
+      logAudit({
+        action: editingEmployee ? 'update' : 'create',
+        page: 'الموظفون', entity: 'employee', entity_id: editingEmployee?.id || result?.id,
+        details: editingEmployee
+          ? { name: data.name, role_before: editingEmployee.role, role_after: data.role }
+          : { name: data.name, role: data.role },
+      });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       setDialogOpen(false);
       setEditingEmployee(null);

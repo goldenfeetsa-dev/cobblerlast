@@ -10,7 +10,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
   MapPin, Phone, Clock, Instagram, MessageCircle, Star, Award, Shield,
-  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle
+  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck
 } from 'lucide-react';
 
 // ── Palette ──────────────────────────────────────────────────────
@@ -89,10 +89,18 @@ function AnimCounter({ target, duration = 2 }) {
 function Navbar() {
   const { t, dir } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
+  }, []);
+  // القائمة تُغلق تلقائياً لو المستخدم كبّر الشاشة (نفس الأخطاء
+  // الشائعة بقوائم الجوال اللي تفضل مفتوحة على شاشات ديسكتوب)
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth >= 768) setMobileOpen(false); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   const links = [
@@ -129,15 +137,60 @@ function Navbar() {
             style={{ color: G, border: `1px solid ${GB}0.3)`, background: GB + '0.05)' }}>
             {t('common.nav.trackBooking')}
           </Link>
-          <Link to="/book">
+          <Link to="/book" className="hidden sm:block">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               className="text-xs font-black px-5 py-2 rounded-full text-black"
               style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
               {t('common.nav.bookNow')}
             </motion.div>
           </Link>
+          {/* زر قائمة الجوال — كانت روابط الموقع (الخدمات/قصتنا/آراء العملاء/
+              المتجر/تتبع الحجز) تختفي بالكامل على الجوال بدون أي بديل إطلاقاً،
+              فالزائر من الجوال ما يقدر يوصلها أبداً */}
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: GB + '0.08)', border: `1px solid ${GB}0.2)`, color: T }}
+            aria-label={mobileOpen ? 'إغلاق القائمة' : 'فتح القائمة'}
+          >
+            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile dropdown */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden max-w-7xl mx-auto mt-2 rounded-2xl overflow-hidden"
+            style={{ background: 'rgba(10,6,0,0.96)', backdropFilter: 'blur(20px)', border: `1px solid ${GB}0.15)` }}
+          >
+            <div className="p-4 flex flex-col gap-1" dir={dir}>
+              {links.map(l => l.to
+                ? <Link key={l.label} to={l.href} onClick={() => setMobileOpen(false)}
+                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-white/5" style={{ color: T }}>{l.label}</Link>
+                : <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)}
+                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-white/5" style={{ color: T }}>{l.label}</a>
+              )}
+              <Link to="/my-bookings" onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 text-sm font-bold py-3 px-3 rounded-xl mt-1"
+                style={{ color: G, border: `1px solid ${GB}0.25)` }}>
+                <CalendarCheck className="w-4 h-4" />
+                {t('common.nav.trackBooking')}
+              </Link>
+              <Link to="/book" onClick={() => setMobileOpen(false)}
+                className="text-center text-sm font-black py-3 rounded-xl text-black mt-1"
+                style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+                {t('common.nav.bookNow')}
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }
@@ -700,25 +753,39 @@ function BrandsSection() {
     { name_ar: 'Prada' }, { name_ar: 'Dior' }, { name_ar: 'Bottega' }, { name_ar: 'Ferragamo' },
     { name_ar: "Tod's" }, { name_ar: 'Louboutin' },
   ];
+  // إعادة تصميم كاملة بناءً على الطلب: الشعار فقط، كبير وواضح
+  // (بدل شريط متحرك بشعارات صغيرة جداً وأسماء نصية)، تحت عنوان
+  // صريح "نتعامل مع" / "أرقى العلامات العالمية" يوضح للزائر إنه
+  // مكان عرض العلامات التي تُعمل معها الورشة
   return (
-    <section className="py-20 px-6 overflow-hidden" style={{ background: '#0A0500', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
+    <section className="py-20 px-6" style={{ background: '#0A0500', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
-        <FadeIn className="text-center mb-10">
+        <FadeIn className="text-center mb-12">
           <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: G }}>{t('home.brands.eyebrow')}</p>
-          <h3 className="text-2xl font-black" style={{ color: T }}>{t('home.brands.title')}</h3>
+          <h3 className="text-2xl md:text-3xl font-black" style={{ color: T }}>{t('home.brands.title')}</h3>
         </FadeIn>
-        <div className="flex gap-0 overflow-hidden">
-          {[0, 1].map(k => (
-            <motion.div key={k} className="flex gap-8 shrink-0 pr-8"
-              animate={{ x: ['0%', '-100%'] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}>
-              {list.map((b, i) => (
-                <div key={i} className="shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap flex items-center gap-2"
-                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.1)`, color: `${GB}0.5)` }}>
-                  {b.logo_url && <img src={b.logo_url} alt={b.name_ar || b.name} className="w-5 h-5 object-contain rounded" />}
-                  {b.name_ar || b.name}
-                </div>
-              ))}
-            </motion.div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
+          {list.map((b, i) => (
+            <FadeIn key={b.id || i} delay={i * 0.05}>
+              <motion.div
+                whileHover={{ y: -4, borderColor: GB + '0.35)' }}
+                className="rounded-2xl h-28 md:h-32 flex items-center justify-center p-5"
+                style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)` }}
+              >
+                {b.logo_url ? (
+                  <img
+                    src={b.logo_url}
+                    alt={b.name_ar || b.name}
+                    className="max-h-full max-w-full object-contain"
+                    style={{ filter: 'grayscale(15%) brightness(1.05)' }}
+                  />
+                ) : (
+                  <span className="text-lg md:text-xl font-black text-center" style={{ color: `${GB}0.6)` }}>
+                    {b.name_ar || b.name}
+                  </span>
+                )}
+              </motion.div>
+            </FadeIn>
           ))}
         </div>
       </div>
@@ -730,7 +797,7 @@ function BrandsSection() {
 function TrackOrderSection() {
   const { t, dir } = useLanguage();
   const [code, setCode] = useState('');
-  const [result, setResult] = useState(null);
+  const [results, setResults] = useState(null); // null = لم يُبحث بعد، [] = بحث بدون نتائج
   const [loading, setLoading] = useState(false);
   const STATUS = t('home.track.status');
 
@@ -738,9 +805,17 @@ function TrackOrderSection() {
     if (!code.trim()) return;
     setLoading(true);
     try {
-      const { data } = await supabase.from('orders').select('order_number,customer_name,status,item_type,created_at').or(`order_number.eq.${code},customer_phone.eq.${code}`).limit(1).single();
-      setResult(data ? { found: true, ...data } : { found: false });
-    } catch { setResult({ found: false }); }
+      // كان الاستعلام محدود بـ .limit(1).single() فيرجع طلب واحد فقط
+      // حتى لو العميل عنده عدة طلبات مسجلة بنفس رقم الجوال — الآن
+      // نجيب كل الطلبات المطابقة (بالرقم أو الجوال) ونعرضها كلها
+      const { data, error } = await supabase.from('orders')
+        .select('order_number,customer_name,status,item_type,created_at')
+        .or(`order_number.eq.${code},customer_phone.eq.${code}`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      setResults(data || []);
+    } catch { setResults([]); }
     finally { setLoading(false); }
   };
 
@@ -764,18 +839,34 @@ function TrackOrderSection() {
             </MagneticBtn>
           </div>
           <AnimatePresence>
-            {result && (
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="rounded-2xl p-5 text-sm"
-                style={{ background: result.found ? GB + '0.06)' : 'rgba(255,50,50,0.06)', border: `1px solid ${result.found ? GB + '0.2)' : 'rgba(255,50,50,0.2)'}` }}>
-                {result.found
-                  ? <div className="text-right space-y-2">
-                    <div className="font-black text-base" style={{ color: G }}>{result.order_number}</div>
-                    <div style={{ color: T }}>{t('home.track.customer')}: {result.customer_name}</div>
-                    <div className="text-xl font-black" style={{ color: G }}>{STATUS[result.status] || result.status}</div>
-                  </div>
-                  : <p style={{ color: 'rgba(255,100,100,0.8)' }}>{t('home.track.notFound')}</p>}
-              </motion.div>
+            {results !== null && (
+              results.length === 0 ? (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="rounded-2xl p-5 text-sm"
+                  style={{ background: 'rgba(255,50,50,0.06)', border: '1px solid rgba(255,50,50,0.2)' }}>
+                  <p style={{ color: 'rgba(255,100,100,0.8)' }}>{t('home.track.notFound')}</p>
+                </motion.div>
+              ) : (
+                <div className="space-y-3">
+                  {results.length > 1 && (
+                    <p className="text-xs text-right" style={{ color: `${GB}0.5)` }}>
+                      {t('home.track.multipleFound') || `عدد الطلبات الموجودة: ${results.length}`}
+                    </p>
+                  )}
+                  {results.map((r, i) => (
+                    <motion.div key={r.order_number || i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="rounded-2xl p-5 text-sm"
+                      style={{ background: GB + '0.06)', border: `1px solid ${GB}0.2)` }}>
+                      <div className="text-right space-y-2">
+                        <div className="font-black text-base" style={{ color: G }}>{r.order_number}</div>
+                        <div style={{ color: T }}>{t('home.track.customer')}: {r.customer_name}</div>
+                        <div className="text-xl font-black" style={{ color: G }}>{STATUS[r.status] || r.status}</div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )
             )}
           </AnimatePresence>
         </FadeIn>

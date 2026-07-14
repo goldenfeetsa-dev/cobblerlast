@@ -365,6 +365,27 @@ export default function OrderDetails() {
                       <p className="font-medium">{ITEM_LABELS[order.item_type] || order.item_type} × {order.quantity || 1}</p>
                     </div>
                   </div>
+                  {Array.isArray(order.order_items) && order.order_items.length > 0 && (
+                    <div className="pt-2 border-t space-y-2">
+                      <p className="text-xs text-muted-foreground mb-1">تفصيل القطع</p>
+                      {order.order_items.map((it, idx) => (
+                        <div key={idx} className="rounded-lg bg-muted/40 p-2.5 text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold">قطعة {idx + 1} — {ITEM_LABELS[it.item_type] || it.item_type}</span>
+                            {it.technician_name && <span className="text-xs text-muted-foreground">الفني: {it.technician_name}</span>}
+                          </div>
+                          {Array.isArray(it.services) && it.services.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {it.services.map((s, i2) => (
+                                <span key={i2} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{s}</span>
+                              ))}
+                            </div>
+                          )}
+                          {it.description && <p className="text-xs text-muted-foreground mt-1.5">{it.description}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center gap-3">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <div>

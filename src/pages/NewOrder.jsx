@@ -31,6 +31,24 @@ const ITEM_TYPES = [
   { value: 'other', label: 'أخرى' },
 ];
 
+// خدمات كل قطعة حسب نوعها — بناءً على طلب صريح: كل قطعة (حذاء/حقيبة)
+// تُسجَّل لحالها بخدماتها الخاصة بدل ما يكون الطلب كامل وصف عام واحد
+const SERVICES_BY_TYPE = {
+  shoes: ['تلميع', 'تنظيف', 'خياطة', 'دعسات', 'تنعيل', 'أخرى'],
+  bag:   ['تلوين', 'تنظيف', 'خياطة', 'تغيير يد', 'أخرى'],
+};
+
+function newPiece() {
+  return {
+    id: Math.random().toString(36).slice(2),
+    item_type: 'shoes',
+    services: [],
+    description: '',
+    technician_id: '',
+    technician_name: '',
+  };
+}
+
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
 function genInvoiceNo() {
@@ -42,8 +60,9 @@ function CobblerTab({ session }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [photos, setPhotos] = useState([]);
+  const [pieces, setPieces] = useState([newPiece()]);
   const [form, setForm] = useState({
-    customer_name: '', customer_phone: '', item_type: '', quantity: 1,
+    customer_name: '', customer_phone: '',
     delivery_method: 'pickup', delivery_address: '', delivery_date: '', total_price: '',
     payment_status: 'unpaid', payment_method: 'cash', notes: '',
   });
@@ -57,6 +76,11 @@ function CobblerTab({ session }) {
   const { data: planList2 } = useQuery({
     queryKey: ['operations-plan'], queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],
   });
+  // قائمة الفنيين لتخصيص كل قطعة لفني مسؤول عنها
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees'], queryFn: () => base44.entities.Employee.list(), initialData: [],
+  });
+  const technicians = employees.filter(e => e.is_active !== false);
 
   const { submitInvoice } = useZATCA();
   const shopSettings = settingsList[0] || {};
@@ -66,6 +90,19 @@ function CobblerTab({ session }) {
     : null;
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const addPiece = () => setPieces(prev => [...prev, newPiece()]);
+  const removePiece = (id) => setPieces(prev => prev.length > 1 ? prev.filter(p => p.id !== id) : prev);
+  const updatePiece = (id, field, value) => setPieces(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+  const setPieceTechnician = (id, techId) => {
+    const tech = technicians.find(t => t.id === techId);
+    setPieces(prev => prev.map(p => p.id === id ? { ...p, technician_id: techId, technician_name: tech?.name || '' } : p));
+  };
+  const toggleService = (id, service) => setPieces(prev => prev.map(p => {
+    if (p.id !== id) return p;
+    const has = p.services.includes(service);
+    return { ...p, services: has ? p.services.filter(s => s !== service) : [...p.services, service] };
+  }));
 
   const createOrder = useMutation({
     mutationFn: async (orderData) => {
@@ -160,10 +197,32 @@ function CobblerTab({ session }) {
       return;
     }
 
+    const incompletePiece = pieces.find(p =>
+      !p.description.trim() && p.services.length === 0
+    );
+    if (incompletePiece) {
+      toast.error('كل قطعة لازم تحدد لها الخدمة المطلوبة أو وصف — راجع القطع المضافة');
+      return;
+    }
+
     const price = parseFloat(form.total_price) || 0;
     const vatEnabled = shopSettings.vat_enabled !== false;
     const vatAmount = vatEnabled ? parseFloat((price - price / 1.15).toFixed(2)) : 0;
     const subtotal = vatEnabled ? parseFloat((price / 1.15).toFixed(2)) : price;
+
+    // وصف عام يجمع كل القطع — يستمر يظهر بصفحة «مهامي» للعامل ولأي كود
+    // قديم يعتمد على حقل notes/description النصي فقط
+    const combinedNotes = pieces.map((p, i) => {
+      const typeLabel = ITEM_TYPES.find(t => t.value === p.item_type)?.label || p.item_type;
+      const svc = p.services.length ? ` [${p.services.join('، ')}]` : '';
+      const tech = p.technician_name ? ` — الفني: ${p.technician_name}` : '';
+      return `قطعة ${i + 1} (${typeLabel})${svc}${tech}${p.description ? `: ${p.description}` : ''}`;
+    }).join('\n');
+
+    // النوع/الكمية العامين على مستوى الطلب يُشتقّان تلقائياً من عدد
+    // ونوع القطع الفعلية — بدل ما يختارهم الموظف يدوياً بمعزل عن القطع
+    const firstType = pieces[0]?.item_type;
+    const overallType = pieces.every(p => p.item_type === firstType) ? firstType : 'other';
 
     createOrder.mutate({
       order_number: generateOrderNumber(),
@@ -173,8 +232,12 @@ function CobblerTab({ session }) {
       branch_name: session?.branch_name || '',
       customer_name: form.customer_name,
       customer_phone: form.customer_phone,
-      item_type: form.item_type,
-      quantity: parseInt(form.quantity) || 1,
+      item_type: overallType,
+      quantity: pieces.length,
+      order_items: pieces.map(p => ({
+        item_type: p.item_type, services: p.services, description: p.description,
+        technician_id: p.technician_id || null, technician_name: p.technician_name || '',
+      })),
       photos,
       delivery_method: form.delivery_method,
       delivery_address: form.delivery_method === 'delivery' ? form.delivery_address : '',
@@ -183,8 +246,8 @@ function CobblerTab({ session }) {
       payment_status: form.payment_status,
       payment_method: form.payment_method,
       status: 'pending',
-      notes: form.notes,
-      description: form.notes,
+      notes: combinedNotes,
+      description: combinedNotes,
       points_earned: Math.floor(price / 10),
     });
   };
@@ -235,31 +298,88 @@ function CobblerTab({ session }) {
         </CardContent>
       </Card>
 
-      {/* Item Details */}
+      {/* Item Details — كل قطعة (حذاء/حقيبة...) تُسجَّل لحالها بخدماتها
+          الخاصة وفنيها المسؤول، بدل وصف عام واحد لكل الطلب */}
       <Card>
-        <CardHeader className="pb-4"><CardTitle className="text-base">تفاصيل القطعة</CardTitle></CardHeader>
+        <CardHeader className="pb-4 flex-row items-center justify-between">
+          <CardTitle className="text-base">القطع ({pieces.length})</CardTitle>
+          <Button type="button" size="sm" variant="outline" onClick={addPiece} className="gap-1.5">
+            <Plus className="w-4 h-4" /> إضافة قطعة
+          </Button>
+        </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>نوع القطعة *</Label>
-              <Select value={form.item_type} onValueChange={v => update('item_type', v)} required>
-                <SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger>
-                <SelectContent>
-                  {ITEM_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>الكمية</Label>
-              <Input type="number" min={1} value={form.quantity} onChange={e => update('quantity', e.target.value)} />
-            </div>
-          </div>
+          {pieces.map((piece, idx) => {
+            const services = SERVICES_BY_TYPE[piece.item_type];
+            return (
+              <div key={piece.id} className="rounded-xl border p-4 space-y-3 relative">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-muted-foreground">قطعة {idx + 1}</span>
+                  {pieces.length > 1 && (
+                    <button type="button" onClick={() => removePiece(piece.id)} className="text-destructive hover:text-destructive/70">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">نوع القطعة *</Label>
+                    <Select value={piece.item_type} onValueChange={v => updatePiece(piece.id, 'item_type', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ITEM_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">الفني المسؤول</Label>
+                    <Select value={piece.technician_id} onValueChange={v => setPieceTechnician(piece.id, v)}>
+                      <SelectTrigger><SelectValue placeholder="اختر الفني" /></SelectTrigger>
+                      <SelectContent>
+                        {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* اختيار متعدد باللمس — يظهر فقط لأنواع فيها خدمات محددة
+                    (أحذية/حقائب)، وباقي الأنواع تعتمد على الوصف الحر */}
+                {services && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">نوع الخدمة (يمكن اختيار أكثر من واحدة)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {services.map(s => {
+                        const active = piece.services.includes(s);
+                        return (
+                          <button
+                            key={s} type="button"
+                            onClick={() => toggleService(piece.id, s)}
+                            className={`px-3.5 py-2 rounded-full text-sm font-medium border-2 transition-all select-none ${
+                              active ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/40'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">وصف إضافي لهذي القطعة (يظهر للفني)</Label>
+                  <Textarea
+                    value={piece.description}
+                    onChange={e => updatePiece(piece.id, 'description', e.target.value)}
+                    placeholder="مثال: انتبه للخيط الجانبي، اللون البني الغامق..."
+                    className="h-16 text-sm"
+                  />
+                </div>
+              </div>
+            );
+          })}
+
           <PhotoUploader photos={photos} setPhotos={setPhotos} maxPhotos={5} />
-          <div className="space-y-2">
-            <Label>وصف الشغلة المطلوبة (يظهر للعامل) *</Label>
-            <Textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="مثال: تبديل نعل كامل + تلميع، انتبه للخيط الجانبي..." className="h-20" required />
-            <p className="text-xs text-muted-foreground">هذا الوصف هو اللي بيشوفه العامل بالضبط في صفحة «مهامي» — اكتبه واضح.</p>
-          </div>
         </CardContent>
       </Card>
 
@@ -328,7 +448,7 @@ function CobblerTab({ session }) {
         </CardContent>
       </Card>
 
-      <Button type="submit" disabled={createOrder.isPending || !form.customer_name || !form.item_type || !form.total_price || !form.notes.trim()}
+      <Button type="submit" disabled={createOrder.isPending || !form.customer_name || !form.total_price || pieces.length === 0}
         className="w-full h-14 text-lg font-bold">
         {createOrder.isPending ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'إنشاء الطلب'}
       </Button>
@@ -363,11 +483,18 @@ function ProductsTab({ session }) {
     if (session?.branch_id && !selectedBranch) setSelectedBranch(session.branch_id);
   }, [session?.branch_id]);
 
+  // كانت هذي القائمة تُخفي أي منتج ما عنده مخزون مُحوَّل لهذا الفرع تحديداً
+  // بالكامل — فمنتج جديد أضافه الأدمن بقسم المنتجات (بالمستودع) بس ما حوّله
+  // لفرع بعد كان يختفي تماماً من شاشة الفاتورة وكأنه غير موجود إطلاقاً.
+  // الآن نعرض كل المنتجات دائماً، ونميّز فقط المتوفر فعلياً بهذا الفرع
+  // (قابل للإضافة) عن المتوفر بالمستودع فقط (يحتاج تحويل أولاً)
   const branchItems = useMemo(() => {
     if (!selectedBranch) return [];
-    return items.filter(i => i.category !== 'workshop' &&
-      ((i.branch_qty || {})[selectedBranch] || 0) > 0 &&
-      (!search || i.name?.toLowerCase().includes(search.toLowerCase())));
+    return items
+      .filter(i => i.category !== 'workshop' &&
+        (!search || i.name?.toLowerCase().includes(search.toLowerCase())))
+      .map(i => ({ ...i, _branchQty: (i.branch_qty || {})[selectedBranch] || 0 }))
+      .sort((a, b) => (b._branchQty > 0) - (a._branchQty > 0));
   }, [items, selectedBranch, search]);
 
   const addToCart = (item) => {
@@ -463,6 +590,7 @@ function ProductsTab({ session }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       queryClient.invalidateQueries({ queryKey: ['sales-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] }); // كانت ناقصة: فاتورة المنتجات تنشئ/تحدّث عميل لكن ما كانت تحدّث كاش صفحة العملاء
       toast.success('تم إصدار الفاتورة وخصم المخزون ✅');
       setCart([]);
       setCustomer({ name: '', phone: '' });
@@ -494,16 +622,26 @@ function ProductsTab({ session }) {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {branchItems.map(item => (
-              <button key={item.id} onClick={() => addToCart(item)} type="button"
-                className="rounded-xl border p-3 text-right hover:border-primary hover:bg-primary/5 transition-all">
-                <p className="font-medium text-sm mb-1 line-clamp-1">{item.name}</p>
-                <p className="text-xs text-muted-foreground">متوفر: {(item.branch_qty || {})[selectedBranch] || 0} {UNITS[item.unit] || item.unit}</p>
-                <p className="text-sm font-bold text-primary mt-1">{item.sell_price} ر.س</p>
-              </button>
-            ))}
+            {branchItems.map(item => {
+              const available = item._branchQty > 0;
+              return (
+                <button key={item.id} onClick={() => available && addToCart(item)} type="button" disabled={!available}
+                  title={!available ? 'المنتج موجود بالمستودع فقط — يحتاج تحويل إلى هذا الفرع من صفحة المبيعات والمخازن' : ''}
+                  className={`rounded-xl border p-3 text-right transition-all ${available ? 'hover:border-primary hover:bg-primary/5' : 'opacity-50 cursor-not-allowed bg-muted/30'}`}>
+                  <p className="font-medium text-sm mb-1 line-clamp-1">{item.name}</p>
+                  {available ? (
+                    <p className="text-xs text-muted-foreground">متوفر: {item._branchQty} {UNITS[item.unit] || item.unit}</p>
+                  ) : (
+                    <p className="text-xs text-amber-600 font-medium">
+                      {(item.warehouse_qty || 0) > 0 ? 'بالمستودع فقط — يحتاج تحويل' : 'نفد المخزون'}
+                    </p>
+                  )}
+                  <p className="text-sm font-bold text-primary mt-1">{item.sell_price} ر.س</p>
+                </button>
+              );
+            })}
             {branchItems.length === 0 && (
-              <div className="col-span-3 text-center py-10 text-muted-foreground text-sm">لا توجد منتجات في هذا الفرع</div>
+              <div className="col-span-3 text-center py-10 text-muted-foreground text-sm">لا توجد منتجات مطابقة للبحث</div>
             )}
           </div>
         )}
