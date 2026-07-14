@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { generateOrderNumber } from '@/lib/barcodeUtils';
 import PhotoUploader from '@/components/pos/PhotoUploader';
+import ReceiptView from '@/components/pos/ReceiptView';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -464,6 +466,7 @@ function ProductsTab({ session }) {
   const [selectedBranch, setSelectedBranch] = useState(session?.branch_id || '');
   const [payMethod, setPayMethod] = useState('cash');
   const [search, setSearch] = useState('');
+  const [printInvoice, setPrintInvoice] = useState(null);
 
   const { data: items } = useQuery({
     queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 500), initialData: [],
@@ -587,13 +590,14 @@ function ProductsTab({ session }) {
 
       return invoice;
     },
-    onSuccess: () => {
+    onSuccess: (invoice) => {
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       queryClient.invalidateQueries({ queryKey: ['sales-invoices'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] }); // كانت ناقصة: فاتورة المنتجات تنشئ/تحدّث عميل لكن ما كانت تحدّث كاش صفحة العملاء
       toast.success('تم إصدار الفاتورة وخصم المخزون ✅');
       setCart([]);
       setCustomer({ name: '', phone: '' });
+      setPrintInvoice(invoice); // تُطبع تلقائياً فوراً بنفس حجم إيصال الماركت الصغير، تماماً مثل طلب الإصلاح
     },
     onError: (e) => toast.error(`فشل إصدار الفاتورة: ${e.message || 'خطأ غير معروف'}`),
   });
@@ -721,6 +725,20 @@ function ProductsTab({ session }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* طباعة الفاتورة تلقائياً فور الإصدار — نفس حجم إيصال الماركت الصغير */}
+      <Dialog open={!!printInvoice} onOpenChange={(o) => !o && setPrintInvoice(null)}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden">
+          {printInvoice && (
+            <>
+              <ReceiptView order={printInvoice} autoPrint />
+              <div className="p-3 border-t">
+                <Button className="w-full" variant="outline" onClick={() => setPrintInvoice(null)}>إغلاق</Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

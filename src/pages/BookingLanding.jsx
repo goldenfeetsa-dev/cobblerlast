@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import {
   MapPin, Phone, Clock, Instagram, MessageCircle, Star, Award, Shield,
   Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck
@@ -533,6 +534,45 @@ function ServicesSection() {
   );
 }
 
+// ── Before / After Gallery ──────────────────────────────────────────
+function BeforeAfterSection() {
+  const { t, dir } = useLanguage();
+  const items = t('home.beforeAfter.items');
+  return (
+    <section id="before-after" className="py-32 px-6" style={{ background: '#060300' }}>
+      <div className="max-w-6xl mx-auto" dir={dir}>
+        <FadeIn className="text-center mb-16">
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.beforeAfter.eyebrow')}</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.beforeAfter.title')}</h2>
+          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: `${GB}0.4)` }}>
+            {t('home.beforeAfter.desc')}
+          </p>
+          <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
+        </FadeIn>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {items.map((item, i) => (
+            <FadeIn key={i} delay={i * 0.12}>
+              <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${GB}0.12)`, background: 'rgba(255,255,255,0.02)' }}>
+                <BeforeAfterSlider
+                  beforeImage={item.before}
+                  afterImage={item.after}
+                  beforeLabel={dir === 'rtl' ? 'قبل' : 'Before'}
+                  afterLabel={dir === 'rtl' ? 'بعد' : 'After'}
+                />
+                <div className="px-5 py-4 text-center">
+                  <p className="font-black text-sm" style={{ color: T }}>{item.label}</p>
+                  <p className="text-[11px] mt-1" style={{ color: `${GB}0.35)` }}>{t('home.beforeAfter.hint')}</p>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Request Service ───────────────────────────────────────────────
 function RequestServiceSection() {
   const { t, dir } = useLanguage();
@@ -1050,6 +1090,7 @@ export default function BookingLanding() {
       <HeroSection />
       <TickerStrip />
       <ServicesSection />
+      <BeforeAfterSection />
       <RequestServiceSection />
       <BrandsSection />
       <AboutSection />

@@ -213,7 +213,7 @@ function InventoryTab({ items, branches, session }) {
               onClick={() => addItem.mutate({
                 name: form.name, sku: form.sku, unit: form.unit,
                 cost_price: parseFloat(form.cost_price),
-                sell_price: form.sell_price ? parseFloat(form.sell_price) : null,
+                sell_price: form.sell_price ? parseFloat(form.sell_price) : 0,
                 category: form.category,
                 warehouse_qty: parseInt(form.warehouse_qty) || 0,
               })}>

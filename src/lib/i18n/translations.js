@@ -77,6 +77,16 @@ export const translations = {
           { t: 'التسليم', d: 'نوصل قطعتك كالجديدة مع ضمان كامل على الخدمة' },
         ],
       },
+      beforeAfter: {
+        eyebrow: 'شاهد الفرق بنفسك',
+        title: 'قبل وبعد الترميم',
+        desc: 'اسحب المقبض يميناً ويساراً لتكتشف تفاصيل الترميم بنفسك',
+        hint: 'اسحب للمقارنة',
+        items: [
+          { label: 'حقيبة لويس فيتون سبيدي', before: '/images/gallery/bag-before.png', after: '/images/gallery/bag-after.png' },
+          { label: 'سنيكرز لويس فيتون', before: '/images/gallery/sneaker-before.png', after: '/images/gallery/sneaker-after.png' },
+        ],
+      },
       request: {
         eyebrow: 'اطلب خدمة',
         title: 'نتواصل معك فوراً',
@@ -463,6 +473,16 @@ export const translations = {
           { t: 'Pickup', d: 'Our courier picks up directly from your location in Riyadh' },
           { t: 'Repair', d: 'Our team starts work immediately and updates you at every stage' },
           { t: 'Delivery', d: 'We deliver your item like new, with a full service warranty' },
+        ],
+      },
+      beforeAfter: {
+        eyebrow: 'See the Difference Yourself',
+        title: 'Before & After Restoration',
+        desc: 'Drag the handle left and right to discover the restoration details yourself',
+        hint: 'Drag to compare',
+        items: [
+          { label: 'Louis Vuitton Speedy Bag', before: '/images/gallery/bag-before.png', after: '/images/gallery/bag-after.png' },
+          { label: 'Louis Vuitton Sneaker', before: '/images/gallery/sneaker-before.png', after: '/images/gallery/sneaker-after.png' },
         ],
       },
       request: {
