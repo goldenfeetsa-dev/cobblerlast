@@ -24,7 +24,13 @@ export const queryClientInstance = new QueryClient({
         if (error?.status >= 400 && error?.status < 500) return false;
         return failureCount < 2;
       },
-      staleTime: 50,
+      // ملاحظة: مع تفعيل RealtimeSync (يُبطل الكاش تلقائياً خلال نصف ثانية
+      // من أي تغيير حقيقي بالقاعدة)، ما فيه داعي لـ staleTime قصير جداً —
+      // كان مضبوط سابقاً 50ms وهذا خلّى كل تنقل بين الصفحات يعيد الجلب
+      // من الصفر بدون داعي (بطء ملحوظ + طلبات مكررة كثيرة). 15 ثانية
+      // تعطي توازن جيد: البيانات تتحدث تلقائياً فوراً عند أي تغيير حقيقي
+      // (عبر Realtime)، وما تعيد الجلب من فراغ عند مجرد التنقل بين الصفحات.
+      staleTime: 15_000,
     },
     mutations: {
       retry: 0,
