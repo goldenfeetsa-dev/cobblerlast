@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ListOrdered, Search, Clock, Package, CheckCircle2, XCircle, Loader2, Barcode, Layers, Truck } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ListOrdered, Search, Clock, Package, CheckCircle2, XCircle, Loader2, Barcode, Layers, Truck, Trash2 } from 'lucide-react';
 import { getSession } from '@/lib/sessionStore';
+import { isFullAdmin } from '@/lib/roles';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
@@ -32,11 +34,21 @@ const ITEM_LABELS = {
 
 export default function Orders() {
   const session = getSession();
+  const canDelete = isFullAdmin(session?.role);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [shelfInputs, setShelfInputs] = useState({}); // orderId -> shelf text
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const deleteOrder = useMutation({
+    mutationFn: (order) => base44.entities.Order.delete(order.id),
+    onSuccess: (_data, order) => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      logAudit({ action: 'delete', page: 'الطلبات', entity: 'order', entity_id: order.id, details: { order_number: order.order_number } });
+      toast.success('تم حذف الطلب');
+    },
+  });
 
   const { addStamp } = useLoyalty();
 
@@ -189,6 +201,34 @@ export default function Orders() {
                       <Barcode className="w-3 h-3 ml-1" />
                       باركود
                     </Button>
+                    {canDelete && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline"
+                            className="text-[10px] h-6 px-2 text-destructive hover:bg-destructive/10 border-destructive/30"
+                            onClick={e => e.preventDefault()}>
+                            <Trash2 className="w-3 h-3 ml-1" />
+                            حذف
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onClick={e => e.stopPropagation()}>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>حذف الطلب {order.order_number}؟</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              هذا الإجراء نهائي ولا يمكن التراجع عنه. سيُحذف الطلب بكل بياناته بشكل كامل.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive hover:bg-destructive/90"
+                              onClick={() => deleteOrder.mutate(order)}>
+                              نعم، احذف
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
                 </div>
 

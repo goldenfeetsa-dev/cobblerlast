@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/supabaseApi';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Users, Search, Star, ShoppingBag, Wallet, MessageCircle, CheckSquare, Square, Send, History, Package, Clock } from 'lucide-react';
+import { Users, Search, Star, ShoppingBag, Wallet, MessageCircle, CheckSquare, Square, Send, History, Package, Clock, Pencil, Trash2 } from 'lucide-react';
 import StampCard from '@/components/pos/StampCard';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
+import { logAudit } from '@/lib/auditLog';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 
@@ -29,6 +32,28 @@ export default function Customers() {
   const session = getSession();
   const isAdmin = isFullAdmin(session?.role);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editCustomer, setEditCustomer] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', phone: '' });
+
+  const updateCustomer = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Customer.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      logAudit({ action: 'update', page: 'العملاء', entity: 'customer', entity_id: editCustomer?.id, details: editForm });
+      toast({ title: 'تم تحديث بيانات العميل' });
+      setEditCustomer(null);
+    },
+  });
+
+  const deleteCustomer = useMutation({
+    mutationFn: (id) => base44.entities.Customer.delete(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      logAudit({ action: 'delete', page: 'العملاء', entity: 'customer', entity_id: id });
+      toast({ title: 'تم حذف العميل' });
+    },
+  });
 
   // سجل طلبات العميل المفتوح حالياً — كانت الصفحة قبل ما تعرض أي تفاصيل
   // لطلبات العميل إطلاقاً، والضغط على البطاقة كان يُستخدم فقط لتحديدها
@@ -191,10 +216,50 @@ export default function Customers() {
                         </div>
                       </div>
                     </div>
-                    <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 flex-shrink-0">
-                      <Star className="w-3 h-3" />
-                      {c.loyalty_points || 0}
-                    </Badge>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
+                        <Star className="w-3 h-3" />
+                        {c.loyalty_points || 0}
+                      </Badge>
+                      {isAdmin && (
+                        <>
+                          <button
+                            type="button"
+                            className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                            title="تعديل"
+                            onClick={e => { e.stopPropagation(); setEditForm({ name: c.name || '', phone: c.phone || '' }); setEditCustomer(c); }}
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                type="button"
+                                className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"
+                                title="حذف"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent onClick={e => e.stopPropagation()}>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>حذف العميل {c.name}؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  هذا الإجراء نهائي ولا يمكن التراجع عنه. لن يتأثر سجل الطلبات السابقة، لكن بيانات العميل نفسه ستُحذف.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteCustomer.mutate(c.id)}>
+                                  نعم، احذف
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="flex gap-4 text-sm mb-1">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -300,6 +365,31 @@ export default function Customers() {
               إرسال ({selectedIds.length})
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={!!editCustomer} onOpenChange={(o) => !o && setEditCustomer(null)}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل بيانات العميل</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label>الاسم</Label>
+              <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div>
+              <Label>رقم الجوال</Label>
+              <Input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} dir="ltr" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditCustomer(null)}>إلغاء</Button>
+            <Button onClick={() => updateCustomer.mutate({ id: editCustomer.id, data: editForm })} disabled={updateCustomer.isPending}>
+              حفظ
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

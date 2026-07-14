@@ -13,11 +13,14 @@ import ReceiptView from '@/components/pos/ReceiptView';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
 import { shouldHidePhotos } from '@/lib/photoCleanup';
-import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, RefreshCw, XCircle, PauseCircle, MessageCircle, Mail, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, RefreshCw, XCircle, PauseCircle, MessageCircle, Mail, CalendarDays, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { logAudit } from '@/lib/auditLog';
 
 const ITEM_LABELS = {
   shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
@@ -85,11 +88,33 @@ export default function OrderDetails() {
   const isAdmin = isFullAdmin(session?.role);
   const [holdDialogOpen, setHoldDialogOpen] = useState(false);
   const [holdReason, setHoldReason] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState(null);
 
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => base44.entities.Order.get(orderId),
     enabled: !!orderId,
+  });
+
+  const updateDetails = useMutation({
+    mutationFn: (fields) => base44.entities.Order.update(orderId, fields),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      logAudit({ action: 'update', page: 'تفاصيل الطلب', entity: 'order', entity_id: orderId, details: editForm });
+      toast.success('تم حفظ التعديلات');
+      setEditOpen(false);
+    },
+  });
+
+  const deleteOrder = useMutation({
+    mutationFn: () => base44.entities.Order.delete(orderId),
+    onSuccess: () => {
+      logAudit({ action: 'delete', page: 'تفاصيل الطلب', entity: 'order', entity_id: orderId, details: { order_number: order?.order_number } });
+      toast.success('تم حذف الطلب');
+      navigate('/orders');
+    },
   });
 
   const updateStatus = useMutation({
@@ -208,6 +233,46 @@ export default function OrderDetails() {
 
           {isAdmin && (
             <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { setEditForm({
+                  customer_name: order.customer_name || '',
+                  customer_phone: order.customer_phone || '',
+                  item_type: order.item_type || '',
+                  description: order.description || '',
+                  quantity: order.quantity || 1,
+                  total_price: order.total_price || 0,
+                  notes: order.notes || '',
+                }); setEditOpen(true); }}
+              >
+                <Pencil className="w-3.5 h-3.5 ml-1" />
+                تعديل
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/30">
+                    <Trash2 className="w-3.5 h-3.5 ml-1" />
+                    حذف
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>حذف الطلب {order.order_number}؟</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      هذا الإجراء نهائي ولا يمكن التراجع عنه. سيُحذف الطلب بكل بياناته بشكل كامل.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteOrder.mutate()}>
+                      نعم، احذف
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
               <Button
                 size="sm"
                 variant="outline"
@@ -497,6 +562,51 @@ export default function OrderDetails() {
             >
               <PauseCircle className="w-4 h-4 ml-2" />
               تأكيد التوقيف
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Order Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تعديل بيانات الطلب {order.order_number}</DialogTitle>
+          </DialogHeader>
+          {editForm && (
+            <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto">
+              <div>
+                <Label>اسم العميل</Label>
+                <Input value={editForm.customer_name} onChange={e => setEditForm(f => ({ ...f, customer_name: e.target.value }))} />
+              </div>
+              <div>
+                <Label>رقم جوال العميل</Label>
+                <Input value={editForm.customer_phone} onChange={e => setEditForm(f => ({ ...f, customer_phone: e.target.value }))} dir="ltr" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>الكمية</Label>
+                  <Input type="number" min="1" value={editForm.quantity} onChange={e => setEditForm(f => ({ ...f, quantity: parseInt(e.target.value) || 1 }))} />
+                </div>
+                <div>
+                  <Label>السعر الإجمالي (ر.س)</Label>
+                  <Input type="number" step="0.01" value={editForm.total_price} onChange={e => setEditForm(f => ({ ...f, total_price: parseFloat(e.target.value) || 0 }))} />
+                </div>
+              </div>
+              <div>
+                <Label>الوصف</Label>
+                <Textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="h-20" />
+              </div>
+              <div>
+                <Label>ملاحظات</Label>
+                <Textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} className="h-16" />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>إلغاء</Button>
+            <Button onClick={() => updateDetails.mutate(editForm)} disabled={updateDetails.isPending}>
+              حفظ التعديلات
             </Button>
           </DialogFooter>
         </DialogContent>
