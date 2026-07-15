@@ -53,7 +53,8 @@ const SalesSystem = lazy(() => import('./pages/SalesSystem'));
 const Invoices = lazy(() => import('./pages/Invoices'));
 const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
 const Suppliers = lazy(() => import('./pages/Suppliers'));
-const TaxCompliance = lazy(() => import('./pages/TaxCompliance'));
+const Purchasing = lazy(() => import('./pages/Purchasing'));
+const TaxDashboard = lazy(() => import('./pages/TaxDashboard'));
 
 import AppLayout from './components/pos/AppLayout';
 const BookingLanding = lazy(() => import('./pages/BookingLanding'));
@@ -137,7 +138,8 @@ const AuthenticatedApp = () => {
           <Route path="/sales" element={<SalesSystem />} />
           <Route path="/workshop" element={<WorkshopSystem />} />
           <Route path="/suppliers" element={<Suppliers />} />
-          <Route path="/tax-compliance" element={<TaxCompliance />} />
+          <Route path="/purchasing" element={<Purchasing />} />
+          <Route path="/tax-dashboard" element={<TaxDashboard />} />
       </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

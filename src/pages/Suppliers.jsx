@@ -21,8 +21,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Truck, Plus, Pencil, Trash2, Phone, Mail, Package, AlertTriangle, Search, X } from 'lucide-react';
-import { validateVATNumber } from '@/lib/zatca/zatcaUtils';
+import { Truck, Plus, Pencil, Trash2, Phone, Mail, Package, AlertTriangle, Search, X, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { isValidVatFormat } from '@/lib/vatValidation';
 
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
@@ -36,7 +36,7 @@ export default function Suppliers() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
-  const [form, setForm] = useState({ name: '', contact_name: '', phone: '', email: '', address: '', vat_number: '', notes: '' });
+  const [form, setForm] = useState({ name: '', contact_name: '', phone: '', email: '', address: '', notes: '', vat_number: '' });
   const [productPicker, setProductPicker] = useState(null); // supplier id لما نفتح مربع اختيار المنتجات
   const [productSearch, setProductSearch] = useState('');
 
@@ -62,7 +62,7 @@ export default function Suppliers() {
       toast.success(editingSupplier ? 'تم تحديث بيانات المورد' : 'تم إضافة المورد');
       setDialogOpen(false);
       setEditingSupplier(null);
-      setForm({ name: '', contact_name: '', phone: '', email: '', address: '', vat_number: '', notes: '' });
+      setForm({ name: '', contact_name: '', phone: '', email: '', address: '', notes: '', vat_number: '' });
     },
     onError: (e) => toast.error(`فشل الحفظ: ${e.message || 'خطأ غير معروف'}`),
   });
@@ -90,12 +90,12 @@ export default function Suppliers() {
 
   const openEdit = (s) => {
     setEditingSupplier(s);
-    setForm({ name: s.name, contact_name: s.contact_name || '', phone: s.phone || '', email: s.email || '', address: s.address || '', notes: s.notes || '' });
+    setForm({ name: s.name, contact_name: s.contact_name || '', phone: s.phone || '', email: s.email || '', address: s.address || '', notes: s.notes || '', vat_number: s.vat_number || '' });
     setDialogOpen(true);
   };
   const openNew = () => {
     setEditingSupplier(null);
-    setForm({ name: '', contact_name: '', phone: '', email: '', address: '', vat_number: '', notes: '' });
+    setForm({ name: '', contact_name: '', phone: '', email: '', address: '', notes: '', vat_number: '' });
     setDialogOpen(true);
   };
 
@@ -149,12 +149,24 @@ export default function Suppliers() {
                 <Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label>الرقم الضريبي</Label>
-                <Input value={form.vat_number || ''} onChange={e => setForm(p => ({ ...p, vat_number: e.target.value }))} dir="ltr" placeholder="15 رقم" />
-                {form.vat_number && !validateVATNumber(form.vat_number) && (
-                  <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                    <AlertTriangle className="w-3.5 h-3.5" /> صيغة الرقم غير صحيحة — يجب أن يكون 15 رقم يبدأ وينتهي بـ 3
-                  </p>
+                <Label>الرقم الضريبي (VAT)</Label>
+                <Input
+                  value={form.vat_number}
+                  onChange={e => setForm(p => ({ ...p, vat_number: e.target.value.replace(/[^\d]/g, '') }))}
+                  placeholder="3XXXXXXXXXXXXX3 — 15 رقم"
+                  maxLength={15}
+                  dir="ltr"
+                  className="text-left"
+                />
+                {form.vat_number && (
+                  isValidVatFormat(form.vat_number) ? (
+                    <p className="text-[11px] text-green-600 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> صيغة الرقم صحيحة</p>
+                  ) : (
+                    <p className="text-[11px] text-red-600 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> يجب أن يكون 15 رقماً يبدأ وينتهي بـ 3</p>
+                  )
+                )}
+                {!form.vat_number && (
+                  <p className="text-[11px] text-amber-600 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> بدون رقم ضريبي، فواتير الشراء من هذا المورد لن تُقبل بالإقرار الضريبي</p>
                 )}
               </div>
               <div className="space-y-1.5">
@@ -195,6 +207,15 @@ export default function Suppliers() {
                         {outOfStock.length > 0 && (
                           <Badge className="bg-red-100 text-red-700 text-[10px] flex items-center gap-1">
                             <AlertTriangle className="w-3 h-3" /> {outOfStock.length} منتج نفد
+                          </Badge>
+                        )}
+                        {isValidVatFormat(s.vat_number) ? (
+                          <Badge className="bg-green-100 text-green-700 text-[10px] flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" /> رقم ضريبي
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-100 text-amber-700 text-[10px] flex items-center gap-1">
+                            <ShieldAlert className="w-3 h-3" /> بدون رقم ضريبي
                           </Badge>
                         )}
                       </CardTitle>

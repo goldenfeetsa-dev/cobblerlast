@@ -28,7 +28,7 @@ const navGroups = [
     items: [
       { path: '/sales', icon: ShoppingCart, label: 'المبيعات والمخازن' },
       { path: '/suppliers', icon: Truck, label: 'الموردون', ownerOnly: true },
-      { path: '/tax-compliance', icon: Scale, label: 'الامتثال الضريبي', financeOnly: true },
+      { path: '/purchasing', icon: ShoppingBag, label: 'المشتريات', financeOnly: true },
       { path: '/workshop', icon: Wrench, label: 'العهدة والورشة' },
       { path: '/operations', icon: Factory, label: 'الخطة الثانية ⚡', adminOnly: true },
     ]
@@ -46,6 +46,7 @@ const navGroups = [
     financeOnly: true,
     items: [
       { path: '/financial-reports', icon: Wallet, label: 'التقارير المالية', financeOnly: true },
+      { path: '/tax-dashboard', icon: Scale, label: 'لوحة الضرائب', financeOnly: true },
       { path: '/audit', icon: ClipboardList, label: 'لوحة التدقيق', adminOnly: true },
       { path: '/site-analytics', icon: Globe, label: 'إحصائيات الموقع', adminOnly: true },
     ]

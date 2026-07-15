@@ -9,6 +9,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
+import LogoMarquee from '@/components/LogoMarquee';
 import {
   MapPin, Phone, Clock, Instagram, MessageCircle, Star, Award, Shield,
   Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck
@@ -804,30 +805,7 @@ function BrandsSection() {
           <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: G }}>{t('home.brands.eyebrow')}</p>
           <h3 className="text-2xl md:text-3xl font-black" style={{ color: T }}>{t('home.brands.title')}</h3>
         </FadeIn>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
-          {list.map((b, i) => (
-            <FadeIn key={b.id || i} delay={i * 0.05}>
-              <motion.div
-                whileHover={{ y: -4, borderColor: GB + '0.35)' }}
-                className="rounded-2xl h-28 md:h-32 flex items-center justify-center p-5"
-                style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)` }}
-              >
-                {b.logo_url ? (
-                  <img
-                    src={b.logo_url}
-                    alt={b.name_ar || b.name}
-                    className="max-h-full max-w-full object-contain"
-                    style={{ filter: 'grayscale(15%) brightness(1.05)' }}
-                  />
-                ) : (
-                  <span className="text-lg md:text-xl font-black text-center" style={{ color: `${GB}0.6)` }}>
-                    {b.name_ar || b.name}
-                  </span>
-                )}
-              </motion.div>
-            </FadeIn>
-          ))}
-        </div>
+        <LogoMarquee items={list} />
       </div>
     </section>
   );

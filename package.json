@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "exceljs": "^4.4.0",
+    "tesseract.js": "^7.0.0",
     "@fidm/x509": "^1.2.1",
     "xmldsigjs": "^2.5.0",
     "xmldom": "^0.6.0",
