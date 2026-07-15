@@ -41,6 +41,7 @@ export default function TaxDashboard() {
   const [orders, setOrders] = useState([]);
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [suppliersById, setSuppliersById] = useState({});
 
   const [start, end] = range;
@@ -52,13 +53,14 @@ export default function TaxDashboard() {
     const startDay = format(start, 'yyyy-MM-dd');
     const endDay = format(end, 'yyyy-MM-dd');
 
-    const [{ data: o }, { data: s }, { data: p }, { data: sup }] = await Promise.all([
+    const [{ data: o }, { data: s }, { data: p }, { data: ex }, { data: sup }] = await Promise.all([
       supabase.from('orders').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('sales_invoices').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('purchase_invoices').select('*').gte('invoice_date', startDay).lte('invoice_date', endDay),
+      supabase.from('expenses').select('*').eq('is_vat_applicable', true).gte('expense_date', startDay).lte('expense_date', endDay),
       supabase.from('suppliers').select('id,name'),
     ]);
-    setOrders(o || []); setSales(s || []); setPurchases(p || []);
+    setOrders(o || []); setSales(s || []); setPurchases(p || []); setExpenses(ex || []);
     setSuppliersById(Object.fromEntries((sup || []).map(x => [x.id, x.name])));
     setLoading(false);
   };
@@ -81,9 +83,13 @@ export default function TaxDashboard() {
   // ── ضريبة المدخلات (المشتريات) — فقط الفواتير بمورد له رقم ضريبي صالح ──
   const validPurchases = purchases.filter(p => p.vat_number_valid_format);
   const invalidPurchases = purchases.filter(p => !p.vat_number_valid_format);
-  const vatPaidDeductible = validPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
+  const vatPaidPurchases = validPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
   const vatPaidExcluded = invalidPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
 
+  // ── ضريبة المصروفات القابلة للخصم (إيجار، كهرباء... مصروفات شاملة ضريبة) ──
+  const vatPaidExpenses = expenses.reduce((s, e) => s + (Number(e.vat_amount) || 0), 0);
+
+  const vatPaidDeductible = vatPaidPurchases + vatPaidExpenses;
   const netVatDue = vatCollected - vatPaidDeductible;
 
   const exportReturn = async () => {

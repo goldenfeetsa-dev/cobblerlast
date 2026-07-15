@@ -63,7 +63,7 @@ export default function FinancialReports() {
   const [custodies, setCustodies] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [trend, setTrend] = useState([]);
-  const [newExpense, setNewExpense] = useState({ category: 'other', description: '', amount: '', expense_date: format(new Date(), 'yyyy-MM-dd') });
+  const [newExpense, setNewExpense] = useState({ category: 'other', description: '', amount: '', expense_date: format(new Date(), 'yyyy-MM-dd'), has_vat: false });
   const [exporting, setExporting] = useState(false);
   const statementRef = useRef(null);
 
@@ -164,15 +164,23 @@ export default function FinancialReports() {
   const addExpense = async () => {
     if (!newExpense.amount || Number(newExpense.amount) <= 0) { toast.error('أدخل مبلغاً صحيحاً'); return; }
     try {
+      const amount = Number(newExpense.amount);
+      // المبلغ المُدخل نعتبره شامل الضريبة (متطابق مع كيفية استلام معظم فواتير
+      // المصروفات اليومية: إيجار، كهرباء...). نستخرج منه الضريبة والصافي.
+      const vatAmount = newExpense.has_vat ? +(amount - amount / 1.15).toFixed(2) : 0;
+      const subtotal = +(amount - vatAmount).toFixed(2);
       await base44.entities.Expense.create({
         category: newExpense.category,
         description: newExpense.description,
-        amount: Number(newExpense.amount),
+        amount,
+        subtotal,
+        vat_amount: vatAmount,
+        is_vat_applicable: newExpense.has_vat,
         expense_date: newExpense.expense_date,
         created_by: session?.name || 'admin',
       });
       toast.success('تمت إضافة المصروف ✅');
-      setNewExpense({ category: 'other', description: '', amount: '', expense_date: format(new Date(), 'yyyy-MM-dd') });
+      setNewExpense({ category: 'other', description: '', amount: '', expense_date: format(new Date(), 'yyyy-MM-dd'), has_vat: false });
       load();
     } catch (err) { toast.error('فشل الحفظ: ' + err.message); }
   };
@@ -321,6 +329,10 @@ export default function FinancialReports() {
               <Input type="number" value={newExpense.amount} onChange={e => setNewExpense(p => ({ ...p, amount: e.target.value }))} placeholder="0.00" />
               <Button onClick={addExpense}>إضافة</Button>
             </div>
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer pt-1">
+              <input type="checkbox" checked={newExpense.has_vat} onChange={e => setNewExpense(p => ({ ...p, has_vat: e.target.checked }))} />
+              المبلغ شامل ضريبة 15% (تُحتسب ضمن الإقرار الضريبي)
+            </label>
           </div>
         </CardContent>
       </Card>

@@ -56,8 +56,11 @@ export default async function handler(req, res) {
   // ضريبة المدخلات (المشتريات) — فقط الفواتير التي لدى موردها رقم ضريبي بصيغة صحيحة تُحتسب "قابلة للخصم"
   const validPurchases = (purchases || []).filter(p => p.vat_number_valid_format);
   const invalidPurchases = (purchases || []).filter(p => !p.vat_number_valid_format);
-  const vatPaidDeductible = validPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
+  const vatPaidPurchases = validPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
   const vatPaidExcluded = invalidPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
+  // ضريبة المصروفات القابلة للخصم (إيجار، كهرباء... مصروفات مسجّلة شاملة ضريبة)
+  const vatPaidExpenses = (expenses || []).filter(e => e.is_vat_applicable).reduce((s, e) => s + (Number(e.vat_amount) || 0), 0);
+  const vatPaidDeductible = vatPaidPurchases + vatPaidExpenses;
   const netVatDue = vatCollected - vatPaidDeductible;
 
   const wb = new ExcelJS.Workbook();
@@ -115,7 +118,9 @@ export default async function handler(req, res) {
   s2.getCell(1).fill = s2.getCell(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
   const inputRows = [
     ['المشتريات الخاضعة القابلة للخصم — صافي المبلغ', validPurchases.reduce((s, p) => s + (Number(p.taxable_amount) || 0), 0)],
-    ['ضريبة القيمة المضافة القابلة للخصم (ضريبة المدخلات)', vatPaidDeductible],
+    ['   منها: ضريبة فواتير المشتريات (وحدة المشتريات)', vatPaidPurchases],
+    ['   منها: ضريبة المصروفات المسجّلة الشاملة للضريبة (رواتب، إيجار...)', vatPaidExpenses],
+    ['ضريبة القيمة المضافة القابلة للخصم (ضريبة المدخلات) — الإجمالي', vatPaidDeductible],
   ];
   inputRows.forEach(([label, val]) => {
     const r = ret.addRow([label, Number(val.toFixed(2))]);
