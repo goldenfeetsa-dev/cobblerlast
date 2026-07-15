@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Truck, Plus, Pencil, Trash2, Phone, Mail, Package, AlertTriangle, Search, X } from 'lucide-react';
+import { validateVATNumber } from '@/lib/zatca/zatcaUtils';
 
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
@@ -35,7 +36,7 @@ export default function Suppliers() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
-  const [form, setForm] = useState({ name: '', contact_name: '', phone: '', email: '', address: '', notes: '' });
+  const [form, setForm] = useState({ name: '', contact_name: '', phone: '', email: '', address: '', vat_number: '', notes: '' });
   const [productPicker, setProductPicker] = useState(null); // supplier id لما نفتح مربع اختيار المنتجات
   const [productSearch, setProductSearch] = useState('');
 
@@ -61,7 +62,7 @@ export default function Suppliers() {
       toast.success(editingSupplier ? 'تم تحديث بيانات المورد' : 'تم إضافة المورد');
       setDialogOpen(false);
       setEditingSupplier(null);
-      setForm({ name: '', contact_name: '', phone: '', email: '', address: '', notes: '' });
+      setForm({ name: '', contact_name: '', phone: '', email: '', address: '', vat_number: '', notes: '' });
     },
     onError: (e) => toast.error(`فشل الحفظ: ${e.message || 'خطأ غير معروف'}`),
   });
@@ -94,7 +95,7 @@ export default function Suppliers() {
   };
   const openNew = () => {
     setEditingSupplier(null);
-    setForm({ name: '', contact_name: '', phone: '', email: '', address: '', notes: '' });
+    setForm({ name: '', contact_name: '', phone: '', email: '', address: '', vat_number: '', notes: '' });
     setDialogOpen(true);
   };
 
@@ -146,6 +147,15 @@ export default function Suppliers() {
               <div className="space-y-1.5">
                 <Label>العنوان</Label>
                 <Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>الرقم الضريبي</Label>
+                <Input value={form.vat_number || ''} onChange={e => setForm(p => ({ ...p, vat_number: e.target.value }))} dir="ltr" placeholder="15 رقم" />
+                {form.vat_number && !validateVATNumber(form.vat_number) && (
+                  <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                    <AlertTriangle className="w-3.5 h-3.5" /> صيغة الرقم غير صحيحة — يجب أن يكون 15 رقم يبدأ وينتهي بـ 3
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>ملاحظات</Label>

@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings,
-  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck
+  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';
@@ -28,6 +28,7 @@ const navGroups = [
     items: [
       { path: '/sales', icon: ShoppingCart, label: 'المبيعات والمخازن' },
       { path: '/suppliers', icon: Truck, label: 'الموردون', ownerOnly: true },
+      { path: '/tax-compliance', icon: Scale, label: 'الامتثال الضريبي', financeOnly: true },
       { path: '/workshop', icon: Wrench, label: 'العهدة والورشة' },
       { path: '/operations', icon: Factory, label: 'الخطة الثانية ⚡', adminOnly: true },
     ]
