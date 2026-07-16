@@ -27,7 +27,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import {
   ShoppingBag, Plus, Pencil, Trash2, ShieldCheck, ShieldAlert, Receipt,
-  Package, X, Sparkles, Loader2, Wallet,
+  Package, X, Sparkles, Loader2, Wallet, UserPlus,
 } from 'lucide-react';
 import DocumentUploader from '@/components/common/DocumentUploader';
 import { isValidVatFormat, VAT_RATE_DEFAULT } from '@/lib/vatValidation';
@@ -51,6 +51,9 @@ export default function Purchasing() {
   const [lines, setLines] = useState([emptyLine()]);
   const [ocrBusy, setOcrBusy] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
+  // إضافة مورد سريعة من داخل فاتورة الشراء نفسها — بدون فتح صفحة الموردين
+  const [quickSupplierOpen, setQuickSupplierOpen] = useState(false);
+  const [quickSupplier, setQuickSupplier] = useState({ name: '', vat_number: '', phone: '', address: '' });
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ['suppliers'], queryFn: () => base44.entities.Supplier.list('name', 200),
@@ -123,6 +126,30 @@ export default function Purchasing() {
       queryClient.invalidateQueries({ queryKey: ['purchase-invoices'] });
       toast.success('تم حذف فاتورة الشراء');
     },
+  });
+
+  // مورد سريع: يُضاف مباشرة لقائمة الموردين الفعلية (نفس صفحة الموردين)
+  // ويُختار تلقائياً بفاتورة الشراء الحالية — بدون مغادرة الشاشة
+  const createSupplierQuick = useMutation({
+    mutationFn: (data) => base44.entities.Supplier.create({
+      name: data.name,
+      vat_number: data.vat_number || null,
+      phone: data.phone || null,
+      address: data.address || null,
+      is_active: true,
+    }),
+    onSuccess: (created) => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      setForm(p => ({ ...p, supplier_id: created.id }));
+      setQuickSupplierOpen(false);
+      setQuickSupplier({ name: '', vat_number: '', phone: '', address: '' });
+      toast.success(
+        isValidVatFormat(created.vat_number)
+          ? 'تم إضافة المورد بالرقم الضريبي ✅ — واخترناه لك بهذي الفاتورة'
+          : 'تم إضافة المورد — لكن بدون رقم ضريبي صالح، فاتورته لن تُقبل بالإقرار حتى تضيفه'
+      );
+    },
+    onError: (e) => toast.error(`تعذّر إضافة المورد: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const openNew = () => { setEditingInvoice(null); setForm(emptyInvoice()); setLines([emptyLine()]); setDialogOpen(true); };
@@ -211,22 +238,61 @@ export default function Purchasing() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label>المورد *</Label>
-                  <Select value={form.supplier_id} onValueChange={v => setForm(p => ({ ...p, supplier_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
-                    <SelectContent>
-                      {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  {form.supplier_id && (
-                    supplierVatOk ? (
-                      <p className="text-[11px] text-green-600 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> رقم ضريبي صالح — تُقبل هذه الفاتورة بالإقرار</p>
-                    ) : (
-                      <p className="text-[11px] text-red-600 flex items-center gap-1 font-bold">
-                        <ShieldAlert className="w-3.5 h-3.5" /> هذا المورد بدون رقم ضريبي صالح — لن تُقبل هذه الفاتورة بالإقرار الضريبي.
-                        <Link to="/suppliers" className="underline">أضف الرقم الضريبي أولاً</Link>
+                  <div className="flex items-center justify-between">
+                    <Label>المورد *</Label>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs gap-1"
+                      onClick={() => setQuickSupplierOpen(o => !o)}>
+                      <UserPlus className="w-3.5 h-3.5" /> مورد جديد سريع
+                    </Button>
+                  </div>
+                  {!quickSupplierOpen ? (
+                    <>
+                      <Select value={form.supplier_id} onValueChange={v => setForm(p => ({ ...p, supplier_id: v }))}>
+                        <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
+                        <SelectContent>
+                          {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {form.supplier_id && (
+                        supplierVatOk ? (
+                          <p className="text-[11px] text-green-600 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> رقم ضريبي صالح — تُقبل هذه الفاتورة بالإقرار</p>
+                        ) : (
+                          <p className="text-[11px] text-red-600 flex items-center gap-1 font-bold">
+                            <ShieldAlert className="w-3.5 h-3.5" /> هذا المورد بدون رقم ضريبي صالح — لن تُقبل هذه الفاتورة بالإقرار الضريبي.
+                            <Link to="/suppliers" className="underline">أضف الرقم الضريبي أولاً</Link>
+                          </p>
+                        )
+                      )}
+                    </>
+                  ) : (
+                    <div className="space-y-2 border rounded-xl p-3 bg-secondary/30" style={{ borderColor: 'hsl(var(--border))' }}>
+                      <p className="text-[11px] text-muted-foreground">
+                        عبّي اسم المورد ورقمه الضريبي وخلاص — بيتضاف مباشرة لقائمة الموردين وبيُختار تلقائياً بهذي الفاتورة.
+                        باقي بياناته (العنوان، الجوال...) اختيارية وتقدر تكملها لاحقاً من صفحة الموردين.
                       </p>
-                    )
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="اسم المورد *" value={quickSupplier.name}
+                          onChange={e => setQuickSupplier(p => ({ ...p, name: e.target.value }))} className="h-9" />
+                        <Input placeholder="الرقم الضريبي (15 رقم)" value={quickSupplier.vat_number}
+                          onChange={e => setQuickSupplier(p => ({ ...p, vat_number: e.target.value }))} className="h-9" />
+                        <Input placeholder="الجوال (اختياري)" value={quickSupplier.phone}
+                          onChange={e => setQuickSupplier(p => ({ ...p, phone: e.target.value }))} className="h-9" />
+                        <Input placeholder="العنوان (اختياري)" value={quickSupplier.address}
+                          onChange={e => setQuickSupplier(p => ({ ...p, address: e.target.value }))} className="h-9" />
+                      </div>
+                      {quickSupplier.vat_number && !isValidVatFormat(quickSupplier.vat_number) && (
+                        <p className="text-[11px] text-amber-600 flex items-center gap-1">
+                          <ShieldAlert className="w-3.5 h-3.5" /> الرقم الضريبي لازم يكون 15 رقم ويبدأ وينتهي بـ 3 — بدونه فاتورة هذا المورد لن تُقبل بالإقرار
+                        </p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" className="flex-1" disabled={!quickSupplier.name || createSupplierQuick.isPending}
+                          onClick={() => createSupplierQuick.mutate(quickSupplier)}>
+                          {createSupplierQuick.isPending ? '...' : 'إضافة واختيار المورد'}
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setQuickSupplierOpen(false)}>إلغاء</Button>
+                      </div>
+                    </div>
                   )}
                 </div>
 

@@ -93,6 +93,20 @@ export async function signAndSubmitInvoice({ type, id, isRetry = false }) {
   const { data: record, error: rErr } = await supabase.from(table).select('*').eq('id', id).single();
   if (rErr || !record) throw new Error('السجل غير موجود');
 
+  // ⚠️ ملاحظة توافق مهمة — فواتير الشركات (B2B):
+  // مكتبة التوقيع الحالية (zatca-xml-js) تدعم فقط "الفاتورة الضريبية
+  // المبسّطة" (Simplified Tax Invoice، النوع 388) وتُرسَل بأسلوب
+  // "الإبلاغ" (Reporting) خلال 24 ساعة — وهذا يُعرِض بيانات المشتري
+  // (record.buyer_company_name / buyer_vat_number) على الفاتورة
+  // المطبوعة وبقاعدة البيانات، لكنه لا يُضمّنها داخل XML المُوقَّع
+  // المُرسَل فعلياً لهيئة زاتكا، لأن قالب المكتبة لا يحتوي حقل مشترٍ
+  // إطلاقاً (AccountingCustomerParty فاضي دائماً بالقالب).
+  // "الفاتورة الضريبية القياسية" (Standard Tax Invoice، النوع 380)
+  // التي تتطلبها بعض الشركات لاسترداد ضريبة المدخلات تحتاج مسار
+  // "التخليص" (Clearance) الفوري + تضمين بيانات المشتري بالتوقيع —
+  // وهذا غير موجود بهذه المكتبة، ويحتاج تطويراً إضافياً منفصلاً
+  // (بناء XML قياسي موقّع + استدعاء Clearance API) قبل اعتماده لأي
+  // شركة تطلب فاتورة قياسية رسمية.
   if (record.zatca_status === 'REPORTED') {
     return { alreadySubmitted: true, zatca_status: record.zatca_status, qr: record.zatca_qr };
   }

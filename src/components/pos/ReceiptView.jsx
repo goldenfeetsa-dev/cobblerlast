@@ -31,7 +31,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
   });
   const settings = settingsList[0] || {};
   const shopName = settings.shop_name || 'مؤسسة إبرة وخيط الإسكافي للتجارة';
-  const logoUrl = settings.logo_url || '';
+  const logoUrl = settings.logo_url || '/images/logo-cobblers.png';
   const header = settings.receipt_header || 'خدمات التصليح والخياطة للأحذية والحقائب الجلدية';
   const footer = settings.receipt_footer || 'شكراً لثقتكم بنا — نسعد بخدمتكم دائماً';
   const terms = settings.terms_conditions || '';
@@ -180,7 +180,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
               fontWeight: 'bold',
               letterSpacing: '0.5px',
             }}>
-              فاتورة ضريبية مبسطة — Simplified Tax Invoice
+              فاتورة ضريبية {order.is_b2b ? '(شركات)' : 'مبسطة'} — {order.is_b2b ? 'Tax Invoice (B2B)' : 'Simplified Tax Invoice'}
             </div>
           )}
         </div>
@@ -206,6 +206,24 @@ export default function ReceiptView({ order, autoPrint = false }) {
           <Row label="الاسم" value={order.customer_name} bold />
           {order.customer_phone && <Row label="الجوال" value={order.customer_phone} />}
         </div>
+
+        {/* ── B2B BUYER (فاتورة شركة) ── */}
+        {order.is_b2b && (
+          <>
+            <div style={{
+              marginTop: '6px', padding: '6px 8px', borderRadius: '6px',
+              background: '#f3f4f6', border: '1px dashed #9ca3af',
+            }}>
+              <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#374151', marginBottom: '3px' }}>
+                فاتورة صادرة لمنشأة / Tax Invoice for a Business (B2B)
+              </div>
+              <Row label="اسم الشركة" value={order.buyer_company_name || '—'} bold />
+              <Row label="الرقم الضريبي للمشتري" value={order.buyer_vat_number || '—'} />
+              {order.buyer_cr_number && <Row label="السجل التجاري للمشتري" value={order.buyer_cr_number} />}
+              {order.buyer_address && <Row label="عنوان الشركة" value={order.buyer_address} />}
+            </div>
+          </>
+        )}
 
         <Divider />
 

@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { isValidVatFormat } from '@/lib/vatValidation';
 import { toast } from 'sonner';
 import {
   PackagePlus, Truck, Store, UserCheck, Star, Gift,
@@ -37,7 +39,7 @@ const ITEM_TYPES = [
 // تُسجَّل لحالها بخدماتها الخاصة بدل ما يكون الطلب كامل وصف عام واحد
 const SERVICES_BY_TYPE = {
   shoes: ['تلميع', 'تنظيف', 'خياطة', 'دعسات', 'تنعيل', 'أخرى'],
-  bag:   ['تلوين', 'تنظيف', 'خياطة', 'تغيير يد', 'أخرى'],
+  bag:   ['تلوين', 'صبغات', 'تنظيف', 'خياطة', 'تغيير يد', 'تغيير عجلات', 'رسم', 'أخرى'],
 };
 
 function newPiece() {
@@ -67,6 +69,7 @@ function CobblerTab({ session }) {
     customer_name: '', customer_phone: '',
     delivery_method: 'pickup', delivery_address: '', delivery_date: '', total_price: '',
     payment_status: 'unpaid', payment_method: 'cash', notes: '',
+    is_b2b: false, buyer_company_name: '', buyer_vat_number: '', buyer_cr_number: '', buyer_address: '',
   });
 
   const { data: customers } = useQuery({
@@ -234,6 +237,11 @@ function CobblerTab({ session }) {
       branch_name: session?.branch_name || '',
       customer_name: form.customer_name,
       customer_phone: form.customer_phone,
+      is_b2b: form.is_b2b,
+      buyer_company_name: form.is_b2b ? form.buyer_company_name : null,
+      buyer_vat_number: form.is_b2b ? form.buyer_vat_number : null,
+      buyer_cr_number: form.is_b2b ? form.buyer_cr_number : null,
+      buyer_address: form.is_b2b ? form.buyer_address : null,
       item_type: overallType,
       quantity: pieces.length,
       order_items: pieces.map(p => ({
@@ -274,6 +282,44 @@ function CobblerTab({ session }) {
               }} placeholder="05XXXXXXXX" />
             </div>
           </div>
+
+          {/* فاتورة شركة (B2B) — تُضاف بيانات المشتري (الشركة) هنا فتظهر
+              بالفاتورة كفاتورة صادرة لمنشأة، لا لفرد */}
+          <div className="rounded-xl border p-3 space-y-3" style={{ borderColor: 'hsl(var(--border))' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">فاتورة لشركة (B2B)</p>
+                <p className="text-xs text-muted-foreground">فعّلها إذا العميل منشأة/شركة، لإدراج اسمها ورقمها الضريبي وسجلها التجاري بالفاتورة</p>
+              </div>
+              <Switch checked={form.is_b2b} onCheckedChange={v => update('is_b2b', v)} />
+            </div>
+            {form.is_b2b && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5 col-span-2">
+                  <Label>اسم الشركة *</Label>
+                  <Input value={form.buyer_company_name} onChange={e => update('buyer_company_name', e.target.value)}
+                    placeholder="الاسم النظامي للمنشأة" required={form.is_b2b} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>الرقم الضريبي للشركة *</Label>
+                  <Input value={form.buyer_vat_number} onChange={e => update('buyer_vat_number', e.target.value)}
+                    placeholder="15 رقم" required={form.is_b2b} />
+                  {form.buyer_vat_number && !isValidVatFormat(form.buyer_vat_number) && (
+                    <p className="text-[11px] text-amber-600">لازم 15 رقم ويبدأ وينتهي بـ 3</p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>السجل التجاري (اختياري)</Label>
+                  <Input value={form.buyer_cr_number} onChange={e => update('buyer_cr_number', e.target.value)} placeholder="رقم السجل التجاري" />
+                </div>
+                <div className="space-y-1.5 col-span-2">
+                  <Label>عنوان الشركة (اختياري)</Label>
+                  <Input value={form.buyer_address} onChange={e => update('buyer_address', e.target.value)} placeholder="المدينة، الحي، الشارع" />
+                </div>
+              </div>
+            )}
+          </div>
+
           {knownCustomer && (
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -462,7 +508,7 @@ function CobblerTab({ session }) {
 function ProductsTab({ session }) {
   const queryClient = useQueryClient();
   const [cart, setCart] = useState([]);
-  const [customer, setCustomer] = useState({ name: '', phone: '' });
+  const [customer, setCustomer] = useState({ name: '', phone: '', is_b2b: false, buyer_company_name: '', buyer_vat_number: '', buyer_cr_number: '', buyer_address: '' });
   const [selectedBranch, setSelectedBranch] = useState(session?.branch_id || '');
   const [payMethod, setPayMethod] = useState('cash');
   const [search, setSearch] = useState('');
@@ -527,6 +573,9 @@ function ProductsTab({ session }) {
     mutationFn: async () => {
       if (!selectedBranch) throw new Error('اختر الفرع أولاً');
       if (cart.length === 0) throw new Error('الفاتورة فارغة');
+      if (customer.is_b2b && (!customer.buyer_company_name || !isValidVatFormat(customer.buyer_vat_number))) {
+        throw new Error('لإصدار فاتورة شركة (B2B) لازم اسم الشركة ورقم ضريبي صحيح (15 رقم يبدأ وينتهي بـ 3)');
+      }
       const branch = branches.find(b => b.id === selectedBranch);
       const monthKey = format(new Date(), 'yyyy-MM');
 
@@ -534,6 +583,11 @@ function ProductsTab({ session }) {
         invoice_number: genInvoiceNo(),
         customer_name: customer.name || 'عميل نقدي',
         customer_phone: customer.phone,
+        is_b2b: customer.is_b2b,
+        buyer_company_name: customer.is_b2b ? customer.buyer_company_name : null,
+        buyer_vat_number: customer.is_b2b ? customer.buyer_vat_number : null,
+        buyer_cr_number: customer.is_b2b ? customer.buyer_cr_number : null,
+        buyer_address: customer.is_b2b ? customer.buyer_address : null,
         branch_id: selectedBranch, branch_name: branch?.name || '',
         items: cart, subtotal, vat_amount: vatAmt, total,
         cost_total: costTotal, gross_profit: grossProfit,
@@ -596,7 +650,7 @@ function ProductsTab({ session }) {
       queryClient.invalidateQueries({ queryKey: ['customers'] }); // كانت ناقصة: فاتورة المنتجات تنشئ/تحدّث عميل لكن ما كانت تحدّث كاش صفحة العملاء
       toast.success('تم إصدار الفاتورة وخصم المخزون ✅');
       setCart([]);
-      setCustomer({ name: '', phone: '' });
+      setCustomer({ name: '', phone: '', is_b2b: false, buyer_company_name: '', buyer_vat_number: '', buyer_cr_number: '', buyer_address: '' });
       setPrintInvoice(invoice); // تُطبع تلقائياً فوراً بنفس حجم إيصال الماركت الصغير، تماماً مثل طلب الإصلاح
     },
     onError: (e) => toast.error(`فشل إصدار الفاتورة: ${e.message || 'خطأ غير معروف'}`),
@@ -663,6 +717,28 @@ function ProductsTab({ session }) {
             <div className="grid grid-cols-2 gap-2">
               <Input placeholder="اسم العميل" value={customer.name} onChange={e => setCustomer(p => ({...p, name: e.target.value}))} className="text-sm" />
               <Input placeholder="رقم الهاتف" value={customer.phone} onChange={e => setCustomer(p => ({...p, phone: e.target.value}))} className="text-sm" />
+            </div>
+
+            <div className="rounded-lg border p-2.5 space-y-2" style={{ borderColor: 'hsl(var(--border))' }}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold">فاتورة لشركة (B2B)</span>
+                <Switch checked={customer.is_b2b} onCheckedChange={v => setCustomer(p => ({ ...p, is_b2b: v }))} />
+              </div>
+              {customer.is_b2b && (
+                <div className="grid grid-cols-1 gap-2">
+                  <Input placeholder="اسم الشركة *" value={customer.buyer_company_name}
+                    onChange={e => setCustomer(p => ({ ...p, buyer_company_name: e.target.value }))} className="text-sm" />
+                  <Input placeholder="الرقم الضريبي للشركة * (15 رقم)" value={customer.buyer_vat_number}
+                    onChange={e => setCustomer(p => ({ ...p, buyer_vat_number: e.target.value }))} className="text-sm" />
+                  {customer.buyer_vat_number && !isValidVatFormat(customer.buyer_vat_number) && (
+                    <p className="text-[10px] text-amber-600">لازم 15 رقم ويبدأ وينتهي بـ 3</p>
+                  )}
+                  <Input placeholder="السجل التجاري (اختياري)" value={customer.buyer_cr_number}
+                    onChange={e => setCustomer(p => ({ ...p, buyer_cr_number: e.target.value }))} className="text-sm" />
+                  <Input placeholder="عنوان الشركة (اختياري)" value={customer.buyer_address}
+                    onChange={e => setCustomer(p => ({ ...p, buyer_address: e.target.value }))} className="text-sm" />
+                </div>
+              )}
             </div>
 
             {cart.length === 0 ? (
