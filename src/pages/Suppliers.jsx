@@ -73,6 +73,10 @@ export default function Suppliers() {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success('تم حذف المورد');
     },
+    // لم يكن هناك onError هنا — لو فشل الحذف (مثلاً بسبب قيد مرجعي FK
+    // من فواتير شراء مرتبطة بهذا المورد) كانت الواجهة تبقى صامتة تماماً
+    // ويبدو الأمر وكأن "الحذف ما يشتغل" بينما الطلب فعلياً رجع بخطأ.
+    onError: (e) => toast.error(`فشل حذف المورد: ${e.message || 'تأكد أنه لا توجد فواتير شراء مرتبطة بهذا المورد'}`),
   });
 
   const toggleProductLink = useMutation({

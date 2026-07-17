@@ -26,7 +26,11 @@ import {
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
 
-const fmt = (n) => (Number(n) || 0).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// ملاحظة مهمة: locale 'ar-SA' يعرض الأرقام بالهندي (٠١٢٣٤...) في أغلب
+// المتصفحات، وهذا كان سبب ظهور أرقام غير مقروءة/غير متوافقة مع الأنظمة
+// بالمستند المُصدَّر. نستخدم 'en-US' للحصول على أرقام إنجليزية (Latin)
+// دائماً مع الحفاظ على الفواصل العشرية بنفس الشكل.
+const fmt = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const PRESETS = {
   thisMonth: () => [startOfMonth(new Date()), endOfMonth(new Date())],
@@ -139,27 +143,41 @@ export default function TaxDashboard() {
   // القالب المخفي بالمتصفح ثم تركيبه بملف PDF) — يضمن ظهور الشعار
   // والخط العربي بشكل مثالي، بدون أي عبارات تحذير/أخطاء داخل المستند
   // الرسمي نفسه (تلك تبقى بالشاشة فقط للمتابعة الداخلية). ──
+  // ─────────────────────────────────────────────────────────────
+  // كانت النسخة القديمة تفرض صفحة A4 عمودية ثابتة (210×297mm) ثم
+  // "تقص" الصورة على عدة صفحات كلما زاد المحتوى — ولهذا كان الإقرار
+  // يطلع بعدة صفحات مقطّعة بدل صفحة واحدة واضحة.
+  // الحل: نحسب أبعاد صفحة PDF مخصصة (Custom page size) تطابق نسبة
+  // طول/عرض الصورة الملتقطة فعلياً، بعرض ثابت وواسع (landscape-style)،
+  // فتصير النتيجة صفحة واحدة دائماً مهما طال المحتوى، وبدقة أعلى
+  // (scale أعلى) لجودة طباعة أوضح.
   const exportPDF = async () => {
     if (!statementRef.current) return;
     setExportingPdf(true);
     try {
-      const canvas = await html2canvas(statementRef.current, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = 210, pageHeight = 297;
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight, position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
+      const canvas = await html2canvas(statementRef.current, {
+        scale: 3,               // دقة أعلى = جودة طباعة أفضل (كانت 2)
+        backgroundColor: '#ffffff',
+        useCORS: true,
+      });
+      const imgData = canvas.toDataURL('image/png', 1.0);
+
+      // عرض ثابت وواسع (مثل صفحة A3 landscape تقريباً) حتى لا تُقصّ
+      // أي أعمدة بجدول المشتريات، والارتفاع يُحسب تلقائياً من نسبة
+      // الصورة نفسها فتُطبع دائماً بصفحة واحدة فقط.
+      const pageWidthMM = 340; // أعرض من A4 (210) وأعرض من A3 (297)
+      const pageHeightMM = (canvas.height * pageWidthMM) / canvas.width;
+
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [pageWidthMM, pageHeightMM], // صفحة مخصصة بمقاس المحتوى بالضبط
+        compress: true,
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pageWidthMM, pageHeightMM, undefined, 'FAST');
       pdf.save(`إقرار-ضريبي-${format(start, 'yyyy-MM-dd')}-${format(end, 'yyyy-MM-dd')}.pdf`);
-      toast.success('تم إنشاء ملف PDF للإقرار الضريبي');
+      toast.success('تم إنشاء ملف PDF للإقرار الضريبي — صفحة واحدة');
     } catch (err) {
       toast.error('تعذّر إنشاء ملف PDF: ' + (err.message || 'خطأ غير معروف'));
     } finally {
@@ -357,7 +375,9 @@ export default function TaxDashboard() {
                 )}
 
                 <p className="text-[10px] text-gray-400 border-t pt-3 mt-4">
-                  هذا الملف مُعِد للمساعدة في تعبئة الإقرار عبر بوابة فاتورة (fatoora.zatca.gov.sa) — يُرجى مراجعة الأرقام مع محاسبكم القانوني قبل التقديم الرسمي.
+                  هذا الملف أداة مساعدة داخلية لتجميع الأرقام قبل تعبئة الإقرار الضريبي الدوري يدوياً عبر
+                  بوابة خدمات زاتكا الإلكترونية (zatca.gov.sa) — وليس مستنداً رسمياً يُرفع أو يُقدَّم لزاتكا مباشرة.
+                  يُرجى مراجعة الأرقام مع محاسبكم القانوني قبل التقديم الرسمي.
                 </p>
               </div>
             </CardContent>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Package, Star, ToggleLeft, ToggleRight } from 'lucide-react';
 import ProductImageUploader from '@/components/shop/ProductImageUploader';
+import { toast } from 'sonner';
 
 const CATEGORIES = {
   soles: 'نعال وأكواع',
@@ -96,16 +97,21 @@ export default function ShopAdmin() {
   const createMut = useMutation({
     mutationFn: (d) => base44.entities.Product.create({ ...d, price: Number(d.price), original_price: d.original_price ? Number(d.original_price) : undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['products-admin'] }); setAdding(false); },
+    onError: (e) => toast.error(`فشل إضافة المنتج: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const updateMut = useMutation({
     mutationFn: ({ id, ...d }) => base44.entities.Product.update(id, { ...d, price: Number(d.price), original_price: d.original_price ? Number(d.original_price) : undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['products-admin'] }); setEditing(null); },
+    // كانت الأخطاء هنا تُبتلع بصمت — لو فشل التعديل (صلاحيات RLS، عمود
+    // مفقود، إلخ) ما كان يظهر شيء للمستخدم وتبدو الواجهة وكأنها "ما تشتغل"
+    onError: (e) => toast.error(`فشل تعديل المنتج: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id) => base44.entities.Product.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['products-admin'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['products-admin'] }); toast.success('تم حذف المنتج'); },
+    onError: (e) => toast.error(`فشل حذف المنتج: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const toggleStock = (p) => updateMut.mutate({ id: p.id, in_stock: !p.in_stock });
