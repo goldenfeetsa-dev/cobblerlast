@@ -106,10 +106,6 @@ export default async function handler(req, res) {
     const r = ret.addRow([label, Number(val.toFixed(2))]);
     r.getCell(2).numFmt = '#,##0.00';
   });
-  if ((orders.length + sales.length) - reported.length > 0) {
-    const warn = ret.addRow([`⚠️ ${(orders.length + sales.length) - reported.length} فاتورة/طلب لسه ما انبلّغ لزاتكا خلال الفترة — غير محسوبة أعلاه`, '']);
-    warn.font = { italic: true, color: { argb: 'FFB45309' } };
-  }
   ret.addRow([]);
 
   // ── القسم الثاني: ضريبة المدخلات (المشتريات) ──
@@ -126,10 +122,6 @@ export default async function handler(req, res) {
     const r = ret.addRow([label, Number(val.toFixed(2))]);
     r.getCell(2).numFmt = '#,##0.00';
   });
-  if (invalidPurchases.length > 0) {
-    const warn = ret.addRow([`⚠️ ${invalidPurchases.length} فاتورة شراء بضريبة قدرها ${vatPaidExcluded.toFixed(2)} ر.س مستبعدة — مورد بدون رقم ضريبي صالح`, '']);
-    warn.font = { italic: true, color: { argb: 'FFDC2626' } };
-  }
   ret.addRow([]);
 
   // ── القسم الثالث: الصافي ──

@@ -7,7 +7,7 @@
  * جدول مخصص للمشتريات وضريبة المدخلات مع علامة "مقبولة بالإقرار؟"
  * لكل فاتورة حسب صلاحية الرقم الضريبي للمورد.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { getSession } from '@/lib/sessionStore';
 import { isFinanceUser } from '@/lib/roles';
@@ -15,9 +15,13 @@ import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import {
-  Wallet, TrendingUp, TrendingDown, Scale, FileSpreadsheet, ShieldAlert,
+  Wallet, TrendingUp, TrendingDown, Scale, FileSpreadsheet, FileDown, ShieldAlert,
   ShoppingBag, RefreshCw,
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
@@ -43,6 +47,9 @@ export default function TaxDashboard() {
   const [purchases, setPurchases] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [suppliersById, setSuppliersById] = useState({});
+  const [zatcaSettings, setZatcaSettings] = useState(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const statementRef = useRef(null);
 
   const [start, end] = range;
 
@@ -53,21 +60,35 @@ export default function TaxDashboard() {
     const startDay = format(start, 'yyyy-MM-dd');
     const endDay = format(end, 'yyyy-MM-dd');
 
-    const [{ data: o }, { data: s }, { data: p }, { data: ex }, { data: sup }] = await Promise.all([
+    const [{ data: o }, { data: s }, { data: p }, { data: ex }, { data: sup }, { data: zs }] = await Promise.all([
       supabase.from('orders').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('sales_invoices').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('purchase_invoices').select('*').gte('invoice_date', startDay).lte('invoice_date', endDay),
       supabase.from('expenses').select('*').eq('is_vat_applicable', true).gte('expense_date', startDay).lte('expense_date', endDay),
       supabase.from('suppliers').select('id,name'),
+      supabase.from('zatca_settings').select('*').eq('id', 1).single(),
     ]);
     setOrders(o || []); setSales(s || []); setPurchases(p || []); setExpenses(ex || []);
     setSuppliersById(Object.fromEntries((sup || []).map(x => [x.id, x.name])));
+    setZatcaSettings(zs || null);
     setLoading(false);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [start, end]);
 
   const applyPreset = (key) => { setPreset(key); setRange(PRESETS[key]()); };
+
+  // تحديد فترة يدوياً (من - إلى) بدل الاكتفاء بالفترات الجاهزة فقط
+  const setCustomStart = (val) => {
+    if (!val) return;
+    setPreset('custom');
+    setRange([new Date(val + 'T00:00:00'), end]);
+  };
+  const setCustomEnd = (val) => {
+    if (!val) return;
+    setPreset('custom');
+    setRange([start, new Date(val + 'T00:00:00')]);
+  };
 
   if (!session?.role || !isFinanceUser(session.role)) return <Navigate to="/pos" replace />;
 
@@ -114,6 +135,38 @@ export default function TaxDashboard() {
     } catch (err) { toast.error(err.message); } finally { setExporting(false); }
   };
 
+  // ── تصدير الإقرار كـ PDF احترافي: نفس تقنية "كشف الحساب" (تصوير
+  // القالب المخفي بالمتصفح ثم تركيبه بملف PDF) — يضمن ظهور الشعار
+  // والخط العربي بشكل مثالي، بدون أي عبارات تحذير/أخطاء داخل المستند
+  // الرسمي نفسه (تلك تبقى بالشاشة فقط للمتابعة الداخلية). ──
+  const exportPDF = async () => {
+    if (!statementRef.current) return;
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(statementRef.current, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210, pageHeight = 297;
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight, position = 0;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      pdf.save(`إقرار-ضريبي-${format(start, 'yyyy-MM-dd')}-${format(end, 'yyyy-MM-dd')}.pdf`);
+      toast.success('تم إنشاء ملف PDF للإقرار الضريبي');
+    } catch (err) {
+      toast.error('تعذّر إنشاء ملف PDF: ' + (err.message || 'خطأ غير معروف'));
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -129,18 +182,33 @@ export default function TaxDashboard() {
         <div className="flex gap-2 flex-wrap items-center">
           <Link to="/purchasing"><Button variant="outline"><ShoppingBag className="w-4 h-4 ml-1" /> وحدة المشتريات</Button></Link>
           <Button onClick={load} variant="ghost" size="icon"><RefreshCw className="w-4 h-4" /></Button>
-          <Button onClick={exportReturn} disabled={exporting}>
-            <FileSpreadsheet className="w-4 h-4 ml-1" /> {exporting ? 'جارِ الإنشاء...' : 'تصدير الإقرار الضريبي'}
+          <Button onClick={exportReturn} disabled={exporting} variant="outline">
+            <FileSpreadsheet className="w-4 h-4 ml-1" /> {exporting ? 'جارِ الإنشاء...' : 'Excel'}
+          </Button>
+          <Button onClick={exportPDF} disabled={exportingPdf || loading}>
+            <FileDown className="w-4 h-4 ml-1" /> {exportingPdf ? 'جارِ الإنشاء...' : 'تصدير الإقرار PDF'}
           </Button>
         </div>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
         {Object.keys(PRESETS).map(key => (
           <Button key={key} size="sm" variant={preset === key ? 'default' : 'outline'} onClick={() => applyPreset(key)}>
             {PRESET_LABELS[key]}
           </Button>
         ))}
+        <div className="flex items-center gap-2 border-r pr-3 mr-1" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="tax-from" className="text-xs text-muted-foreground shrink-0">من</Label>
+            <Input id="tax-from" type="date" className="h-8 w-[150px] text-xs"
+              value={format(start, 'yyyy-MM-dd')} onChange={e => setCustomStart(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="tax-to" className="text-xs text-muted-foreground shrink-0">إلى</Label>
+            <Input id="tax-to" type="date" className="h-8 w-[150px] text-xs"
+              value={format(end, 'yyyy-MM-dd')} onChange={e => setCustomEnd(e.target.value)} />
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -206,6 +274,92 @@ export default function TaxDashboard() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          {/* ═══ قالب الإقرار القابل للطباعة/التصدير PDF ═══
+              هذا هو المستند الرسمي فقط: شعار + بيانات المنشأة + الأقسام
+              الثلاثة + جدول المشتريات — بدون أي عبارات تحذير/أخطاء
+              داخلية (تلك تظهر فوق بالشاشة فقط ولا تُطبع بالمستند). */}
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">معاينة الإقرار القابل للتصدير PDF</CardTitle></CardHeader>
+            <CardContent>
+              <div ref={statementRef} className="bg-white text-black p-8 rounded-lg" dir="rtl" style={{ fontFamily: "'Tajawal', sans-serif" }}>
+                <div className="flex items-center justify-between border-b-2 pb-4 mb-5" style={{ borderColor: '#6b4226' }}>
+                  <div className="flex items-center gap-3">
+                    <img src="/images/logo-cobblers.png" alt="الشعار" className="w-14 h-14 rounded-lg object-contain" style={{ background: '#6b4226' }} />
+                    <div>
+                      <h2 className="text-lg font-black" style={{ color: '#4a2e18' }}>{zatcaSettings?.seller_name || 'إبرة وخيط الإسكافي'}</h2>
+                      <p className="text-xs text-gray-500">إقرار ضريبة القيمة المضافة (VAT Return)</p>
+                    </div>
+                  </div>
+                  <div className="text-left text-xs text-gray-500">
+                    <p>الفترة: {format(start, 'yyyy-MM-dd')} — {format(end, 'yyyy-MM-dd')}</p>
+                    <p>تاريخ الإعداد: {format(new Date(), 'yyyy-MM-dd')}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+                  <div className="p-3 rounded-lg" style={{ background: '#fbf6ee' }}>
+                    <p className="text-[11px] text-gray-500">الرقم الضريبي (VAT)</p>
+                    <p className="font-bold" style={{ color: zatcaSettings?.vat_number ? '#000' : '#b5442e' }}>
+                      {zatcaSettings?.vat_number || 'غير مضبوط بإعدادات زاتكا — يُرجى إدخاله قبل التقديم الرسمي'}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ background: '#fbf6ee' }}>
+                    <p className="text-[11px] text-gray-500">السجل التجاري (C.R)</p>
+                    <p className="font-bold">{zatcaSettings?.cr_number || '—'}</p>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#16a34a' }}>القسم الأول — ضريبة المخرجات (المبيعات)</div>
+                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
+                    <div className="flex justify-between"><span>المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ</span><span className="font-mono font-bold">{fmt(vatCollected / 0.15)}</span></div>
+                    <div className="flex justify-between"><span>ضريبة القيمة المضافة المستحقة على المبيعات</span><span className="font-mono font-bold">{fmt(vatCollected)}</span></div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#2563eb' }}>القسم الثاني — ضريبة المدخلات (المشتريات)</div>
+                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
+                    <div className="flex justify-between"><span>ضريبة فواتير المشتريات القابلة للخصم</span><span className="font-mono font-bold">{fmt(vatPaidPurchases)}</span></div>
+                    <div className="flex justify-between"><span>ضريبة المصروفات المسجّلة الشاملة للضريبة</span><span className="font-mono font-bold">{fmt(vatPaidExpenses)}</span></div>
+                    <div className="flex justify-between font-bold border-t pt-1.5"><span>الإجمالي القابل للخصم</span><span className="font-mono">{fmt(vatPaidDeductible)}</span></div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#1e3a8a' }}>القسم الثالث — الصافي</div>
+                  <div className="border border-t-0 rounded-b-md p-4 flex justify-between items-center">
+                    <span className="font-bold text-sm">{netVatDue >= 0 ? 'صافي الضريبة المستحقة (تُسدَّد للهيئة)' : 'صافي الرصيد الضريبي لصالحك'}</span>
+                    <span className="font-mono font-black text-lg" style={{ color: netVatDue >= 0 ? '#dc2626' : '#16a34a' }}>{fmt(Math.abs(netVatDue))} ر.س</span>
+                  </div>
+                </div>
+
+                {purchases.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-bold text-gray-500 mb-2">تفاصيل فواتير المشتريات القابلة للخصم</p>
+                    <table className="w-full text-xs">
+                      <thead><tr className="border-b text-gray-500"><th className="text-right py-1.5">التاريخ</th><th className="text-right py-1.5">المورد</th><th className="text-right py-1.5">رقم الفاتورة</th><th className="text-left py-1.5">قيمة الضريبة</th></tr></thead>
+                      <tbody>
+                        {purchases.filter(p => p.vat_number_valid_format).map(p => (
+                          <tr key={p.id} className="border-b border-gray-100">
+                            <td className="py-1 text-gray-500">{p.invoice_date}</td>
+                            <td className="py-1">{suppliersById[p.supplier_id] || '—'}</td>
+                            <td className="py-1">{p.invoice_number}</td>
+                            <td className="py-1 text-left font-mono">{fmt(p.vat_amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-gray-400 border-t pt-3 mt-4">
+                  هذا الملف مُعِد للمساعدة في تعبئة الإقرار عبر بوابة فاتورة (fatoora.zatca.gov.sa) — يُرجى مراجعة الأرقام مع محاسبكم القانوني قبل التقديم الرسمي.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </>
