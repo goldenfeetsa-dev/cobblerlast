@@ -12,7 +12,7 @@ import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import LogoMarquee from '@/components/LogoMarquee';
 import {
   MapPin, Phone, Clock, Instagram, MessageCircle, Star, Award, Shield,
-  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck
+  Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck, Smartphone
 } from 'lucide-react';
 
 // ── Palette (cream / clay — طلب العميل) ─────────────────────────
@@ -954,77 +954,111 @@ function Footer() {
   const { data: settingsArr } = useQuery({
     queryKey: ['app-settings-public'],
     queryFn: async () => {
-      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,phone,vat_number').limit(1);
+      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,phone').limit(1);
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  // رقم السجل التجاري مصدره إعدادات ZATCA (نفس الرقم المستخدم بالفواتير الرسمية)، مو app_settings
+  const { data: crArr } = useQuery({
+    queryKey: ['zatca-cr-public'],
+    queryFn: async () => {
+      const { data } = await supabase.from('zatca_settings').select('cr_number').eq('id', 1).limit(1);
       return data;
     },
     staleTime: 5 * 60 * 1000,
   });
   const s = settingsArr?.[0] || {};
+  const crNumber  = crArr?.[0]?.cr_number;
   const instagram = s.social_instagram || 'https://www.instagram.com/ebra.kh8/';
   const whatsapp  = s.social_whatsapp  || '966549678191';
   const twitter   = s.social_twitter;
   const phone     = s.phone || '0549678191';
 
+  const usefulLinks = [
+    [t('common.footer.book'), '/book'],
+    [t('common.footer.trackBooking'), '/my-bookings'],
+    [t('common.footer.shop'), '/shop'],
+    [t('common.footer.about'), '/about'],
+    [t('common.footer.repairPolicy'), '/repair-policy'],
+    [t('common.footer.shipping'), '/shipping-policy'],
+    [t('common.footer.privacy'), '/privacy'],
+  ];
+
   return (
     <footer className="py-16 px-6" style={{ background: '#EFE9DD', borderTop: `1px solid ${GB}0.08)` }} dir={dir}>
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
-                <Scissors className="w-4 h-4 text-black" />
-              </div>
-              <h3 className="text-xl font-black" style={{ color: T }}>{t('common.brand')}</h3>
-            </div>
-            <p className="text-sm leading-relaxed max-w-xs mb-5" style={{ color: `${GB}0.2)` }}>
-              {t('common.footer.tagline')}
-            </p>
-            <div className="flex gap-3">
-              {[
-                { href: instagram, icon: Instagram, color: '#E1306C', label: 'Instagram' },
-                { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'WhatsApp' },
-                ...(twitter ? [{ href: twitter, icon: Twitter, color: G, label: 'Twitter' }] : []),
-              ].map((social, i) => (
-                <motion.a key={i} href={social.href} target="_blank" rel="noopener noreferrer"
-                  aria-label={social.label} whileHover={{ scale: 1.15, y: -2 }}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
-                  <social.icon className="w-4 h-4" style={{ color: social.color }} />
-                </motion.a>
-              ))}
-            </div>
-          </div>
+      <div className="max-w-lg mx-auto text-center">
 
-          <div>
-            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.linksTitle')}</h4>
-            <ul className="space-y-3 text-sm" style={{ color: `${GB}0.3)` }}>
-              {[[t('common.footer.book'), '/book'], [t('common.footer.trackBooking'), '/my-bookings'], [t('common.footer.shop'), '/shop'], [t('common.footer.about'), '/about'], [t('common.footer.repairPolicy'), '/repair-policy']].map(([label, to]) => (
-                <li key={to}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
-              ))}
-            </ul>
+        {/* الشعار */}
+        <div className="flex flex-col items-center gap-2 mb-3">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
+            <Scissors className="w-6 h-6 text-black" />
           </div>
-
-          <div>
-            <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.legalTitle')}</h4>
-            <ul className="space-y-3 text-sm" style={{ color: `${GB}0.3)` }}>
-              {[[t('common.footer.privacy'), '/privacy'], [t('common.footer.shipping'), '/shipping-policy']].map(([label, to]) => (
-                <li key={to}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
-              ))}
-              <li><a href={`tel:${phone}`} className="hover:text-yellow-400 transition-colors">{phone}</a></li>
-              <li><a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors">{t('common.footer.whatsapp')}</a></li>
-              {s.vat_number && <li className="pt-1" style={{ color: `${GB}0.25)` }}>الرقم الضريبي: {s.vat_number}</li>}
-            </ul>
-          </div>
+          <h3 className="text-xl font-black" style={{ color: T }}>{t('common.brand')}</h3>
         </div>
 
-        <div className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ borderColor: GB + '0.08)' }}>
-          <p className="text-sm" style={{ color: `${GB}0.12)` }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
-          <div className="flex gap-4 text-xs" style={{ color: `${GB}0.15)` }}>
-            <Link to="/privacy" className="hover:text-yellow-400 transition-colors">{t('common.footer.privacy')}</Link>
-            <Link to="/shipping-policy" className="hover:text-yellow-400 transition-colors">{t('common.footer.shipping')}</Link>
-            <Link to="/about" className="hover:text-yellow-400 transition-colors">{t('common.footer.about')}</Link>
+        {/* الوصف */}
+        <p className="text-sm leading-relaxed mx-auto mb-6" style={{ color: `${GB}0.2)`, maxWidth: '340px' }}>
+          {t('common.footer.tagline')}
+        </p>
+
+        {/* السوشيال ميديا */}
+        <div className="flex gap-3 justify-center mb-10">
+          {[
+            { href: instagram, icon: Instagram, color: '#E1306C', label: 'Instagram' },
+            { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'WhatsApp' },
+            ...(twitter ? [{ href: twitter, icon: Twitter, color: G, label: 'Twitter' }] : []),
+          ].map((social, i) => (
+            <motion.a key={i} href={social.href} target="_blank" rel="noopener noreferrer"
+              aria-label={social.label} whileHover={{ scale: 1.15, y: -2 }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
+              <social.icon className="w-4 h-4" style={{ color: social.color }} />
+            </motion.a>
+          ))}
+        </div>
+
+        {/* روابط تهمك */}
+        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.linksTitle')}</h4>
+        <ul className="space-y-3 text-sm mb-10" style={{ color: `${GB}0.3)` }}>
+          {usefulLinks.map(([label, to]) => (
+            <li key={to}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
+          ))}
+        </ul>
+
+        {/* خدمة العملاء */}
+        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.customerServiceTitle')}</h4>
+        <div className="flex gap-4 justify-center mb-10">
+          <motion.a href={`tel:${phone}`} whileHover={{ scale: 1.1, y: -2 }} aria-label={t('common.footer.callUs')}
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
+            <Phone className="w-4 h-4" style={{ color: G }} />
+          </motion.a>
+          <motion.a href={`sms:${phone}`} whileHover={{ scale: 1.1, y: -2 }} aria-label={t('common.footer.textUs')}
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
+            <Smartphone className="w-4 h-4" style={{ color: G }} />
+          </motion.a>
+          <motion.a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.1, y: -2 }} aria-label="WhatsApp"
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
+            <MessageCircle className="w-4 h-4" style={{ color: '#25D366' }} />
+          </motion.a>
+        </div>
+
+        {/* السجل التجاري */}
+        {crNumber && (
+          <div className="flex items-center justify-center gap-3 mb-10">
+            <div className="text-sm" style={{ color: `${GB}0.3)` }}>
+              <p className="mb-0.5">{t('common.footer.crLabel')}</p>
+              <p className="font-bold" style={{ color: T }}>{crNumber}</p>
+            </div>
+            <img src="/images/cr-emblem.jpg" alt="السجل التجاري" className="w-12 h-12 rounded-lg object-cover" style={{ border: `1px solid ${GB}0.15)` }} />
           </div>
+        )}
+
+        <div className="border-t pt-8" style={{ borderColor: GB + '0.08)' }}>
+          <p className="text-sm" style={{ color: `${GB}0.12)` }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
         </div>
       </div>
     </footer>
