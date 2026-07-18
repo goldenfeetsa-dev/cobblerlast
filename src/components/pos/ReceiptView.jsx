@@ -110,9 +110,16 @@ export default function ReceiptView({ order, autoPrint = false }) {
       {/* أنماط خاصة بالطباعة فقط — تُظهر الفاتورة وتُخفي كل شيء آخر بالصفحة */}
       <style>{`
         @media print {
+          html, body { height: auto !important; overflow: visible !important; }
           body * { visibility: hidden; }
           #pos-receipt-print, #pos-receipt-print * { visibility: visible; }
-          #pos-receipt-print { position: fixed; inset: 0; width: 80mm; margin: 0 auto; box-shadow: none !important; }
+          #pos-receipt-print {
+            position: fixed; top: 0; left: 0; right: 0;
+            /* لا نضع bottom:0 — inset:0 كان يحصر ارتفاع الفاتورة بارتفاع الشاشة
+               فقط، فيقصّ أي محتوى بعده (الباركود وما بعده) من الطباعة تمامًا. */
+            width: 80mm; height: auto; max-height: none; overflow: visible;
+            margin: 0 auto; box-shadow: none !important;
+          }
           .receipt-no-print { display: none !important; }
           @page { size: 80mm auto; margin: 0; }
         }
