@@ -37,11 +37,12 @@ export const translations = {
 
     home: {
       hero: {
-        eyebrow: 'حرفيون سعوديون أصيلون — الرياض',
+        eyebrow: 'تصليح أحذية وشنط جلدية في الرياض — حرفيون سعوديون أصيلون',
         titleStart: 'نُعيد روح',
         titleEnd: 'الفاخرة',
         words: ['الأحذية', 'الحقائب', 'الجلديات', 'الفاخرة'],
-        desc: 'كل قطعة تحكي قصة. نحن نُعيد كتابة فصلها الجديد بأيدٍ سعودية متمرسة وتقنيات عالمية فاخرة.',
+        seoSubtitle: 'تصليح أحذية بالرياض وتصليح شنط بالرياض بأيدٍ سعودية ماهرة',
+        desc: 'كل قطعة تحكي قصة. نحن نُعيد كتابة فصلها الجديد بأيدٍ سعودية متمرسة وتقنيات عالمية فاخرة — من تصليح الأحذية إلى تصليح الشنط الجلدية.',
         pills: ['✦ استلام من موقعك', '✦ ضمان كامل', '✦ أكثر من 20 علامة فاخرة', '✦ إنجاز خلال 48 ساعة'],
         ctaPrimary: 'ابدأ رحلة الترميم',
         ctaSecondary: 'تسوق الآن',
@@ -435,10 +436,11 @@ export const translations = {
 
     home: {
       hero: {
-        eyebrow: 'Authentic Saudi Craftsmen — Riyadh',
+        eyebrow: 'Shoe & Leather Bag Repair in Riyadh — Authentic Saudi Craftsmen',
         titleStart: 'We restore the soul of',
         titleEnd: '',
         words: ['Shoes', 'Bags', 'Leather Goods', 'Luxury Items'],
+        seoSubtitle: 'Shoe repair Riyadh and bag repair Riyadh by skilled Saudi hands',
         desc: 'Every piece tells a story. We write its next chapter with skilled Saudi hands and premium global techniques.',
         pills: ['✦ Pickup from your location', '✦ Full warranty', '✦ 20+ luxury brands', '✦ Ready within 48 hours'],
         ctaPrimary: 'Start the Restoration',

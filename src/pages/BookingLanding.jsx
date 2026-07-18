@@ -280,6 +280,13 @@ function HeroSection() {
                   {t('home.hero.titleEnd')}
                 </motion.h1>
               )}
+
+              {/* عنوان فرعي H2 غني بالكلمات المفتاحية (تصليح أحذية/شنط بالرياض) —
+                  يبقي العنوان الرئيسي H1 شاعرياً/العلامة التجارية كما هو، بينما
+                  يعطي جوجل نص واضح ومباشر يطابق ما يبحث عنه الناس فعلياً. */}
+              <h2 className="text-sm md:text-base font-semibold mt-3" style={{ color: `${GB}0.55)` }}>
+                {t('home.hero.seoSubtitle')}
+              </h2>
             </div>
 
             {/* Desc */}
@@ -1031,10 +1038,10 @@ export default function BookingLanding() {
       <Helmet>
         <html lang={isAr ? 'ar' : 'en'} />
         <title>{isAr
-          ? 'إبرة وخيط الإسكافي | إصلاح وتجديد الأحذية والحقائب الجلدية والبسطار العسكري في الرياض'
-          : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair in Riyadh, Saudi Arabia'}</title>
+          ? 'إبرة وخيط الإسكافي | تصليح أحذية وشنط بالرياض — إصلاح وتجديد الأحذية والحقائب الجلدية والبسطار العسكري'
+          : 'Ebra & Khait Cobbler | Shoe & Bag Repair in Riyadh, Saudi Arabia'}</title>
         <meta name="description" content={isAr
-          ? 'إبرة وخيط الإسكافي — حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة والبسطار العسكري في الرياض. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات. احجز موعدك الآن!'
+          ? 'إبرة وخيط الإسكافي — تصليح أحذية بالرياض وتصليح شنط بالرياض على يد حرفيين سعوديين متخصصين في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة والبسطار العسكري. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات. احجز موعدك الآن!'
           : 'Ebra & Khait Cobbler — Saudi craftsmen specialized in repairing and restoring luxury shoes, leather bags, sneakers, and military boots in Riyadh. Restoration, polishing, sole replacement for top brands. Book now!'} />
         <meta name="keywords" content={isAr
           ? 'إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, تبديل نعل, خياطة حذاء جلد, تنظيف حقائب جلدية, إصلاح سحاب حقيبة, إصلاح أحذية فاخرة, أفضل إسكافي في الرياض, إسكافي منزلي الرياض, اسكافي قريب مني, وين الاقي اسكافي زين, تصليح كوتشي, تصليح جزمة, تصليح صرمايه, صيانة احذيه, تصليح شنطة جلد, تصليح بسطار عسكري, صيانة بسطار الجيش, تبديل نعل بسطار عسكري, اصلاح جزمة عسكرية, تصليح بوت عسكري, بسطار الجيش السعودي, إصلاح أحذية العليا, إصلاح أحذية الملز, إصلاح أحذية النخيل, إصلاح أحذية حي السفارات, تصليح حذاء جلد أصلي, تلوين جلد, صيانة حقائب فاخرة, استلام وتوصيل إصلاح أحذية, حجز موعد إسكافي, shoe repair riyadh, leather bag repair riyadh, luxury shoe restoration, cobbler riyadh, shoe sole replacement riyadh, leather shine and polish, military boot repair riyadh'
