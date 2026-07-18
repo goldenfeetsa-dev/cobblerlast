@@ -8,7 +8,7 @@ import { ShoppingCart, Plus, Search, ChevronLeft, ChevronRight, Star, X } from '
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const GOLD = '#C9A84C';
+const GOLD = '#A67C68'; // Clay accent (كان ذهبي)
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80',
@@ -58,29 +58,29 @@ function CartDrawer({ cart, onClose, onRemove }) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <motion.div initial={{ x: dir === 'rtl' ? '-100%' : '100%' }} animate={{ x: 0 }} exit={{ x: dir === 'rtl' ? '-100%' : '100%' }} transition={{ type: 'spring', damping: 25 }}
         className={`relative w-full max-w-sm h-full flex flex-col overflow-hidden z-10 ${dir === 'ltr' ? 'ml-auto' : ''}`}
-        style={{ background: '#1A0C00', borderLeft: '1px solid rgba(201,168,76,0.15)' }}>
-        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(201,168,76,0.1)' }}>
-          <h2 className="text-lg font-black" style={{ color: '#F5EDD8' }}>{t('shop.cart')} ({cart.length})</h2>
-          <button onClick={onClose} style={{ color: 'rgba(245,237,216,0.4)' }}><X className="w-5 h-5" /></button>
+        style={{ background: '#F4F1EA', borderLeft: '1px solid rgba(166,124,104,0.15)' }}>
+        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(166,124,104,0.1)' }}>
+          <h2 className="text-lg font-black" style={{ color: '#3E322D' }}>{t('shop.cart')} ({cart.length})</h2>
+          <button onClick={onClose} style={{ color: 'rgba(62,50,45,0.4)' }}><X className="w-5 h-5" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {cart.length === 0 ? (
-            <p className="text-center py-12 text-sm" style={{ color: 'rgba(245,237,216,0.3)' }}>{t('shop.cartEmpty')}</p>
+            <p className="text-center py-12 text-sm" style={{ color: 'rgba(62,50,45,0.3)' }}>{t('shop.cartEmpty')}</p>
           ) : cart.map(item => (
-            <div key={item.id} className="flex gap-3 rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.08)' }}>
+            <div key={item.id} className="flex gap-3 rounded-xl p-3" style={{ background: 'rgba(62,50,45,0.045)', border: '1px solid rgba(166,124,104,0.08)' }}>
               <img src={item.image_url} alt={`${item.name_ar} — ${t('common.brand')}`} className="w-14 h-14 rounded-lg object-cover" />
               <div className="flex-1">
-                <p className="text-sm font-bold" style={{ color: '#F5EDD8' }}>{item.name_ar}</p>
+                <p className="text-sm font-bold" style={{ color: '#3E322D' }}>{item.name_ar}</p>
                 <p className="text-xs mt-1" style={{ color: GOLD }}>{item.price} SAR × {item.qty}</p>
               </div>
-              <button onClick={() => onRemove(item.id)} style={{ color: 'rgba(245,237,216,0.3)' }}><X className="w-4 h-4" /></button>
+              <button onClick={() => onRemove(item.id)} style={{ color: 'rgba(62,50,45,0.3)' }}><X className="w-4 h-4" /></button>
             </div>
           ))}
         </div>
         {cart.length > 0 && (
-          <div className="p-6 border-t space-y-4" style={{ borderColor: 'rgba(201,168,76,0.1)' }}>
+          <div className="p-6 border-t space-y-4" style={{ borderColor: 'rgba(166,124,104,0.1)' }}>
             <div className="flex justify-between text-base font-black">
-              <span style={{ color: '#F5EDD8' }}>{t('shop.total')}</span>
+              <span style={{ color: '#3E322D' }}>{t('shop.total')}</span>
               <span style={{ color: GOLD }}>{total.toFixed(0)} SAR</span>
             </div>
             <button
@@ -107,7 +107,7 @@ function ProductCard({ product, onAdd, t }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
       className="group rounded-2xl overflow-hidden flex flex-col h-full transition-all duration-300 hover:-translate-y-1"
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
+      style={{ background: 'rgba(62,50,45,0.035)', border: '1px solid rgba(166,124,104,0.1)' }}>
       <div className="relative overflow-hidden" style={{ height: '200px' }}>
         <img src={product.image_url || FALLBACK_IMAGES[0]}
           alt={`${product.name_ar} — ${t('common.brand')}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -120,7 +120,7 @@ function ProductCard({ product, onAdd, t }) {
         )}
         {product.is_featured && product.in_stock && (
           <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold"
-            style={{ background: 'rgba(201,168,76,0.9)', color: '#1A0C00' }}>
+            style={{ background: 'rgba(166,124,104,0.9)', color: '#3E322D' }}>
             <Star className="w-3 h-3 inline ml-1" />{t('shop.featured')}
           </div>
         )}
@@ -131,9 +131,9 @@ function ProductCard({ product, onAdd, t }) {
         )}
       </div>
       <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-black text-base mb-1" style={{ color: '#F5EDD8' }}>{product.name_ar}</h3>
+        <h3 className="font-black text-base mb-1" style={{ color: '#3E322D' }}>{product.name_ar}</h3>
         {product.description && (
-          <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(245,237,216,0.4)' }}>
+          <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(62,50,45,0.4)' }}>
             {product.description}
           </p>
         )}
@@ -141,13 +141,13 @@ function ProductCard({ product, onAdd, t }) {
           <div>
             <span className="text-lg font-black" style={{ color: GOLD }}>{product.price} SAR</span>
             {product.original_price && (
-              <span className="text-xs line-through mr-2" style={{ color: 'rgba(245,237,216,0.3)' }}>{product.original_price}</span>
+              <span className="text-xs line-through mr-2" style={{ color: 'rgba(62,50,45,0.3)' }}>{product.original_price}</span>
             )}
           </div>
           {product.in_stock && (
             <button onClick={() => onAdd(product)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-black hover:scale-105 transition-all"
-              style={{ background: `linear-gradient(135deg, ${GOLD}, #e8c96a)` }}>
+              style={{ background: `linear-gradient(135deg, ${GOLD}, #C9A08D)` }}>
               <Plus className="w-3.5 h-3.5" />{t('shop.add')}
             </button>
           )}
@@ -194,7 +194,7 @@ export default function Shop() {
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
 
   return (
-    <div dir={dir} style={{ background: '#120A00', minHeight: '100vh', fontFamily: "'Tajawal', sans-serif" }}>
+    <div dir={dir} style={{ background: '#EFE9DD', minHeight: '100vh', fontFamily: "'Tajawal', sans-serif" }}>
       <Helmet>
         <title>{isAr ? 'متجر إبرة وخيط | منتجات العناية بالأحذية والحقائب الفاخرة - الرياض' : "Cobbler's Shop | Shoe & Leather Bag Care Products — Riyadh"}</title>
         <meta name="description" content={isAr
@@ -240,14 +240,14 @@ export default function Shop() {
       </Helmet>
       {/* Navbar */}
       <nav className="sticky top-0 z-40 px-6 h-16 flex items-center justify-between"
-        style={{ background: 'rgba(18,10,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(244,241,234,0.95)', borderBottom: '1px solid rgba(166,124,104,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <Link to="/" className="text-xl font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
           <Link to="/book" className="hidden sm:block px-5 h-9 rounded-full text-sm font-bold text-black flex items-center"
-            style={{ background: `linear-gradient(135deg, ${GOLD}, #e8c96a)` }}>{t('shop.bookNow')}</Link>
+            style={{ background: `linear-gradient(135deg, ${GOLD}, #C9A08D)` }}>{t('shop.bookNow')}</Link>
           <button onClick={() => setCartOpen(true)} className="relative p-2 rounded-full"
-            style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', color: GOLD }}>
+            style={{ background: 'rgba(166,124,104,0.1)', border: '1px solid rgba(166,124,104,0.2)', color: GOLD }}>
             <ShoppingCart className="w-5 h-5" />
             {totalQty > 0 && (
               <span className="absolute -top-1 -left-1 w-5 h-5 rounded-full text-xs font-black flex items-center justify-center text-black"
@@ -258,22 +258,22 @@ export default function Shop() {
       </nav>
 
       {/* Header */}
-      <div className="py-16 px-6 text-center" style={{ background: 'linear-gradient(180deg, #1A0C00 0%, #120A00 100%)' }}>
+      <div className="py-16 px-6 text-center" style={{ background: 'linear-gradient(180deg, #F4F1EA 0%, #EFE9DD 100%)' }}>
         <Link to="/booking" className="inline-flex items-center gap-2 mb-6 text-sm hover:opacity-80 transition-opacity"
-          style={{ color: 'rgba(245,237,216,0.4)' }}>
+          style={{ color: 'rgba(62,50,45,0.4)' }}>
           <BackIcon className="w-4 h-4" />{t('shop.backHome')}
         </Link>
-        <h1 className="text-4xl md:text-5xl font-black mb-3" style={{ color: '#F5EDD8' }}>{t('shop.title')}</h1>
-        <p className="text-sm max-w-md mx-auto mb-8" style={{ color: 'rgba(245,237,216,0.4)' }}>
+        <h1 className="text-4xl md:text-5xl font-black mb-3" style={{ color: '#3E322D' }}>{t('shop.title')}</h1>
+        <p className="text-sm max-w-md mx-auto mb-8" style={{ color: 'rgba(62,50,45,0.4)' }}>
           {t('shop.subtitle')}
         </p>
         {/* Search */}
         <div className="relative max-w-sm mx-auto">
-          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(201,168,76,0.5)' }} />
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(166,124,104,0.5)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder={t('shop.searchPh')}
             className="w-full pr-11 pl-4 py-3 rounded-full text-sm outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)', color: '#F5EDD8' }} />
+            style={{ background: 'rgba(62,50,45,0.05)', border: '1px solid rgba(166,124,104,0.15)', color: '#3E322D' }} />
         </div>
       </div>
 
@@ -284,9 +284,9 @@ export default function Shop() {
             <button key={c.key} onClick={() => setActiveCat(c.key)}
               className="px-4 py-2 rounded-full text-sm font-bold transition-all"
               style={{
-                background: activeCat === c.key ? `linear-gradient(135deg, ${GOLD}, #e8c96a)` : 'rgba(255,255,255,0.03)',
-                color: activeCat === c.key ? '#1A0C00' : 'rgba(245,237,216,0.5)',
-                border: activeCat === c.key ? 'none' : '1px solid rgba(201,168,76,0.1)',
+                background: activeCat === c.key ? `linear-gradient(135deg, ${GOLD}, #C9A08D)` : 'rgba(62,50,45,0.045)',
+                color: activeCat === c.key ? '#3E322D' : 'rgba(62,50,45,0.5)',
+                border: activeCat === c.key ? 'none' : '1px solid rgba(166,124,104,0.1)',
               }}>
               {c.label}
             </button>
@@ -296,8 +296,8 @@ export default function Shop() {
         {/* Products grid */}
         {filtered.length === 0 ? (
           <div className="py-24 text-center">
-            <p className="text-lg font-bold mb-2" style={{ color: 'rgba(245,237,216,0.3)' }}>{t('shop.noProducts')}</p>
-            <p className="text-sm" style={{ color: 'rgba(245,237,216,0.15)' }}>{t('shop.tryDifferent')}</p>
+            <p className="text-lg font-bold mb-2" style={{ color: 'rgba(62,50,45,0.3)' }}>{t('shop.noProducts')}</p>
+            <p className="text-sm" style={{ color: 'rgba(62,50,45,0.15)' }}>{t('shop.tryDifferent')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -307,8 +307,8 @@ export default function Shop() {
 
         {/* WhatsApp CTA */}
         <div className="mt-16 rounded-2xl p-8 text-center"
-          style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(201,168,76,0.1)' }}>
-          <p className="text-sm mb-4" style={{ color: 'rgba(245,237,216,0.4)' }}>
+          style={{ background: 'rgba(62,50,45,0.025)', border: '1px solid rgba(166,124,104,0.1)' }}>
+          <p className="text-sm mb-4" style={{ color: 'rgba(62,50,45,0.4)' }}>
             {t('shop.needSomethingElse')}
           </p>
           <a href="https://wa.me/966549678191" target="_blank" rel="noopener noreferrer"

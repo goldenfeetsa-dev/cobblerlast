@@ -5,15 +5,15 @@ import { Truck, Clock, MapPin, Package, CheckCircle, Phone } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const GOLD = '#C9A84C';
-const TEXT = '#F5EDD8';
+const GOLD = '#A67C68';
+const TEXT = '#3E322D';
 const STEP_ICONS = [Phone, Truck, Package, CheckCircle];
 
 function Section({ title, children }) {
   return (
     <div className="mb-10">
-      <h2 className="text-xl font-black mb-4 pb-2" style={{ color: GOLD, borderBottom: '1px solid rgba(201,168,76,0.15)' }}>{title}</h2>
-      <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'rgba(245,237,216,0.6)' }}>{children}</div>
+      <h2 className="text-xl font-black mb-4 pb-2" style={{ color: GOLD, borderBottom: '1px solid rgba(166,124,104,0.15)' }}>{title}</h2>
+      <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'rgba(62,50,45,0.6)' }}>{children}</div>
     </div>
   );
 }
@@ -27,7 +27,7 @@ export default function ShippingPolicy() {
   const footer = t('shippingPolicy.footer');
 
   return (
-    <div className="min-h-screen font-tajawal" style={{ background: '#060300', color: TEXT }} dir={dir}>
+    <div className="min-h-screen font-tajawal" style={{ background: '#EFE9DD', color: TEXT }} dir={dir}>
       <Helmet>
         <title>{isAr ? 'سياسة التوصيل والاستلام | إبرة وخيط الإسكافي' : 'Shipping & Pickup Policy | Ebra & Khait Cobbler'}</title>
         <meta name="description" content={isAr
@@ -42,12 +42,12 @@ export default function ShippingPolicy() {
 
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 h-16 flex items-center px-6"
-        style={{ background: 'rgba(6,3,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(244,241,234,0.95)', borderBottom: '1px solid rgba(166,124,104,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="max-w-4xl mx-auto w-full flex items-center justify-between" dir={dir}>
           <Link to="/" className="text-lg font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(245,237,216,0.5)' }}>{t('common.nav.home')}</Link>
+            <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(62,50,45,0.5)' }}>{t('common.nav.home')}</Link>
           </div>
         </div>
       </nav>
@@ -57,20 +57,20 @@ export default function ShippingPolicy() {
           <Truck className="w-8 h-8" style={{ color: GOLD }} />
           <div>
             <h1 className="text-3xl font-black" style={{ color: TEXT }}>{t('shippingPolicy.title')}</h1>
-            <p className="text-sm mt-1" style={{ color: 'rgba(245,237,216,0.3)' }}>{t('shippingPolicy.subtitle')}</p>
+            <p className="text-sm mt-1" style={{ color: 'rgba(62,50,45,0.3)' }}>{t('shippingPolicy.subtitle')}</p>
           </div>
         </div>
 
         {/* Steps */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-14">
           {steps.map((s, i) => (
-            <div key={i} className="p-5 rounded-2xl flex gap-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(201,168,76,0.1)' }}>
+            <div key={i} className="p-5 rounded-2xl flex gap-4" style={{ background: 'rgba(62,50,45,0.035)', border: '1px solid rgba(166,124,104,0.1)' }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(166,124,104,0.1)' }}>
                 {React.createElement(STEP_ICONS[i], { className: 'w-5 h-5', style: { color: GOLD } })}
               </div>
               <div>
                 <h3 className="font-black mb-1" style={{ color: TEXT }}>{i + 1}. {s.title}</h3>
-                <p className="text-sm" style={{ color: 'rgba(245,237,216,0.5)' }}>{s.desc}</p>
+                <p className="text-sm" style={{ color: 'rgba(62,50,45,0.5)' }}>{s.desc}</p>
               </div>
             </div>
           ))}
@@ -98,11 +98,11 @@ export default function ShippingPolicy() {
         </Section>
 
         <Section title={t('shippingPolicy.feesTitle')}>
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.1)' }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(166,124,104,0.1)' }}>
             {fees.map((r, i) => (
               <div key={i} className="flex justify-between items-center px-5 py-3 text-sm"
-                style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(201,168,76,0.06)' }}>
-                <span style={{ color: 'rgba(245,237,216,0.6)' }}>{r.zone}</span>
+                style={{ background: i % 2 === 0 ? 'rgba(62,50,45,0.035)' : 'transparent', borderBottom: '1px solid rgba(166,124,104,0.06)' }}>
+                <span style={{ color: 'rgba(62,50,45,0.6)' }}>{r.zone}</span>
                 <span className="font-bold" style={{ color: GOLD }}>{r.price}</span>
               </div>
             ))}
@@ -129,7 +129,7 @@ export default function ShippingPolicy() {
       </div>
 
       <footer className="py-6 px-6 border-t text-center text-sm" dir={dir}
-        style={{ borderColor: 'rgba(201,168,76,0.08)', color: 'rgba(245,237,216,0.2)', background: '#060300' }}>
+        style={{ borderColor: 'rgba(166,124,104,0.08)', color: 'rgba(62,50,45,0.2)', background: '#EFE9DD' }}>
         <div className="flex flex-wrap justify-center gap-4 mb-3">
           <Link to="/" className="hover:text-yellow-400 transition-colors">{t('common.nav.home')}</Link>
           <Link to="/about" className="hover:text-yellow-400 transition-colors">{footer.about}</Link>

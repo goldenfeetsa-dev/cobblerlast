@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const GOLD = '#C9A84C';
-const BG = '#120A00';
+const GOLD = '#A67C68';
+const BG = '#EFE9DD';
 const SECTION_ICONS = [Package, Clock, Shield, CreditCard, AlertCircle];
 
 function PolicyCard({ number, title, icon: Icon, children }) {
@@ -18,16 +18,16 @@ function PolicyCard({ number, title, icon: Icon, children }) {
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
       className="rounded-2xl p-8"
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.12)' }}
+      style={{ background: 'rgba(62,50,45,0.035)', border: '1px solid rgba(166,124,104,0.12)' }}
     >
       <div className="flex items-center gap-4 mb-6">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)' }}>
+          style={{ background: 'rgba(166,124,104,0.08)', border: '1px solid rgba(166,124,104,0.2)' }}>
           <Icon className="w-6 h-6" style={{ color: GOLD }} />
         </div>
         <div>
-          <span className="text-xs font-bold tracking-widest" style={{ color: 'rgba(201,168,76,0.5)' }}>0{number}</span>
-          <h3 className="text-xl font-black" style={{ color: '#F5EDD8' }}>{title}</h3>
+          <span className="text-xs font-bold tracking-widest" style={{ color: 'rgba(166,124,104,0.5)' }}>0{number}</span>
+          <h3 className="text-xl font-black" style={{ color: '#3E322D' }}>{title}</h3>
         </div>
       </div>
       {children}
@@ -68,32 +68,32 @@ export default function RepairPolicy() {
       </Helmet>
       {/* Navbar */}
       <nav className="sticky top-0 z-50 px-6 h-16 flex items-center justify-between"
-        style={{ background: 'rgba(18,10,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(244,241,234,0.95)', borderBottom: '1px solid rgba(166,124,104,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <Link to="/booking" className="text-xl font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
           <Link to="/book">
             <button className="px-5 h-9 rounded-full text-sm font-bold text-black"
-              style={{ background: `linear-gradient(135deg, ${GOLD}, #e8c96a)` }}>{t('repairPolicy.bookNow')}</button>
+              style={{ background: `linear-gradient(135deg, ${GOLD}, #C9A08D)` }}>{t('repairPolicy.bookNow')}</button>
           </Link>
         </div>
       </nav>
 
       {/* Header */}
-      <div className="py-20 px-6 text-center" style={{ background: 'linear-gradient(180deg, #1A0C00 0%, #120A00 100%)' }}>
+      <div className="py-20 px-6 text-center" style={{ background: 'linear-gradient(180deg, #F4F1EA 0%, #EFE9DD 100%)' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <Link to="/booking" className="inline-flex items-center gap-2 mb-8 text-sm hover:opacity-80 transition-opacity"
-            style={{ color: 'rgba(245,237,216,0.4)' }}>
+            style={{ color: 'rgba(62,50,45,0.4)' }}>
             <BackIcon className="w-4 h-4" />{t('repairPolicy.backHome')}
           </Link>
           <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full text-xs font-bold"
-            style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', color: GOLD }}>
+            style={{ background: 'rgba(166,124,104,0.1)', border: '1px solid rgba(166,124,104,0.25)', color: GOLD }}>
             <Shield className="w-3 h-3" />{t('repairPolicy.badge')}
           </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-4" style={{ color: '#F5EDD8' }}>
+          <h1 className="text-4xl md:text-6xl font-black mb-4" style={{ color: '#3E322D' }}>
             {t('repairPolicy.title')}
           </h1>
-          <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(245,237,216,0.4)' }}>
+          <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(62,50,45,0.4)' }}>
             {t('repairPolicy.subtitle')}
           </p>
         </motion.div>
@@ -107,7 +107,7 @@ export default function RepairPolicy() {
             {sec.items && (
               <ul className="space-y-3">
                 {sec.items.map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm" style={{ color: 'rgba(245,237,216,0.6)' }}>
+                  <li key={i} className="flex items-start gap-3 text-sm" style={{ color: 'rgba(62,50,45,0.6)' }}>
                     {si === 4
                       ? <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#f59e0b' }} />
                       : <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: GOLD }} />}
@@ -121,20 +121,20 @@ export default function RepairPolicy() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   {sec.durations.map((d, i) => (
                     <div key={i} className="rounded-xl p-4 text-center"
-                      style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.1)' }}>
+                      style={{ background: 'rgba(166,124,104,0.05)', border: '1px solid rgba(166,124,104,0.1)' }}>
                       <div className="text-2xl font-black mb-1" style={{ color: GOLD }}>{d.time}</div>
-                      <div className="text-xs" style={{ color: 'rgba(245,237,216,0.4)' }}>{d.type}</div>
+                      <div className="text-xs" style={{ color: 'rgba(62,50,45,0.4)' }}>{d.type}</div>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs" style={{ color: 'rgba(245,237,216,0.35)' }}>{sec.note}</p>
+                <p className="text-xs" style={{ color: 'rgba(62,50,45,0.35)' }}>{sec.note}</p>
               </>
             )}
             {sec.methods && (
               <div className="flex flex-wrap gap-2">
                 {sec.methods.map(m => (
                   <span key={m} className="px-3 py-1 rounded-full text-xs font-bold"
-                    style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', color: GOLD }}>{m}</span>
+                    style={{ background: 'rgba(166,124,104,0.1)', border: '1px solid rgba(166,124,104,0.2)', color: GOLD }}>{m}</span>
                 ))}
               </div>
             )}
@@ -144,13 +144,13 @@ export default function RepairPolicy() {
         {/* CTA */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="rounded-2xl p-10 text-center mt-8"
-          style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(201,168,76,0.03))', border: '1px solid rgba(201,168,76,0.2)' }}>
+          style={{ background: 'linear-gradient(135deg, rgba(166,124,104,0.08), rgba(166,124,104,0.03))', border: '1px solid rgba(166,124,104,0.2)' }}>
           <Scissors className="w-10 h-10 mx-auto mb-4" style={{ color: GOLD }} />
-          <h3 className="text-2xl font-black mb-3" style={{ color: '#F5EDD8' }}>{t('repairPolicy.ctaTitle')}</h3>
-          <p className="text-sm mb-6" style={{ color: 'rgba(245,237,216,0.4)' }}>{t('repairPolicy.ctaDesc')}</p>
+          <h3 className="text-2xl font-black mb-3" style={{ color: '#3E322D' }}>{t('repairPolicy.ctaTitle')}</h3>
+          <p className="text-sm mb-6" style={{ color: 'rgba(62,50,45,0.4)' }}>{t('repairPolicy.ctaDesc')}</p>
           <Link to="/book">
             <button className="px-10 py-3.5 rounded-full font-black text-base text-black hover:scale-105 transition-all"
-              style={{ background: `linear-gradient(135deg, ${GOLD}, #e8c96a)`, boxShadow: '0 8px 30px rgba(201,168,76,0.3)' }}>
+              style={{ background: `linear-gradient(135deg, ${GOLD}, #C9A08D)`, boxShadow: '0 8px 30px rgba(166,124,104,0.3)' }}>
               {t('repairPolicy.ctaBtn')}
             </button>
           </Link>

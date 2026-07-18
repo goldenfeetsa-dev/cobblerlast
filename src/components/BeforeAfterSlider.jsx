@@ -108,13 +108,13 @@ export default function BeforeAfterSlider({
       {/* تسميات "قبل" و "بعد" */}
       <span
         className="absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase transition-opacity duration-150 pointer-events-none"
-        style={{ background: 'rgba(0,0,0,0.55)', color: '#F5EDD8', opacity: pos > 8 ? 1 : 0 }}
+        style={{ background: 'rgba(0,0,0,0.55)', color: '#F4F1EA', opacity: pos > 8 ? 1 : 0 }}
       >
         {beforeLabel}
       </span>
       <span
         className="absolute top-3 right-3 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase transition-opacity duration-150 pointer-events-none"
-        style={{ background: 'rgba(0,0,0,0.55)', color: '#F5EDD8', opacity: pos < 92 ? 1 : 0 }}
+        style={{ background: 'rgba(0,0,0,0.55)', color: '#F4F1EA', opacity: pos < 92 ? 1 : 0 }}
       >
         {afterLabel}
       </span>
@@ -124,7 +124,7 @@ export default function BeforeAfterSlider({
         className="absolute top-0 bottom-0 pointer-events-none"
         style={{ left: `${pos}%`, transform: 'translateX(-50%)' }}
       >
-        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[3px]" style={{ background: '#F5EDD8', boxShadow: '0 0 8px rgba(0,0,0,0.5)' }} />
+        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[3px]" style={{ background: '#F4F1EA', boxShadow: '0 0 8px rgba(0,0,0,0.5)' }} />
         <div
           role="slider"
           tabIndex={0}
@@ -135,13 +135,13 @@ export default function BeforeAfterSlider({
           onKeyDown={handleKeyDown}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center pointer-events-auto focus:outline-none focus:ring-2"
           style={{
-            background: '#F5EDD8',
-            border: '2px solid #C9A84C',
+            background: '#F4F1EA',
+            border: '2px solid #A67C68',
             boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
             cursor: dragging ? 'grabbing' : 'grab',
           }}
         >
-          <ChevronsLeftRight className="w-5 h-5" style={{ color: '#1A0C00' }} strokeWidth={2.5} />
+          <ChevronsLeftRight className="w-5 h-5" style={{ color: '#3E322D' }} strokeWidth={2.5} />
         </div>
       </div>
     </div>

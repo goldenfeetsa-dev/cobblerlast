@@ -15,11 +15,14 @@ import {
   Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck
 } from 'lucide-react';
 
-// ── Palette ──────────────────────────────────────────────────────
-const G   = '#C9A84C';   // Gold
-const D   = '#1A0F00';   // Dark
-const T   = '#F5EDD8';   // Text
-const GB  = 'rgba(201,168,76,';
+// ── Palette (cream / clay — طلب العميل) ─────────────────────────
+const G   = '#A67C68';   // Accent (clay) — كان ذهبي
+const D   = '#EDE4D0';   // درجة كريمية أغمق شوي، تُستخدم لتدرّجات بسيطة (كان غامق جداً)
+const T   = '#3E322D';   // نص داكن (كان نص فاتح على خلفية غامقة)
+const GB  = 'rgba(166,124,104,'; // نفس G بصيغة rgba قابلة لإضافة شفافية
+const GL  = '#C9A08D';   // تدرّج فاتح للطين، يقابل الذهب الفاتح #C9A08D سابقاً
+const BG1 = '#F4F1EA';   // خلفية القسم الأساسية (كريمي)
+const BG2 = '#EFE9DD';   // خلفية قسم متبادلة (أغمق شوي بدرجة بسيطة، لإحساس بصري بالفصل بين الأقسام)
 
 // ── FadeIn ────────────────────────────────────────────────────────
 function FadeIn({ children, delay = 0, className = '', x = 0, y = 32 }) {
@@ -116,10 +119,10 @@ function Navbar() {
     <motion.nav className="fixed top-0 inset-x-0 z-50 px-6"
       initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
       <div className={`max-w-7xl mx-auto mt-3 rounded-2xl px-5 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-2xl' : ''}`}
-        style={{ background: scrolled ? 'rgba(10,6,0,0.92)' : 'rgba(10,6,0,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
+        style={{ background: scrolled ? 'rgba(244,241,234,0.92)' : 'rgba(244,241,234,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
         <Link to="/" dir={dir}>
           <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
               <Scissors className="w-3.5 h-3.5 text-black" />
             </div>
             <span className="font-black text-sm" style={{ color: T }}>{t('common.brandShort')}</span>
@@ -142,7 +145,7 @@ function Navbar() {
           <Link to="/book" className="hidden sm:block">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               className="text-xs font-black px-5 py-2 rounded-full text-black"
-              style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
+              style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
               {t('common.nav.bookNow')}
             </motion.div>
           </Link>
@@ -169,14 +172,14 @@ function Navbar() {
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="md:hidden max-w-7xl mx-auto mt-2 rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(10,6,0,0.96)', backdropFilter: 'blur(20px)', border: `1px solid ${GB}0.15)` }}
+            style={{ background: 'rgba(244,241,234,0.96)', backdropFilter: 'blur(20px)', border: `1px solid ${GB}0.15)` }}
           >
             <div className="p-4 flex flex-col gap-1" dir={dir}>
               {links.map(l => l.to
                 ? <Link key={l.label} to={l.href} onClick={() => setMobileOpen(false)}
-                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-white/5" style={{ color: T }}>{l.label}</Link>
+                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(62,50,45,0.06)]" style={{ color: T }}>{l.label}</Link>
                 : <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)}
-                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-white/5" style={{ color: T }}>{l.label}</a>
+                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(62,50,45,0.06)]" style={{ color: T }}>{l.label}</a>
               )}
               <Link to="/my-bookings" onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-2 text-sm font-bold py-3 px-3 rounded-xl mt-1"
@@ -186,7 +189,7 @@ function Navbar() {
               </Link>
               <Link to="/book" onClick={() => setMobileOpen(false)}
                 className="text-center text-sm font-black py-3 rounded-xl text-black mt-1"
-                style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+                style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
                 {t('common.nav.bookNow')}
               </Link>
             </div>
@@ -218,7 +221,7 @@ function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 30% 20%, #1E0F00 0%, #0A0500 50%, #000 100%)' }}>
+      style={{ background: 'radial-gradient(ellipse at 30% 20%, #FBF9F5 0%, #F4F1EA 50%, #EDE4D0 100%)' }}>
 
       {/* Animated orb — تم تخفيفها من 3 دوائر متحركة لدائرة واحدة لتقليل العبء على الرسوميات */}
       <GlowOrb x="75%" y="35%" size={500} color="rgba(201,168,76,0.10)" blur={130} />
@@ -310,7 +313,7 @@ function HeroSection() {
               className="flex flex-wrap gap-4 items-center">
               <Link to="/book">
                 <MagneticBtn className="group relative px-9 py-4 rounded-2xl font-black text-base text-black overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 16px 50px ${GB}0.45)` }}>
+                  style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 16px 50px ${GB}0.45)` }}>
                   <span className="relative z-10 flex items-center gap-2">
                     {t('home.hero.ctaPrimary')}
                     <motion.div animate={{ x: dir === 'rtl' ? [0, 4, 0] : [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
@@ -318,7 +321,7 @@ function HeroSection() {
                     </motion.div>
                   </span>
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: 'linear-gradient(135deg, #e8c96a, #C9A84C)' }} />
+                    style={{ background: 'linear-gradient(135deg, #C9A08D, #A67C68)' }} />
                 </MagneticBtn>
               </Link>
 
@@ -382,8 +385,8 @@ function HeroSection() {
             <motion.div
               animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute top-6 right-2 z-20 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs"
-              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: `0 8px 30px ${GB}0.2)` }}>
-              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+              style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid ${GB}0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: `0 8px 30px ${GB}0.2)` }}>
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
                 <CheckCircle className="w-3.5 h-3.5 text-black" />
               </div>
               <div>
@@ -396,7 +399,7 @@ function HeroSection() {
             <motion.div
               animate={{ y: [0, 10, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
               className="absolute bottom-10 left-0 z-20 px-4 py-3 rounded-2xl"
-              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+              style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <div className="flex items-center gap-2 mb-1.5">
                 {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: G }} />)}
               </div>
@@ -407,7 +410,7 @@ function HeroSection() {
             {/* Live indicator */}
             <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
               className="absolute top-1/2 -left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-              style={{ background: 'rgba(10,5,0,0.88)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+              style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <motion.div className="w-2 h-2 rounded-full" style={{ background: '#22c55e' }}
                 animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
               <span style={{ color: '#22c55e', fontWeight: 700 }}>{t('home.hero.liveNow')}</span>
@@ -436,7 +439,7 @@ function TickerStrip() {
   const { t } = useLanguage();
   const items = t('home.ticker');
   return (
-    <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #2C1A00, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
+    <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #E4D8BE, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
       <div className="flex gap-0">
         {[0, 1].map(k => (
           <motion.div key={k} className="flex gap-10 shrink-0 pr-10"
@@ -464,7 +467,7 @@ function ServicesSection() {
   const services = t('home.services.items');
   const steps = t('home.services.steps');
   return (
-    <section id="services" className="py-32 px-6" style={{ background: '#0A0500' }}>
+    <section id="services" className="py-32 px-6" style={{ background: '#F4F1EA' }}>
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.services.eyebrow')}</p>
@@ -479,7 +482,7 @@ function ServicesSection() {
           {services.map((s, i) => (
             <FadeIn key={i} delay={i * 0.12}>
               <motion.div className="group rounded-3xl overflow-hidden h-full flex flex-col cursor-pointer"
-                style={{ background: `rgba(255,255,255,0.02)`, border: `1px solid ${GB}0.08)` }}
+                style={{ background: `rgba(62,50,45,0.035)`, border: `1px solid ${GB}0.08)` }}
                 whileHover={{ y: -8, borderColor: `${GB}0.25)`, boxShadow: `0 30px 60px ${GB}0.15)` }}
                 transition={{ duration: 0.35 }}>
 
@@ -491,7 +494,7 @@ function ServicesSection() {
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, #0A0500 100%)' }} />
                   {/* Price tag */}
                   <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl text-xs font-black text-black"
-                    style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{s.price}</div>
+                    style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{s.price}</div>
                 </div>
 
                 <div className="p-6 flex flex-col flex-1">
@@ -528,7 +531,7 @@ function ServicesSection() {
                       {React.createElement(STEP_ICONS[i], { className: 'w-6 h-6', style: { color: G } })}
                     </div>
                     <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center text-black"
-                      style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{i + 1}</span>
+                      style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{i + 1}</span>
                   </div>
                   <h4 className="font-black mb-1.5" style={{ color: T }}>{step.t}</h4>
                   <p className="text-xs leading-relaxed" style={{ color: `${GB}0.4)` }}>{step.d}</p>
@@ -547,7 +550,7 @@ function BeforeAfterSection() {
   const { t, dir } = useLanguage();
   const items = t('home.beforeAfter.items');
   return (
-    <section id="before-after" className="py-32 px-6" style={{ background: '#060300' }}>
+    <section id="before-after" className="py-32 px-6" style={{ background: '#EFE9DD' }}>
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.beforeAfter.eyebrow')}</p>
@@ -561,7 +564,7 @@ function BeforeAfterSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {items.map((item, i) => (
             <FadeIn key={i} delay={i * 0.12}>
-              <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${GB}0.12)`, background: 'rgba(255,255,255,0.02)' }}>
+              <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${GB}0.12)`, background: 'rgba(62,50,45,0.035)' }}>
                 <BeforeAfterSlider
                   beforeImage={item.before}
                   afterImage={item.after}
@@ -609,7 +612,7 @@ function RequestServiceSection() {
   };
 
   return (
-    <section id="request" className="py-32 px-6" style={{ background: '#060300' }}>
+    <section id="request" className="py-32 px-6" style={{ background: '#EFE9DD' }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-14">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.request.eyebrow')}</p>
@@ -630,7 +633,7 @@ function RequestServiceSection() {
             </motion.div>
           ) : (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${GB}0.1)` }}>
+              className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(62,50,45,0.035)', border: `1px solid ${GB}0.1)` }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 {[['name', t('home.request.nameLabel'), t('home.request.namePh')], ['phone', t('home.request.phoneLabel'), '05XXXXXXXX']].map(([k, label, ph]) => (
                   <div key={k} className="space-y-2">
@@ -651,7 +654,7 @@ function RequestServiceSection() {
                   style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: form.service ? T : `${GB}0.3)` }}>
                   <option value="">{t('home.request.chooseService')}</option>
                   {t('home.request.serviceOptions').map(s => (
-                    <option key={s} value={s} style={{ background: '#0A0500' }}>{s}</option>
+                    <option key={s} value={s} style={{ background: '#F4F1EA' }}>{s}</option>
                   ))}
                 </select>
               </div>
@@ -669,7 +672,7 @@ function RequestServiceSection() {
               )}
               <MagneticBtn onClick={submit}
                 className="w-full py-4 rounded-2xl font-black text-base text-black transition-all"
-                style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 12px 40px ${GB}0.4)`, opacity: loading ? 0.7 : 1 }}>
+                style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 12px 40px ${GB}0.4)`, opacity: loading ? 0.7 : 1 }}>
                 {loading ? t('home.request.sending') : t('home.request.send')}
               </MagneticBtn>
             </motion.div>
@@ -686,7 +689,7 @@ function AboutSection() {
   const { t, dir } = useLanguage();
   const stats = t('home.about.stats');
   return (
-    <section id="about" className="py-32 px-6" style={{ background: '#0A0500' }} dir={dir}>
+    <section id="about" className="py-32 px-6" style={{ background: '#F4F1EA' }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <FadeIn className="grid grid-cols-2 gap-3">
@@ -726,7 +729,7 @@ function AboutSection() {
             </div>
             <Link to="/about">
               <MagneticBtn className="px-8 py-3.5 rounded-2xl font-bold text-base text-black"
-                style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)`, boxShadow: `0 8px 30px ${GB}0.3)` }}>
+                style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 8px 30px ${GB}0.3)` }}>
                 {t('home.about.cta')}
               </MagneticBtn>
             </Link>
@@ -747,7 +750,7 @@ function ReviewsSection() {
     return () => clearInterval(iv);
   }, [reviews.length]);
   return (
-    <section className="py-32 px-6" style={{ background: '#060300' }} dir={dir}>
+    <section className="py-32 px-6" style={{ background: '#EFE9DD' }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-14">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.reviews.eyebrow')}</p>
@@ -758,7 +761,7 @@ function ReviewsSection() {
           {reviews.map((r, i) => (
             <FadeIn key={i} delay={i * 0.07}>
               <motion.div className="rounded-2xl p-6 flex flex-col gap-4 h-full cursor-pointer"
-                animate={{ background: active === i ? GB + '0.07)' : 'rgba(255,255,255,0.02)', borderColor: active === i ? GB + '0.3)' : 'rgba(255,255,255,0.05)' }}
+                animate={{ background: active === i ? GB + '0.07)' : 'rgba(62,50,45,0.035)', borderColor: active === i ? GB + '0.3)' : 'rgba(62,50,45,0.06)' }}
                 style={{ border: '1px solid' }} whileHover={{ y: -4 }} onClick={() => setActive(i)}>
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: G }} />)}
@@ -766,7 +769,7 @@ function ReviewsSection() {
                 <p className="text-sm leading-relaxed flex-1" style={{ color: `${GB}0.6)` }}>"{r.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-black shrink-0"
-                    style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>{r.name[0]}</div>
+                    style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{r.name[0]}</div>
                   <div>
                     <p className="font-bold text-sm" style={{ color: T }}>{r.name}</p>
                     <p className="text-xs" style={{ color: `${GB}0.3)` }}>{r.service}</p>
@@ -806,7 +809,7 @@ function BrandsSection() {
   // صريح "نتعامل مع" / "أرقى العلامات العالمية" يوضح للزائر إنه
   // مكان عرض العلامات التي تُعمل معها الورشة
   return (
-    <section className="py-20 px-6" style={{ background: '#0A0500', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
+    <section className="py-20 px-6" style={{ background: '#F4F1EA', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-12">
           <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: G }}>{t('home.brands.eyebrow')}</p>
@@ -845,7 +848,7 @@ function TrackOrderSection() {
   };
 
   return (
-    <section className="py-28 px-6" style={{ background: '#060300' }} dir={dir}>
+    <section className="py-28 px-6" style={{ background: '#EFE9DD' }} dir={dir}>
       <div className="max-w-2xl mx-auto text-center">
         <FadeIn>
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.track.eyebrow')}</p>
@@ -859,7 +862,7 @@ function TrackOrderSection() {
               style={{ background: GB + '0.04)', border: `1px solid ${GB}0.15)`, color: T }} />
             <MagneticBtn onClick={search}
               className="px-6 py-3.5 rounded-2xl font-black text-sm text-black"
-              style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+              style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
               {loading ? t('home.track.loading') : t('home.track.search')}
             </MagneticBtn>
           </div>
@@ -911,7 +914,7 @@ function BranchesSection() {
   });
   const items = branches.length ? branches : [{ name: t('home.branches.mainBranch'), city: t('home.branches.city'), address: t('home.branches.city'), phone: '0549678191' }];
   return (
-    <section id="branches" className="py-28 px-6" style={{ background: '#0A0500' }} dir={dir}>
+    <section id="branches" className="py-28 px-6" style={{ background: '#F4F1EA' }} dir={dir}>
       <div className="max-w-5xl mx-auto">
         <FadeIn className="text-center mb-12">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.branches.eyebrow')}</p>
@@ -963,12 +966,12 @@ function Footer() {
   const phone     = s.phone || '0549678191';
 
   return (
-    <footer className="py-16 px-6" style={{ background: '#060300', borderTop: `1px solid ${GB}0.08)` }} dir={dir}>
+    <footer className="py-16 px-6" style={{ background: '#EFE9DD', borderTop: `1px solid ${GB}0.08)` }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #e8c96a)` }}>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
                 <Scissors className="w-4 h-4 text-black" />
               </div>
               <h3 className="text-xl font-black" style={{ color: T }}>{t('common.brand')}</h3>

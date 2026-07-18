@@ -6,7 +6,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 // زر تبديل اللغة — يظهر في أعلى شريط التنقل بكل صفحة عامة
 export default function LanguageSwitcher({ className = '', dark = true }) {
   const { lang, toggleLang } = useLanguage();
-  const gold = '#C9A84C';
+  const gold = '#A67C68';
 
   return (
     <motion.button
@@ -17,8 +17,8 @@ export default function LanguageSwitcher({ className = '', dark = true }) {
       aria-label={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
       className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black shrink-0 ${className}`}
       style={{
-        border: `1px solid ${dark ? 'rgba(201,168,76,0.3)' : 'rgba(201,168,76,0.5)'}`,
-        background: dark ? 'rgba(201,168,76,0.08)' : 'rgba(201,168,76,0.12)',
+        border: `1px solid ${dark ? 'rgba(166,124,104,0.3)' : 'rgba(166,124,104,0.5)'}`,
+        background: dark ? 'rgba(166,124,104,0.08)' : 'rgba(166,124,104,0.12)',
         color: gold,
       }}
     >

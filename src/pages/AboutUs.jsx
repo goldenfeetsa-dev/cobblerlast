@@ -7,9 +7,9 @@ import { useTrackVisit } from '@/hooks/useTrackVisit';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const GOLD = '#C9A84C';
-const DARK = '#1A0F00';
-const TEXT = '#F5EDD8';
+const GOLD = '#A67C68';
+const DARK = '#F4F1EA';
+const TEXT = '#3E322D';
 
 function FadeIn({ children, delay = 0, className = '' }) {
   return (
@@ -37,7 +37,7 @@ export default function AboutUs() {
   const storyParas = t('about.storyParas');
 
   return (
-    <div className="min-h-screen font-tajawal" style={{ background: '#060300', color: TEXT }} dir={dir}>
+    <div className="min-h-screen font-tajawal" style={{ background: '#EFE9DD', color: TEXT }} dir={dir}>
       <Helmet>
         <title>{isAr ? 'من نحن | إبرة وخيط الإسكافي — حرفيون سعوديون في الرياض' : 'About Us | Ebra & Khait Cobbler — Saudi Craftsmen in Riyadh'}</title>
         <meta name="description" content={isAr
@@ -69,14 +69,14 @@ export default function AboutUs() {
 
       {/* Navbar */}
       <nav className="fixed top-0 inset-x-0 z-50 h-16 flex items-center px-6"
-        style={{ background: 'rgba(6,3,0,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(244,241,234,0.95)', borderBottom: '1px solid rgba(166,124,104,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="max-w-6xl mx-auto w-full flex items-center justify-between" dir={dir}>
           <Link to="/" className="text-lg font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(245,237,216,0.5)' }}>{t('common.nav.home')}</Link>
+            <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(62,50,45,0.5)' }}>{t('common.nav.home')}</Link>
             <Link to="/book" className="px-4 py-2 rounded-full text-sm font-bold text-black"
-              style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)' }}>{t('common.nav.bookNow')}</Link>
+              style={{ background: 'linear-gradient(135deg, #A67C68, #C9A08D)' }}>{t('common.nav.bookNow')}</Link>
           </div>
         </div>
       </nav>
@@ -88,19 +88,19 @@ export default function AboutUs() {
           <h1 className="text-4xl md:text-6xl font-black mb-6" style={{ color: TEXT }}>
             {t('about.titleLine1')}<br /><span style={{ color: GOLD }}>{t('about.titleLine2')}</span>
           </h1>
-          <p className="text-base max-w-xl mx-auto leading-relaxed" style={{ color: 'rgba(245,237,216,0.5)' }}>
+          <p className="text-base max-w-xl mx-auto leading-relaxed" style={{ color: 'rgba(62,50,45,0.5)' }}>
             {t('about.heroDesc')}
           </p>
         </FadeIn>
       </section>
 
       {/* Stats */}
-      <section className="py-14 px-6" style={{ background: 'rgba(201,168,76,0.04)', borderTop: '1px solid rgba(201,168,76,0.08)', borderBottom: '1px solid rgba(201,168,76,0.08)' }}>
+      <section className="py-14 px-6" style={{ background: 'rgba(166,124,104,0.04)', borderTop: '1px solid rgba(166,124,104,0.08)', borderBottom: '1px solid rgba(166,124,104,0.08)' }}>
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6" dir={dir}>
           {stats.map((s, i) => (
             <FadeIn key={i} delay={i * 0.1} className="text-center">
               <div className="text-4xl font-black mb-1" style={{ color: GOLD }}>{s.number}</div>
-              <div className="text-sm" style={{ color: 'rgba(245,237,216,0.4)' }}>{s.label}</div>
+              <div className="text-sm" style={{ color: 'rgba(62,50,45,0.4)' }}>{s.label}</div>
             </FadeIn>
           ))}
         </div>
@@ -111,7 +111,7 @@ export default function AboutUs() {
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <FadeIn>
-              <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.12)' }}>
+              <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(166,124,104,0.12)' }}>
                 <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80"
                   alt="ورشة إبرة وخيط الإسكافي" className="w-full h-72 object-cover" />
               </div>
@@ -119,7 +119,7 @@ export default function AboutUs() {
             <FadeIn delay={0.15}>
               <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: GOLD }}>{t('about.storyEyebrow')}</p>
               <h2 className="text-3xl font-black mb-5" style={{ color: TEXT }}>{t('about.storyTitle')}</h2>
-              <div className="space-y-4 text-sm leading-relaxed" style={{ color: 'rgba(245,237,216,0.55)' }}>
+              <div className="space-y-4 text-sm leading-relaxed" style={{ color: 'rgba(62,50,45,0.55)' }}>
                 {storyParas.map((p, i) => <p key={i}>{p}</p>)}
               </div>
             </FadeIn>
@@ -128,7 +128,7 @@ export default function AboutUs() {
       </section>
 
       {/* Values */}
-      <section className="py-20 px-6" style={{ background: '#080400' }} dir={dir}>
+      <section className="py-20 px-6" style={{ background: '#EFE9DD' }} dir={dir}>
         <div className="max-w-5xl mx-auto">
           <FadeIn className="text-center mb-14">
             <p className="text-xs tracking-[0.4em] font-bold mb-3 uppercase" style={{ color: GOLD }}>{t('about.valuesEyebrow')}</p>
@@ -137,10 +137,10 @@ export default function AboutUs() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {values.map((v, i) => (
               <FadeIn key={i} delay={i * 0.1}>
-                <div className="p-6 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
+                <div className="p-6 rounded-2xl" style={{ background: 'rgba(62,50,45,0.035)', border: '1px solid rgba(166,124,104,0.1)' }}>
                   {React.createElement(VALUE_ICONS[i], { className: 'w-8 h-8 mb-4', style: { color: GOLD } })}
                   <h3 className="font-black text-lg mb-2" style={{ color: TEXT }}>{v.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(245,237,216,0.45)' }}>{v.desc}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(62,50,45,0.45)' }}>{v.desc}</p>
                 </div>
               </FadeIn>
             ))}
@@ -158,11 +158,11 @@ export default function AboutUs() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {team.map((m, i) => (
               <FadeIn key={i} delay={i * 0.1}>
-                <div className="p-6 rounded-2xl text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)' }}>
+                <div className="p-6 rounded-2xl text-center" style={{ background: 'rgba(62,50,45,0.035)', border: '1px solid rgba(166,124,104,0.1)' }}>
                   <div className="text-5xl mb-4">{TEAM_EMOJIS[i]}</div>
                   <h3 className="font-black text-lg" style={{ color: TEXT }}>{m.name}</h3>
                   <p className="text-sm mt-1" style={{ color: GOLD }}>{m.role}</p>
-                  <p className="text-xs mt-2" style={{ color: 'rgba(245,237,216,0.3)' }}>{m.exp}</p>
+                  <p className="text-xs mt-2" style={{ color: 'rgba(62,50,45,0.3)' }}>{m.exp}</p>
                 </div>
               </FadeIn>
             ))}
@@ -171,13 +171,13 @@ export default function AboutUs() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-6 text-center" style={{ background: '#080400' }} dir={dir}>
+      <section className="py-20 px-6 text-center" style={{ background: '#EFE9DD' }} dir={dir}>
         <FadeIn>
           <h2 className="text-3xl font-black mb-4" style={{ color: TEXT }}>{t('about.ctaTitle')}</h2>
-          <p className="text-sm mb-8" style={{ color: 'rgba(245,237,216,0.4)' }}>{t('about.ctaDesc')}</p>
+          <p className="text-sm mb-8" style={{ color: 'rgba(62,50,45,0.4)' }}>{t('about.ctaDesc')}</p>
           <Link to="/book">
             <button className="px-10 py-4 rounded-full font-black text-base text-black hover:scale-105 transition-all"
-              style={{ background: 'linear-gradient(135deg, #C9A84C, #e8c96a)', boxShadow: '0 8px 30px rgba(201,168,76,0.3)' }}>
+              style={{ background: 'linear-gradient(135deg, #A67C68, #C9A08D)', boxShadow: '0 8px 30px rgba(166,124,104,0.3)' }}>
               {t('about.ctaBtn')}
             </button>
           </Link>
@@ -186,7 +186,7 @@ export default function AboutUs() {
 
       {/* Footer mini */}
       <footer className="py-8 px-6 border-t text-center text-sm" dir={dir}
-        style={{ borderColor: 'rgba(201,168,76,0.08)', color: 'rgba(245,237,216,0.2)', background: '#060300' }}>
+        style={{ borderColor: 'rgba(166,124,104,0.08)', color: 'rgba(62,50,45,0.2)', background: '#EFE9DD' }}>
         <div className="flex flex-wrap justify-center gap-4 mb-4">
           <Link to="/" className="hover:text-yellow-400 transition-colors">{t('common.nav.home')}</Link>
           <Link to="/about" className="hover:text-yellow-400 transition-colors" style={{ color: GOLD }}>{t('common.nav.about')}</Link>
