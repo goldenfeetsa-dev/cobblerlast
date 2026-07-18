@@ -15,9 +15,13 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useZATCA } from '@/lib/zatca/useZATCA';
 import {
-  ShoppingCart, Package, ArrowRightLeft, Plus, Minus, Trash2,
+  ShoppingCart, Package, ArrowRightLeft, Plus, Minus, Trash2, Pencil,
   FileText, Warehouse, Building2, TrendingUp, Search, AlertCircle
 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import ReceiptView from '@/components/pos/ReceiptView';
 import { salesInvoiceToReceipt } from '@/lib/invoiceAdapter';
@@ -32,6 +36,9 @@ function genInvoiceNo() {
 function InventoryTab({ items, branches, session }) {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', sku: '', unit: 'piece', cost_price: '', sell_price: '', warehouse_qty: '' });
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferItem, setTransferItem] = useState(null);
   const [search, setSearch] = useState('');
@@ -54,7 +61,38 @@ function InventoryTab({ items, branches, session }) {
       setAddOpen(false);
       setForm({ name: '', sku: '', unit: 'piece', cost_price: '', sell_price: '', category: 'sales', warehouse_qty: '' });
     },
+    onError: (e) => toast.error(`فشل إضافة المنتج: ${e.message}`),
   });
+
+  const updateItem = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.InventoryItem.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
+      toast.success('تم حفظ التعديلات');
+      setEditOpen(false);
+      setEditItem(null);
+    },
+    onError: (e) => toast.error(`فشل حفظ التعديل: ${e.message}`),
+  });
+
+  const deleteItem = useMutation({
+    mutationFn: (id) => base44.entities.InventoryItem.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
+      toast.success('تم حذف المنتج');
+    },
+    onError: (e) => toast.error(`فشل حذف المنتج: ${e.message || 'تأكد أنه لا توجد فواتير أو حركات مخزون مرتبطة بهذا المنتج'}`),
+  });
+
+  const openEdit = (item) => {
+    setEditItem(item);
+    setEditForm({
+      name: item.name || '', sku: item.sku || '', unit: item.unit || 'piece',
+      cost_price: item.cost_price ?? '', sell_price: item.sell_price ?? '',
+      warehouse_qty: item.warehouse_qty ?? '',
+    });
+    setEditOpen(true);
+  };
 
   const doTransfer = useMutation({
     mutationFn: async ({ item, qty, toBranch, branchName }) => {
@@ -137,10 +175,34 @@ function InventoryTab({ items, branches, session }) {
                   <td className="py-2.5 px-3 text-muted-foreground">{item.cost_price} ر.س</td>
                   <td className="py-2.5 px-3 font-medium">{item.sell_price || '-'} ر.س</td>
                   <td className="py-2.5 px-3">
-                    <Button size="sm" variant="outline" className="text-xs gap-1"
-                      onClick={() => { setTransferItem(item); setTransferOpen(true); }}>
-                      <ArrowRightLeft className="w-3 h-3" /> تحويل
-                    </Button>
+                    <div className="flex gap-1.5 justify-end">
+                      <Button size="sm" variant="outline" className="text-xs gap-1"
+                        onClick={() => { setTransferItem(item); setTransferOpen(true); }}>
+                        <ArrowRightLeft className="w-3 h-3" /> تحويل
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs px-2" onClick={() => openEdit(item)}>
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="text-xs px-2 text-red-600 hover:bg-red-50">
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent dir="rtl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>حذف المنتج؟</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              سيتم حذف «{item.name}» نهائياً من المخزون. هذا الإجراء لا يمكن التراجع عنه.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteItem.mutate(item.id)} className="bg-red-600 hover:bg-red-700">حذف</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </td>
                 </tr>
               );
@@ -218,6 +280,65 @@ function InventoryTab({ items, branches, session }) {
                 warehouse_qty: parseInt(form.warehouse_qty) || 0,
               })}>
               {addItem.isPending ? 'جاري...' : 'إضافة'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Item Dialog */}
+      <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) setEditItem(null); }}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader><DialogTitle>تعديل المنتج</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>اسم المنتج *</Label>
+                <Input value={editForm.name} onChange={e => setEditForm(p => ({...p, name: e.target.value}))} />
+              </div>
+              <div className="space-y-1">
+                <Label>رمز SKU</Label>
+                <Input value={editForm.sku} onChange={e => setEditForm(p => ({...p, sku: e.target.value}))} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>الوحدة</Label>
+              <Select value={editForm.unit} onValueChange={v => setEditForm(p => ({...p, unit: v}))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(UNITS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  {/* الوحدة المستوردة من ملف الجرد الأصلي قد لا تكون بهذي القائمة (مثلاً "علبه"، "درزن" بحروف خام) — نعرضها كخيار إضافي حتى لا تُفقد */}
+                  {editForm.unit && !UNITS[editForm.unit] && <SelectItem value={editForm.unit}>{editForm.unit} (من الملف الأصلي)</SelectItem>}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label>سعر التكلفة</Label>
+                <Input type="number" value={editForm.cost_price} onChange={e => setEditForm(p => ({...p, cost_price: e.target.value}))} />
+              </div>
+              <div className="space-y-1">
+                <Label>سعر البيع</Label>
+                <Input type="number" value={editForm.sell_price} onChange={e => setEditForm(p => ({...p, sell_price: e.target.value}))} />
+              </div>
+              <div className="space-y-1">
+                <Label>كمية المستودع</Label>
+                <Input type="number" value={editForm.warehouse_qty} onChange={e => setEditForm(p => ({...p, warehouse_qty: e.target.value}))} />
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>إلغاء</Button>
+            <Button disabled={!editForm.name || updateItem.isPending}
+              onClick={() => updateItem.mutate({
+                id: editItem.id,
+                data: {
+                  name: editForm.name, sku: editForm.sku || null, unit: editForm.unit,
+                  cost_price: editForm.cost_price === '' ? null : parseFloat(editForm.cost_price),
+                  sell_price: editForm.sell_price === '' ? null : parseFloat(editForm.sell_price),
+                  warehouse_qty: parseInt(editForm.warehouse_qty) || 0,
+                },
+              })}>
+              {updateItem.isPending ? 'جاري...' : 'حفظ التعديلات'}
             </Button>
           </div>
         </DialogContent>
