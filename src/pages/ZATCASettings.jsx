@@ -27,8 +27,12 @@ import {
 import { supabase } from '@/lib/supabaseClient';
 import { getSession } from '@/lib/sessionStore';
 import { isFinanceUser } from '@/lib/roles';
+import { isValidVatFormat, normalizeDigits } from '@/lib/vatValidation';
 
-const validateVATNumber = (vat) => /^3\d{13}3$/.test(vat || '');
+// نعيد استخدام نفس دالة التحقق المستخدمة بباقي الشاشات (NewOrder) بدل نسخة
+// محلية منفصلة — كانت هذي النسخة المحلية سبب فشل صامت لو الرقم مكتوب
+// بأرقام عربية (٠-٩)، لأنها لا تطبّعها قبل الفحص. راجع src/lib/vatValidation.js.
+const validateVATNumber = (vat) => isValidVatFormat(vat);
 
 function StatusBadge({ status }) {
   if (!status) return <Badge variant="outline" className="text-gray-500">غير محدد</Badge>;
@@ -130,7 +134,7 @@ export default function ZATCASettings() {
     setSaving(true);
     const { error } = await supabase.from('zatca_settings').update({
       seller_name: settings.seller_name,
-      vat_number: settings.vat_number,
+      vat_number: settings.vat_number ? normalizeDigits(String(settings.vat_number).trim()) : settings.vat_number,
       cr_number: settings.cr_number,
       city: settings.city,
       district: settings.district,

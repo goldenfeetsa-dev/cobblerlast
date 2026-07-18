@@ -6,7 +6,11 @@ import { format } from 'date-fns';
 import { base44 } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
-import { QRCodeSVG } from 'qrcode.react';
+// نستخدم نسخة Canvas (صورة نقطية) بدل SVG لرمز QR: بعض مسارات الطباعة
+// (خصوصاً طابعات الفواتير الحرارية أو تحويل المتصفح→طابعة) لا تدعم عرض
+// SVG متجهي بشكل موثوق وتستبدله بنص بديل بدل الصورة — بينما صورة Canvas
+// النقطية مدعومة بكل مسارات الطباعة تقريباً بدون استثناء.
+import { QRCodeCanvas } from 'qrcode.react';
 import { buildZatcaTLV, validateVATNumber } from '@/lib/zatca/zatcaUtils';
 
 const ITEM_LABELS = {
@@ -49,13 +53,20 @@ export default function ReceiptView({ order, autoPrint = false }) {
   const createdDate = order.created_at ? new Date(order.created_at) : new Date();
 
   // Use order's stored ZATCA QR if available (Phase 2 cleared), else build Phase 1 TLV
-  const zatcaQR = order.zatca_qr || buildZatcaTLV({
-    sellerName: shopName,
-    vatNumber,
-    invoiceDate: createdDate,
-    totalAmount: order.total_price ?? 0,
-    vatAmount: vatAmount ?? 0,
-  });
+  let zatcaQR = order.zatca_qr;
+  if (!zatcaQR) {
+    try {
+      zatcaQR = buildZatcaTLV({
+        sellerName: shopName,
+        vatNumber,
+        invoiceDate: createdDate,
+        totalAmount: order.total_price ?? 0,
+        vatAmount: vatAmount ?? 0,
+      });
+    } catch {
+      zatcaQR = ''; // QRCodeCanvas مع قيمة فاضية يرسم صندوق فاضي بدل ما يكسر الصفحة كلها
+    }
+  }
 
   const handleDownload = async () => {
     if (!receiptRef.current) return;
@@ -344,7 +355,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
             <div style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '4px' }}>
               رمز QR — التحقق من الفاتورة (ZATCA)
             </div>
-            <QRCodeSVG value={zatcaQR} size={96} bgColor="#ffffff" fgColor="#000000" level="M" />
+            <QRCodeCanvas value={zatcaQR} size={96} bgColor="#ffffff" fgColor="#000000" level="M" />
             {/* ZATCA submission status */}
             {order.zatca_status && (
               <div style={{

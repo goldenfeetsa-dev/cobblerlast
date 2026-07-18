@@ -1,0 +1,12 @@
+-- 017_add_network_payment_method.sql
+-- ─────────────────────────────────────────────────────────────
+-- الكود بكامله (NewOrder.jsx, SalesSystem.jsx, OrderDetails.jsx,
+-- AuditLog.jsx, FinancialReport.jsx) يستخدم القيمة 'network' لخيار
+-- الدفع "شبكة" بشكل ثابت في كل مكان — لكن enum "payment_method"
+-- بقاعدة البيانات ما كان فيه هالقيمة أصلاً (كان فيه mada/card/visa
+-- إلخ لكن مو network تحديداً)، فكان أي طلب "شبكة" يفشل حفظه بخطأ:
+-- invalid input value for enum payment_method: "network"
+--
+-- الحل: إضافة القيمة الناقصة فقط — بدون حذف أو تعديل أي قيمة موجودة،
+-- وبدون أي أثر على بيانات سابقة.
+alter type payment_method add value if not exists 'network';

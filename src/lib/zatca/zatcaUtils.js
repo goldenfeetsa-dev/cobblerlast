@@ -346,9 +346,19 @@ export const xmlToBase64 = (xmlString) => btoa(unescape(encodeURIComponent(xmlSt
 
 /**
  * Validate Saudi VAT number format (15 digits, starts with 3, ends with 3)
+ * يطبّع الأرقام العربية (٠-٩) أولاً — نفس القاعدة المستخدمة في
+ * src/lib/vatValidation.js، حتى لا يفشل التحقق فقط لأن الرقم مكتوب
+ * بأرقام عربية بدل لاتينية.
  */
 export const validateVATNumber = (vat) => {
-  return /^3\d{13}3$/.test(vat);
+  if (!vat) return false;
+  const normalized = String(vat).trim().replace(/\s+/g, '').replace(/[٠-٩۰-۹]/g, (d) => {
+    const code = d.charCodeAt(0);
+    if (code >= 0x0660 && code <= 0x0669) return String(code - 0x0660);
+    if (code >= 0x06F0 && code <= 0x06F9) return String(code - 0x06F0);
+    return d;
+  });
+  return /^3\d{13}3$/.test(normalized);
 };
 
 export { generateUUID, escapeXml };

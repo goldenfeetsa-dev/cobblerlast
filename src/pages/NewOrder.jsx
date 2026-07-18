@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { isValidVatFormat } from '@/lib/vatValidation';
+import { isValidVatFormat, normalizeDigits } from '@/lib/vatValidation';
 import { toast } from 'sonner';
 import {
   PackagePlus, Truck, Store, UserCheck, Star, Gift,
@@ -239,7 +239,7 @@ function CobblerTab({ session }) {
       customer_phone: form.customer_phone,
       is_b2b: form.is_b2b,
       buyer_company_name: form.is_b2b ? form.buyer_company_name : null,
-      buyer_vat_number: form.is_b2b ? form.buyer_vat_number : null,
+      buyer_vat_number: form.is_b2b ? normalizeDigits(form.buyer_vat_number.trim()) : null,
       buyer_cr_number: form.is_b2b ? form.buyer_cr_number : null,
       buyer_address: form.is_b2b ? form.buyer_address : null,
       item_type: overallType,
@@ -585,7 +585,7 @@ function ProductsTab({ session }) {
         customer_phone: customer.phone,
         is_b2b: customer.is_b2b,
         buyer_company_name: customer.is_b2b ? customer.buyer_company_name : null,
-        buyer_vat_number: customer.is_b2b ? customer.buyer_vat_number : null,
+        buyer_vat_number: customer.is_b2b ? normalizeDigits(customer.buyer_vat_number.trim()) : null,
         buyer_cr_number: customer.is_b2b ? customer.buyer_cr_number : null,
         buyer_address: customer.is_b2b ? customer.buyer_address : null,
         branch_id: selectedBranch, branch_name: branch?.name || '',
