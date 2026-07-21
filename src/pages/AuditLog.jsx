@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -72,21 +72,21 @@ export default function AuditLog() {
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders-audit'],
-    queryFn: () => base44.entities.Order.list('-created_at', 500),
+    queryFn: () => db.Order.list('-created_at', 500),
   });
 
   // فواتير بيع المنتجات — كانت مفقودة بالكامل من هذي اللوحة سابقاً، مع أنها
   // إيراد فعلي للمتجر مثل طلبات الإصلاح تماماً
   const { data: salesInvoices = [], isLoading: salesLoading } = useQuery({
     queryKey: ['sales-invoices-audit'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 500),
+    queryFn: () => db.SalesInvoice.list('-created_at', 500),
   });
 
   // سجل النشاط الحقيقي — كل حركة (إنشاء/تعديل/حذف) مسجّلة بمعرفة مين
   // سواها وبأي صفحة، بعكس الجدول المالي تحت اللي يعرض فقط الطلبات والفواتير
   const { data: activityLogs = [], isLoading: activityLoading } = useQuery({
     queryKey: ['activity-logs'],
-    queryFn: () => base44.entities.AuditLog.list('-created_at', 300),
+    queryFn: () => db.AuditLog.list('-created_at', 300),
   });
 
   if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;

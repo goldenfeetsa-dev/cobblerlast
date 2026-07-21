@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
@@ -46,10 +46,10 @@ function InventoryTab({ items, branches, session }) {
   const [transfer, setTransfer] = useState({ qty: '', to_branch: '' });
 
   const addItem = useMutation({
-    mutationFn: (data) => base44.entities.InventoryItem.create(data),
+    mutationFn: (data) => db.InventoryItem.create(data),
     onSuccess: async (item) => {
       // Record movement
-      await base44.entities.StockMovement.create({
+      await db.StockMovement.create({
         item_id: item.id, item_name: item.name, movement_type: 'warehouse_in',
         quantity: item.warehouse_qty || 0, unit: item.unit,
         from_location: 'external', to_location: 'warehouse',
@@ -65,7 +65,7 @@ function InventoryTab({ items, branches, session }) {
   });
 
   const updateItem = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.InventoryItem.update(id, data),
+    mutationFn: ({ id, data }) => db.InventoryItem.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       toast.success('تم حفظ التعديلات');
@@ -76,7 +76,7 @@ function InventoryTab({ items, branches, session }) {
   });
 
   const deleteItem = useMutation({
-    mutationFn: (id) => base44.entities.InventoryItem.delete(id),
+    mutationFn: (id) => db.InventoryItem.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       toast.success('تم حذف المنتج');
@@ -100,8 +100,8 @@ function InventoryTab({ items, branches, session }) {
       if (newWarehouse < 0) throw new Error('الكمية في المستودع غير كافية');
       const branchQty = item.branch_qty || {};
       branchQty[toBranch] = (branchQty[toBranch] || 0) + qty;
-      await base44.entities.InventoryItem.update(item.id, { warehouse_qty: newWarehouse, branch_qty: branchQty });
-      await base44.entities.StockMovement.create({
+      await db.InventoryItem.update(item.id, { warehouse_qty: newWarehouse, branch_qty: branchQty });
+      await db.StockMovement.create({
         item_id: item.id, item_name: item.name, movement_type: 'warehouse_to_branch',
         quantity: qty, unit: item.unit, from_location: 'warehouse', to_location: toBranch,
         cost_price: item.cost_price, reference_type: 'transfer',
@@ -428,7 +428,7 @@ function InvoiceTab({ items, branches, session }) {
       const branch = branches.find(b => b.id === selectedBranch);
       const monthKey = format(new Date(), 'yyyy-MM');
 
-      const invoice = await base44.entities.SalesInvoice.create({
+      const invoice = await db.SalesInvoice.create({
         invoice_number: genInvoiceNo(),
         customer_name: customer.name || 'عميل نقدي',
         customer_phone: customer.phone,
@@ -448,8 +448,8 @@ function InvoiceTab({ items, branches, session }) {
         if (!inv) continue;
         const bqty = inv.branch_qty || {};
         bqty[selectedBranch] = Math.max(0, (bqty[selectedBranch] || 0) - line.qty);
-        await base44.entities.InventoryItem.update(inv.id, { branch_qty: bqty });
-        await base44.entities.StockMovement.create({
+        await db.InventoryItem.update(inv.id, { branch_qty: bqty });
+        await db.StockMovement.create({
           item_id: inv.id, item_name: inv.name, movement_type: 'branch_sale',
           quantity: line.qty, unit: inv.unit,
           from_location: selectedBranch, to_location: 'customer',
@@ -480,7 +480,7 @@ function InvoiceTab({ items, branches, session }) {
 
   const { data: invoices } = useQuery({
     queryKey: ['sales-invoices'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 20),
+    queryFn: () => db.SalesInvoice.list('-created_at', 20),
     initialData: [],
   });
 
@@ -696,19 +696,19 @@ export default function SalesSystem() {
 
   const { data: items } = useQuery({
     queryKey: ['inventory-items'],
-    queryFn: () => base44.entities.InventoryItem.list('-created_at', 500),
+    queryFn: () => db.InventoryItem.list('-created_at', 500),
     initialData: [],
   });
 
   const { data: branches } = useQuery({
     queryKey: ['branches'],
-    queryFn: () => base44.entities.Branch.list(),
+    queryFn: () => db.Branch.list(),
     initialData: [],
   });
 
   const { data: movements } = useQuery({
     queryKey: ['stock-movements'],
-    queryFn: () => base44.entities.StockMovement.list('-created_at', 300),
+    queryFn: () => db.StockMovement.list('-created_at', 300),
     initialData: [],
   });
 

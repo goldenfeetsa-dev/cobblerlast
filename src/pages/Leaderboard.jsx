@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -62,13 +62,13 @@ export default function Leaderboard() {
 
   const { data: employees = [], isLoading: empLoading } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list(),
+    queryFn: () => db.Employee.list(),
     initialData: [],
   });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['orders-leaderboard'],
-    queryFn: () => base44.entities.Order.list('-created_at', 1000),
+    queryFn: () => db.Order.list('-created_at', 1000),
     initialData: [],
   });
 
@@ -76,7 +76,7 @@ export default function Leaderboard() {
   // (مبيعاته)، مو على أساس طلبات إصلاح ما دخل فيها أصلاً
   const { data: salesInvoices = [] } = useQuery({
     queryKey: ['sales-invoices-leaderboard'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 1000),
+    queryFn: () => db.SalesInvoice.list('-created_at', 1000),
     initialData: [],
   });
 

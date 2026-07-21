@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,7 @@ export default function Orders() {
   const queryClient = useQueryClient();
 
   const deleteOrder = useMutation({
-    mutationFn: (order) => base44.entities.Order.delete(order.id),
+    mutationFn: (order) => db.Order.delete(order.id),
     onSuccess: (_data, order) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       logAudit({ action: 'delete', page: 'الطلبات', entity: 'order', entity_id: order.id, details: { order_number: order.order_number } });
@@ -53,7 +53,7 @@ export default function Orders() {
   const { addStamp } = useLoyalty();
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Order.update(id, data),
+    mutationFn: ({ id, data }) => db.Order.update(id, data),
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] }); // ينطبق على كل مفاتيح orders.* (list/dashboard/operations)
       const order = orders?.find(o => o.id === variables.id);
@@ -85,7 +85,7 @@ export default function Orders() {
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders', 'list'],
-    queryFn: () => base44.entities.Order.list('-created_at', 200,
+    queryFn: () => db.Order.list('-created_at', 200,
       'id, order_number, customer_name, customer_phone, employee_name, item_type, quantity, shelf_location, status, payment_status, payment_method, total_price, photos, created_at, branch_id, delivery_method'),
     initialData: [],
   });

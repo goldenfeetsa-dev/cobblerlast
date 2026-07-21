@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Plus, Pencil, Trash2, Scissors, ShoppingBag, Tag, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,13 @@ export default function ServicesAdmin() {
 
   const { data: services = [] } = useQuery({
     queryKey: ['all-services'],
-    queryFn: () => base44.entities.Service.list(),
+    queryFn: () => db.Service.list(),
   });
 
   const save = useMutation({
     mutationFn: (data) => editing
-      ? base44.entities.Service.update(editing.id, data)
-      : base44.entities.Service.create(data),
+      ? db.Service.update(editing.id, data)
+      : db.Service.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['all-services'] });
       qc.invalidateQueries({ queryKey: ['public-services'] });
@@ -37,7 +37,7 @@ export default function ServicesAdmin() {
   });
 
   const del = useMutation({
-    mutationFn: (id) => base44.entities.Service.delete(id),
+    mutationFn: (id) => db.Service.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-services'] }); toast({ title: 'تم الحذف' }); },
   });
 

@@ -25,6 +25,7 @@ import {
   FileText, Building2, Hash, Server, Terminal, ExternalLink,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { secureZatca } from '@/lib/secureApi';
 import { getSession } from '@/lib/sessionStore';
 import { isFinanceUser } from '@/lib/roles';
 import { isValidVatFormat, normalizeDigits } from '@/lib/vatValidation';
@@ -63,13 +64,9 @@ export default function ZATCASettings() {
 
   const loadAll = async () => {
     setLoading(true);
-    const { data } = await supabase.from('zatca_settings').select('*').eq('id', 1).single();
+    const data = await secureZatca.getSettings().catch(() => null);
     setSettings(data || {});
-    const { data: logRows } = await supabase
-      .from('zatca_submission_log')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
+    const logRows = await secureZatca.getLog().catch(() => []);
     setLog(logRows || []);
 
     const [{ data: ordersFlagged }, { data: salesFlagged }] = await Promise.all([
@@ -132,23 +129,26 @@ export default function ZATCASettings() {
   const save = async () => {
     if (!infoComplete) { toast.error(`أكمل بيانات المنشأة أولاً — ناقص: ${missingFields.join('، ')}`); return; }
     setSaving(true);
-    const { error } = await supabase.from('zatca_settings').update({
-      seller_name: settings.seller_name,
-      vat_number: settings.vat_number ? normalizeDigits(String(settings.vat_number).trim()) : settings.vat_number,
-      cr_number: settings.cr_number,
-      city: settings.city,
-      district: settings.district,
-      street: settings.street,
-      postal_code: settings.postal_code,
-      building_number: settings.building_number,
-      environment: settings.environment,
-      egs_uuid: settings.egs_uuid,
-      updated_at: new Date().toISOString(),
-    }).eq('id', 1);
-    setSaving(false);
-    if (error) { toast.error('فشل الحفظ: ' + error.message); return; }
-    toast.success('تم حفظ إعدادات زاتكا ✅');
-    checkHealth();
+    try {
+      await secureZatca.updateSettings({
+        seller_name: settings.seller_name,
+        vat_number: settings.vat_number ? normalizeDigits(String(settings.vat_number).trim()) : settings.vat_number,
+        cr_number: settings.cr_number,
+        city: settings.city,
+        district: settings.district,
+        street: settings.street,
+        postal_code: settings.postal_code,
+        building_number: settings.building_number,
+        environment: settings.environment,
+        egs_uuid: settings.egs_uuid,
+      });
+      toast.success('تم حفظ إعدادات زاتكا ✅');
+      checkHealth();
+    } catch (err) {
+      toast.error('فشل الحفظ: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

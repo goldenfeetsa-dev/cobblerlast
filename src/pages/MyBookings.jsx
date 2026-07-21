@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Calendar, Search, Scissors, Store, Truck, CheckCircle, XCircle, AlertCircle, RefreshCw, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -37,7 +37,7 @@ export default function MyBookings() {
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['my-bookings', searchPhone],
-    queryFn: () => base44.entities.Booking.filter({ customer_phone: searchPhone }),
+    queryFn: () => db.Booking.filter({ customer_phone: searchPhone }),
     enabled: !!searchPhone,
   });
 

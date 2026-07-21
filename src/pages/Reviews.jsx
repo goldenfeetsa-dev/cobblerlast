@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, Send, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,11 +40,11 @@ export default function Reviews() {
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['reviews-approved'],
-    queryFn: () => base44.entities.Review.filter({ is_approved: true }, '-created_at'),
+    queryFn: () => db.Review.filter({ is_approved: true }, '-created_at'),
   });
 
   const submitMutation = useMutation({
-    mutationFn: (data) => base44.entities.Review.create(data),
+    mutationFn: (data) => db.Review.create(data),
     onSuccess: () => {
       setSubmitted(true);
       queryClient.invalidateQueries({ queryKey: ['reviews-approved'] });

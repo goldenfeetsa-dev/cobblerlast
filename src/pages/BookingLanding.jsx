@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTrackVisit } from '@/hooks/useTrackVisit';
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/supabaseApi';
 import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -10,6 +9,22 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import LogoMarquee from '@/components/LogoMarquee';
+
+// بيانات عامة مخزّنة بالـ CDN (علامات/فروع/تواصل/سجل تجاري) — طلب واحد
+// مشترك بين كل الأقسام بدل ما كل قسم يسوي استعلامه المنفصل لـ Supabase.
+// راجع api/public/site-data.js لتفاصيل التخزين المؤقت على مستوى Vercel.
+function useSiteData() {
+  return useQuery({
+    queryKey: ['site-data-public'],
+    queryFn: async () => {
+      const res = await fetch('/api/public/site-data');
+      if (!res.ok) throw new Error('site_data_failed');
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+}
 import {
   MapPin, Phone, Clock, Instagram, MessageCircle, Star, Award, Shield,
   Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck, Smartphone
@@ -794,11 +809,8 @@ function ReviewsSection() {
 // ── Brands ────────────────────────────────────────────────────────
 function BrandsSection() {
   const { t, dir } = useLanguage();
-  const { data: brands = [] } = useQuery({
-    queryKey: ['brands-public'],
-    queryFn: () => base44.entities.Brand.filter({ is_active: true }, 'sort_order'),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: siteData } = useSiteData();
+  const brands = siteData?.brands || [];
   const list = brands.length ? brands : [
     { name_ar: 'Hermès' }, { name_ar: 'Louis Vuitton' }, { name_ar: 'Chanel' }, { name_ar: 'Gucci' },
     { name_ar: 'Prada' }, { name_ar: 'Dior' }, { name_ar: 'Bottega' }, { name_ar: 'Ferragamo' },
@@ -906,12 +918,8 @@ function TrackOrderSection() {
 // ── Branches ──────────────────────────────────────────────────────
 function BranchesSection() {
   const { t, dir } = useLanguage();
-  const { data: branches = [] } = useQuery({
-    queryKey: ['branches-public'],
-    queryFn: () => base44.entities.Branch.filter({ is_active: true }, 'sort_order'),
-    staleTime: 10 * 60 * 1000,
-    retry: 1,
-  });
+  const { data: siteData } = useSiteData();
+  const branches = siteData?.branches || [];
   const items = branches.length ? branches : [{ name: t('home.branches.mainBranch'), city: t('home.branches.city'), address: t('home.branches.city'), phone: '0549678191' }];
   return (
     <section id="branches" className="py-28 px-6" style={{ background: '#F4F1EA' }} dir={dir}>
@@ -951,25 +959,9 @@ function BranchesSection() {
 // ── Footer ────────────────────────────────────────────────────────
 function Footer() {
   const { t, dir } = useLanguage();
-  const { data: settingsArr } = useQuery({
-    queryKey: ['app-settings-public'],
-    queryFn: async () => {
-      const { data } = await supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,phone').limit(1);
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-  // رقم السجل التجاري مصدره إعدادات ZATCA (نفس الرقم المستخدم بالفواتير الرسمية)، مو app_settings
-  const { data: crArr } = useQuery({
-    queryKey: ['zatca-cr-public'],
-    queryFn: async () => {
-      const { data } = await supabase.from('zatca_settings').select('cr_number').eq('id', 1).limit(1);
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-  const s = settingsArr?.[0] || {};
-  const crNumber  = crArr?.[0]?.cr_number;
+  const { data: siteData } = useSiteData();
+  const s = siteData?.settings || {};
+  const crNumber = siteData?.crNumber;
   const instagram = s.social_instagram || 'https://www.instagram.com/ebra.kh8/';
   const whatsapp  = s.social_whatsapp  || '966549678191';
   const twitter   = s.social_twitter;

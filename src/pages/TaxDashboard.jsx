@@ -9,6 +9,7 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { secureExpenses, secureZatca } from '@/lib/secureApi';
 import { getSession } from '@/lib/sessionStore';
 import { isFinanceUser } from '@/lib/roles';
 import { Navigate, Link } from 'react-router-dom';
@@ -64,15 +65,16 @@ export default function TaxDashboard() {
     const startDay = format(start, 'yyyy-MM-dd');
     const endDay = format(end, 'yyyy-MM-dd');
 
-    const [{ data: o }, { data: s }, { data: p }, { data: ex }, { data: sup }, { data: zs }] = await Promise.all([
+    const [{ data: o }, { data: s }, { data: p }, expensesRaw, { data: sup }, zs] = await Promise.all([
       supabase.from('orders').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('sales_invoices').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('purchase_invoices').select('*').gte('invoice_date', startDay).lte('invoice_date', endDay),
-      supabase.from('expenses').select('*').eq('is_vat_applicable', true).gte('expense_date', startDay).lte('expense_date', endDay),
+      secureExpenses.list({ orderBy: '-expense_date', limit: 2000, gteCol: 'expense_date', gteVal: startDay, lteCol: 'expense_date', lteVal: endDay }),
       supabase.from('suppliers').select('id,name'),
-      supabase.from('zatca_settings').select('*').eq('id', 1).single(),
+      secureZatca.getSettings().catch(() => null),
     ]);
-    setOrders(o || []); setSales(s || []); setPurchases(p || []); setExpenses(ex || []);
+    setOrders(o || []); setSales(s || []); setPurchases(p || []);
+    setExpenses((expensesRaw || []).filter((x) => x.is_vat_applicable));
     setSuppliersById(Object.fromEntries((sup || []).map(x => [x.id, x.name])));
     setZatcaSettings(zs || null);
     setLoading(false);

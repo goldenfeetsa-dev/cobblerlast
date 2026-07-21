@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Button } from '@/components/ui/button';
@@ -91,17 +91,17 @@ export default function ShopAdmin() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products-admin'],
-    queryFn: () => base44.entities.Product.list('sort_order'),
+    queryFn: () => db.Product.list('sort_order'),
   });
 
   const createMut = useMutation({
-    mutationFn: (d) => base44.entities.Product.create({ ...d, price: Number(d.price), original_price: d.original_price ? Number(d.original_price) : undefined }),
+    mutationFn: (d) => db.Product.create({ ...d, price: Number(d.price), original_price: d.original_price ? Number(d.original_price) : undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['products-admin'] }); setAdding(false); },
     onError: (e) => toast.error(`فشل إضافة المنتج: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, ...d }) => base44.entities.Product.update(id, { ...d, price: Number(d.price), original_price: d.original_price ? Number(d.original_price) : undefined }),
+    mutationFn: ({ id, ...d }) => db.Product.update(id, { ...d, price: Number(d.price), original_price: d.original_price ? Number(d.original_price) : undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['products-admin'] }); setEditing(null); },
     // كانت الأخطاء هنا تُبتلع بصمت — لو فشل التعديل (صلاحيات RLS، عمود
     // مفقود، إلخ) ما كان يظهر شيء للمستخدم وتبدو الواجهة وكأنها "ما تشتغل"
@@ -109,7 +109,7 @@ export default function ShopAdmin() {
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => base44.entities.Product.delete(id),
+    mutationFn: (id) => db.Product.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['products-admin'] }); toast.success('تم حذف المنتج'); },
     onError: (e) => toast.error(`فشل حذف المنتج: ${e.message || 'خطأ غير معروف'}`),
   });

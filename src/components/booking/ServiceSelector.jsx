@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Scissors, ShoppingBag, Check, Clock, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,7 +10,7 @@ const categoryLabels = { shoes: 'أحذية', bags: 'شنط' };
 export default function ServiceSelector({ selectedService, onSelect }) {
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['public-services'],
-    queryFn: () => base44.entities.Service.filter({ is_active: true }),
+    queryFn: () => db.Service.filter({ is_active: true }),
   });
 
   const shoes = services.filter(s => s.category === 'shoes');

@@ -5,7 +5,7 @@ import OrderNotifications from './OrderNotifications';
 import RealtimeSync from './RealtimeSync';
 import { getSession } from '@/lib/sessionStore';
 import { useGlobalBarcodeScanner } from '@/hooks/useGlobalBarcodeScanner';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { toast } from 'sonner';
 import {
   isFullAdmin, isFinanceUser, isCashier, isWorker,
@@ -21,7 +21,7 @@ export default function AppLayout() {
   // بدون الحاجة للذهاب لصفحة "مسح الباركود" — بمجرد مسح أي كود يفتح الطلب مباشرة
   useGlobalBarcodeScanner(async (code) => {
     try {
-      const matches = await base44.entities.Order.filter({ order_number: code }, '-created_at', 1);
+      const matches = await db.Order.filter({ order_number: code }, '-created_at', 1);
       if (matches?.[0]) {
         toast.success(`📦 فُتح الطلب ${code}`);
         navigate(`/orders/${matches[0].id}`);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Clock, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,7 @@ export default function WorkingHoursAdmin() {
 
   const { data: existingHours = [] } = useQuery({
     queryKey: ['working-hours-admin'],
-    queryFn: () => base44.entities.WorkingHours.list('day_of_week'),
+    queryFn: () => db.WorkingHours.list('day_of_week'),
   });
 
   useEffect(() => {
@@ -70,8 +70,8 @@ export default function WorkingHoursAdmin() {
     const results = await Promise.allSettled(hours.map(dayHour => {
       const existing = existingHours.find(wh => wh.day_of_week === dayHour.day_of_week);
       return existing
-        ? base44.entities.WorkingHours.update(existing.id, dayHour)
-        : base44.entities.WorkingHours.create(dayHour);
+        ? db.WorkingHours.update(existing.id, dayHour)
+        : db.WorkingHours.create(dayHour);
     }));
 
     const failed = results

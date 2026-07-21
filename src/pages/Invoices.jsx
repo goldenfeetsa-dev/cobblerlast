@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,12 +26,12 @@ export default function Invoices() {
 
   const { data: orders = [] } = useQuery({
     queryKey: ['invoices-orders'],
-    queryFn: () => base44.entities.Order.list('-created_at', 300),
+    queryFn: () => db.Order.list('-created_at', 300),
   });
 
   const { data: salesInvoices = [] } = useQuery({
     queryKey: ['invoices-sales'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 300),
+    queryFn: () => db.SalesInvoice.list('-created_at', 300),
   });
 
   const merged = useMemo(() => {

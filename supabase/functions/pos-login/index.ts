@@ -6,6 +6,9 @@
  *   الذي كان يمكن تجاوزه بمجرد فتح نافذة تصفح خفي أو مسح بيانات الموقع).
  * - يتحقق من رقم الـ PIN باستخدام service role على السيرفر فقط — المتصفح لا يستطيع
  *   أبداً قراءة عمود الـ PIN مباشرة (تم قطع صلاحية القراءة عنه في migration 006).
+ * - هذي الدالة تُستدعى فقط من /api/auth/login (BFF على Vercel)، وهو اللي
+ *   يتولى إصدار كوكي الجلسة HttpOnly الحقيقية — هذي الدالة ترجّع بيانات
+ *   الموظف فقط، بدون أي توكن، ولا تُستدعى من المتصفح مباشرة.
  *
  * إعدادات القفل: 5 محاولات خاطئة كحد أقصى لكل IP خلال 15 دقيقة.
  * بعد تجاوز الحد يُقفل الـ IP لمدة 15 دقيقة إضافية بغض النظر عن عدد محاولاته لاحقاً.
@@ -89,7 +92,7 @@ serve(async (req: Request) => {
       await supabase.from('login_attempts').upsert({
         ip, attempts: 0, window_start: now.toISOString(), locked_until: null, updated_at: now.toISOString(),
       });
-      return json({ success: true, employee: match });
+      return json({ success: true, employee: match }, 200);
     }
 
     // فشل: زيادة عداد المحاولات لهذا الـ IP
@@ -108,6 +111,7 @@ serve(async (req: Request) => {
 
     return json({ success: false, error: 'invalid_pin', attempts_left: MAX_ATTEMPTS - attempts }, 401);
   } catch (e) {
+    console.error('pos-login unexpected error', e);
     return json({ success: false, error: 'server_error' }, 500);
   }
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Stamp, Plus, RotateCcw } from 'lucide-react';
@@ -10,7 +10,7 @@ export default function StampCard({ customer, stampsRequired = 10, isAdmin }) {
   const stamps = customer.stamps || 0;
 
   const updateStamps = useMutation({
-    mutationFn: (newStamps) => base44.entities.Customer.update(customer.id, { stamps: newStamps }),
+    mutationFn: (newStamps) => db.Customer.update(customer.id, { stamps: newStamps }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customers'] }),
   });
 

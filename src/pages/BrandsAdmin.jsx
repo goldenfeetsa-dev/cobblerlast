@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -21,21 +21,21 @@ export default function BrandsAdmin() {
 
   const { data: brands = [], isLoading } = useQuery({
     queryKey: ['brands-admin'],
-    queryFn: () => base44.entities.Brand.list('sort_order'),
+    queryFn: () => db.Brand.list('sort_order'),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Brand.create(data),
+    mutationFn: (data) => db.Brand.create(data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands-admin'] }); setOpen(false); setForm(EMPTY); },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Brand.update(id, data),
+    mutationFn: ({ id, data }) => db.Brand.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands-admin'] }); setOpen(false); setEditing(null); setForm(EMPTY); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Brand.delete(id),
+    mutationFn: (id) => db.Brand.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['brands-admin'] }),
   });
 

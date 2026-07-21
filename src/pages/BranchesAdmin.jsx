@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,13 +22,13 @@ export default function BranchesAdmin() {
 
   const { data: branches = [], isLoading } = useQuery({
     queryKey: ['branches'],
-    queryFn: () => base44.entities.Branch.list('sort_order'),
+    queryFn: () => db.Branch.list('sort_order'),
   });
 
   const saveMutation = useMutation({
     mutationFn: (data) => editId
-      ? base44.entities.Branch.update(editId, data)
-      : base44.entities.Branch.create(data),
+      ? db.Branch.update(editId, data)
+      : db.Branch.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });
       toast.success(editId ? 'تم تحديث الفرع' : 'تم إضافة الفرع');
@@ -39,7 +39,7 @@ export default function BranchesAdmin() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Branch.delete(id),
+    mutationFn: (id) => db.Branch.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });
       toast.success('تم حذف الفرع');
@@ -47,7 +47,7 @@ export default function BranchesAdmin() {
   });
 
   const toggleActive = useMutation({
-    mutationFn: ({ id, val }) => base44.entities.Branch.update(id, { is_active: val }),
+    mutationFn: ({ id, val }) => db.Branch.update(id, { is_active: val }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['branches'] }),
   });
 

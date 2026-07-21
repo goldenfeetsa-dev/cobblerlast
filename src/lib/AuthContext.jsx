@@ -17,7 +17,12 @@ export const AuthProvider = ({ children }) => {
       .catch(() => {});
   }, []);
 
-  const logout = () => { clearSession(); window.location.replace('/login'); };
+  const logout = () => {
+    clearSession();
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      .catch(() => {})
+      .finally(() => window.location.replace('/login'));
+  };
   const navigateToLogin = () => { window.location.replace('/login'); };
 
   return (

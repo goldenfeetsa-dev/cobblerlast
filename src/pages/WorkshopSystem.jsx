@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
@@ -36,7 +36,7 @@ function WithdrawalTab({ items, session }) {
 
   const { data: myWithdrawals } = useQuery({
     queryKey: ['workshop-custody', session?.name, monthKey],
-    queryFn: () => base44.entities.WorkshopCustody.filter({ technician_name: session?.name, month_key: monthKey }),
+    queryFn: () => db.WorkshopCustody.filter({ technician_name: session?.name, month_key: monthKey }),
     initialData: [],
   });
 
@@ -47,7 +47,7 @@ function WithdrawalTab({ items, session }) {
       const qty = parseFloat(form.qty);
       if ((item?.workshop_qty || 0) < qty) throw new Error('الكمية في مخزن الورشة غير كافية');
 
-      await base44.entities.WorkshopCustody.create({
+      await db.WorkshopCustody.create({
         technician_name: session?.name || 'فني',
         item_id: form.item_id,
         item_name: item.name,
@@ -61,12 +61,12 @@ function WithdrawalTab({ items, session }) {
       });
 
       // Deduct from workshop stock
-      await base44.entities.InventoryItem.update(form.item_id, {
+      await db.InventoryItem.update(form.item_id, {
         workshop_qty: Math.max(0, (item.workshop_qty || 0) - qty),
       });
 
       // Movement record
-      await base44.entities.StockMovement.create({
+      await db.StockMovement.create({
         item_id: form.item_id, item_name: item.name,
         movement_type: 'workshop_withdrawal',
         quantity: qty, unit: item.unit,
@@ -180,26 +180,26 @@ function SettlementTab({ items, session }) {
 
   const { data: allCustody } = useQuery({
     queryKey: ['workshop-custody-all'],
-    queryFn: () => base44.entities.WorkshopCustody.list('-created_at', 500),
+    queryFn: () => db.WorkshopCustody.list('-created_at', 500),
     initialData: [],
   });
 
   const { data: salesInvoices } = useQuery({
     queryKey: ['sales-invoices'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 500),
+    queryFn: () => db.SalesInvoice.list('-created_at', 500),
     initialData: [],
   });
 
   // طلبات الإصلاح — كانت مفقودة تماماً من حساب صافي الربح سابقاً
   const { data: repairOrders } = useQuery({
     queryKey: ['orders-for-settlement'],
-    queryFn: () => base44.entities.Order.list('-created_at', 1000),
+    queryFn: () => db.Order.list('-created_at', 1000),
     initialData: [],
   });
 
   const { data: settlements } = useQuery({
     queryKey: ['workshop-settlements'],
-    queryFn: () => base44.entities.WorkshopSettlement.list('-created_at', 24),
+    queryFn: () => db.WorkshopSettlement.list('-created_at', 24),
     initialData: [],
   });
 
@@ -279,7 +279,7 @@ function SettlementTab({ items, session }) {
       if (settleItems.length === 0) throw new Error('لا توجد مسحوبات لتسويتها');
       const journalEntry = generateJournal({ totalWorkshopCost, totalSalesRevenue, totalSalesCost, grossProfit, netProfit });
 
-      const settlement = await base44.entities.WorkshopSettlement.create({
+      const settlement = await db.WorkshopSettlement.create({
         month_key: selectedMonth,
         month_label: monthLabel(selectedMonth),
         settlement_items: settleItems,
@@ -297,13 +297,13 @@ function SettlementTab({ items, session }) {
 
       // Mark custody records as settled
       for (const c of monthCustody) {
-        await base44.entities.WorkshopCustody.update(c.id, { settled: true, settlement_id: settlement.id });
+        await db.WorkshopCustody.update(c.id, { settled: true, settlement_id: settlement.id });
       }
 
       // Record deduction movement
       for (const si of settleItems) {
         if (!si.actual_qty_used) continue;
-        await base44.entities.StockMovement.create({
+        await db.StockMovement.create({
           item_id: si.item_id, item_name: si.item_name,
           movement_type: 'settlement_deduction',
           quantity: si.actual_qty_used, unit: si.unit,
@@ -503,10 +503,10 @@ function WorkshopStockTab({ items, session }) {
       const item = workshopItems.find(i => i.id === form.item_id);
       if (!item) throw new Error('اختر مادة');
       const qty = parseFloat(form.qty);
-      await base44.entities.InventoryItem.update(form.item_id, {
+      await db.InventoryItem.update(form.item_id, {
         workshop_qty: (item.workshop_qty || 0) + qty,
       });
-      await base44.entities.StockMovement.create({
+      await db.StockMovement.create({
         item_id: item.id, item_name: item.name, movement_type: 'workshop_in',
         quantity: qty, unit: item.unit,
         from_location: 'purchase', to_location: 'workshop',
@@ -587,7 +587,7 @@ export default function WorkshopSystem() {
 
   const { data: items } = useQuery({
     queryKey: ['inventory-items'],
-    queryFn: () => base44.entities.InventoryItem.list('-created_at', 500),
+    queryFn: () => db.InventoryItem.list('-created_at', 500),
     initialData: [],
   });
 
@@ -595,7 +595,7 @@ export default function WorkshopSystem() {
 
   const { data: allCustodyStats } = useQuery({
     queryKey: ['workshop-custody-all'],
-    queryFn: () => base44.entities.WorkshopCustody.list('-created_at', 500),
+    queryFn: () => db.WorkshopCustody.list('-created_at', 500),
     initialData: [],
   });
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { base44 } from '@/api/supabaseApi';
+import { db, functions } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -58,7 +58,7 @@ async function sendEmailNotification(order, newStatus) {
   const itemLabel = ITEM_LABELS[order.item_type] || order.item_type;
   const emailTarget = order.customer_email;
   if (!emailTarget) return;
-  await base44.integrations.Core.SendEmail({
+  await functions.invoke('send-email', {
     to: emailTarget,
     subject: `تحديث حالة طلبك ${order.order_number} — إبرة وخيط الإسكافي`,
     body: `<div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #1A0C00; color: #F5EDD8; border-radius: 12px;">
@@ -93,12 +93,12 @@ export default function OrderDetails() {
 
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: () => base44.entities.Order.get(orderId),
+    queryFn: () => db.Order.get(orderId),
     enabled: !!orderId,
   });
 
   const updateDetails = useMutation({
-    mutationFn: (fields) => base44.entities.Order.update(orderId, fields),
+    mutationFn: (fields) => db.Order.update(orderId, fields),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -109,7 +109,7 @@ export default function OrderDetails() {
   });
 
   const deleteOrder = useMutation({
-    mutationFn: () => base44.entities.Order.delete(orderId),
+    mutationFn: () => db.Order.delete(orderId),
     onSuccess: () => {
       logAudit({ action: 'delete', page: 'تفاصيل الطلب', entity: 'order', entity_id: orderId, details: { order_number: order?.order_number } });
       toast.success('تم حذف الطلب');
@@ -118,7 +118,7 @@ export default function OrderDetails() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Order.update(id, { status: status }),
+    mutationFn: ({ id, status }) => db.Order.update(id, { status: status }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -134,7 +134,7 @@ export default function OrderDetails() {
   });
 
   const updatePayment = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Order.update(id, { payment_status: status }),
+    mutationFn: ({ id, status }) => db.Order.update(id, { payment_status: status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -143,7 +143,7 @@ export default function OrderDetails() {
   });
 
   const updatePaymentMethod = useMutation({
-    mutationFn: ({ id, method }) => base44.entities.Order.update(id, { payment_method: method }),
+    mutationFn: ({ id, method }) => db.Order.update(id, { payment_method: method }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -152,7 +152,7 @@ export default function OrderDetails() {
   });
 
   const adminAction = useMutation({
-    mutationFn: ({ id, status, extra }) => base44.entities.Order.update(id, { status: status, ...extra }),
+    mutationFn: ({ id, status, extra }) => db.Order.update(id, { status: status, ...extra }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });

@@ -12,7 +12,8 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
+import { secureExpenses } from '@/lib/secureApi';
 import { getSession } from '@/lib/sessionStore';
 import { isFinanceUser } from '@/lib/roles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,35 +77,33 @@ export default function FinancialReports() {
     const startDay = format(start, 'yyyy-MM-dd');
     const endDay = format(end, 'yyyy-MM-dd');
 
-    const [{ data: o }, { data: s }, { data: e }, { data: c }, { data: st }] = await Promise.all([
-      supabase.from('orders').select('*').gte('created_at', startISO).lte('created_at', endISO),
-      supabase.from('sales_invoices').select('*').gte('created_at', startISO).lte('created_at', endISO),
-      supabase.from('expenses').select('*').gte('expense_date', startDay).lte('expense_date', endDay).order('expense_date', { ascending: false }),
-      supabase.from('workshop_custodies').select('*').gte('created_at', startISO).lte('created_at', endISO),
-      supabase.from('workshop_settlements').select('*'),
+    const [{ data: o }, { data: s }, expensesData, { data: c }, { data: st }] = await Promise.all([
+      supabase.from('orders').select('subtotal,total_price,zatca_status,created_at,order_number,customer_name').gte('created_at', startISO).lte('created_at', endISO),
+      supabase.from('sales_invoices').select('subtotal,zatca_status,created_at,invoice_number').gte('created_at', startISO).lte('created_at', endISO),
+      secureExpenses.list({ orderBy: '-expense_date', limit: 2000, gteCol: 'expense_date', gteVal: startDay, lteCol: 'expense_date', lteVal: endDay }),
+      supabase.from('workshop_custodies').select('total_cost,month_key').gte('created_at', startISO).lte('created_at', endISO),
+      supabase.from('workshop_settlements').select('month_key,total_workshop_cost'),
     ]);
-    setOrders(o || []); setSales(s || []); setExpenses(e || []); setCustodies(c || []); setSettlements(st || []);
+    setOrders(o || []); setSales(s || []); setExpenses(expensesData || []); setCustodies(c || []); setSettlements(st || []);
 
-    // آخر 6 أشهر للرسم البياني (بغض النظر عن الفلتر المختار أعلاه)
-    const months = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), 5 - i));
-    const trendRows = await Promise.all(months.map(async (m) => {
-      const mStart = startOfMonth(m).toISOString();
-      const mEnd = endOfMonth(m).toISOString();
-      const mKey = monthKeyOf(m);
-      const [{ data: mo }, { data: ms }, { data: me }] = await Promise.all([
-        supabase.from('orders').select('subtotal,total_price').gte('created_at', mStart).lte('created_at', mEnd),
-        supabase.from('sales_invoices').select('subtotal').gte('created_at', mStart).lte('created_at', mEnd),
-        supabase.from('expenses').select('amount').gte('expense_date', format(startOfMonth(m), 'yyyy-MM-dd')).lte('expense_date', format(endOfMonth(m), 'yyyy-MM-dd')),
-      ]);
-      const settlement = (st || []).find((x) => x.month_key === mKey);
-      const revenue = (mo || []).reduce((a, r) => a + (r.subtotal ?? (r.total_price || 0) / 1.15), 0)
-        + (ms || []).reduce((a, r) => a + (r.subtotal || 0), 0);
-      const manualExp = (me || []).reduce((a, r) => a + (r.amount || 0), 0);
-      const materialCost = settlement ? (settlement.total_workshop_cost || 0)
-        : 0; // نحسبها بدقة أدناه بعد جلب custodies لكل الأشهر لو احتجنا لاحقاً
-      return { month: format(m, 'MM/yyyy'), الإيراد: Math.round(revenue), المصاريف: Math.round(manualExp + materialCost) };
-    }));
-    setTrend(trendRows);
+    // آخر 6 أشهر للرسم البياني — استعلام واحد مجمّع بقاعدة البيانات
+    // بدل 18 استعلام منفصل (كان السبب الرئيسي لبطء الصفحة)
+    const { data: trendRaw, error: trendErr } = await supabase.rpc('get_monthly_financial_trend', { months_count: 6 });
+    if (trendErr) {
+      console.error('trend rpc error', trendErr);
+      setTrend([]);
+    } else {
+      const trendRows = (trendRaw || []).map((row) => {
+        const settlement = (st || []).find((x) => x.month_key === row.month_key);
+        const materialCost = settlement ? (settlement.total_workshop_cost || 0) : 0;
+        return {
+          month: format(new Date(`${row.month_key}-01`), 'MM/yyyy'),
+          الإيراد: Math.round(row.revenue || 0),
+          المصاريف: Math.round((row.manual_expenses || 0) + materialCost),
+        };
+      });
+      setTrend(trendRows);
+    }
     setLoading(false);
   };
 
@@ -169,7 +168,7 @@ export default function FinancialReports() {
       // المصروفات اليومية: إيجار، كهرباء...). نستخرج منه الضريبة والصافي.
       const vatAmount = newExpense.has_vat ? +(amount - amount / 1.15).toFixed(2) : 0;
       const subtotal = +(amount - vatAmount).toFixed(2);
-      await base44.entities.Expense.create({
+      await db.Expense.create({
         category: newExpense.category,
         description: newExpense.description,
         amount,

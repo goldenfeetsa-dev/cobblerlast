@@ -58,6 +58,7 @@ const TaxDashboard = lazy(() => import('./pages/TaxDashboard'));
 
 import AppLayout from './components/pos/AppLayout';
 const BookingLanding = lazy(() => import('./pages/BookingLanding'));
+const HeroPreview = lazy(() => import('./pages/HeroPreview'));
 
 const AuthenticatedApp = () => {
   const { authError, navigateToLogin } = useAuth();
@@ -91,6 +92,10 @@ const AuthenticatedApp = () => {
         {/* الصفحة الرئيسية = صفحة الحجز */}
         <Route path="/" element={<BookingLanding />} />
         <Route path="/booking" element={<BookingLanding />} />
+
+        {/* معاينة تجريبية للهيرو ثلاثي الأبعاد — لا تُستبدل بها الصفحة
+            الرئيسية إلا بعد موافقتك */}
+        <Route path="/hero-preview" element={<HeroPreview />} />
 
         {/* Public pages */}
         <Route path="/book" element={<BookingWizard />} />

@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import BarcodeDisplay from '@/components/pos/BarcodeDisplay';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ export default function BarcodeOnly() {
 
   const { data: order } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: () => base44.entities.Order.get(orderId),
+    queryFn: () => db.Order.get(orderId),
     enabled: !!orderId,
   });
 

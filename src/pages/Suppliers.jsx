@@ -8,7 +8,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
 import { ROLES } from '@/lib/roles';
 import { Navigate } from 'react-router-dom';
@@ -41,13 +41,13 @@ export default function Suppliers() {
   const [productSearch, setProductSearch] = useState('');
 
   const { data: suppliers = [], isLoading } = useQuery({
-    queryKey: ['suppliers'], queryFn: () => base44.entities.Supplier.list('name', 200),
+    queryKey: ['suppliers'], queryFn: () => db.Supplier.list('name', 200),
   });
   const { data: links = [] } = useQuery({
-    queryKey: ['supplier-products'], queryFn: () => base44.entities.SupplierProduct.list('-created_at', 1000),
+    queryKey: ['supplier-products'], queryFn: () => db.SupplierProduct.list('-created_at', 1000),
   });
   const { data: items = [] } = useQuery({
-    queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 500),
+    queryKey: ['inventory-items'], queryFn: () => db.InventoryItem.list('-created_at', 500),
   });
 
   // بناءً على طلب صريح: الموردون تظهر للمالك فقط، مو لكل أدوار الإدارة/المحاسب
@@ -55,8 +55,8 @@ export default function Suppliers() {
 
   const saveMutation = useMutation({
     mutationFn: (data) => editingSupplier
-      ? base44.entities.Supplier.update(editingSupplier.id, data)
-      : base44.entities.Supplier.create({ ...data, is_active: true }),
+      ? db.Supplier.update(editingSupplier.id, data)
+      : db.Supplier.create({ ...data, is_active: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success(editingSupplier ? 'تم تحديث بيانات المورد' : 'تم إضافة المورد');
@@ -68,7 +68,7 @@ export default function Suppliers() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Supplier.delete(id),
+    mutationFn: (id) => db.Supplier.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success('تم حذف المورد');
@@ -83,9 +83,9 @@ export default function Suppliers() {
     mutationFn: async ({ supplierId, itemId, linked }) => {
       if (linked) {
         const existing = links.find(l => l.supplier_id === supplierId && l.item_id === itemId);
-        if (existing) await base44.entities.SupplierProduct.delete(existing.id);
+        if (existing) await db.SupplierProduct.delete(existing.id);
       } else {
-        await base44.entities.SupplierProduct.create({ supplier_id: supplierId, item_id: itemId });
+        await db.SupplierProduct.create({ supplier_id: supplierId, item_id: itemId });
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['supplier-products'] }),

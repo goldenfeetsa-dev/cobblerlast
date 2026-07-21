@@ -4,10 +4,6 @@ import PinPad from '@/components/pos/PinPad';
 import { setSession, getSession } from '@/lib/sessionStore';
 import { getHomePath } from '@/lib/roles';
 
-// رابط دالة الحافة (Edge Function) — تتحقق من الـ PIN وتقيّد المحاولات حسب IP على السيرفر
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bwuvldnlfgobqpdfhyql.supabase.co';
-const POS_LOGIN_URL = `${SUPABASE_URL}/functions/v1/pos-login`;
-
 export default function PinLogin() {
   const navigate  = useNavigate();
   const [error, setError]       = useState('');
@@ -19,7 +15,7 @@ export default function PinLogin() {
     if (existing) { navigate(getHomePath(existing.role), { replace: true }); return; }
     window.history.replaceState(null, '', '/login');
     // ملاحظة: لا يوجد أي جلب لبيانات الموظفين أو أرقام الـ PIN هنا —
-    // التحقق يتم بالكامل على السيرفر عبر pos-login حتى لا تُفتح أي بيانات حساسة للمتصفح.
+    // التحقق يتم بالكامل على السيرفر عبر /api/auth/login حتى لا تُفتح أي بيانات حساسة للمتصفح.
   }, [navigate]);
 
   const handlePin = async (pin) => {
@@ -27,8 +23,13 @@ export default function PinLogin() {
     setError('');
 
     try {
-      const res = await fetch(POS_LOGIN_URL, {
+      // /api/auth/login يتحقق من الـ PIN (نفس منطق pos-login الآمن على
+      // السيرفر) ثم يصدر كوكي جلسة HttpOnly مباشرة — المتصفح والجافاسكربت
+      // لا يريان أي توكن إطلاقاً (credentials: 'include' يخلي المتصفح
+      // يحفظ ويرسل الكوكي تلقائياً بكل طلب لاحق، بدون تدخل من كودنا).
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin }),
       });
@@ -42,6 +43,9 @@ export default function PinLogin() {
       }
 
       if (result.success && result.employee) {
+        // هذي نسخة "عرض فقط" تُخزَّن محلياً لتلوين الواجهة (اسم/دور/صورة)
+        // — هي ليست مصدر الصلاحية الفعلي؛ أي عملية حساسة (مصاريف، زاتكا)
+        // يتحقق منها السيرفر من كوكي HttpOnly في كل طلب بشكل مستقل.
         setSession(result.employee);
         navigate(getHomePath(result.employee.role), { replace: true });
         return;

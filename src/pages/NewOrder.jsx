@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { generateOrderNumber } from '@/lib/barcodeUtils';
@@ -73,17 +73,17 @@ function CobblerTab({ session }) {
   });
 
   const { data: customers } = useQuery({
-    queryKey: ['customers'], queryFn: () => base44.entities.Customer.list(), initialData: [],
+    queryKey: ['customers'], queryFn: () => db.Customer.list(), initialData: [],
   });
   const { data: settingsList = [] } = useQuery({
-    queryKey: ['app-settings'], queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
+    queryKey: ['app-settings'], queryFn: () => db.AppSettings.list(), staleTime: 0,
   });
   const { data: planList2 } = useQuery({
-    queryKey: ['operations-plan'], queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],
+    queryKey: ['operations-plan'], queryFn: () => db.OperationsPlan.list(), initialData: [],
   });
   // قائمة الفنيين لتخصيص كل قطعة لفني مسؤول عنها
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'], queryFn: () => base44.entities.Employee.list(), initialData: [],
+    queryKey: ['employees'], queryFn: () => db.Employee.list(), initialData: [],
   });
   const technicians = employees.filter(e => e.is_active !== false);
 
@@ -111,21 +111,21 @@ function CobblerTab({ session }) {
 
   const createOrder = useMutation({
     mutationFn: async (orderData) => {
-      const order = await base44.entities.Order.create(orderData);
+      const order = await db.Order.create(orderData);
       const price = parseFloat(form.total_price) || 0;
       const pointsEarned = Math.floor(price / 10);
-      const planList = await base44.entities.OperationsPlan.list();
+      const planList = await db.OperationsPlan.list();
       const freeAfter = planList[0]?.loyalty_free_after || 4;
 
       // نتأكد من القاعدة مباشرة (مو من الكاش المحلي) لتفادي محاولة إنشاء
       // عميل مكرر برقم جوال موجود أصلاً (customers_phone_key)
-      const freshMatches = await base44.entities.Customer.filter({ phone: form.customer_phone });
+      const freshMatches = await db.Customer.filter({ phone: form.customer_phone });
       const existingCustomer = freshMatches?.[0];
 
       if (existingCustomer) {
         const newStamps = (existingCustomer.stamps || 0) + 1;
         const resetStamps = newStamps >= freeAfter;
-        await base44.entities.Customer.update(existingCustomer.id, {
+        await db.Customer.update(existingCustomer.id, {
           loyalty_points: (existingCustomer.loyalty_points || 0) + pointsEarned,
           stamps: resetStamps ? 0 : newStamps,
           total_orders: (existingCustomer.total_orders || 0) + 1,
@@ -140,7 +140,7 @@ function CobblerTab({ session }) {
         }
       } else {
         try {
-          await base44.entities.Customer.create({
+          await db.Customer.create({
             name: form.customer_name, phone: form.customer_phone,
             loyalty_points: pointsEarned, stamps: 1, total_orders: 1, total_spent: price,
           });
@@ -150,9 +150,9 @@ function CobblerTab({ session }) {
           }
         } catch (custErr) {
           // تعارض نادر (Race Condition): نفس الرقم انسجل بلحظة موازية — نحدّثه بدل ما نفشل الطلب كامل
-          const retryMatch = (await base44.entities.Customer.filter({ phone: form.customer_phone }))?.[0];
+          const retryMatch = (await db.Customer.filter({ phone: form.customer_phone }))?.[0];
           if (retryMatch) {
-            await base44.entities.Customer.update(retryMatch.id, {
+            await db.Customer.update(retryMatch.id, {
               loyalty_points: (retryMatch.loyalty_points || 0) + pointsEarned,
               stamps: (retryMatch.stamps || 0) + 1,
               total_orders: (retryMatch.total_orders || 0) + 1,
@@ -165,10 +165,10 @@ function CobblerTab({ session }) {
       }
 
       if (session?.id) {
-        const emp = await base44.entities.Employee.list();
+        const emp = await db.Employee.list();
         const me = emp.find(e => e.id === session.id);
         if (me) {
-          await base44.entities.Employee.update(me.id, {
+          await db.Employee.update(me.id, {
             total_orders: (me.total_orders || 0) + 1,
             total_revenue: (me.total_revenue || 0) + price,
           });
@@ -515,13 +515,13 @@ function ProductsTab({ session }) {
   const [printInvoice, setPrintInvoice] = useState(null);
 
   const { data: items } = useQuery({
-    queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 500), initialData: [],
+    queryKey: ['inventory-items'], queryFn: () => db.InventoryItem.list('-created_at', 500), initialData: [],
   });
   const { data: branches } = useQuery({
-    queryKey: ['branches'], queryFn: () => base44.entities.Branch.list(), initialData: [],
+    queryKey: ['branches'], queryFn: () => db.Branch.list(), initialData: [],
   });
   const { data: planList } = useQuery({
-    queryKey: ['operations-plan'], queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],
+    queryKey: ['operations-plan'], queryFn: () => db.OperationsPlan.list(), initialData: [],
   });
   const freeAfter = planList[0]?.loyalty_free_after || 4;
 
@@ -579,7 +579,7 @@ function ProductsTab({ session }) {
       const branch = branches.find(b => b.id === selectedBranch);
       const monthKey = format(new Date(), 'yyyy-MM');
 
-      const invoice = await base44.entities.SalesInvoice.create({
+      const invoice = await db.SalesInvoice.create({
         invoice_number: genInvoiceNo(),
         customer_name: customer.name || 'عميل نقدي',
         customer_phone: customer.phone,
@@ -601,8 +601,8 @@ function ProductsTab({ session }) {
         if (!inv) continue;
         const bqty = { ...(inv.branch_qty || {}) };
         bqty[selectedBranch] = Math.max(0, (bqty[selectedBranch] || 0) - line.qty);
-        await base44.entities.InventoryItem.update(inv.id, { branch_qty: bqty });
-        await base44.entities.StockMovement.create({
+        await db.InventoryItem.update(inv.id, { branch_qty: bqty });
+        await db.StockMovement.create({
           item_id: inv.id, item_name: inv.name, movement_type: 'branch_sale',
           quantity: line.qty, unit: inv.unit,
           from_location: selectedBranch, to_location: 'customer',
@@ -615,12 +615,12 @@ function ProductsTab({ session }) {
       // ── ربط برنامج الولاء بفاتورة المنتجات (كان مفعّل فقط بطلبات الإصلاح) ──
       if (customer.phone) {
         const pointsEarned = Math.floor(total / 10);
-        const freshMatches = await base44.entities.Customer.filter({ phone: customer.phone });
+        const freshMatches = await db.Customer.filter({ phone: customer.phone });
         const existingCustomer = freshMatches?.[0];
         if (existingCustomer) {
           const newStamps = (existingCustomer.stamps || 0) + 1;
           const resetStamps = newStamps >= freeAfter;
-          await base44.entities.Customer.update(existingCustomer.id, {
+          await db.Customer.update(existingCustomer.id, {
             loyalty_points: (existingCustomer.loyalty_points || 0) + pointsEarned,
             stamps: resetStamps ? 0 : newStamps,
             total_orders: (existingCustomer.total_orders || 0) + 1,
@@ -632,7 +632,7 @@ function ProductsTab({ session }) {
           notifyCustomerDirect(existingCustomer.phone, msg);
         } else {
           try {
-            await base44.entities.Customer.create({
+            await db.Customer.create({
               name: customer.name || 'عميل نقدي', phone: customer.phone,
               loyalty_points: pointsEarned, stamps: 1, total_orders: 1, total_spent: total,
             });

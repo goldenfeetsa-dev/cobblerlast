@@ -1,11 +1,12 @@
 /**
  * supabaseApi.js
- * بديل كامل عن base44Client — كل العمليات على Supabase
+ * طبقة الوصول الوحيدة للبيانات — كل العمليات تذهب مباشرة إلى Supabase
  */
 import { supabase } from '@/lib/supabaseClient';
+import { secureExpenses } from '@/lib/secureApi';
 
 // ── Generic Entity Factory ──────────────────────────────────────
-// يحاكي base44.entities.X.list() / .create() / .update() / .filter()
+// list() / get() / create() / update() / delete() / filter() لكل جدول
 function createEntity(tableName) {
   return {
     async list(orderBy = '-created_at', limit = 200, columns = '*') {
@@ -62,7 +63,7 @@ function createEntity(tableName) {
       return data || [];
     },
 
-    // Real-time subscription (replaces base44 subscribe)
+    // Real-time subscription
     subscribe(callback) {
       const channel = supabase
         .channel(`${tableName}_changes`)
@@ -74,7 +75,7 @@ function createEntity(tableName) {
   };
 }
 
-// ── File Upload (replaces base44 UploadFile) ───────────────────
+// ── File Upload ──────────────────────────────────────────────
 async function uploadFile({ file, bucket = 'order-photos' }) {
   const ext  = file.name.split('.').pop() || 'jpg';
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -119,7 +120,18 @@ export const db = {
   PurchaseInvoiceItem:  createEntity('purchase_invoice_items'),
   Product:          createEntity('products'),
   SalesInvoice:     createEntity('sales_invoices'),
-  Expense:          createEntity('expenses'),
+  // Expenses — يمر حصرياً عبر /api/secure/expenses (BFF بكوكي HttpOnly).
+  // نفس شكل الدوال بالضبط (list/get/create/update/delete/filter) عشان
+  // كل الصفحات اللي تستخدم db.Expense.xxx() تفضل تشتغل بدون أي تعديل.
+  Expense: {
+    list: (orderBy = '-expense_date', limit = 500) => secureExpenses.list({ orderBy, limit }),
+    get: (id) => secureExpenses.get(id),
+    create: (record) => secureExpenses.create(record),
+    update: (id, record) => secureExpenses.update(id, record),
+    delete: (id) => secureExpenses.delete(id),
+    filter: (filters = {}, orderBy = '-expense_date', limit = 500) => secureExpenses.filter(filters, orderBy, limit),
+    subscribe: () => (() => {}), // لا يوجد بث لحظي عبر BFF — راجع RealtimeSync.jsx
+  },
   AuditLog:         createEntity('audit_logs'),
   AppSettings:      createEntity('app_settings'),
   // Loyalty
@@ -151,13 +163,5 @@ export const storage = { uploadFile, deleteFile };
 
 // ── Functions ──────────────────────────────────────────────────
 export const functions = { invoke: invokeFunction };
-
-// ── Backward compat shim (drop-in for base44) ─────────────────
-export const base44 = {
-  entities: db,
-  integrations: {
-    Core: { UploadFile: uploadFile },
-  },
-};
 
 export default db;

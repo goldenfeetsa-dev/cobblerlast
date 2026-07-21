@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isBefore, startOfDay, getDay } from 'date-fns';
@@ -25,12 +25,12 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
 
   const { data: workingHours = [] } = useQuery({
     queryKey: ['working-hours'],
-    queryFn: () => base44.entities.WorkingHours.list(),
+    queryFn: () => db.WorkingHours.list(),
   });
 
   const { data: bookings = [] } = useQuery({
     queryKey: ['bookings-calendar'],
-    queryFn: () => base44.entities.Booking.filter({ status: ['pending', 'confirmed', 'in_progress'] }),
+    queryFn: () => db.Booking.filter({ status: ['pending', 'confirmed', 'in_progress'] }),
     refetchInterval: 30000,
   });
 

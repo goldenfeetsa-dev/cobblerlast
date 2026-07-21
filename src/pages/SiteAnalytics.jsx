@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ export default function SiteAnalytics() {
 
   const { data: visits = [], isLoading } = useQuery({
     queryKey: ['site-visits'],
-    queryFn: () => base44.entities.SiteVisit.list('-created_at', 2000),
+    queryFn: () => db.SiteVisit.list('-created_at', 2000),
   });
 
   if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;

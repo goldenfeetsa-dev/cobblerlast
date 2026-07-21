@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ export default function Customers() {
   const [editForm, setEditForm] = useState({ name: '', phone: '' });
 
   const updateCustomer = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Customer.update(id, data),
+    mutationFn: ({ id, data }) => db.Customer.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       logAudit({ action: 'update', page: 'العملاء', entity: 'customer', entity_id: editCustomer?.id, details: editForm });
@@ -47,7 +47,7 @@ export default function Customers() {
   });
 
   const deleteCustomer = useMutation({
-    mutationFn: (id) => base44.entities.Customer.delete(id),
+    mutationFn: (id) => db.Customer.delete(id),
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       logAudit({ action: 'delete', page: 'العملاء', entity: 'customer', entity_id: id });
@@ -60,24 +60,24 @@ export default function Customers() {
   // لإرسال واتساب جماعي (وهذا سبب شكوى "التتبع" من طرف الموظف)
   const { data: customerOrders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['customer-orders', historyCustomer?.phone],
-    queryFn: () => base44.entities.Order.filter({ customer_phone: historyCustomer.phone }, '-created_at', 100),
+    queryFn: () => db.Order.filter({ customer_phone: historyCustomer.phone }, '-created_at', 100),
     enabled: !!historyCustomer?.phone,
   });
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list('-created_at', 200),
+    queryFn: () => db.Customer.list('-created_at', 200),
     initialData: [],
   });
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
+    queryFn: () => db.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
   const { data: planList } = useQuery({
     queryKey: ['operations-plan'],
-    queryFn: () => base44.entities.OperationsPlan.list(), initialData: [],
+    queryFn: () => db.OperationsPlan.list(), initialData: [],
   });
   // نفس المصدر المستخدم فعلياً عند إنشاء الطلب (NewOrder) — كانت الصفحتين
   // تقرآن من جدولين مختلفين فيطلع رقم مختلف بالبطاقة عن الرقم الحقيقي المُطبَّق

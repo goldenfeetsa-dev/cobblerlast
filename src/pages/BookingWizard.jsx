@@ -2,7 +2,7 @@ import { useTrackVisit } from '@/hooks/useTrackVisit';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Scissors } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -111,7 +111,7 @@ export default function BookingWizard() {
     };
 
     try {
-      const created = await base44.entities.Booking.create(bookingData);
+      const created = await db.Booking.create(bookingData);
       qc.invalidateQueries({ queryKey: ['bookings-calendar'] });
       qc.invalidateQueries({ queryKey: ['bookings'] });
       setConfirmedBooking(created);

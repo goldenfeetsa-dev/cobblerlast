@@ -10,7 +10,11 @@ import { supabase } from '@/lib/supabaseClient';
 const WATCHED_TABLES = [
   'orders', 'customers', 'employees', 'branches',
   'inventory_items', 'suppliers', 'supplier_products', 'products',
-  'sales_invoices', 'expenses', 'audit_logs', 'app_settings',
+  // ملاحظة: 'expenses' اتشالت من هنا — الجدول أصبح مقفول بالكامل عن anon
+  // (BFF فقط عبر /api/secure/expenses)، فالمزامنة اللحظية القديمة ما
+  // كانت ستوصل أي بيانات فعلياً بعد التشديد. صفحة المحاسبة تعيد الجلب
+  // بنفسها بعد كل عملية إضافة/تعديل مباشرة بدل الاعتماد على Realtime.
+  'sales_invoices', 'audit_logs', 'app_settings',
   'loyalty_cards', 'loyalty_stamps', 'loyalty_settings',
   'loyalty_members', 'loyalty_points_transactions',
   'loyalty_member_notifications', 'loyalty_membership_settings',

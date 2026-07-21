@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,7 +58,7 @@ export default function Dashboard() {
 
   const { data: allOrders } = useQuery({
     queryKey: ['orders', 'dashboard'],
-    queryFn: () => base44.entities.Order.list('-created_at', 500),
+    queryFn: () => db.Order.list('-created_at', 500),
     initialData: [],
   });
 
@@ -66,7 +66,7 @@ export default function Dashboard() {
   // كاملاً من الإيراد الفعلي لأي فرع يبيع منتجات وليس فقط يصلّح
   const { data: allSalesInvoices } = useQuery({
     queryKey: ['sales-invoices-dashboard'],
-    queryFn: () => base44.entities.SalesInvoice.list('-created_at', 500),
+    queryFn: () => db.SalesInvoice.list('-created_at', 500),
     initialData: [],
   });
 
@@ -122,7 +122,7 @@ export default function Dashboard() {
 
   const { data: customers } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list(),
+    queryFn: () => db.Customer.list(),
     initialData: [],
   });
 

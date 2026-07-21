@@ -15,13 +15,13 @@
 //
 // الاستخدام لا يوقف العملية الأساسية أبداً حتى لو فشل التسجيل نفسه —
 // تسجيل التدقيق ثانوي ولا يجوز يمنع حفظ عمل المستخدم.
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
 
 export async function logAudit({ action, page, entity, entity_id, details }) {
   try {
     const session = getSession();
-    await base44.entities.AuditLog.create({
+    await db.AuditLog.create({
       action,                              // مثال: 'create' | 'update' | 'delete' | 'status_change'
       page: page || null,                  // مثال: '/employees' أو 'الموظفون'
       entity: entity || null,              // مثال: 'order' | 'employee' | 'customer' | 'working_hours'

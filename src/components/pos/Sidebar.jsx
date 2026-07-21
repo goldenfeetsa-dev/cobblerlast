@@ -88,6 +88,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     clearSession();
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     // تنقّل ناعم عبر الراوتر بدل إعادة تحميل الصفحة بالكامل (أخف وأسرع على الجهاز)
     navigate('/login', { replace: true });
   };

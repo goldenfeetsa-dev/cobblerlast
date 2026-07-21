@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin, getHomePath } from '@/lib/roles';
@@ -35,17 +35,17 @@ export default function Employees() {
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => base44.entities.Employee.list(),
+    queryFn: () => db.Employee.list(),
     initialData: [],
   });
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
-    queryFn: () => base44.entities.Branch.list(),
+    queryFn: () => db.Branch.list(),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Employee.delete(id),
+    mutationFn: (id) => db.Employee.delete(id),
     onSuccess: (_, id) => {
       const emp = employees?.find(e => e.id === id);
       logAudit({ action: 'delete', page: 'الموظفون', entity: 'employee', entity_id: id, details: { name: emp?.name, role: emp?.role } });
@@ -57,9 +57,9 @@ export default function Employees() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (editingEmployee) {
-        return base44.entities.Employee.update(editingEmployee.id, data);
+        return db.Employee.update(editingEmployee.id, data);
       }
-      return base44.entities.Employee.create(data);
+      return db.Employee.create(data);
     },
     onSuccess: (result, data) => {
       logAudit({

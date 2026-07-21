@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,16 +13,16 @@ export default function ReviewsAdmin() {
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ['reviews-all'],
-    queryFn: () => base44.entities.Review.list('-created_at'),
+    queryFn: () => db.Review.list('-created_at'),
   });
 
   const approveMutation = useMutation({
-    mutationFn: (id) => base44.entities.Review.update(id, { is_approved: true }),
+    mutationFn: (id) => db.Review.update(id, { is_approved: true }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reviews-all'] }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Review.delete(id),
+    mutationFn: (id) => db.Review.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reviews-all'] }),
   });
 

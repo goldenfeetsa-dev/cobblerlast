@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +19,7 @@ export default function ScanBarcode() {
 
     setLoading(true);
     try {
-      const matches = await base44.entities.Order.filter({ order_number: trimmed }, '-created_at', 1);
+      const matches = await db.Order.filter({ order_number: trimmed }, '-created_at', 1);
       if (matches?.[0]) {
         navigate(`/orders/${matches[0].id}`);
       } else {

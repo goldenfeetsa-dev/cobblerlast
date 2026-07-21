@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { Calendar, Phone, Store, Truck, Search, Camera, MapPin, Send, CheckSquare, Square, MessageCircle, Eye } from 'lucide-react';
 import { getSession } from '@/lib/sessionStore';
 import { Button } from '@/components/ui/button';
@@ -32,12 +32,12 @@ export default function BookingAdmin() {
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['bookings'],
-    queryFn: () => base44.entities.Booking.list('-booking_date', 200),
+    queryFn: () => db.Booking.list('-booking_date', 200),
     refetchInterval: 30000,
   });
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Booking.update(id, { status }),
+    mutationFn: ({ id, status }) => db.Booking.update(id, { status }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['bookings'] });
       const labels = { confirmed: 'استلمناه ✓', in_progress: 'جارٍ الشغل 🔧', completed: 'انتهينا ✅' };

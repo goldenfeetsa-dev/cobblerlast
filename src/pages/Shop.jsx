@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Plus, Search, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -168,7 +168,7 @@ export default function Shop() {
 
   const { data: dbProducts = [] } = useQuery({
     queryKey: ['products-public'],
-    queryFn: () => base44.entities.Product.list('-created_at', 200),
+    queryFn: () => db.Product.list('-created_at', 200),
   });
 
   const fallbackProducts = useFallbackProducts(t);

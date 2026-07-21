@@ -3,7 +3,7 @@ import BarcodeDisplay from './BarcodeDisplay';
 import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
 // نستخدم نسخة Canvas (صورة نقطية) بدل SVG لرمز QR: بعض مسارات الطباعة
@@ -30,7 +30,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
 
   const { data: settingsList, isFetched: settingsFetched } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
+    queryFn: () => db.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
   const settings = settingsList[0] || {};

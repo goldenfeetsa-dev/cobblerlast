@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -217,34 +217,34 @@ export default function OperationsDashboard() {
 
   const { data: planList } = useQuery({
     queryKey: ['operations-plan'],
-    queryFn: () => base44.entities.OperationsPlan.list(),
+    queryFn: () => db.OperationsPlan.list(),
     initialData: [],
   });
   const plan = planList[0] || null;
 
   const { data: workflows, isLoading: wfLoading } = useQuery({
     queryKey: ['workflow-stages'],
-    queryFn: () => base44.entities.WorkflowStage.list('-created_at', 100),
+    queryFn: () => db.WorkflowStage.list('-created_at', 100),
     initialData: [],
     refetchInterval: 15000,
   });
 
   const { data: allOrders } = useQuery({
     queryKey: ['orders', 'operations'],
-    queryFn: () => base44.entities.Order.list('-created_at', 300),
+    queryFn: () => db.Order.list('-created_at', 300),
     initialData: [],
     refetchInterval: 20000,
   });
 
   const { data: customers } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list(),
+    queryFn: () => db.Customer.list(),
     initialData: [],
   });
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => base44.entities.AppSettings.list(), staleTime: 0,
+    queryFn: () => db.AppSettings.list(), staleTime: 0,
     initialData: [],
   });
   const freeAfter = plan?.loyalty_free_after || settingsList[0]?.stamps_required || 4;
@@ -298,8 +298,8 @@ export default function OperationsDashboard() {
   const planMutation = useMutation({
     mutationFn: async (enabled) => {
       const data = { plan_b_enabled: enabled, updated_by: session?.name || 'admin' };
-      if (plan) return base44.entities.OperationsPlan.update(plan.id, data);
-      return base44.entities.OperationsPlan.create(data);
+      if (plan) return db.OperationsPlan.update(plan.id, data);
+      return db.OperationsPlan.create(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['operations-plan'] });
@@ -315,7 +315,7 @@ export default function OperationsDashboard() {
       if (nextStage === 'logistics_return') updates.returned_to_branch_at = new Date().toISOString();
       if (nextStage === 'ready_for_pickup') updates.notified_customer_at = new Date().toISOString();
       if (techInput[wf.id]) updates.technician_name = techInput[wf.id];
-      return base44.entities.WorkflowStage.update(wf.id, updates);
+      return db.WorkflowStage.update(wf.id, updates);
     },
     onSuccess: (_, { wf }) => {
       queryClient.invalidateQueries({ queryKey: ['workflow-stages'] });

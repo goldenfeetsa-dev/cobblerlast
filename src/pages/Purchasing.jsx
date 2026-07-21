@@ -11,7 +11,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/supabaseApi';
+import { db } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
 import { FINANCE_ROLES } from '@/lib/roles';
 import { Navigate, Link } from 'react-router-dom';
@@ -56,13 +56,13 @@ export default function Purchasing() {
   const [quickSupplier, setQuickSupplier] = useState({ name: '', vat_number: '', phone: '', address: '' });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ['suppliers'], queryFn: () => base44.entities.Supplier.list('name', 200),
+    queryKey: ['suppliers'], queryFn: () => db.Supplier.list('name', 200),
   });
   const { data: items = [] } = useQuery({
-    queryKey: ['inventory-items'], queryFn: () => base44.entities.InventoryItem.list('-created_at', 500),
+    queryKey: ['inventory-items'], queryFn: () => db.InventoryItem.list('-created_at', 500),
   });
   const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ['purchase-invoices'], queryFn: () => base44.entities.PurchaseInvoice.list('-invoice_date', 300),
+    queryKey: ['purchase-invoices'], queryFn: () => db.PurchaseInvoice.list('-invoice_date', 300),
   });
 
   // موظف مالي فقط (مالك/مدير/إداري/محاسب) — نفس صلاحيات الفواتير والتقارير المالية
@@ -91,16 +91,16 @@ export default function Purchasing() {
         vat_number_valid_format: isValidVatFormat(suppliersById[data.supplier_id]?.vat_number),
       };
       const saved = editingInvoice
-        ? await base44.entities.PurchaseInvoice.update(editingInvoice.id, payload)
-        : await base44.entities.PurchaseInvoice.create(payload);
+        ? await db.PurchaseInvoice.update(editingInvoice.id, payload)
+        : await db.PurchaseInvoice.create(payload);
 
       // ربط بنود الفاتورة بالمخزون — نحذف القديم (لو تعديل) ونعيد الإدخال
       if (editingInvoice) {
-        const existingLines = await base44.entities.PurchaseInvoiceItem.filter({ purchase_invoice_id: editingInvoice.id });
-        await Promise.all(existingLines.map(l => base44.entities.PurchaseInvoiceItem.delete(l.id)));
+        const existingLines = await db.PurchaseInvoiceItem.filter({ purchase_invoice_id: editingInvoice.id });
+        await Promise.all(existingLines.map(l => db.PurchaseInvoiceItem.delete(l.id)));
       }
       const validLines = lines.filter(l => l.item_id || l.description);
-      await Promise.all(validLines.map(l => base44.entities.PurchaseInvoiceItem.create({
+      await Promise.all(validLines.map(l => db.PurchaseInvoiceItem.create({
         purchase_invoice_id: saved.id,
         item_id: l.item_id || null,
         description: l.description || null,
@@ -121,7 +121,7 @@ export default function Purchasing() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.PurchaseInvoice.delete(id),
+    mutationFn: (id) => db.PurchaseInvoice.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-invoices'] });
       toast.success('تم حذف فاتورة الشراء');
@@ -131,7 +131,7 @@ export default function Purchasing() {
   // مورد سريع: يُضاف مباشرة لقائمة الموردين الفعلية (نفس صفحة الموردين)
   // ويُختار تلقائياً بفاتورة الشراء الحالية — بدون مغادرة الشاشة
   const createSupplierQuick = useMutation({
-    mutationFn: (data) => base44.entities.Supplier.create({
+    mutationFn: (data) => db.Supplier.create({
       name: data.name,
       vat_number: data.vat_number || null,
       phone: data.phone || null,
@@ -161,7 +161,7 @@ export default function Purchasing() {
       tax_classification: inv.tax_classification, document_url: inv.document_url || '', notes: inv.notes || '',
     });
     try {
-      const existingLines = await base44.entities.PurchaseInvoiceItem.filter({ purchase_invoice_id: inv.id });
+      const existingLines = await db.PurchaseInvoiceItem.filter({ purchase_invoice_id: inv.id });
       setLines(existingLines.length ? existingLines.map(l => ({ item_id: l.item_id || '', description: l.description || '', quantity: l.quantity, unit_cost: l.unit_cost })) : [emptyLine()]);
     } catch { setLines([emptyLine()]); }
     setDialogOpen(true);
