@@ -1,5 +1,6 @@
 import React, { useRef, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 import Workshop from './Workshop';
 import Shoe from './Shoe';
 import RoboticArm from './RoboticArm';
@@ -16,7 +17,7 @@ function CameraRig() {
   const pointer = useHeroStore((s) => s.pointer);
   useFrame(() => {
     camera.position.x += (pointer.x * 0.4 - camera.position.x) * 0.04;
-    camera.position.y += (1.2 - pointer.y * 0.25 - camera.position.y) * 0.04;
+    camera.position.y += (0.9 - pointer.y * 0.2 - camera.position.y) * 0.04;
     camera.lookAt(0, -0.1, 0);
   });
   return null;
@@ -31,18 +32,35 @@ function SceneContents() {
     <>
       <CameraRig />
 
-      {/* إضاءة دافئة LED من الأعلى + إضاءة تعبئة خفيفة */}
-      <ambientLight intensity={0.35} color="#3a2a1a" />
-      <pointLight position={[0, 2.4, 1]} intensity={1.4} color="#ffd9a0" distance={8} decay={2} />
-      <pointLight position={[-2, 1.5, 1]} intensity={0.5} color="#ffb877" distance={6} decay={2} />
+      {/* إضاءة معاد ضبطها بالكامل — كانت خافتة جداً وما تبيّن أي تفاصيل.
+          الآن: تعبئة عامة قوية + إضاءة LED دافئة من الأعلى تصيب الحذاء
+          والمكتب مباشرة + إضاءة جانبية من النافذة (باردة قليلاً تقابل
+          الدافئ) عشان يصير فيه تباين وعمق بدل سواد مسطّح. */}
+      <ambientLight intensity={0.9} color="#5a4530" />
+      <hemisphereLight args={['#ffe9c4', '#2a1c10', 0.8]} />
+
+      {/* الإضاءة الرئيسية فوق الحذاء مباشرة */}
+      <pointLight position={[0, 2.2, 1.2]} intensity={4.5} color="#ffdca8" distance={10} decay={1.6} />
       <spotLight
-        position={[0.5, 2.6, 1.5]}
-        angle={0.5}
-        penumbra={0.6}
-        intensity={0.9}
-        color="#fff1d6"
-        target-position={[0, -0.2, 0]}
+        position={[0.2, 2.6, 1.8]}
+        angle={0.6}
+        penumbra={0.5}
+        intensity={5}
+        color="#fff2d9"
+        distance={9}
+        decay={1.4}
+        target-position={[0, -0.1, 0]}
       />
+
+      {/* إضاءة تعبئة من جهة النافذة (يسار) — تعطي عمق ولمعان بارد خفيف */}
+      <pointLight position={[-2.4, 1.2, 1]} intensity={1.8} color="#a8c8ff" distance={7} decay={1.8} />
+
+      {/* إضاءة تعبئة دافئة من اليمين قرب البكرات */}
+      <pointLight position={[2.2, 1, 1]} intensity={1.6} color="#ffb877" distance={7} decay={1.8} />
+
+      {/* إضاءة أمامية خفيفة تجاه الكاميرا عشان الوجه الأمامي للحذاء
+          والأذرع ما يطلع أسود بالكامل */}
+      <pointLight position={[0, 0.4, 3.5]} intensity={1.2} color="#fff1d6" distance={8} decay={2} />
 
       <Workshop />
 
@@ -68,9 +86,15 @@ export default function Scene({ className = '' }) {
   return (
     <div className={`absolute inset-0 ${className}`}>
       <Canvas
-        camera={{ position: [0, 1.2, 4.2], fov: 42 }}
+        camera={{ position: [0, 0.9, 5.4], fov: 48 }}
         dpr={[1, 1.75]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.5,
+        }}
         onPointerMove={(e) => {
           const x = (e.clientX / window.innerWidth) * 2 - 1;
           const y = (e.clientY / window.innerHeight) * 2 - 1;

@@ -13,7 +13,7 @@ export default function HeroPreview() {
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ height: '100dvh', background: 'radial-gradient(ellipse at 50% 20%, #241a12 0%, #140d09 60%, #0a0603 100%)' }}
+      style={{ height: '100dvh', background: 'radial-gradient(ellipse at 50% 25%, #4a3320 0%, #2a1c12 55%, #180f09 100%)' }}
     >
       {/* رابط رجوع صغير — للمعاينة فقط، مو جزء من التصميم النهائي */}
       <Link

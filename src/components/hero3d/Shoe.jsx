@@ -27,13 +27,13 @@ export default function Shoe({ shoeRef }) {
   });
 
   const leather = {
-    color: '#6b3d24',
-    roughness: 0.35,
+    color: '#8a5230',
+    roughness: 0.32,
     metalness: 0.08,
   };
   const sole = {
-    color: '#2a1810',
-    roughness: 0.9,
+    color: '#3f2a1c',
+    roughness: 0.85,
     metalness: 0,
   };
   const lace = {

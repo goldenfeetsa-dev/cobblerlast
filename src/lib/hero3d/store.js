@@ -16,9 +16,10 @@ export const useHeroStore = create((set) => ({
   isActive: true,
   setActive: (isActive) => set({ isActive }),
 
-  // اللوحة المفتوحة فوق الـ Canvas: null | 'tracking' | 'booking'
-  openPanel: null,
-  togglePanel: (panel) =>
-    set((s) => ({ openPanel: s.openPanel === panel ? null : panel })),
-  closePanel: () => set({ openPanel: null }),
+  // لوحتا "تتبع طلبك" و"Booking" ظاهرتان افتراضياً (زي النموذج
+  // المرجعي) — كل وحدة تقدر تتطوى لحالها بدون ما تأثر على الثانية
+  trackingOpen: true,
+  bookingOpen: true,
+  toggleTracking: () => set((s) => ({ trackingOpen: !s.trackingOpen })),
+  toggleBooking: () => set((s) => ({ bookingOpen: !s.bookingOpen })),
 }));
