@@ -48,6 +48,7 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "@react-three/postprocessing": "^2.16.3",
     "three": "^0.160.0",
     "zustand": "^4.5.5",
     "@stripe/react-stripe-js": "^3.0.0",

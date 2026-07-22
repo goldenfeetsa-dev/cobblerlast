@@ -1,5 +1,7 @@
 import React, { useRef, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Sparkles } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import Workshop from './Workshop';
 import Shoe from './Shoe';
@@ -21,6 +23,29 @@ function CameraRig() {
     camera.lookAt(0, -0.1, 0);
   });
   return null;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// شرر/غبار متوهج يتبع طرف الإبرة كل فريم — نفس التفصيلة اللي بالصورة
+// المرجعية (شرر يتطاير من نقطة الخياطة). نحدّث موضع المجموعة يدوياً
+// عشان Sparkles من drei ما تقبل ref متحرك مباشرة.
+// ─────────────────────────────────────────────────────────────────
+function NeedleSpark({ tipRef }) {
+  const groupRef = useRef();
+  const vec = useRef(new THREE.Vector3());
+
+  useFrame(() => {
+    if (!tipRef.current || !groupRef.current) return;
+    tipRef.current.getWorldPosition(vec.current);
+    groupRef.current.position.copy(vec.current);
+  });
+
+  return (
+    <group ref={groupRef}>
+      <Sparkles count={26} scale={0.28} size={3} speed={0.6} color="#ffd9a0" opacity={0.9} />
+      <pointLight color="#ffcf8a" intensity={0.8} distance={1.2} decay={2} />
+    </group>
+  );
 }
 
 function SceneContents() {
@@ -78,6 +103,9 @@ function SceneContents() {
       {/* الخيوط الحية: من كل رف نحو طرف الإبرة اليمنى (خياطة فعلية) */}
       <Thread start={[1.9, 0.5, -0.3]} endRef={rightTipRef} color="#e8c88a" sag={0.25} />
       <Thread start={[-1.9, 0.5, -0.3]} endRef={leftTipRef} color="#d9d2bd" sag={0.2} />
+
+      {/* شرر متوهج عند نقطة الخياطة الفعلية — يتبع الإبرة أوتوماتيكياً */}
+      <NeedleSpark tipRef={rightTipRef} />
     </>
   );
 }
@@ -103,6 +131,15 @@ export default function Scene({ className = '' }) {
       >
         <Suspense fallback={null}>
           <SceneContents />
+          <EffectComposer multisampling={0}>
+            <Bloom
+              intensity={0.55}
+              luminanceThreshold={0.5}
+              luminanceSmoothing={0.25}
+              mipmapBlur
+            />
+            <Vignette eskil={false} offset={0.15} darkness={0.6} />
+          </EffectComposer>
         </Suspense>
       </Canvas>
     </div>

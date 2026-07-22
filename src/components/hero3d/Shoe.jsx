@@ -29,7 +29,9 @@ export default function Shoe({ shoeRef }) {
   const leather = {
     color: '#8a5230',
     roughness: 0.32,
-    metalness: 0.08,
+    metalness: 0.06,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.25,
   };
   const sole = {
     color: '#3f2a1c',
@@ -50,17 +52,17 @@ export default function Shoe({ shoeRef }) {
 
       {/* جسم الحذاء الرئيسي */}
       <RoundedBox args={[1.35, 0.42, 0.52]} radius={0.14} smoothness={4} position={[0.02, -0.06, 0]}>
-        <meshStandardMaterial {...leather} />
+        <meshPhysicalMaterial {...leather} />
       </RoundedBox>
 
       {/* مقدمة الحذاء (toe cap) — أضيق وأملس */}
       <RoundedBox args={[0.62, 0.34, 0.46]} radius={0.16} smoothness={4} position={[0.68, -0.08, 0]}>
-        <meshStandardMaterial color="#7a4630" roughness={0.25} metalness={0.12} />
+        <meshPhysicalMaterial color="#7a4630" roughness={0.2} metalness={0.1} clearcoat={0.7} clearcoatRoughness={0.2} />
       </RoundedBox>
 
       {/* كعب الحذاء المرتفع */}
       <RoundedBox args={[0.5, 0.5, 0.5]} radius={0.12} smoothness={4} position={[-0.58, 0.06, 0]}>
-        <meshStandardMaterial {...leather} />
+        <meshPhysicalMaterial {...leather} />
       </RoundedBox>
 
       {/* عروة الرباط (eyelet tabs) */}
