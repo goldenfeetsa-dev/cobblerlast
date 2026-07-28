@@ -202,7 +202,7 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-bold text-sm truncate">{b.branch_name}</span>
-                    {i === 0 && <Crown className="w-4 h-4 text-amber-500 shrink-0" />}
+                    {i === 0 && <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />}
                   </div>
                   <p className="text-xl font-black">{b.revenue.toFixed(0)} <span className="text-xs font-normal text-muted-foreground">ر.س</span></p>
                   <p className="text-xs text-muted-foreground mt-1">

@@ -19,11 +19,11 @@ const STATUS_ICONS = {
   cancelled: XCircle,
 };
 const STATUS_COLORS = {
-  pending: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10',
-  confirmed: 'text-blue-400 border-blue-500/30 bg-blue-500/10',
-  in_progress: 'text-purple-400 border-purple-500/30 bg-purple-500/10',
-  completed: 'text-green-400 border-green-500/30 bg-green-500/10',
-  cancelled: 'text-red-400 border-red-500/30 bg-red-500/10',
+  pending: 'text-yellow-400 dark:text-yellow-300 border-yellow-500/30 bg-yellow-500/10',
+  confirmed: 'text-blue-400 dark:text-blue-300 border-blue-500/30 bg-blue-500/10',
+  in_progress: 'text-purple-400 dark:text-purple-300 border-purple-500/30 bg-purple-500/10',
+  completed: 'text-green-400 dark:text-green-300 border-green-500/30 bg-green-500/10',
+  cancelled: 'text-red-400 dark:text-red-300 border-red-500/30 bg-red-500/10',
 };
 
 export default function MyBookings() {

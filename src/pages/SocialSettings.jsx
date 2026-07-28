@@ -172,9 +172,9 @@ export default function SocialSettings() {
       </Card>
 
       {/* Preview */}
-      <Card className="border-amber-100 bg-amber-50/30">
+      <Card className="border-amber-100 dark:border-amber-800 bg-amber-50/30">
         <CardHeader>
-          <CardTitle className="text-base text-amber-800">معاينة — كيف تظهر في الموقع</CardTitle>
+          <CardTitle className="text-base text-amber-800 dark:text-amber-300">معاينة — كيف تظهر في الموقع</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">

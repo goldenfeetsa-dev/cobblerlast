@@ -135,7 +135,7 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
                 onClick={() => { onDateChange(day); onTimeChange(null); }}
                 className={cn(
                   "h-9 w-full rounded-xl text-sm font-medium transition-all",
-                  selected ? "bg-amber-500 text-white shadow-md shadow-amber-200" :
+                  selected ? "bg-amber-500 dark:bg-amber-900/60 text-white shadow-md shadow-amber-200" :
                   past ? "text-stone-300 cursor-not-allowed" :
                   available ? "hover:bg-amber-50 text-stone-700 hover:text-amber-700" :
                   "text-stone-300 cursor-not-allowed line-through"
@@ -169,7 +169,7 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
                   className={cn(
                     "py-2.5 rounded-xl text-sm font-medium border-2 transition-all",
                     selectedTime === slot.time
-                      ? "border-amber-500 bg-amber-500 text-white shadow-md shadow-amber-100"
+                      ? "border-amber-500 dark:border-amber-600 bg-amber-500 dark:bg-amber-900/60 text-white shadow-md shadow-amber-100"
                       : slot.available
                       ? "border-stone-200 text-stone-700 hover:border-amber-300 hover:bg-amber-50"
                       : "border-stone-100 text-stone-300 bg-stone-50 cursor-not-allowed line-through"

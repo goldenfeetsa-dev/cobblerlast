@@ -72,7 +72,7 @@ export function OrderStatusBar() {
           <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
             <span>شريط حالة الطلبات النشطة ({orders.length} طلب)</span>
             {stats.late > 0 && (
-              <span className="flex items-center gap-1 text-red-500 font-bold">
+              <span className="flex items-center gap-1 text-red-500 dark:text-red-400 font-bold">
                 <AlertTriangle className="w-3 h-3" />{stats.late} متأخر
               </span>
             )}
@@ -96,7 +96,7 @@ export function OrderStatusBar() {
               </div>
             ))}
             <div className="flex items-center gap-1.5 text-xs">
-              <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-red-500 dark:bg-red-900/60" />
               <span className="text-gray-500">متأخر &gt;3 أيام</span>
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function CalendarView() {
                 className="h-16 p-1.5 border-b border-l border-gray-50 flex flex-col items-center justify-between transition-all"
                 style={{ background: style.bg, borderColor: isSelected ? style.border : undefined,
                   outline: isSelected ? `2px solid ${style.border}` : 'none', outlineOffset: -2 }}>
-                <span className={`text-xs font-bold ${isToday(day) ? 'text-amber-600' : ''}`} style={{ color: style.text }}>
+                <span className={`text-xs font-bold ${isToday(day) ? 'text-amber-600 dark:text-amber-400' : ''}`} style={{ color: style.text }}>
                   {format(day, 'd')}
                 </span>
                 {dayOrders.length > 0 && (
@@ -299,7 +299,7 @@ export default function CalendarView() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-sm text-gray-900">{order.order_number}</span>
-                          {isLate && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-bold">متأخر</span>}
+                          {isLate && <span className="text-[10px] bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full font-bold">متأخر</span>}
                         </div>
                         <div className="text-xs text-gray-500">{order.customer_name}</div>
                       </div>

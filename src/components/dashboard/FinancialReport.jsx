@@ -49,17 +49,17 @@ export default function FinancialReport({ orders }) {
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-green-50 rounded-xl p-3 text-center">
-            <Banknote className="w-4 h-4 text-green-600 mx-auto mb-1" />
-            <p className="text-[11px] text-green-700 font-medium">إجمالي النقد</p>
-            <p className="text-lg font-bold text-green-800">{cashTotal.toFixed(0)}</p>
-            <p className="text-[10px] text-green-600">ر.س</p>
+          <div className="bg-green-50 dark:bg-green-950/30 rounded-xl p-3 text-center">
+            <Banknote className="w-4 h-4 text-green-600 dark:text-green-400 mx-auto mb-1" />
+            <p className="text-[11px] text-green-700 dark:text-green-300 font-medium">إجمالي النقد</p>
+            <p className="text-lg font-bold text-green-800 dark:text-green-300">{cashTotal.toFixed(0)}</p>
+            <p className="text-[10px] text-green-600 dark:text-green-400">ر.س</p>
           </div>
-          <div className="bg-blue-50 rounded-xl p-3 text-center">
-            <CreditCard className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-            <p className="text-[11px] text-blue-700 font-medium">إجمالي الشبكة</p>
-            <p className="text-lg font-bold text-blue-800">{networkTotal.toFixed(0)}</p>
-            <p className="text-[10px] text-blue-600">ر.س</p>
+          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-3 text-center">
+            <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+            <p className="text-[11px] text-blue-700 dark:text-blue-300 font-medium">إجمالي الشبكة</p>
+            <p className="text-lg font-bold text-blue-800 dark:text-blue-300">{networkTotal.toFixed(0)}</p>
+            <p className="text-[10px] text-blue-600 dark:text-blue-400">ر.س</p>
           </div>
           <div className="bg-primary/10 rounded-xl p-3 text-center">
             <Wallet className="w-4 h-4 text-primary mx-auto mb-1" />

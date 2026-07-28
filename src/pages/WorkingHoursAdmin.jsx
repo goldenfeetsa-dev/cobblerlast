@@ -107,7 +107,7 @@ export default function WorkingHoursAdmin() {
           <h1 className="text-2xl font-black text-stone-800">أوقات العمل</h1>
           <p className="text-stone-500 text-sm mt-1">حدد أيام وساعات العمل لمنع التضارب في الحجوزات</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-amber-500 hover:bg-amber-400 text-stone-900 font-bold">
+        <Button onClick={handleSave} disabled={saving} className="bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold">
           <Save className="w-4 h-4 ml-2" />
           {saving ? 'جارٍ الحفظ...' : 'حفظ التغييرات'}
         </Button>
@@ -119,7 +119,7 @@ export default function WorkingHoursAdmin() {
             {/* Toggle */}
             <button
               onClick={() => update(i, 'is_open', !dayHour.is_open)}
-              className={cn("relative w-12 h-6 rounded-full transition-colors flex-shrink-0", dayHour.is_open ? "bg-amber-500" : "bg-stone-200")}
+              className={cn("relative w-12 h-6 rounded-full transition-colors flex-shrink-0", dayHour.is_open ? "bg-amber-500 dark:bg-amber-900/60" : "bg-stone-200")}
             >
               <span className={cn("absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all", dayHour.is_open ? "right-0.5" : "left-0.5")} />
             </button>

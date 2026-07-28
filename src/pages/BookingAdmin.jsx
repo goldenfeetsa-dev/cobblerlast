@@ -12,11 +12,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
 const STATUS_CONFIG = {
-  pending:     { label: 'قيد الانتظار',  color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  confirmed:   { label: 'مؤكد',           color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  in_progress: { label: 'جارٍ الشغل',    color: 'bg-purple-100 text-purple-700 border-purple-200' },
-  completed:   { label: 'انتهينا',        color: 'bg-green-100 text-green-700 border-green-200' },
-  cancelled:   { label: 'ملغى',           color: 'bg-red-100 text-red-700 border-red-200' },
+  pending:     { label: 'قيد الانتظار',  color: 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' },
+  confirmed:   { label: 'مؤكد',           color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+  in_progress: { label: 'جارٍ الشغل',    color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
+  completed:   { label: 'انتهينا',        color: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' },
+  cancelled:   { label: 'ملغى',           color: 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
 };
 
 export default function BookingAdmin() {
@@ -106,10 +106,10 @@ export default function BookingAdmin() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {[
           { label: 'الكل',      value: stats.total,               color: 'text-stone-800' },
-          { label: 'انتظار',    value: stats.pending,             color: 'text-yellow-600' },
-          { label: 'مؤكدة',    value: stats.confirmed,           color: 'text-blue-600' },
-          { label: 'مكتملة',   value: stats.completed,           color: 'text-green-600' },
-          { label: 'الإيرادات', value: `${stats.revenue.toFixed(0)} ر.س`, color: 'text-amber-600' },
+          { label: 'انتظار',    value: stats.pending,             color: 'text-yellow-600 dark:text-yellow-400' },
+          { label: 'مؤكدة',    value: stats.confirmed,           color: 'text-blue-600 dark:text-blue-400' },
+          { label: 'مكتملة',   value: stats.completed,           color: 'text-green-600 dark:text-green-400' },
+          { label: 'الإيرادات', value: `${stats.revenue.toFixed(0)} ر.س`, color: 'text-amber-600 dark:text-amber-400' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-2xl border border-stone-200 p-4 text-center">
             <p className={cn("text-2xl font-black", s.color)}>{s.value}</p>
@@ -148,19 +148,19 @@ export default function BookingAdmin() {
         <div className="flex items-center gap-2 mb-3 text-sm text-stone-500">
           <button onClick={toggleAll} className="flex items-center gap-1.5 hover:text-stone-800 transition-colors">
             {selectedIds.length === filtered.length && filtered.length > 0
-              ? <CheckSquare className="w-4 h-4 text-amber-500" />
+              ? <CheckSquare className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               : <Square className="w-4 h-4" />}
             تحديد الكل
           </button>
           {selectedIds.length > 0 && (
-            <span className="text-amber-600 font-medium">({selectedIds.length} محدد)</span>
+            <span className="text-amber-600 dark:text-amber-400 font-medium">({selectedIds.length} محدد)</span>
           )}
         </div>
       )}
 
       {isLoading && (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-amber-200 dark:border-amber-800 border-t-amber-500 rounded-full animate-spin" />
         </div>
       )}
 
@@ -184,7 +184,7 @@ export default function BookingAdmin() {
                     {/* Checkbox */}
                     <button onClick={() => toggleSelect(booking.id)} className="mt-1 flex-shrink-0">
                       {isSelected
-                        ? <CheckSquare className="w-4 h-4 text-amber-500" />
+                        ? <CheckSquare className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                         : <Square className="w-4 h-4 text-stone-300" />}
                     </button>
 
@@ -196,7 +196,7 @@ export default function BookingAdmin() {
                         {hasPhotos && (
                           <button
                             onClick={() => setPhotosBooking(booking)}
-                            className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 hover:bg-amber-100 transition-colors"
+                            className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 hover:bg-amber-100 transition-colors"
                           >
                             <Camera className="w-3 h-3" />
                             {booking.item_photos.length} صور
@@ -215,40 +215,40 @@ export default function BookingAdmin() {
                             href={`https://maps.google.com/?q=${booking.latitude},${booking.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-blue-500 hover:underline"
+                            className="flex items-center gap-1 text-blue-500 dark:text-blue-400 hover:underline"
                           >
                             <MapPin className="w-3 h-3" />
                             موقع العميل
                           </a>
                         )}
-                        <span className="font-bold text-amber-600">{booking.total_price} ر.س</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400">{booking.total_price} ر.س</span>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex gap-2 flex-shrink-0 flex-wrap">
                       {booking.status === 'pending' && (
-                        <Button size="sm" onClick={() => updateStatus.mutate({ id: booking.id, status: 'confirmed' })} className="bg-blue-500 hover:bg-blue-400 text-white text-xs h-8">
+                        <Button size="sm" onClick={() => updateStatus.mutate({ id: booking.id, status: 'confirmed' })} className="bg-blue-500 dark:bg-blue-900/60 hover:bg-blue-400 text-white text-xs h-8">
                           استلمناه ✓
                         </Button>
                       )}
                       {booking.status === 'confirmed' && (
-                        <Button size="sm" onClick={() => updateStatus.mutate({ id: booking.id, status: 'in_progress' })} className="bg-purple-500 hover:bg-purple-400 text-white text-xs h-8">
+                        <Button size="sm" onClick={() => updateStatus.mutate({ id: booking.id, status: 'in_progress' })} className="bg-purple-500 dark:bg-purple-900/60 hover:bg-purple-400 text-white text-xs h-8">
                           جارٍ الشغل 🔧
                         </Button>
                       )}
                       {booking.status === 'in_progress' && (
-                        <Button size="sm" onClick={() => updateStatus.mutate({ id: booking.id, status: 'completed' })} className="bg-green-500 hover:bg-green-400 text-white text-xs h-8">
+                        <Button size="sm" onClick={() => updateStatus.mutate({ id: booking.id, status: 'completed' })} className="bg-green-500 dark:bg-green-900/60 hover:bg-green-400 text-white text-xs h-8">
                           انتهينا ✅
                         </Button>
                       )}
                       {!['completed', 'cancelled'].includes(booking.status) && (
-                        <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: booking.id, status: 'cancelled' })} className="border-red-200 text-red-500 hover:bg-red-50 text-xs h-8">
+                        <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: booking.id, status: 'cancelled' })} className="border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 hover:bg-red-50 text-xs h-8">
                           إلغاء
                         </Button>
                       )}
                       <a href={`https://wa.me/${booking.customer_phone?.replace(/^0/, '966').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50 text-xs h-8">
+                        <Button size="sm" variant="outline" className="border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 hover:bg-green-50 text-xs h-8">
                           <MessageCircle className="w-3 h-3" />
                         </Button>
                       </a>
@@ -266,7 +266,7 @@ export default function BookingAdmin() {
         <DialogContent className="max-w-lg" dir="rtl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Camera className="w-5 h-5 text-amber-500" />
+              <Camera className="w-5 h-5 text-amber-500 dark:text-amber-400" />
               صور القطعة — {photosBooking?.customer_name}
             </DialogTitle>
           </DialogHeader>

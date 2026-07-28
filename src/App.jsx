@@ -79,7 +79,7 @@ const AuthenticatedApp = () => {
       <Suspense fallback={
         <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#060300' }}>
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 rounded-full border-2 border-yellow-500 border-t-transparent animate-spin" />
+            <div className="w-10 h-10 rounded-full border-2 border-yellow-500 dark:border-yellow-600 border-t-transparent animate-spin" />
             <p className="text-xs font-bold tracking-widest" style={{ color: '#C9A84C' }}>إبرة وخيط</p>
           </div>
         </div>

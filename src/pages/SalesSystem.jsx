@@ -162,10 +162,10 @@ function InventoryTab({ items, branches, session }) {
                   </td>
                   <td className="py-2.5 px-3 text-muted-foreground">{UNITS[item.unit] || item.unit}</td>
                   <td className="py-2.5 px-3 text-center">
-                    <span className={`font-bold ${lowStock ? 'text-red-600' : 'text-foreground'}`}>
+                    <span className={`font-bold ${lowStock ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
                       {item.warehouse_qty || 0}
                     </span>
-                    {lowStock && <AlertCircle className="w-3 h-3 text-red-500 inline mr-1" />}
+                    {lowStock && <AlertCircle className="w-3 h-3 text-red-500 dark:text-red-400 inline mr-1" />}
                   </td>
                   {salesBranches.map(b => (
                     <td key={b.id} className="py-2.5 px-3 text-center font-medium">
@@ -185,7 +185,7 @@ function InventoryTab({ items, branches, session }) {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="text-xs px-2 text-red-600 hover:bg-red-50">
+                          <Button size="sm" variant="outline" className="text-xs px-2 text-red-600 dark:text-red-400 hover:bg-red-50">
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </AlertDialogTrigger>
@@ -198,7 +198,7 @@ function InventoryTab({ items, branches, session }) {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteItem.mutate(item.id)} className="bg-red-600 hover:bg-red-700">حذف</AlertDialogAction>
+                            <AlertDialogAction onClick={() => deleteItem.mutate(item.id)} className="bg-red-600 dark:bg-red-900/70 hover:bg-red-700">حذف</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -608,7 +608,7 @@ function InvoiceTab({ items, branches, session }) {
               <div className="flex justify-between font-bold text-base">
                 <span>الإجمالي</span><span className="text-primary">{total.toFixed(2)} ر.س</span>
               </div>
-              <div className="flex justify-between text-xs text-green-600">
+              <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
                 <span>إجمالي الربح</span><span>{grossProfit.toFixed(2)} ر.س</span>
               </div>
             </div>
@@ -655,9 +655,9 @@ function TransferReportTab({ movements, branches }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm">
-        <p className="font-bold text-amber-800 mb-1">📊 تقرير التحويل من المستودع إلى الفروع</p>
-        <p className="text-amber-700">يُظهر هذا التقرير كل بضاعة خرجت من المستودع ووجهتها. أي بضاعة خرجت يجب أن تظهر في رصيد الفرع.</p>
+      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4 text-sm">
+        <p className="font-bold text-amber-800 dark:text-amber-300 mb-1">📊 تقرير التحويل من المستودع إلى الفروع</p>
+        <p className="text-amber-700 dark:text-amber-300">يُظهر هذا التقرير كل بضاعة خرجت من المستودع ووجهتها. أي بضاعة خرجت يجب أن تظهر في رصيد الفرع.</p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -724,8 +724,8 @@ export default function SalesSystem() {
   return (
     <div dir="rtl">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-          <ShoppingCart className="w-5 h-5 text-blue-600" />
+        <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+          <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold">نظام المبيعات والمخازن</h1>
@@ -736,9 +736,9 @@ export default function SalesSystem() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'منتجات المبيعات', value: salesItems.length, icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'إجمالي المستودع', value: totalWarehouse + ' وحدة', icon: Warehouse, color: 'text-purple-600', bg: 'bg-purple-50' },
-          { label: 'قيمة المخزون', value: warehouseValue.toFixed(0) + ' ر.س', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'منتجات المبيعات', value: salesItems.length, icon: Package, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+          { label: 'إجمالي المستودع', value: totalWarehouse + ' وحدة', icon: Warehouse, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/30' },
+          { label: 'قيمة المخزون', value: warehouseValue.toFixed(0) + ' ر.س', icon: TrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-950/30' },
           { label: 'حركات اليوم', value: movements.filter(m => m.created_at && format(new Date(m.created_at), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, icon: ArrowRightLeft, color: 'text-primary', bg: 'bg-primary/5' },
         ].map((s, i) => (
           <Card key={i}>

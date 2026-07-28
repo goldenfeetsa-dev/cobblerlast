@@ -11,10 +11,10 @@ import { useLoyaltyMembers } from '@/lib/loyalty/useLoyaltyMembers';
 import { getSession } from '@/lib/sessionStore';
 
 const LEVEL_COLORS = {
-  Bronze: 'bg-amber-800/20 text-amber-400 border-amber-700/40',
+  Bronze: 'bg-amber-800/20 text-amber-400 dark:text-amber-300 border-amber-700/40',
   Silver: 'bg-slate-400/20 text-slate-300 border-slate-400/40',
-  Gold: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40',
-  Platinum: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40',
+  Gold: 'bg-yellow-500/20 text-yellow-400 dark:text-yellow-300 border-yellow-500/40',
+  Platinum: 'bg-fuchsia-500/20 text-fuchsia-300 dark:text-fuchsia-300 border-fuchsia-500/40',
 };
 
 const LEVEL_LABELS_AR = { Bronze: 'برونزي', Silver: 'فضي', Gold: 'ذهبي', Platinum: 'بلاتيني' };
@@ -100,7 +100,7 @@ export default function LoyaltyMembersAdmin() {
     <div className="p-4 md:p-8 max-w-5xl mx-auto" dir="rtl">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <Award className="w-7 h-7 text-yellow-500" />
+          <Award className="w-7 h-7 text-yellow-500 dark:text-yellow-400" />
           <h1 className="text-2xl font-bold">برنامج الولاء — النقاط والعضويات</h1>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2">
@@ -153,7 +153,7 @@ export default function LoyaltyMembersAdmin() {
                 <InfoItem label="البريد" value={member.email || '—'} />
               </div>
               <div className="flex gap-3">
-                <Button onClick={() => openAdjust('add')} className="gap-2 bg-green-600 hover:bg-green-700">
+                <Button onClick={() => openAdjust('add')} className="gap-2 bg-green-600 dark:bg-green-900/70 hover:bg-green-700">
                   <PlusCircle className="w-4 h-4" /> إضافة نقاط
                 </Button>
                 <Button onClick={() => openAdjust('deduct')} variant="destructive" className="gap-2">
@@ -177,7 +177,7 @@ export default function LoyaltyMembersAdmin() {
                   {result.history.map((tx) => (
                     <div key={tx.id} className="flex items-center justify-between border-b border-border/50 py-2 text-sm">
                       <div>
-                        <span className={tx.change_amount > 0 ? 'text-green-500 font-bold' : 'text-red-500 font-bold'}>
+                        <span className={tx.change_amount > 0 ? 'text-green-500 dark:text-green-400 font-bold' : 'text-red-500 dark:text-red-400 font-bold'}>
                           {tx.change_amount > 0 ? `+${tx.change_amount}` : tx.change_amount}
                         </span>
                         <span className="text-muted-foreground mx-2">•</span>
@@ -253,7 +253,7 @@ function InfoItem({ label, value, big }) {
   return (
     <div>
       <div className="text-xs text-muted-foreground mb-1">{label}</div>
-      <div className={big ? 'text-2xl font-bold text-yellow-500' : 'font-semibold'}>{value}</div>
+      <div className={big ? 'text-2xl font-bold text-yellow-500 dark:text-yellow-400' : 'font-semibold'}>{value}</div>
     </div>
   );
 }

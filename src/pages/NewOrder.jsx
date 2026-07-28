@@ -23,6 +23,7 @@ import {
 import { format } from 'date-fns';
 import { useZATCA } from '@/lib/zatca/useZATCA';
 import { notifyCustomerDirect } from '@/lib/notifyCustomer';
+import LocationPicker from '@/components/shared/LocationPicker';
 
 const ITEM_TYPES = [
   { value: 'shoes', label: 'أحذية' },
@@ -67,7 +68,7 @@ function CobblerTab({ session }) {
   const [pieces, setPieces] = useState([newPiece()]);
   const [form, setForm] = useState({
     customer_name: '', customer_phone: '',
-    delivery_method: 'pickup', delivery_address: '', delivery_date: '', total_price: '',
+    delivery_method: 'pickup', delivery_address: '', delivery_lat: null, delivery_lng: null, delivery_date: '', total_price: '',
     payment_status: 'unpaid', payment_method: 'cash', notes: '',
     is_b2b: false, buyer_company_name: '', buyer_vat_number: '', buyer_cr_number: '', buyer_address: '',
   });
@@ -251,6 +252,8 @@ function CobblerTab({ session }) {
       photos,
       delivery_method: form.delivery_method,
       delivery_address: form.delivery_method === 'delivery' ? form.delivery_address : '',
+      delivery_lat: form.delivery_method === 'delivery' ? form.delivery_lat : null,
+      delivery_lng: form.delivery_method === 'delivery' ? form.delivery_lng : null,
       delivery_date: form.delivery_date,
       subtotal, vat_amount: vatAmount, total_price: price,
       payment_status: form.payment_status,
@@ -305,7 +308,7 @@ function CobblerTab({ session }) {
                   <Input value={form.buyer_vat_number} onChange={e => update('buyer_vat_number', e.target.value)}
                     placeholder="15 رقم" required={form.is_b2b} />
                   {form.buyer_vat_number && !isValidVatFormat(form.buyer_vat_number) && (
-                    <p className="text-[11px] text-amber-600">لازم 15 رقم ويبدأ وينتهي بـ 3</p>
+                    <p className="text-[11px] text-amber-600 dark:text-amber-400">لازم 15 رقم ويبدأ وينتهي بـ 3</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
@@ -331,7 +334,7 @@ function CobblerTab({ session }) {
               </div>
               <div>
                 {(knownCustomer.stamps || 0) >= freeAfterUI - 1 ? (
-                  <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                  <span className="flex items-center gap-1 text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 px-2 py-1 rounded-full">
                     <Gift className="w-3 h-3" />يستحق مجاناً!
                   </span>
                 ) : (
@@ -448,9 +451,20 @@ function CobblerTab({ session }) {
             </button>
           </div>
           {form.delivery_method === 'delivery' && (
-            <div className="space-y-2">
-              <Label>عنوان التوصيل</Label>
-              <Input value={form.delivery_address} onChange={e => update('delivery_address', e.target.value)} placeholder="العنوان الكامل" />
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>عنوان التوصيل</Label>
+                <Input value={form.delivery_address} onChange={e => update('delivery_address', e.target.value)} placeholder="العنوان الكامل (يُملأ تلقائياً من الخريطة، أو عدّله يدوياً)" />
+              </div>
+              <LocationPicker
+                initialLat={form.delivery_lat}
+                initialLng={form.delivery_lng}
+                onLocationSelect={({ lat, lng, address }) => {
+                  update('delivery_lat', lat);
+                  update('delivery_lng', lng);
+                  if (!form.delivery_address) update('delivery_address', address);
+                }}
+              />
             </div>
           )}
           <div className="space-y-2">
@@ -690,7 +704,7 @@ function ProductsTab({ session }) {
                   {available ? (
                     <p className="text-xs text-muted-foreground">متوفر: {item._branchQty} {UNITS[item.unit] || item.unit}</p>
                   ) : (
-                    <p className="text-xs text-amber-600 font-medium">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                       {(item.warehouse_qty || 0) > 0 ? 'بالمستودع فقط — يحتاج تحويل' : 'نفد المخزون'}
                     </p>
                   )}
@@ -731,7 +745,7 @@ function ProductsTab({ session }) {
                   <Input placeholder="الرقم الضريبي للشركة * (15 رقم)" value={customer.buyer_vat_number}
                     onChange={e => setCustomer(p => ({ ...p, buyer_vat_number: e.target.value }))} className="text-sm" />
                   {customer.buyer_vat_number && !isValidVatFormat(customer.buyer_vat_number) && (
-                    <p className="text-[10px] text-amber-600">لازم 15 رقم ويبدأ وينتهي بـ 3</p>
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400">لازم 15 رقم ويبدأ وينتهي بـ 3</p>
                   )}
                   <Input placeholder="السجل التجاري (اختياري)" value={customer.buyer_cr_number}
                     onChange={e => setCustomer(p => ({ ...p, buyer_cr_number: e.target.value }))} className="text-sm" />
@@ -781,7 +795,7 @@ function ProductsTab({ session }) {
               <div className="flex justify-between font-bold text-base">
                 <span>الإجمالي</span><span className="text-primary">{total.toFixed(2)} ر.س</span>
               </div>
-              <div className="flex justify-between text-xs text-green-600">
+              <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
                 <span>الربح الإجمالي</span><span>{grossProfit.toFixed(2)} ر.س</span>
               </div>
             </div>

@@ -33,7 +33,7 @@ export default function ItemPhotosUploader({ photos = [], onChange }) {
   return (
     <div>
       <label className="text-sm font-medium text-stone-700 flex items-center gap-2 mb-3">
-        <Camera className="w-4 h-4 text-amber-500" />
+        <Camera className="w-4 h-4 text-amber-500 dark:text-amber-400" />
         صور لنا أغراضك عشان نضبطك
         <span className="text-xs text-stone-400 font-normal">(حتى {MAX_PHOTOS} صور)</span>
       </label>
@@ -55,7 +55,7 @@ export default function ItemPhotosUploader({ photos = [], onChange }) {
         {photos.length < MAX_PHOTOS && (
           <label className={`aspect-square rounded-xl border-2 border-dashed border-stone-300 hover:border-amber-400 hover:bg-amber-50 flex flex-col items-center justify-center cursor-pointer transition-all ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
             {uploading ? (
-              <Loader2 className="w-7 h-7 text-amber-500 animate-spin" />
+              <Loader2 className="w-7 h-7 text-amber-500 dark:text-amber-400 animate-spin" />
             ) : (
               <>
                 <ImagePlus className="w-7 h-7 text-stone-400 mb-1" />

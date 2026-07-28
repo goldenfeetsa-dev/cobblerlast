@@ -77,7 +77,7 @@ export default function ServicesAdmin() {
                     </div>
                     <p className="text-xs text-stone-500 mb-2">{s.description}</p>
                     <div className="flex items-center gap-3">
-                      <span className="text-amber-600 font-bold text-sm flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{s.price} ر.س</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-bold text-sm flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{s.price} ر.س</span>
                       <span className="text-stone-400 text-xs flex items-center gap-1"><Clock className="w-3 h-3" />{s.duration_minutes} د</span>
                     </div>
                   </div>
@@ -87,7 +87,7 @@ export default function ServicesAdmin() {
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-400 dark:text-red-300 hover:text-red-600 hover:bg-red-50">
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </AlertDialogTrigger>
@@ -96,7 +96,7 @@ export default function ServicesAdmin() {
                         <p className="text-sm text-stone-500">هل تريد حذف "{s.name_ar}"؟</p>
                         <AlertDialogFooter>
                           <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => del.mutate(s.id)} className="bg-red-500">حذف</AlertDialogAction>
+                          <AlertDialogAction onClick={() => del.mutate(s.id)} className="bg-red-500 dark:bg-red-900/60">حذف</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -117,7 +117,7 @@ export default function ServicesAdmin() {
           <h1 className="text-2xl font-black text-stone-800">إدارة الخدمات</h1>
           <p className="text-stone-500 text-sm mt-1">أضف وعدّل خدمات إصلاح الأحذية والشنط</p>
         </div>
-        <Button onClick={openNew} className="bg-amber-500 hover:bg-amber-400 text-stone-900 font-bold">
+        <Button onClick={openNew} className="bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold">
           <Plus className="w-4 h-4 ml-2" />
           إضافة خدمة
         </Button>
@@ -163,7 +163,7 @@ export default function ServicesAdmin() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setForm(p => ({ ...p, is_active: !p.is_active }))}
-                className={cn("relative w-12 h-6 rounded-full transition-colors", form.is_active ? "bg-amber-500" : "bg-stone-200")}
+                className={cn("relative w-12 h-6 rounded-full transition-colors", form.is_active ? "bg-amber-500 dark:bg-amber-900/60" : "bg-stone-200")}
               >
                 <span className={cn("absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all", form.is_active ? "right-0.5" : "left-0.5")} />
               </button>
@@ -172,7 +172,7 @@ export default function ServicesAdmin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
-            <Button onClick={handleSave} disabled={!form.name_ar || !form.price || save.isPending} className="bg-amber-500 hover:bg-amber-400 text-stone-900 font-bold">
+            <Button onClick={handleSave} disabled={!form.name_ar || !form.price || save.isPending} className="bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold">
               {save.isPending ? 'جارٍ الحفظ...' : 'حفظ'}
             </Button>
           </DialogFooter>

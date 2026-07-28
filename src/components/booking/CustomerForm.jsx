@@ -11,7 +11,7 @@ export default function CustomerForm({ data, onChange, errors = {} }) {
         <label className="text-sm font-medium text-stone-700 mb-1.5 flex items-center gap-1.5">
           <Icon className="w-4 h-4 text-stone-400" />
           {label}
-          {['name', 'phone'].includes(key) && <span className="text-red-400">*</span>}
+          {['name', 'phone'].includes(key) && <span className="text-red-400 dark:text-red-300">*</span>}
         </label>
         <Input
           type={type}
@@ -19,9 +19,9 @@ export default function CustomerForm({ data, onChange, errors = {} }) {
           onChange={e => onChange(key, e.target.value)}
           placeholder={placeholder}
           dir="rtl"
-          className={cn("text-right", errors[key] && "border-red-400 focus-visible:ring-red-300")}
+          className={cn("text-right", errors[key] && "border-red-400 dark:border-red-700 focus-visible:ring-red-300")}
         />
-        {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
+        {errors[key] && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{errors[key]}</p>}
       </div>
     );
   };

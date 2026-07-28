@@ -73,15 +73,15 @@ export default function StaffOrders() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-            <Scissors className="w-5 h-5 text-blue-600" />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
+            <Scissors className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <h1 className="text-xl font-black">مهامك اليوم</h1>
             <p className="text-sm text-gray-500">مرحباً {session?.name || 'موظف'}</p>
           </div>
         </div>
-        <Link to="/calendar" className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
+        <Link to="/calendar" className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 shrink-0">
           <CalendarDays className="w-3.5 h-3.5" />
           الجدول المرئي
         </Link>
@@ -89,18 +89,18 @@ export default function StaffOrders() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl p-4 bg-amber-50 border border-amber-100 flex items-center gap-3">
-          <Clock className="w-6 h-6 text-amber-500" />
+        <div className="rounded-xl p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800 flex items-center gap-3">
+          <Clock className="w-6 h-6 text-amber-500 dark:text-amber-400" />
           <div>
-            <div className="text-2xl font-black text-amber-600">{myPending}</div>
-            <div className="text-xs text-amber-500">بانتظار البدء</div>
+            <div className="text-2xl font-black text-amber-600 dark:text-amber-400">{myPending}</div>
+            <div className="text-xs text-amber-500 dark:text-amber-400">بانتظار البدء</div>
           </div>
         </div>
-        <div className="rounded-xl p-4 bg-blue-50 border border-blue-100 flex items-center gap-3">
-          <Package className="w-6 h-6 text-blue-500" />
+        <div className="rounded-xl p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800 flex items-center gap-3">
+          <Package className="w-6 h-6 text-blue-500 dark:text-blue-400" />
           <div>
-            <div className="text-2xl font-black text-blue-600">{myInProgress}</div>
-            <div className="text-xs text-blue-500">جارٍ التنفيذ</div>
+            <div className="text-2xl font-black text-blue-600 dark:text-blue-400">{myInProgress}</div>
+            <div className="text-xs text-blue-500 dark:text-blue-400">جارٍ التنفيذ</div>
           </div>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function StaffOrders() {
             placeholder="ابحث برقم الطلب أو الوصف..." className="w-full pr-9 pl-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-300" />
         </div>
         <button onClick={() => setFilter(f => f === 'active' ? 'all' : 'active')}
-          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${filter === 'active' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}>
+          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${filter === 'active' ? 'bg-blue-600 dark:bg-blue-900/70 text-white border-blue-600 dark:border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}>
           <Filter className="w-3.5 h-3.5" />
           {filter === 'active' ? 'النشطة' : 'الكل'}
         </button>
@@ -122,11 +122,11 @@ export default function StaffOrders() {
       {/* Orders */}
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
-          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-300" />
+          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-300 dark:text-green-300" />
           <p className="font-bold">لا توجد طلبات نشطة</p>
           <p className="text-sm mt-1">أحسنت! كل المهام منجزة 🎉</p>
         </div>
@@ -141,7 +141,7 @@ export default function StaffOrders() {
               return (
                 <motion.div key={order.id}
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                  className={`rounded-2xl border overflow-hidden ${isUrgent ? 'border-red-200' : 'border-gray-100'}`}
+                  className={`rounded-2xl border overflow-hidden ${isUrgent ? 'border-red-200 dark:border-red-800' : 'border-gray-100'}`}
                   style={{ background: isUrgent ? '#fff8f8' : 'white' }}>
 
                   {/* Top bar */}
@@ -149,7 +149,7 @@ export default function StaffOrders() {
                     style={{ background: st.bg, borderBottom: `1px solid ${st.color}22` }}>
                     <div className="flex items-center gap-2">
                       <span className="font-black text-sm" style={{ color: st.color }}>{order.order_number}</span>
-                      {isUrgent && <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">عاجل ⚡</span>}
+                      {isUrgent && <span className="text-[10px] bg-red-500 dark:bg-red-900/60 text-white px-2 py-0.5 rounded-full font-bold">عاجل ⚡</span>}
                     </div>
                     <span className="text-xs font-bold px-3 py-1 rounded-full"
                       style={{ background: 'white', color: st.color, border: `1px solid ${st.color}40` }}>
@@ -170,10 +170,10 @@ export default function StaffOrders() {
                     {Array.isArray(order.order_items) && order.order_items.length > 0 && (
                       <div className="space-y-1.5">
                         {order.order_items.map((it, i) => (
-                          <div key={i} className="text-sm bg-blue-50/60 rounded-lg px-3 py-2 border border-blue-100">
+                          <div key={i} className="text-sm bg-blue-50/60 rounded-lg px-3 py-2 border border-blue-100 dark:border-blue-800">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-gray-800">قطعة {i + 1} — {ITEM_LABELS[it.item_type]?.split(' ')[0] || it.item_type}</span>
-                              {it.technician_name && <span className="text-xs text-blue-700 font-medium">👤 {it.technician_name}</span>}
+                              {it.technician_name && <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">👤 {it.technician_name}</span>}
                             </div>
                             {it.services?.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">

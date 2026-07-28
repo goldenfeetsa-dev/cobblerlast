@@ -73,7 +73,7 @@ function ProductForm({ initial, onSave, onCancel }) {
         </div>
       </div>
       {!form.image_url && (
-        <p className="text-xs text-amber-600 mb-3">⚠️ بدون صورة حقيقية، لن يظهر المنتج في نتائج بحث الصور بجوجل، وسيُستبدل بصورة عامة مؤقتة في المتجر.</p>
+        <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">⚠️ بدون صورة حقيقية، لن يظهر المنتج في نتائج بحث الصور بجوجل، وسيُستبدل بصورة عامة مؤقتة في المتجر.</p>
       )}
       <div className="flex gap-3">
         <Button onClick={() => onSave(form)} className="bg-primary" disabled={!form.name_ar || !form.price}>حفظ</Button>
@@ -149,7 +149,7 @@ export default function ShopAdmin() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold">{p.name_ar}</span>
-                      {p.is_featured && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
+                      {p.is_featured && <Star className="w-3.5 h-3.5 text-yellow-500 dark:text-yellow-400 fill-yellow-500" />}
                       <Badge variant="outline">{CATEGORIES[p.category] || p.category}</Badge>
                       <Badge variant={p.in_stock ? 'default' : 'destructive'}>{p.in_stock ? 'متوفر' : 'نفذ'}</Badge>
                     </div>
@@ -159,7 +159,7 @@ export default function ShopAdmin() {
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button onClick={() => toggleStock(p)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="تغيير التوفر">
-                      {p.in_stock ? <ToggleRight className="w-4 h-4 text-green-600" /> : <ToggleLeft className="w-4 h-4 text-muted-foreground" />}
+                      {p.in_stock ? <ToggleRight className="w-4 h-4 text-green-600 dark:text-green-400" /> : <ToggleLeft className="w-4 h-4 text-muted-foreground" />}
                     </button>
                     <button onClick={() => { setEditing(p); setAdding(false); }} className="p-2 rounded-lg hover:bg-muted transition-colors">
                       <Pencil className="w-4 h-4 text-muted-foreground" />

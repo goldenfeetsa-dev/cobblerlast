@@ -16,8 +16,8 @@ export default function LiveInvoice({ service, bookingType, className }) {
   return (
     <div className={cn("bg-gradient-to-br from-stone-900 to-stone-800 text-white rounded-2xl p-5", className)}>
       <div className="flex items-center gap-2 mb-4">
-        <Receipt className="w-5 h-5 text-amber-400" />
-        <h3 className="font-bold text-sm text-amber-400">الفاتورة 
+        <Receipt className="w-5 h-5 text-amber-400 dark:text-amber-300" />
+        <h3 className="font-bold text-sm text-amber-400 dark:text-amber-300">الفاتورة 
 </h3>
       </div>
       <div className="space-y-2.5 text-sm">
@@ -45,7 +45,7 @@ export default function LiveInvoice({ service, bookingType, className }) {
         </div>
         <div className="border-t border-stone-700 pt-2.5 flex items-center justify-between">
           <span className="font-bold text-white">الإجمالي</span>
-          <span className="text-xl font-black text-amber-400">{total} ر.س</span>
+          <span className="text-xl font-black text-amber-400 dark:text-amber-300">{total} ر.س</span>
         </div>
       </div>
     </div>);

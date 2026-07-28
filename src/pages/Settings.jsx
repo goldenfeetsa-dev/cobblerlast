@@ -70,13 +70,13 @@ export default function Settings() {
                   placeholder={k === 'vat_number' ? '314151483700003' : undefined}
                 />
                 {k === 'vat_number' && vatNumber && !isVatValid && (
-                  <p className="text-xs text-red-600">
+                  <p className="text-xs text-red-600 dark:text-red-400">
                     الرقم الضريبي غير صحيح — يجب أن يكون 15 رقماً ويبدأ وينتهي بالرقم 3.
                     سيظهر داخل رمز QR بشكل خاطئ وتُرفض الفاتورة من زاتكا.
                   </p>
                 )}
                 {k === 'vat_number' && !vatNumber && (
-                  <p className="text-xs text-amber-600">
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
                     لم تُدخل رقماً ضريبياً بعد — بدونه سيظهر في رمز QR كـ 000000000000000
                     وتُرفض الفاتورة من زاتكا.
                   </p>

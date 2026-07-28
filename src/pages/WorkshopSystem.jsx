@@ -341,7 +341,7 @@ function SettlementTab({ items, session }) {
           </SelectContent>
         </Select>
         {existingSettlement && (
-          <Badge className="bg-green-100 text-green-700 border-green-200">
+          <Badge className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
             <CheckCircle2 className="w-3 h-3 ml-1" /> تمت التسوية
           </Badge>
         )}
@@ -351,7 +351,7 @@ function SettlementTab({ items, session }) {
         // Show approved settlement
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2 text-green-700">
+            <CardTitle className="text-sm flex items-center gap-2 text-green-700 dark:text-green-300">
               <CheckCircle2 className="w-4 h-4" />
               تسوية معتمدة — {existingSettlement.month_label}
             </CardTitle>
@@ -359,9 +359,9 @@ function SettlementTab({ items, session }) {
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'إجمالي المبيعات', val: existingSettlement.total_sales_revenue, color: 'text-blue-600' },
-                { label: 'تكلفة الورشة', val: existingSettlement.total_workshop_cost, color: 'text-red-600' },
-                { label: 'إجمالي ربح المبيعات', val: existingSettlement.gross_profit, color: 'text-green-600' },
+                { label: 'إجمالي المبيعات', val: existingSettlement.total_sales_revenue, color: 'text-blue-600 dark:text-blue-400' },
+                { label: 'تكلفة الورشة', val: existingSettlement.total_workshop_cost, color: 'text-red-600 dark:text-red-400' },
+                { label: 'إجمالي ربح المبيعات', val: existingSettlement.gross_profit, color: 'text-green-600 dark:text-green-400' },
                 { label: 'صافي الربح الحقيقي', val: existingSettlement.net_profit, color: 'text-primary font-black' },
               ].map((s, i) => (
                 <div key={i} className="rounded-xl bg-muted/40 p-3 text-center">
@@ -381,10 +381,10 @@ function SettlementTab({ items, session }) {
           {/* Summary preview */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'إجمالي مبيعات الشهر', val: totalSalesRevenue.toFixed(2), sub: 'ر.س', color: 'text-blue-600', bg: 'bg-blue-50' },
-              { label: 'تكاليف الورشة (مقدّر)', val: totalWorkshopCost.toFixed(2), sub: 'ر.س', color: 'text-red-600', bg: 'bg-red-50' },
-              { label: 'إجمالي ربح المبيعات', val: grossProfit.toFixed(2), sub: 'ر.س', color: 'text-green-600', bg: 'bg-green-50' },
-              { label: 'صافي الربح الحقيقي', val: netProfit.toFixed(2), sub: 'ر.س', color: netProfit >= 0 ? 'text-primary' : 'text-red-600', bg: 'bg-primary/5' },
+              { label: 'إجمالي مبيعات الشهر', val: totalSalesRevenue.toFixed(2), sub: 'ر.س', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+              { label: 'تكاليف الورشة (مقدّر)', val: totalWorkshopCost.toFixed(2), sub: 'ر.س', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/30' },
+              { label: 'إجمالي ربح المبيعات', val: grossProfit.toFixed(2), sub: 'ر.س', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-950/30' },
+              { label: 'صافي الربح الحقيقي', val: netProfit.toFixed(2), sub: 'ر.س', color: netProfit >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400', bg: 'bg-primary/5' },
             ].map((s, i) => (
               <Card key={i}>
                 <CardContent className="p-4 text-center">
@@ -435,7 +435,7 @@ function SettlementTab({ items, session }) {
                               />
                             </td>
                             <td className="py-2 px-3 text-muted-foreground">{si.cost_price} ر.س</td>
-                            <td className="py-2 px-3 font-bold text-red-600">{si.total_cost.toFixed(2)} ر.س</td>
+                            <td className="py-2 px-3 font-bold text-red-600 dark:text-red-400">{si.total_cost.toFixed(2)} ر.س</td>
                           </tr>
                         ))}
                       </tbody>
@@ -447,9 +447,9 @@ function SettlementTab({ items, session }) {
                     <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="ملاحظات على التسوية..." />
                   </div>
 
-                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm">
-                    <p className="font-bold text-amber-800 mb-1">⚠️ تنبيه مهم</p>
-                    <p className="text-amber-700">بالضغط على "اعتماد التسوية" سيتم إنشاء قيد محاسبي تلقائي وخصم تكاليف الورشة من أرباح المبيعات. هذا الإجراء لا يمكن التراجع عنه.</p>
+                  <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4 text-sm">
+                    <p className="font-bold text-amber-800 dark:text-amber-300 mb-1">⚠️ تنبيه مهم</p>
+                    <p className="text-amber-700 dark:text-amber-300">بالضغط على "اعتماد التسوية" سيتم إنشاء قيد محاسبي تلقائي وخصم تكاليف الورشة من أرباح المبيعات. هذا الإجراء لا يمكن التراجع عنه.</p>
                   </div>
 
                   <Button className="w-full gap-2" disabled={approve.isPending} onClick={() => approve.mutate()}>
@@ -607,8 +607,8 @@ export default function WorkshopSystem() {
   return (
     <div dir="rtl">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-          <Wrench className="w-5 h-5 text-orange-600" />
+        <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/40 flex items-center justify-center">
+          <Wrench className="w-5 h-5 text-orange-600 dark:text-orange-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold">نظام العهدة والورشة</h1>
@@ -618,8 +618,8 @@ export default function WorkshopSystem() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'قيمة مخزن الورشة', value: totalWorkshopStock.toFixed(0) + ' ر.س', icon: Package, color: 'text-orange-600', bg: 'bg-orange-50' },
-          { label: 'تكاليف هذا الشهر', value: monthWithdrawalCost.toFixed(0) + ' ر.س', icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'قيمة مخزن الورشة', value: totalWorkshopStock.toFixed(0) + ' ر.س', icon: Package, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/30' },
+          { label: 'تكاليف هذا الشهر', value: monthWithdrawalCost.toFixed(0) + ' ر.س', icon: TrendingDown, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/30' },
           { label: 'إجمالي المسحوبات', value: thisMonthWithdrawals.length, icon: ClipboardList, color: 'text-primary', bg: 'bg-primary/5' },
         ].map((s, i) => (
           <Card key={i}>

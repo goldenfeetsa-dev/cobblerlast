@@ -161,7 +161,7 @@ export default function BookingWizard() {
             <LanguageSwitcher dark={false} />
           </div>
           <h1 className="text-2xl font-black text-stone-800 flex items-center justify-center gap-2">
-            <Scissors className="w-6 h-6 text-amber-500" />
+            <Scissors className="w-6 h-6 text-amber-500 dark:text-amber-400" />
             {t('bookingWizard.pageTitle')}
           </h1>
         </div>
@@ -255,7 +255,7 @@ export default function BookingWizard() {
                 <Button
                   onClick={handleNext}
                   disabled={!canGoNext()}
-                  className="bg-amber-500 hover:bg-amber-400 text-stone-900 font-bold gap-2"
+                  className="bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold gap-2"
                 >
                   {t('bookingWizard.next')}
                   {dir === 'rtl' ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
@@ -264,7 +264,7 @@ export default function BookingWizard() {
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="bg-green-600 hover:bg-green-500 text-white font-bold px-8"
+                  className="bg-green-600 dark:bg-green-900/70 hover:bg-green-500 text-white font-bold px-8"
                 >
                   {submitting ? t('bookingWizard.booking') : t('bookingWizard.confirm')}
                 </Button>
@@ -278,9 +278,9 @@ export default function BookingWizard() {
               <div className="sticky top-6">
                 <LiveInvoice service={service} bookingType={bookingType} />
                 {selectedDate && selectedTime && (
-                  <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-right">
-                    <p className="font-bold text-amber-800 mb-1">{t('bookingWizard.chosenDate')}</p>
-                    <p className="text-amber-700">{format(selectedDate, 'yyyy/MM/dd')} — {selectedTime}</p>
+                  <div className="mt-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-sm text-right">
+                    <p className="font-bold text-amber-800 dark:text-amber-300 mb-1">{t('bookingWizard.chosenDate')}</p>
+                    <p className="text-amber-700 dark:text-amber-300">{format(selectedDate, 'yyyy/MM/dd')} — {selectedTime}</p>
                   </div>
                 )}
               </div>

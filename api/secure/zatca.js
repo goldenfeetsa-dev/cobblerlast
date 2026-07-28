@@ -2,10 +2,13 @@
  * /api/secure/zatca — إعدادات وسجلات زاتكا (بيانات ضريبية حساسة)
  * GET  ?resource=settings           → قراءة الإعدادات (دور مالي فقط)
  * GET  ?resource=log&needs_review=1 → قراءة سجل الفواتير المرفوضة/المعلّقة
+ * GET  ?resource=notes              → قراءة إشعارات الدائن/المدين
  * POST ?resource=settings           → تحديث الإعدادات (دور مالي فقط)
+ * POST ?resource=notes              → إصدار إشعار دائن/مدين جديد
  */
 import { getSessionFromRequest } from '../_lib/session.js';
 import { getSupabaseAdmin } from '../_lib/loyalty/supabaseAdmin.js';
+import { issueCreditDebitNote } from '../_lib/zatcaEngine.js';
 
 const FINANCE_ROLES = ['owner', 'admin', 'manager', 'accountant'];
 
@@ -34,6 +37,25 @@ export default async function handler(req, res) {
         .limit(100);
       if (error) throw error;
       return res.status(200).json(data || []);
+    }
+
+    if (req.method === 'GET' && resource === 'notes') {
+      const { data, error } = await supabase
+        .from('zatca_credit_debit_notes')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    if (req.method === 'POST' && resource === 'notes') {
+      const { noteType, originalRecordType, originalRecordId, reason, amount, vatAmount } = req.body || {};
+      if (!noteType || !originalRecordType || !originalRecordId || !reason || !amount) {
+        return res.status(400).json({ error: 'الحقول المطلوبة: noteType, originalRecordType, originalRecordId, reason, amount' });
+      }
+      const result = await issueCreditDebitNote({ noteType, originalRecordType, originalRecordId, reason, amount, vatAmount });
+      return res.status(200).json(result);
     }
 
     if (req.method === 'POST' && resource === 'settings') {

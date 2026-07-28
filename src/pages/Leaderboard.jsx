@@ -18,9 +18,9 @@ const PERIODS = [
 ];
 
 const rankIcons = [
-  <Crown key="1" className="w-5 h-5 text-amber-500" />,
+  <Crown key="1" className="w-5 h-5 text-amber-500 dark:text-amber-400" />,
   <Medal key="2" className="w-5 h-5 text-gray-400" />,
-  <Medal key="3" className="w-5 h-5 text-amber-700" />,
+  <Medal key="3" className="w-5 h-5 text-amber-700 dark:text-amber-300" />,
 ];
 
 function RankRow({ i, name, branch, metricLabel, metricValue, secondaryLabel, secondaryValue }) {
@@ -176,7 +176,7 @@ export default function Leaderboard() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-3">
-                    <Crown className="w-8 h-8 text-amber-500" />
+                    <Crown className="w-8 h-8 text-amber-500 dark:text-amber-400" />
                     <div>
                       <p className="text-xs text-muted-foreground">أفضل فرع من حيث الإيراد</p>
                       <p className="text-lg font-black">{topBranch?.branch_name}</p>

@@ -79,22 +79,22 @@ export default function SiteAnalytics() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <Users className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-            <p className="text-2xl font-black text-blue-600">{uniqueIPs}</p>
+            <Users className="w-5 h-5 text-blue-500 dark:text-blue-400 mx-auto mb-1" />
+            <p className="text-2xl font-black text-blue-600 dark:text-blue-400">{uniqueIPs}</p>
             <p className="text-xs text-muted-foreground mt-1">زوار فريدون (تقريبي)</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <TrendingUp className="w-5 h-5 text-green-500 mx-auto mb-1" />
-            <p className="text-2xl font-black text-green-600">{todayVisits}</p>
+            <TrendingUp className="w-5 h-5 text-green-500 dark:text-green-400 mx-auto mb-1" />
+            <p className="text-2xl font-black text-green-600 dark:text-green-400">{todayVisits}</p>
             <p className="text-xs text-muted-foreground mt-1">زيارات اليوم</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <Smartphone className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-            <p className="text-2xl font-black text-amber-600">{visits.length ? Math.round(mobileCount / visits.length * 100) : 0}%</p>
+            <Smartphone className="w-5 h-5 text-amber-500 dark:text-amber-400 mx-auto mb-1" />
+            <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{visits.length ? Math.round(mobileCount / visits.length * 100) : 0}%</p>
             <p className="text-xs text-muted-foreground mt-1">من الجوال</p>
           </CardContent>
         </Card>
@@ -142,7 +142,7 @@ export default function SiteAnalytics() {
             </div>
             <div className="flex justify-center gap-4 mt-1">
               <span className="flex items-center gap-1 text-xs"><span className="w-3 h-3 rounded-full bg-primary inline-block" /> جوال: {mobileCount}</span>
-              <span className="flex items-center gap-1 text-xs"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> كمبيوتر: {desktopCount}</span>
+              <span className="flex items-center gap-1 text-xs"><span className="w-3 h-3 rounded-full bg-blue-500 dark:bg-blue-900/60 inline-block" /> كمبيوتر: {desktopCount}</span>
             </div>
           </CardContent>
         </Card>
@@ -180,7 +180,7 @@ export default function SiteAnalytics() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-500" /> حسب المدينة</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400" /> حسب المدينة</CardTitle>
           </CardHeader>
           <CardContent>
             {cityData.length === 0 ? (
@@ -192,10 +192,10 @@ export default function SiteAnalytics() {
                     <span className="text-xs w-4 text-muted-foreground">{i + 1}</span>
                     <div className="flex-1 flex items-center gap-2">
                       <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                        <div className="h-full rounded-full bg-blue-400" style={{ width: `${(c.value / cityData[0].value) * 100}%` }} />
+                        <div className="h-full rounded-full bg-blue-400 dark:bg-blue-900" style={{ width: `${(c.value / cityData[0].value) * 100}%` }} />
                       </div>
                       <span className="text-xs font-medium w-20 truncate">{c.name}</span>
-                      <span className="text-xs font-bold text-blue-600">{c.value}</span>
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{c.value}</span>
                     </div>
                   </div>
                 ))}
@@ -230,8 +230,8 @@ export default function SiteAnalytics() {
                     <td className="py-2 px-3">{v.city || '—'}</td>
                     <td className="py-2 px-3">
                       {v.is_mobile
-                        ? <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-amber-500" /> جوال</span>
-                        : <span className="flex items-center gap-1"><Monitor className="w-3 h-3 text-blue-500" /> كمبيوتر</span>}
+                        ? <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-amber-500 dark:text-amber-400" /> جوال</span>
+                        : <span className="flex items-center gap-1"><Monitor className="w-3 h-3 text-blue-500 dark:text-blue-400" /> كمبيوتر</span>}
                     </td>
                     <td className="py-2 px-3 text-muted-foreground truncate max-w-[120px]">{v.page || '/'}</td>
                   </tr>

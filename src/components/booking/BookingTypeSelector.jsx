@@ -15,12 +15,12 @@ export default function BookingTypeSelector({ bookingType, address, location, on
           className={cn(
             "p-4 rounded-xl border-2 text-center transition-all",
             bookingType === 'in_store'
-              ? "border-amber-500 bg-amber-50"
+              ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30"
               : "border-stone-200 hover:border-amber-200"
           )}
         >
-          <Store className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'in_store' ? "text-amber-500" : "text-stone-400")} />
-          <p className={cn("font-bold text-sm", bookingType === 'in_store' ? "text-amber-700" : "text-stone-600")}>
+          <Store className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'in_store' ? "text-amber-500 dark:text-amber-400" : "text-stone-400")} />
+          <p className={cn("font-bold text-sm", bookingType === 'in_store' ? "text-amber-700 dark:text-amber-300" : "text-stone-600")}>
             استلام من المحل
           </p>
           <p className="text-xs text-stone-400 mt-0.5">مجاني</p>
@@ -30,13 +30,13 @@ export default function BookingTypeSelector({ bookingType, address, location, on
           className={cn(
             "p-4 rounded-xl border-2 text-center transition-all",
             bookingType === 'home_visit'
-              ? "border-amber-500 bg-amber-50"
+              ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30"
               : "border-stone-200 hover:border-amber-200"
           )}
         >
-          <Truck className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'home_visit' ? "text-amber-500" : "text-stone-400")} />
-          <p className={cn("font-bold text-sm", bookingType === 'home_visit' ? "text-amber-700" : "text-stone-600")}>
-            زيارة منزلية
+          <Truck className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'home_visit' ? "text-amber-500 dark:text-amber-400" : "text-stone-400")} />
+          <p className={cn("font-bold text-sm", bookingType === 'home_visit' ? "text-amber-700 dark:text-amber-300" : "text-stone-600")}>
+            توصيل
           </p>
           <p className="text-xs text-stone-400 mt-0.5">+{DELIVERY_FEE} ر.س</p>
         </button>

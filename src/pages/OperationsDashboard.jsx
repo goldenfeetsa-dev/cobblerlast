@@ -16,12 +16,12 @@ import {
 import { Link } from 'react-router-dom';
 
 const STAGES = [
-  { key: 'reception',          label: 'الاستلام',            icon: Package,        color: 'bg-blue-100 text-blue-700',    border: 'border-blue-200' },
-  { key: 'logistics_out',      label: 'إرسال للمصنع',        icon: Truck,          color: 'bg-orange-100 text-orange-700', border: 'border-orange-200' },
-  { key: 'factory_processing', label: 'الإصلاح في المصنع',   icon: Factory,        color: 'bg-purple-100 text-purple-700', border: 'border-purple-200' },
-  { key: 'quality_check',      label: 'فحص الجودة',          icon: CheckCircle2,   color: 'bg-yellow-100 text-yellow-700', border: 'border-yellow-200' },
-  { key: 'logistics_return',   label: 'الإرجاع للفرع',       icon: ArrowLeftRight, color: 'bg-teal-100 text-teal-700',    border: 'border-teal-200' },
-  { key: 'ready_for_pickup',   label: 'جاهز للاستلام',       icon: Bell,           color: 'bg-green-100 text-green-700',  border: 'border-green-200' },
+  { key: 'reception',          label: 'الاستلام',            icon: Package,        color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300',    border: 'border-blue-200 dark:border-blue-800' },
+  { key: 'logistics_out',      label: 'إرسال للمصنع',        icon: Truck,          color: 'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
+  { key: 'factory_processing', label: 'الإصلاح في المصنع',   icon: Factory,        color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' },
+  { key: 'quality_check',      label: 'فحص الجودة',          icon: CheckCircle2,   color: 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300', border: 'border-yellow-200 dark:border-yellow-800' },
+  { key: 'logistics_return',   label: 'الإرجاع للفرع',       icon: ArrowLeftRight, color: 'bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300',    border: 'border-teal-200 dark:border-teal-800' },
+  { key: 'ready_for_pickup',   label: 'جاهز للاستلام',       icon: Bell,           color: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300',  border: 'border-green-200 dark:border-green-800' },
 ];
 
 const STAGE_NEXT = {
@@ -83,13 +83,13 @@ function BranchCard({ branchName, orders }) {
           <h3 className="font-bold truncate">{branchName || 'الفرع الرئيسي'}</h3>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl p-3 bg-blue-50">
-            <p className="text-xs text-blue-600 mb-0.5">داخل (قيد الإصلاح)</p>
-            <p className="text-2xl font-black text-blue-700">{inbound}</p>
+          <div className="rounded-xl p-3 bg-blue-50 dark:bg-blue-950/30">
+            <p className="text-xs text-blue-600 dark:text-blue-400 mb-0.5">داخل (قيد الإصلاح)</p>
+            <p className="text-2xl font-black text-blue-700 dark:text-blue-300">{inbound}</p>
           </div>
-          <div className="rounded-xl p-3 bg-green-50">
-            <p className="text-xs text-green-600 mb-0.5">خارج (جاهزة)</p>
-            <p className="text-2xl font-black text-green-700">{outbound}</p>
+          <div className="rounded-xl p-3 bg-green-50 dark:bg-green-950/30">
+            <p className="text-xs text-green-600 dark:text-green-400 mb-0.5">خارج (جاهزة)</p>
+            <p className="text-2xl font-black text-green-700 dark:text-green-300">{outbound}</p>
           </div>
           <div className="rounded-xl p-3 bg-muted/50">
             <p className="text-xs text-muted-foreground mb-0.5">الإيرادات</p>
@@ -195,8 +195,8 @@ function LoyaltyStats({ customers, freeAfter }) {
         <p className="text-2xl font-black text-primary">{eligibleNow}</p>
         <p className="text-xs text-muted-foreground mt-1">يستحق خدمة مجانية الآن</p>
       </div>
-      <div className="rounded-xl p-4 bg-yellow-50 border border-yellow-200 text-center">
-        <p className="text-2xl font-black text-yellow-600">{nearFree}</p>
+      <div className="rounded-xl p-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 text-center">
+        <p className="text-2xl font-black text-yellow-600 dark:text-yellow-400">{nearFree}</p>
         <p className="text-xs text-muted-foreground mt-1">يقترب من المجاني</p>
       </div>
       <div className="rounded-xl p-4 bg-muted/50 border text-center">
@@ -347,7 +347,7 @@ export default function OperationsDashboard() {
           </p>
         </div>
         <div className="mr-auto flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-1.5">
-          <div className={`w-2 h-2 rounded-full ${plan?.plan_b_enabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+          <div className={`w-2 h-2 rounded-full ${plan?.plan_b_enabled ? 'bg-green-500 dark:bg-green-900/60 animate-pulse' : 'bg-gray-400'}`} />
           <span className="text-xs font-medium">
             {plan?.plan_b_enabled ? 'الخطة الثانية نشطة' : 'الخطة الثانية متوقفة'}
           </span>
@@ -366,9 +366,9 @@ export default function OperationsDashboard() {
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'إجمالي الطلبات الجارية', value: totalInbound,  icon: ShoppingBag, color: 'text-blue-600',   bg: 'bg-blue-50' },
-          { label: 'جاهزة للتسليم',           value: totalOutbound, icon: CheckCircle2, color: 'text-green-600',  bg: 'bg-green-50' },
-          { label: 'في المصنع الآن',           value: atFactory,     icon: Factory,      color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'إجمالي الطلبات الجارية', value: totalInbound,  icon: ShoppingBag, color: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-50 dark:bg-blue-950/30' },
+          { label: 'جاهزة للتسليم',           value: totalOutbound, icon: CheckCircle2, color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-50 dark:bg-green-950/30' },
+          { label: 'في المصنع الآن',           value: atFactory,     icon: Factory,      color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/30' },
           { label: 'إجمالي العملاء',           value: customers.length, icon: Users,     color: 'text-primary',    bg: 'bg-primary/5' },
         ].map((s, i) => (
           <Card key={i}>
@@ -543,7 +543,7 @@ export default function OperationsDashboard() {
           {completedWorkflows.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2 text-green-700">
+                <CardTitle className="text-sm flex items-center gap-2 text-green-700 dark:text-green-300">
                   <Bell className="w-4 h-4" />
                   جاهزة لإشعار العميل ({completedWorkflows.length})
                 </CardTitle>

@@ -14,31 +14,31 @@ import { unifyTransactions } from '@/lib/analytics';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ACTION_LABELS = {
-  create: { label: 'إنشاء', class: 'bg-emerald-100 text-emerald-700' },
-  update: { label: 'تعديل', class: 'bg-blue-100 text-blue-700' },
-  delete: { label: 'حذف', class: 'bg-red-100 text-red-700' },
-  status_change: { label: 'تغيير حالة', class: 'bg-amber-100 text-amber-700' },
+  create: { label: 'إنشاء', class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },
+  update: { label: 'تعديل', class: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300' },
+  delete: { label: 'حذف', class: 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300' },
+  status_change: { label: 'تغيير حالة', class: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' },
 };
 
 const STATUS_LABELS = {
-  pending: { label: 'قيد الانتظار', class: 'bg-amber-100 text-amber-700' },
-  in_progress: { label: 'جارٍ التنفيذ', class: 'bg-blue-100 text-blue-700' },
-  ready: { label: 'جاهز', class: 'bg-green-100 text-green-700' },
-  completed: { label: 'مكتمل', class: 'bg-emerald-100 text-emerald-700' },
-  cancelled: { label: 'ملغى', class: 'bg-red-100 text-red-700' },
-  returned: { label: 'مُسترجع', class: 'bg-orange-100 text-orange-700' },
-  exchanged: { label: 'مُستبدَل', class: 'bg-purple-100 text-purple-700' },
-  on_hold: { label: 'متوقف', class: 'bg-yellow-100 text-yellow-700' },
+  pending: { label: 'قيد الانتظار', class: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' },
+  in_progress: { label: 'جارٍ التنفيذ', class: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300' },
+  ready: { label: 'جاهز', class: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300' },
+  completed: { label: 'مكتمل', class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },
+  cancelled: { label: 'ملغى', class: 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300' },
+  returned: { label: 'مُسترجع', class: 'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300' },
+  exchanged: { label: 'مُستبدَل', class: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300' },
+  on_hold: { label: 'متوقف', class: 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300' },
 };
 
 const PAYMENT_LABELS = {
-  paid: { label: 'مدفوع', class: 'bg-green-100 text-green-700' },
-  unpaid: { label: 'غير مدفوع', class: 'bg-red-100 text-red-700' },
+  paid: { label: 'مدفوع', class: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300' },
+  unpaid: { label: 'غير مدفوع', class: 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300' },
 };
 
 const KIND_LABELS = {
-  repair: { label: 'إصلاح', class: 'bg-indigo-100 text-indigo-700' },
-  sale: { label: 'بيع منتج', class: 'bg-cyan-100 text-cyan-700' },
+  repair: { label: 'إصلاح', class: 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300' },
+  sale: { label: 'بيع منتج', class: 'bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300' },
 };
 
 const PERIODS = [
@@ -173,19 +173,19 @@ export default function AuditLog() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-black text-emerald-600">{totalRevenue.toFixed(0)}</p>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{totalRevenue.toFixed(0)}</p>
             <p className="text-xs text-muted-foreground mt-1">الإيراد الكلي (ر.س)</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-black text-green-600">{cashTotal.toFixed(0)}</p>
+            <p className="text-2xl font-black text-green-600 dark:text-green-400">{cashTotal.toFixed(0)}</p>
             <p className="text-xs text-muted-foreground mt-1">نقد (ر.س)</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-black text-blue-600">{networkTotal.toFixed(0)}</p>
+            <p className="text-2xl font-black text-blue-600 dark:text-blue-400">{networkTotal.toFixed(0)}</p>
             <p className="text-xs text-muted-foreground mt-1">شبكة (ر.س)</p>
           </CardContent>
         </Card>
@@ -193,15 +193,15 @@ export default function AuditLog() {
 
       {/* Revenue split — repair vs sale, so nothing is hidden anymore */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <Card className="border-indigo-100">
+        <Card className="border-indigo-100 dark:border-indigo-800">
           <CardContent className="p-3 text-center">
-            <p className="text-lg font-black text-indigo-700">{repairRevenue.toFixed(0)} ر.س</p>
+            <p className="text-lg font-black text-indigo-700 dark:text-indigo-300">{repairRevenue.toFixed(0)} ر.س</p>
             <p className="text-xs text-muted-foreground mt-0.5">إيراد الإصلاح</p>
           </CardContent>
         </Card>
-        <Card className="border-cyan-100">
+        <Card className="border-cyan-100 dark:border-cyan-800">
           <CardContent className="p-3 text-center">
-            <p className="text-lg font-black text-cyan-700">{saleRevenue.toFixed(0)} ر.س</p>
+            <p className="text-lg font-black text-cyan-700 dark:text-cyan-300">{saleRevenue.toFixed(0)} ر.س</p>
             <p className="text-xs text-muted-foreground mt-0.5">إيراد بيع المنتجات</p>
           </CardContent>
         </Card>
@@ -283,8 +283,8 @@ export default function AuditLog() {
 
       {/* Paid/Unpaid summary */}
       <div className="flex gap-3 mb-5">
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">{paidCount} مدفوع</span>
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">{unpaidCount} غير مدفوع</span>
+        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300">{paidCount} مدفوع</span>
+        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300">{unpaidCount} غير مدفوع</span>
         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground">{filtered.length} إجمالي</span>
       </div>
 

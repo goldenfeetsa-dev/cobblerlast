@@ -320,10 +320,6 @@ export default function ReceiptView({ order, autoPrint = false }) {
 
         {/* Payment */}
         <div style={{ marginTop: '6px' }}>
-          <Row
-            label="حالة الدفع"
-            value={order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
-          />
           {order.payment_method && (
             <Row
               label="طريقة الدفع"

@@ -55,4 +55,13 @@ export const secureZatca = {
   async getLog() {
     return secureFetch('/api/secure/zatca?resource=log');
   },
+  async getNotes() {
+    return secureFetch('/api/secure/zatca?resource=notes');
+  },
+  async issueNote({ noteType, originalRecordType, originalRecordId, reason, amount, vatAmount }) {
+    return secureFetch('/api/secure/zatca?resource=notes', {
+      method: 'POST',
+      body: JSON.stringify({ noteType, originalRecordType, originalRecordId, reason, amount, vatAmount }),
+    });
+  },
 };

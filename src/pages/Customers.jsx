@@ -206,7 +206,7 @@ export default function Customers() {
                               href={`https://wa.me/966${c.phone.replace(/^0/, '').replace(/\D/g, '')}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-green-500 hover:text-green-600 transition-colors"
+                              className="text-green-500 dark:text-green-400 hover:text-green-600 transition-colors"
                               title="فتح واتساب"
                               onClick={e => e.stopPropagation()}
                             >

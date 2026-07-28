@@ -131,7 +131,7 @@ export default function Invoices() {
                 <div key={row.id} className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/30 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-                      ${row.kind === 'repair' ? 'bg-amber-500/10 text-amber-600' : 'bg-blue-500/10 text-blue-600'}`}>
+                      ${row.kind === 'repair' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>
                       {row.kind === 'repair' ? <Wrench className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
                     </div>
                     <div className="min-w-0">

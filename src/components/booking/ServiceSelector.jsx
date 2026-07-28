@@ -18,7 +18,7 @@ export default function ServiceSelector({ selectedService, onSelect }) {
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-40">
-      <div className="w-8 h-8 border-3 border-amber-200 border-t-amber-500 rounded-full animate-spin" />
+      <div className="w-8 h-8 border-3 border-amber-200 dark:border-amber-800 border-t-amber-500 rounded-full animate-spin" />
     </div>
   );
 
@@ -40,7 +40,7 @@ export default function ServiceSelector({ selectedService, onSelect }) {
                 onClick={() => onSelect(service)}
                 className={cn(
                   "text-right p-4 rounded-xl border-2 transition-all hover:border-amber-300 hover:bg-amber-50",
-                  isSelected ? "border-amber-500 bg-amber-50 shadow-md shadow-amber-100" : "border-stone-200 bg-white"
+                  isSelected ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 shadow-md shadow-amber-100" : "border-stone-200 bg-white"
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -48,7 +48,7 @@ export default function ServiceSelector({ selectedService, onSelect }) {
                     <p className="font-bold text-stone-800 mb-0.5">{service.name_ar}</p>
                     {service.description && <p className="text-xs text-stone-500 leading-relaxed">{service.description}</p>}
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="flex items-center gap-1 text-amber-600 font-bold text-sm">
+                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold text-sm">
                         <Tag className="w-3.5 h-3.5" />
                         {service.price} ر.س
                       </span>
@@ -59,7 +59,7 @@ export default function ServiceSelector({ selectedService, onSelect }) {
                     </div>
                   </div>
                   {isSelected && (
-                    <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-6 h-6 bg-amber-500 dark:bg-amber-900/60 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Check className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}

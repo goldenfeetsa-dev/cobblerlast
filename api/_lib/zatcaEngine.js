@@ -241,3 +241,128 @@ export async function signAndSubmitInvoice({ type, id, isRetry = false }) {
     warnings: zData?.validationResults?.warningMessages || [],
   };
 }
+
+/**
+ * Issues a credit or debit note against an already-reported invoice.
+ * This is the ONLY sanctioned way to correct a reported invoice —
+ * see migration 021 (the DB trigger blocks direct edits/deletes on
+ * REPORTED invoices). The note is itself a real, sequential,
+ * hash-chained ZATCA document: it reserves its own ICV/PIH from the
+ * exact same zatca_invoice_chain used for normal invoices.
+ *
+ * ⚠️ Verify in the ZATCA sandbox before relying on this in
+ * production: the installed `zatca-xml-js` version's support for
+ * invoice type codes 381 (credit) / 383 (debit) — as opposed to 388
+ * (simplified invoice) — should be confirmed against its actual API
+ * before the first real note is issued, exactly like every other
+ * "believe but verify with the simulation environment" step in this
+ * file.
+ */
+export async function issueCreditDebitNote({ noteType, originalRecordType, originalRecordId, reason, amount, vatAmount }) {
+  if (!['credit', 'debit'].includes(noteType)) throw new Error('نوع الإشعار يجب أن يكون credit أو debit');
+  if (!reason || !reason.trim()) throw new Error('سبب الإشعار مطلوب — زاتكا يرفض إشعارات بدون سبب واضح');
+  if (!(Number(amount) > 0)) throw new Error('المبلغ يجب أن يكون أكبر من صفر');
+
+  const supabase = getSupabase();
+
+  const { data: settings, error: sErr } = await supabase.from('zatca_settings').select('*').eq('id', 1).single();
+  if (sErr || !settings) throw new Error('لم يتم إعداد بيانات المنشأة بعد في zatca_settings');
+
+  const table = originalRecordType === 'order' ? 'orders' : 'sales_invoices';
+  const { data: original, error: oErr } = await supabase.from(table).select('*').eq('id', originalRecordId).single();
+  if (oErr || !original) throw new Error('الفاتورة الأصلية غير موجودة');
+  if (original.zatca_status !== 'REPORTED' && original.zatca_status !== 'CLEARED') {
+    throw new Error('لا يمكن إصدار إشعار دائن/مدين لفاتورة لم تُبلَّغ لزاتكا أصلاً — عدّل الفاتورة نفسها بدل ذلك');
+  }
+
+  const env = settings.environment || 'sandbox';
+  const certificate = env === 'production' ? process.env.ZATCA_PRODUCTION_CERTIFICATE : process.env.ZATCA_CERTIFICATE;
+  const apiSecret = env === 'production' ? process.env.ZATCA_PRODUCTION_API_SECRET : process.env.ZATCA_API_SECRET;
+  const privateKey = process.env.ZATCA_PRIVATE_KEY;
+  if (!certificate || !apiSecret || !privateKey) throw new Error(`متغيرات بيئة زاتكا غير مكتملة لبيئة "${env}"`);
+
+  const seq = await supabase.from('zatca_credit_debit_notes').select('id', { count: 'exact', head: true });
+  const noteNumber = `${noteType === 'credit' ? 'CN' : 'DN'}-${(original.order_number || original.invoice_number || original.id)}-${((seq.count || 0) + 1)}`;
+
+  const { data: chainRows, error: chainErr } = await supabase.rpc('zatca_reserve_next');
+  if (chainErr || !chainRows?.length) throw new Error('فشل حجز رقم تسلسل الإشعار (ICV): ' + (chainErr?.message || ''));
+  const { icv, prev_hash } = chainRows[0];
+
+  const now = new Date();
+  const egsUnit = {
+    uuid: settings.egs_uuid || '00000000-0000-4000-8000-000000000000',
+    custom_id: 'cobblerlast-pos-1',
+    model: 'Cobblerlast POS',
+    CRN_number: settings.cr_number,
+    VAT_name: settings.seller_name,
+    VAT_number: settings.vat_number,
+    branch_name: settings.seller_name,
+    branch_industry: 'Repair & Retail Services',
+    location: {
+      city: settings.city, city_subdivision: settings.district, street: settings.street,
+      plot_identification: '0000', building: settings.building_number, postal_zone: settings.postal_code,
+    },
+  };
+
+  const subtotal = round2(Number(amount) - Number(vatAmount || round2(Number(amount) - Number(amount) / (1 + VAT_FRACTION))));
+  const lineItems = [{
+    id: '1', name: `${noteType === 'credit' ? 'إشعار دائن' : 'إشعار مدين'} — ${reason}`.slice(0, 200),
+    quantity: 1, tax_exclusive_price: subtotal, VAT_percent: VAT_FRACTION,
+  }];
+
+  const invoice = new ZATCASimplifiedTaxInvoice({
+    props: {
+      egs_info: egsUnit,
+      invoice_counter_number: Number(icv),
+      invoice_serial_number: noteNumber,
+      issue_date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+      issue_time: `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+      previous_invoice_hash: prev_hash,
+      line_items: lineItems,
+      invoice_type_code: noteType === 'credit' ? '381' : '383',
+    },
+  });
+
+  const { signed_invoice_string, invoice_hash, qr } = invoice.sign(certificate, privateKey);
+  const invoiceUuid = signed_invoice_string.match(/<cbc:UUID>(.*?)<\/cbc:UUID>/)?.[1];
+
+  const certStripped = stripPem(certificate);
+  const basicAuth = Buffer.from(`${Buffer.from(certStripped).toString('base64')}:${apiSecret}`).toString('base64');
+  const base = ZATCA_BASE[env] || ZATCA_BASE.sandbox;
+
+  let httpStatus, zData;
+  try {
+    const zRes = await fetch(`${base}/invoices/reporting/single`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', 'Accept': 'application/json',
+        'Accept-Version': 'V2', 'Accept-Language': 'en', 'Clearance-Status': '0',
+        'Authorization': `Basic ${basicAuth}`,
+      },
+      body: JSON.stringify({ invoiceHash: invoice_hash, uuid: invoiceUuid, invoice: Buffer.from(signed_invoice_string).toString('base64') }),
+    });
+    httpStatus = zRes.status;
+    zData = await zRes.json().catch(() => ({}));
+  } catch (netErr) {
+    httpStatus = 0; zData = { __networkError: netErr.message };
+  }
+
+  const ok = httpStatus === 200 || httpStatus === 202;
+  const status = ok ? 'REPORTED' : (httpStatus === 0 ? 'ERROR' : 'REJECTED');
+  if (ok) await supabase.rpc('zatca_commit_hash', { p_hash: invoice_hash });
+
+  const { data: noteRow, error: insErr } = await supabase.from('zatca_credit_debit_notes').insert({
+    note_type: noteType, original_record_type: originalRecordType, original_record_id: originalRecordId,
+    note_number: noteNumber, reason, amount: round2(amount), vat_amount: round2(vatAmount || (Number(amount) - subtotal)),
+    icv, invoice_hash, zatca_status: status, zatca_qr: qr, zatca_uuid: invoiceUuid,
+    zatca_submitted_at: new Date().toISOString(),
+  }).select().single();
+  if (insErr) throw new Error('تعذر حفظ الإشعار بعد إرساله لزاتكا: ' + insErr.message);
+
+  if (!ok) {
+    const errorMessage = zData?.validationResults?.errorMessages?.map(e => e.message).join(', ') || zData?.__networkError || `رفض من زاتكا (HTTP ${httpStatus})`;
+    throw new Error('رفضت زاتكا الإشعار: ' + errorMessage);
+  }
+
+  return { note: noteRow, qr, invoice_hash, uuid: invoiceUuid };
+}

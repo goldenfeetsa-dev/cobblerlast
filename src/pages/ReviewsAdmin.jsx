@@ -37,11 +37,11 @@ export default function ReviewsAdmin() {
 
       <div className="flex gap-4 mb-8">
         <div className="rounded-xl p-4 text-center flex-1 bg-card border border-border">
-          <div className="text-3xl font-black text-yellow-500">{pending.length}</div>
+          <div className="text-3xl font-black text-yellow-500 dark:text-yellow-400">{pending.length}</div>
           <div className="text-sm text-muted-foreground">في انتظار الموافقة</div>
         </div>
         <div className="rounded-xl p-4 text-center flex-1 bg-card border border-border">
-          <div className="text-3xl font-black text-green-500">{approved.length}</div>
+          <div className="text-3xl font-black text-green-500 dark:text-green-400">{approved.length}</div>
           <div className="text-sm text-muted-foreground">منشور</div>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function ReviewsAdmin() {
                   {!r.is_approved && (
                     <Button size="sm" onClick={() => approveMutation.mutate(r.id)}
                       disabled={approveMutation.isPending}
-                      className="bg-green-600 hover:bg-green-700 text-white">
+                      className="bg-green-600 dark:bg-green-900/70 hover:bg-green-700 text-white">
                       <Check className="w-4 h-4" />
                       موافقة
                     </Button>

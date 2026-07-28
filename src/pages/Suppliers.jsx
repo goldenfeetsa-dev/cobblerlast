@@ -164,13 +164,13 @@ export default function Suppliers() {
                 />
                 {form.vat_number && (
                   isValidVatFormat(form.vat_number) ? (
-                    <p className="text-[11px] text-green-600 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> صيغة الرقم صحيحة</p>
+                    <p className="text-[11px] text-green-600 dark:text-green-400 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> صيغة الرقم صحيحة</p>
                   ) : (
-                    <p className="text-[11px] text-red-600 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> يجب أن يكون 15 رقماً يبدأ وينتهي بـ 3</p>
+                    <p className="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> يجب أن يكون 15 رقماً يبدأ وينتهي بـ 3</p>
                   )
                 )}
                 {!form.vat_number && (
-                  <p className="text-[11px] text-amber-600 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> بدون رقم ضريبي، فواتير الشراء من هذا المورد لن تُقبل بالإقرار الضريبي</p>
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> بدون رقم ضريبي، فواتير الشراء من هذا المورد لن تُقبل بالإقرار الضريبي</p>
                 )}
               </div>
               <div className="space-y-1.5">
@@ -202,23 +202,23 @@ export default function Suppliers() {
             const myProducts = supplierProducts(s.id);
             const outOfStock = myProducts.filter(i => totalStock(i) <= 0);
             return (
-              <Card key={s.id} className={outOfStock.length > 0 ? 'border-red-300' : ''}>
+              <Card key={s.id} className={outOfStock.length > 0 ? 'border-red-300 dark:border-red-700' : ''}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-base flex items-center gap-2">
                         {s.name}
                         {outOfStock.length > 0 && (
-                          <Badge className="bg-red-100 text-red-700 text-[10px] flex items-center gap-1">
+                          <Badge className="bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[10px] flex items-center gap-1">
                             <AlertTriangle className="w-3 h-3" /> {outOfStock.length} منتج نفد
                           </Badge>
                         )}
                         {isValidVatFormat(s.vat_number) ? (
-                          <Badge className="bg-green-100 text-green-700 text-[10px] flex items-center gap-1">
+                          <Badge className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 text-[10px] flex items-center gap-1">
                             <ShieldCheck className="w-3 h-3" /> رقم ضريبي
                           </Badge>
                         ) : (
-                          <Badge className="bg-amber-100 text-amber-700 text-[10px] flex items-center gap-1">
+                          <Badge className="bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[10px] flex items-center gap-1">
                             <ShieldAlert className="w-3 h-3" /> بدون رقم ضريبي
                           </Badge>
                         )}
@@ -231,7 +231,7 @@ export default function Suppliers() {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 dark:text-red-400">
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </AlertDialogTrigger>
@@ -242,7 +242,7 @@ export default function Suppliers() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMutation.mutate(s.id)} className="bg-red-600 hover:bg-red-700">حذف</AlertDialogAction>
+                            <AlertDialogAction onClick={() => deleteMutation.mutate(s.id)} className="bg-red-600 dark:bg-red-900/70 hover:bg-red-700">حذف</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -273,7 +273,7 @@ export default function Suppliers() {
                           const out = totalStock(i) <= 0;
                           return (
                             <Badge key={i.id} variant="outline"
-                              className={`text-[11px] ${out ? 'border-red-400 text-red-600 bg-red-50 font-bold' : ''}`}>
+                              className={`text-[11px] ${out ? 'border-red-400 dark:border-red-700 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 font-bold' : ''}`}>
                               {out && <AlertTriangle className="w-3 h-3 ml-1" />}
                               {i.name} {out ? '— نفد من المخزن' : `(${totalStock(i)} ${UNITS[i.unit] || i.unit || ''})`}
                             </Badge>
@@ -313,7 +313,7 @@ export default function Suppliers() {
                     </span>
                     {item.name}
                   </span>
-                  <span className={`text-xs ${out ? 'text-red-600 font-bold' : 'text-muted-foreground'}`}>
+                  <span className={`text-xs ${out ? 'text-red-600 dark:text-red-400 font-bold' : 'text-muted-foreground'}`}>
                     {out ? 'نفد من المخزن ⚠️' : `${totalStock(item)} ${UNITS[item.unit] || item.unit || ''}`}
                   </span>
                 </button>

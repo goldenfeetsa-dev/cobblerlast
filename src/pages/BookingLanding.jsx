@@ -137,9 +137,11 @@ function Navbar() {
         style={{ background: scrolled ? 'rgba(244,241,234,0.92)' : 'rgba(244,241,234,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
         <Link to="/" dir={dir}>
           <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
-              <Scissors className="w-3.5 h-3.5 text-black" />
-            </div>
+            <img
+              src="/images/logo-cobblers.png"
+              alt={t('common.brandShort')}
+              className="w-8 h-8 rounded-lg object-cover"
+            />
             <span className="font-black text-sm" style={{ color: T }}>{t('common.brandShort')}</span>
           </motion.div>
         </Link>
@@ -845,16 +847,15 @@ function TrackOrderSection() {
     if (!code.trim()) return;
     setLoading(true);
     try {
-      // كان الاستعلام محدود بـ .limit(1).single() فيرجع طلب واحد فقط
-      // حتى لو العميل عنده عدة طلبات مسجلة بنفس رقم الجوال — الآن
-      // نجيب كل الطلبات المطابقة (بالرقم أو الجوال) ونعرضها كلها
-      const { data, error } = await supabase.from('orders')
-        .select('order_number,customer_name,status,item_type,created_at')
-        .or(`order_number.eq.${code},customer_phone.eq.${code}`)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      setResults(data || []);
+      // كان الاستعلام يروح مباشرة لـ Supabase من المتصفح (anon key)،
+      // وكان ممكن بس لأن RLS على orders كانت مفتوحة USING (true).
+      // بعد إغلاق RLS (ميغريشن 026) صار لازم يمر عبر مسار عام من
+      // السيرفر يستخدم صلاحية admin — نفس النتيجة والحقول بالضبط،
+      // بس بدون الاعتماد على anon key للوصول المباشر لجدول محمي.
+      const res = await fetch(`/api/public/track-order?code=${encodeURIComponent(code)}`);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'server_error');
+      setResults(json.results || []);
     } catch { setResults([]); }
     finally { setLoading(false); }
   };
@@ -983,9 +984,13 @@ function Footer() {
 
         {/* الشعار */}
         <div className="flex flex-col items-center gap-2 mb-3">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
-            <Scissors className="w-6 h-6 text-black" />
-          </div>
+          <img
+            src="/images/logo-cobblers.png"
+            alt={t('common.brand')}
+            className="w-16 h-16 rounded-2xl object-cover shadow-sm"
+            style={{ border: `1px solid ${GB}0.1)` }}
+            loading="lazy"
+          />
           <h3 className="text-xl font-black" style={{ color: T }}>{t('common.brand')}</h3>
         </div>
 

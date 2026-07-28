@@ -37,9 +37,9 @@ const validateVATNumber = (vat) => isValidVatFormat(vat);
 
 function StatusBadge({ status }) {
   if (!status) return <Badge variant="outline" className="text-gray-500">غير محدد</Badge>;
-  if (status === 'REPORTED') return <Badge className="bg-green-100 text-green-700">✅ تم الإبلاغ</Badge>;
-  if (status === 'CLEARED') return <Badge className="bg-blue-100 text-blue-700">✅ تم التخليص</Badge>;
-  if (status === 'REJECTED') return <Badge className="bg-red-100 text-red-700">❌ مرفوض</Badge>;
+  if (status === 'REPORTED') return <Badge className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300">✅ تم الإبلاغ</Badge>;
+  if (status === 'CLEARED') return <Badge className="bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300">✅ تم التخليص</Badge>;
+  if (status === 'REJECTED') return <Badge className="bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300">❌ مرفوض</Badge>;
   return <Badge variant="outline">{status}</Badge>;
 }
 
@@ -155,8 +155,8 @@ export default function ZATCASettings() {
     <div className="space-y-6 max-w-2xl mx-auto" dir="rtl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-          <Shield className="w-5 h-5 text-green-700" />
+        <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-950/40 flex items-center justify-center">
+          <Shield className="w-5 h-5 text-green-700 dark:text-green-300" />
         </div>
         <div>
           <h1 className="text-xl font-black">إعدادات زاتكا ZATCA</h1>
@@ -164,13 +164,13 @@ export default function ZATCASettings() {
         </div>
         <div className="mr-auto">
           {health?.ready
-            ? <Badge className="bg-green-100 text-green-700 px-3 py-1">✅ الخادم جاهز ({ENV_LABELS[health.environment]?.label.split(' ')[0]})</Badge>
-            : <Badge className="bg-amber-100 text-amber-700 px-3 py-1">⚠️ غير جاهز</Badge>}
+            ? <Badge className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-3 py-1">✅ الخادم جاهز ({ENV_LABELS[health.environment]?.label.split(' ')[0]})</Badge>
+            : <Badge className="bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-3 py-1">⚠️ غير جاهز</Badge>}
         </div>
       </div>
 
       {missingFields.length > 0 && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
+        <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
           <span className="font-bold shrink-0">⚠️ ناقص:</span>
           <span>{missingFields.join('، ')} — زاتكا يرفض الفاتورة لو أي من هالحقول فاضي، خصوصاً بيانات العنوان.</span>
         </div>
@@ -188,7 +188,7 @@ export default function ZATCASettings() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-blue-600" />بيانات منشأتك (غير سرية)
+                <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />بيانات منشأتك (غير سرية)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -201,8 +201,8 @@ export default function ZATCASettings() {
                   <Label className="flex items-center gap-1"><Hash className="w-3 h-3" />الرقم الضريبي (VAT) *</Label>
                   <Input value={settings.vat_number || ''} onChange={e => update('vat_number', e.target.value)}
                     placeholder="300000000000003" dir="ltr"
-                    className={!isVATValid ? 'border-red-400' : ''} />
-                  {!isVATValid && <p className="text-xs text-red-500">15 رقماً — يبدأ وينتهي بـ 3</p>}
+                    className={!isVATValid ? 'border-red-400 dark:border-red-700' : ''} />
+                  {!isVATValid && <p className="text-xs text-red-500 dark:text-red-400">15 رقماً — يبدأ وينتهي بـ 3</p>}
                 </div>
                 <div className="space-y-1.5">
                   <Label>رقم السجل التجاري *</Label>
@@ -239,7 +239,7 @@ export default function ZATCASettings() {
                       type="button"
                       onClick={() => update('environment', key)}
                       className={`text-right p-3 rounded-xl border-2 transition-colors ${
-                        settings.environment === key ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                        settings.environment === key ? 'border-blue-500 dark:border-blue-600 bg-blue-50 dark:bg-blue-950/30' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="font-bold text-sm">{v.label}</div>
@@ -248,7 +248,7 @@ export default function ZATCASettings() {
                   ))}
                 </div>
                 {settings.environment === 'production' && (
-                  <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 mt-2">
+                  <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-800 dark:text-red-300 mt-2">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     أي طلب أو فاتورة تُنشأ الآن سترسل لزاتكا فعلياً بأثر قانوني حقيقي. تأكد إنك اختبرت على simulation أولاً.
                   </div>
@@ -268,11 +268,11 @@ export default function ZATCASettings() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Server className="w-4 h-4 text-purple-600" />الشهادة والمفتاح الخاص — على الخادم فقط
+                <Server className="w-4 h-4 text-purple-600 dark:text-purple-400" />الشهادة والمفتاح الخاص — على الخادم فقط
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 leading-relaxed">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
                 لأسباب أمنية وامتثالية، الشهادة والمفتاح الخاص ما يُرفعان من هذه الصفحة أبداً — أي شيء يُكتب بالمتصفح ممكن يُسرّب.
                 بدلاً من ذلك، تُضبط كمتغيرات بيئة سرّية في لوحة Vercel لهذا المشروع (Settings → Environment Variables):
               </div>
@@ -289,7 +289,7 @@ export default function ZATCASettings() {
                 بعد إضافتها، أعد نشر المشروع (Redeploy) حتى تُقرأ من دالة <code dir="ltr">/api/zatca/submit</code>
               </div>
               <a href="https://vercel.com/docs/projects/environment-variables" target="_blank" rel="noreferrer"
-                className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline">
+                className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline">
                 <ExternalLink className="w-3 h-3" /> دليل Vercel لإضافة متغيرات البيئة
               </a>
 
@@ -314,20 +314,20 @@ export default function ZATCASettings() {
         {/* ── Log ────────────────────────────────────── */}
         <TabsContent value="log" className="mt-6 space-y-4">
           {needsReview.length > 0 && (
-            <Card className="border-red-300">
+            <Card className="border-red-300 dark:border-red-700">
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-red-700">
+                <CardTitle className="text-base flex items-center gap-2 text-red-700 dark:text-red-300">
                   <AlertTriangle className="w-4 h-4" />
                   {needsReview.length} فاتورة تحتاج مراجعتك يدوياً (النظام ما يقدر يصلحها تلقائياً)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {needsReview.map((r) => (
-                  <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border border-red-200 bg-red-50 text-sm flex-wrap">
+                  <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-sm flex-wrap">
                     <Badge variant="outline">{r.kind}</Badge>
                     <span className="font-mono font-medium">{r.number}</span>
                     <span className="text-gray-500">{r.amount?.toFixed?.(2)} ر.س</span>
-                    <Badge className="bg-red-100 text-red-700">{r.zatca_error_category || 'غير مصنّف'}</Badge>
+                    <Badge className="bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300">{r.zatca_error_category || 'غير مصنّف'}</Badge>
                     <span className="text-xs text-gray-400 mr-auto">{r.zatca_retry_count} محاولات</span>
                   </div>
                 ))}
@@ -341,7 +341,7 @@ export default function ZATCASettings() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-blue-600" />الإصلاح التلقائي — كيف يشتغل
+                <RefreshCw className="w-4 h-4 text-blue-600 dark:text-blue-400" />الإصلاح التلقائي — كيف يشتغل
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-gray-600 space-y-1.5 leading-relaxed">
@@ -349,7 +349,7 @@ export default function ZATCASettings() {
               <p>✅ أخطاء شبكة/خادم مؤقتة من زاتكا → تُعاد المحاولة تلقائياً</p>
               <p>✅ فرق تقريب بالحسابات أو عدم تطابق تسلسل الفواتير → تُصحَّح وتُعاد تلقائياً</p>
               <p>🛑 رقم ضريبي/سجل تجاري خاطئ أو شهادة منتهية → يتوقف ويظهر لك أعلاه فقط، ما يُخمِّن قيمة بديلة</p>
-              <p className="text-amber-600 pt-1">⚠️ ملاحظة: تشغيل Cron كل 10 دقائق يحتاج خطة Vercel Pro — على الخطة المجانية (Hobby) الحد الأقصى تشغيل واحد يومياً.</p>
+              <p className="text-amber-600 dark:text-amber-400 pt-1">⚠️ ملاحظة: تشغيل Cron كل 10 دقائق يحتاج خطة Vercel Pro — على الخطة المجانية (Hobby) الحد الأقصى تشغيل واحد يومياً.</p>
             </CardContent>
           </Card>
 
@@ -370,12 +370,12 @@ export default function ZATCASettings() {
                       <span className="font-mono font-medium">{entry.invoice_number}</span>
                       <span className="text-gray-400 text-xs">ICV #{entry.icv}</span>
                       <Badge variant="outline" className="text-[10px]">{entry.environment}</Badge>
-                      {entry.auto_fix_applied && <Badge className="bg-blue-100 text-blue-700 text-[10px]">إعادة محاولة تلقائية</Badge>}
+                      {entry.auto_fix_applied && <Badge className="bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px]">إعادة محاولة تلقائية</Badge>}
                       <span className="text-gray-400 text-xs mr-auto">
                         {new Date(entry.created_at).toLocaleString('ar-SA')}
                       </span>
                       {entry.error_message && (
-                        <span className="text-red-500 text-xs w-full">{entry.error_message}</span>
+                        <span className="text-red-500 dark:text-red-400 text-xs w-full">{entry.error_message}</span>
                       )}
                     </div>
                   ))}
@@ -391,7 +391,7 @@ export default function ZATCASettings() {
 
 function CheckRow({ ok, label }) {
   return (
-    <div className={`flex items-center gap-1.5 p-2 rounded-lg border ${ok ? 'border-green-200 bg-green-50 text-green-700' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
+    <div className={`flex items-center gap-1.5 p-2 rounded-lg border ${ok ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
       {ok ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
       {label}
     </div>

@@ -53,6 +53,7 @@ export default function TaxDashboard() {
   const [expenses, setExpenses] = useState([]);
   const [suppliersById, setSuppliersById] = useState({});
   const [zatcaSettings, setZatcaSettings] = useState(null);
+  const [creditNotes, setCreditNotes] = useState([]);
   const [exportingPdf, setExportingPdf] = useState(false);
   const statementRef = useRef(null);
 
@@ -65,18 +66,20 @@ export default function TaxDashboard() {
     const startDay = format(start, 'yyyy-MM-dd');
     const endDay = format(end, 'yyyy-MM-dd');
 
-    const [{ data: o }, { data: s }, { data: p }, expensesRaw, { data: sup }, zs] = await Promise.all([
+    const [{ data: o }, { data: s }, { data: p }, expensesRaw, { data: sup }, zs, { data: notes }] = await Promise.all([
       supabase.from('orders').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('sales_invoices').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('purchase_invoices').select('*').gte('invoice_date', startDay).lte('invoice_date', endDay),
       secureExpenses.list({ orderBy: '-expense_date', limit: 2000, gteCol: 'expense_date', gteVal: startDay, lteCol: 'expense_date', lteVal: endDay }),
       supabase.from('suppliers').select('id,name'),
       secureZatca.getSettings().catch(() => null),
+      supabase.from('zatca_credit_debit_notes').select('*').gte('created_at', startISO).lte('created_at', endISO).eq('zatca_status', 'REPORTED'),
     ]);
     setOrders(o || []); setSales(s || []); setPurchases(p || []);
     setExpenses((expensesRaw || []).filter((x) => x.is_vat_applicable));
     setSuppliersById(Object.fromEntries((sup || []).map(x => [x.id, x.name])));
     setZatcaSettings(zs || null);
+    setCreditNotes(notes || []);
     setLoading(false);
   };
 
@@ -102,10 +105,14 @@ export default function TaxDashboard() {
   const reportedOrders = orders.filter(o => o.zatca_status === 'REPORTED');
   const reportedSales = sales.filter(s => s.zatca_status === 'REPORTED');
   const unreportedCount = (orders.length + sales.length) - (reportedOrders.length + reportedSales.length);
-  const vatCollected = useMemo(() => [...reportedOrders, ...reportedSales].reduce((s, r) => {
-    const sub = r.subtotal ?? (r.total_price ? r.total_price / 1.15 : 0);
-    return s + sub * 0.15;
-  }, 0), [orders, sales]);
+  const vatCollected = useMemo(() => {
+    const invoicesVat = [...reportedOrders, ...reportedSales].reduce((s, r) => {
+      const sub = r.subtotal ?? (r.total_price ? r.total_price / 1.15 : 0);
+      return s + sub * 0.15;
+    }, 0);
+    const notesAdjustment = creditNotes.reduce((s, n) => s + (n.note_type === 'credit' ? -(n.vat_amount || 0) : (n.vat_amount || 0)), 0);
+    return invoicesVat + notesAdjustment;
+  }, [orders, sales, creditNotes]);
 
   // ── ضريبة المدخلات (المشتريات) — فقط الفواتير بمورد له رقم ضريبي صالح ──
   const validPurchases = purchases.filter(p => p.vat_number_valid_format);
@@ -113,8 +120,12 @@ export default function TaxDashboard() {
   const vatPaidPurchases = validPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
   const vatPaidExcluded = invalidPurchases.reduce((s, p) => s + (Number(p.vat_amount) || 0), 0);
 
-  // ── ضريبة المصروفات القابلة للخصم (إيجار، كهرباء... مصروفات شاملة ضريبة) ──
-  const vatPaidExpenses = expenses.reduce((s, e) => s + (Number(e.vat_amount) || 0), 0);
+  // ── ضريبة المصروفات القابلة للخصم — فقط اللي عليها فاتورة ضريبية رسمية
+  // من المورد (شرط زاتكا لقبول خصم ضريبة المدخلات) ──
+  const deductibleExpenses = expenses.filter(e => e.has_tax_invoice);
+  const nonDeductibleExpenses = expenses.filter(e => !e.has_tax_invoice);
+  const vatPaidExpenses = deductibleExpenses.reduce((s, e) => s + (Number(e.vat_amount) || 0), 0);
+  const vatExpensesExcluded = nonDeductibleExpenses.reduce((s, e) => s + (Number(e.vat_amount) || 0), 0);
 
   const vatPaidDeductible = vatPaidPurchases + vatPaidExpenses;
   const netVatDue = vatCollected - vatPaidDeductible;
@@ -238,13 +249,13 @@ export default function TaxDashboard() {
       ) : (
         <>
           {unreportedCount > 0 && (
-            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 flex items-center gap-2">
+            <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-3 text-sm text-amber-800 dark:text-amber-300 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 shrink-0" />
               فيه {unreportedCount} فاتورة/طلب مبيعات لسه ما انبلّغ لزاتكا بهذي الفترة — مو محسوبة ضمن ضريبة المخرجات هنا.
             </div>
           )}
           {invalidPurchases.length > 0 && (
-            <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-800 flex items-center gap-2">
+            <div className="rounded-xl border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-800 dark:text-red-300 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 shrink-0" />
               فيه {invalidPurchases.length} فاتورة شراء بمبلغ ضريبة {fmt(vatPaidExcluded)} ر.س مستبعدة من الخصم لأن موردها بدون رقم ضريبي صالح —
               <Link to="/suppliers" className="underline font-bold">حدّث بيانات الموردين</Link>
@@ -252,22 +263,22 @@ export default function TaxDashboard() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-green-200">
+            <Card className="border-green-200 dark:border-green-800">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-green-700"><TrendingUp className="w-4 h-4" /><p className="text-xs font-bold">ضريبة المخرجات (المبيعات)</p></div>
-                <p className="text-2xl font-black mt-2 text-green-700">{fmt(vatCollected)} ر.س</p>
+                <div className="flex items-center gap-2 text-green-700 dark:text-green-300"><TrendingUp className="w-4 h-4" /><p className="text-xs font-bold">ضريبة المخرجات (المبيعات)</p></div>
+                <p className="text-2xl font-black mt-2 text-green-700 dark:text-green-300">{fmt(vatCollected)} ر.س</p>
               </CardContent>
             </Card>
-            <Card className="border-blue-200">
+            <Card className="border-blue-200 dark:border-blue-800">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-blue-700"><TrendingDown className="w-4 h-4" /><p className="text-xs font-bold">ضريبة المدخلات القابلة للخصم (المشتريات)</p></div>
-                <p className="text-2xl font-black mt-2 text-blue-700">{fmt(vatPaidDeductible)} ر.س</p>
+                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300"><TrendingDown className="w-4 h-4" /><p className="text-xs font-bold">ضريبة المدخلات القابلة للخصم (المشتريات)</p></div>
+                <p className="text-2xl font-black mt-2 text-blue-700 dark:text-blue-300">{fmt(vatPaidDeductible)} ر.س</p>
               </CardContent>
             </Card>
-            <Card className={netVatDue >= 0 ? 'border-primary/30' : 'border-green-300'}>
+            <Card className={netVatDue >= 0 ? 'border-primary/30' : 'border-green-300 dark:border-green-700'}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2"><Scale className="w-4 h-4" /><p className="text-xs font-bold">صافي الضريبة المستحقة للهيئة</p></div>
-                <p className={`text-2xl font-black mt-2 ${netVatDue >= 0 ? '' : 'text-green-600'}`}>{fmt(Math.abs(netVatDue))} ر.س</p>
+                <p className={`text-2xl font-black mt-2 ${netVatDue >= 0 ? '' : 'text-green-600 dark:text-green-400'}`}>{fmt(Math.abs(netVatDue))} ر.س</p>
                 <p className="text-[11px] text-muted-foreground mt-1">{netVatDue >= 0 ? 'مبلغ يجب سداده للهيئة' : 'رصيد ضريبي لصالحك (استرداد/ترحيل)'}</p>
               </CardContent>
             </Card>
@@ -287,9 +298,9 @@ export default function TaxDashboard() {
                   <div className="flex items-center gap-3">
                     <span className="text-xs">ضريبة: {fmt(p.vat_amount)} ر.س</span>
                     {p.vat_number_valid_format ? (
-                      <Badge className="bg-green-100 text-green-700 text-[10px]">قابلة للخصم</Badge>
+                      <Badge className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 text-[10px]">قابلة للخصم</Badge>
                     ) : (
-                      <Badge className="bg-red-100 text-red-700 text-[10px]">غير مقبولة</Badge>
+                      <Badge className="bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[10px]">غير مقبولة</Badge>
                     )}
                   </div>
                 </div>
@@ -337,6 +348,9 @@ export default function TaxDashboard() {
                   <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
                     <div className="flex justify-between"><span>المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ</span><span className="font-mono font-bold">{fmt(vatCollected / 0.15)}</span></div>
                     <div className="flex justify-between"><span>ضريبة القيمة المضافة المستحقة على المبيعات</span><span className="font-mono font-bold">{fmt(vatCollected)}</span></div>
+                    {creditNotes.length > 0 && (
+                      <p className="text-[10px] text-gray-400 pt-1">* شامل صافي إشعارات الدائن/المدين المُصدرة بهذه الفترة</p>
+                    )}
                   </div>
                 </div>
 
@@ -344,10 +358,15 @@ export default function TaxDashboard() {
                   <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#2563eb' }}>القسم الثاني — ضريبة المدخلات (المشتريات)</div>
                   <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
                     <div className="flex justify-between"><span>ضريبة فواتير المشتريات القابلة للخصم</span><span className="font-mono font-bold">{fmt(vatPaidPurchases)}</span></div>
-                    <div className="flex justify-between"><span>ضريبة المصروفات المسجّلة الشاملة للضريبة</span><span className="font-mono font-bold">{fmt(vatPaidExpenses)}</span></div>
+                    <div className="flex justify-between"><span>ضريبة المصروفات المسجّلة (بفاتورة ضريبية رسمية)</span><span className="font-mono font-bold">{fmt(vatPaidExpenses)}</span></div>
                     <div className="flex justify-between font-bold border-t pt-1.5"><span>الإجمالي القابل للخصم</span><span className="font-mono">{fmt(vatPaidDeductible)}</span></div>
                   </div>
                 </div>
+                {vatExpensesExcluded > 0 && (
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 -mt-2 mb-3">
+                    ⚠ {fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة من الإقرار لعدم وجود فاتورة ضريبية رسمية من المورد.
+                  </p>
+                )}
 
                 <div className="mb-6">
                   <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#1e3a8a' }}>القسم الثالث — الصافي</div>

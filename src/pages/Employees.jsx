@@ -18,11 +18,11 @@ import { logAudit } from '@/lib/auditLog';
 
 
 const ROLE_LABELS = {
-  owner:      { label: 'مالك',     color: 'bg-purple-100 text-purple-700' },
-  manager:    { label: 'مدير',     color: 'bg-blue-100 text-blue-700' },
-  admin:      { label: 'مدير',     color: 'bg-blue-100 text-blue-700' },
-  accountant: { label: 'محاسب',   color: 'bg-green-100 text-green-700' },
-  cashier:    { label: 'كاشير',   color: 'bg-amber-100 text-amber-700' },
+  owner:      { label: 'مالك',     color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300' },
+  manager:    { label: 'مدير',     color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300' },
+  admin:      { label: 'مدير',     color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300' },
+  accountant: { label: 'محاسب',   color: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300' },
+  cashier:    { label: 'كاشير',   color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' },
   staff:      { label: 'عامل',    color: 'bg-gray-100 text-gray-700' },
 };
 

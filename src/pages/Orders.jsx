@@ -17,14 +17,14 @@ import { useLoyalty } from '@/lib/loyalty/useLoyalty';
 import { logAudit } from '@/lib/auditLog';
 
 const STATUS_CONFIG = {
-  pending: { label: 'قيد الانتظار', icon: Clock, class: 'bg-amber-100 text-amber-700 border-amber-200' },
-  in_progress: { label: 'جارٍ التنفيذ', icon: Loader2, class: 'bg-blue-100 text-blue-700 border-blue-200' },
-  ready: { label: 'جاهز', icon: Package, class: 'bg-green-100 text-green-700 border-green-200' },
-  completed: { label: 'مكتمل', icon: CheckCircle2, class: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  cancelled: { label: 'ملغى', icon: XCircle, class: 'bg-red-100 text-red-700 border-red-200' },
-  returned: { label: 'مُسترجع', icon: XCircle, class: 'bg-orange-100 text-orange-700 border-orange-200' },
-  exchanged: { label: 'مُستبدَل', icon: CheckCircle2, class: 'bg-purple-100 text-purple-700 border-purple-200' },
-  on_hold: { label: 'متوقف', icon: Clock, class: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+  pending: { label: 'قيد الانتظار', icon: Clock, class: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+  in_progress: { label: 'جارٍ التنفيذ', icon: Loader2, class: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+  ready: { label: 'جاهز', icon: Package, class: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' },
+  completed: { label: 'مكتمل', icon: CheckCircle2, class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+  cancelled: { label: 'ملغى', icon: XCircle, class: 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
+  returned: { label: 'مُسترجع', icon: XCircle, class: 'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
+  exchanged: { label: 'مُستبدَل', icon: CheckCircle2, class: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
+  on_hold: { label: 'متوقف', icon: Clock, class: 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' },
 };
 
 const ITEM_LABELS = {
@@ -189,7 +189,7 @@ export default function Orders() {
                   <div className="text-left flex flex-col items-end gap-1 shrink-0 mr-2">
                     <p className="font-bold text-lg">{order.total_price?.toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground">ر.س</p>
-                    <Badge variant="outline" className={`text-[10px] ${order.payment_status === 'paid' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <Badge variant="outline" className={`text-[10px] ${order.payment_status === 'paid' ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300'}`}>
                       {order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
                     </Badge>
                     <Button
@@ -201,7 +201,7 @@ export default function Orders() {
                       <Barcode className="w-3 h-3 ml-1" />
                       باركود
                     </Button>
-                    {canDelete && (
+                    {canDelete && order.zatca_status !== 'REPORTED' && order.zatca_status !== 'CLEARED' && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button size="sm" variant="outline"
@@ -229,6 +229,11 @@ export default function Orders() {
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
+                    {canDelete && (order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED') && (
+                      <Badge variant="outline" className="text-[10px] h-6 px-2 bg-slate-50 text-slate-500 border-slate-200">
+                        مُبلَّغة لزاتكا — للقراءة فقط
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
@@ -237,7 +242,7 @@ export default function Orders() {
                   <div className="mt-3 pt-3 border-t flex flex-wrap items-center gap-2" dir="rtl">
                     {order.status === 'ready' && !order.shelf_location && (
                       <>
-                        <Layers className="w-4 h-4 text-amber-600 shrink-0" />
+                        <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                         <Input
                           placeholder="رقم الرف / مكان التخزين"
                           value={shelfInputs[order.id] || ''}
@@ -247,7 +252,7 @@ export default function Orders() {
                         />
                         <Button
                           size="sm"
-                          className="h-8 text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                          className="h-8 text-xs bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-600 text-white"
                           disabled={!shelfInputs[order.id]?.trim() || updateMutation.isPending}
                           onClick={e => {
                             e.preventDefault();
@@ -260,7 +265,7 @@ export default function Orders() {
                       </>
                     )}
                     {order.shelf_location && (
-                      <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 flex items-center gap-1">
+                      <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1 flex items-center gap-1">
                         <Layers className="w-3 h-3" />
                         رف: {order.shelf_location}
                       </span>
@@ -268,7 +273,7 @@ export default function Orders() {
                     {order.status === 'ready' && order.shelf_location && (
                       <Button
                         size="sm"
-                        className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white mr-auto"
+                        className="h-8 text-xs bg-emerald-600 dark:bg-emerald-900/70 hover:bg-emerald-700 text-white mr-auto"
                         disabled={updateMutation.isPending}
                         onClick={e => {
                           e.preventDefault();

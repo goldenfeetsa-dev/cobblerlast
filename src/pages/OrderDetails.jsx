@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { logAudit } from '@/lib/auditLog';
+import { secureZatca } from '@/lib/secureApi';
 
 const ITEM_LABELS = {
   shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
@@ -90,6 +91,25 @@ export default function OrderDetails() {
   const [holdReason, setHoldReason] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteForm, setNoteForm] = useState({ noteType: 'credit', reason: '', amount: '' });
+
+  const issueNote = useMutation({
+    mutationFn: () => secureZatca.issueNote({
+      noteType: noteForm.noteType,
+      originalRecordType: 'order',
+      originalRecordId: orderId,
+      reason: noteForm.reason,
+      amount: Number(noteForm.amount),
+    }),
+    onSuccess: (res) => {
+      toast.success(`تم إصدار وإرسال ${noteForm.noteType === 'credit' ? 'إشعار الدائن' : 'إشعار المدين'} رقم ${res.note?.note_number} لزاتكا بنجاح`);
+      logAudit({ action: 'zatca_note', page: 'تفاصيل الطلب', entity: 'order', entity_id: orderId, details: { note_number: res.note?.note_number, note_type: noteForm.noteType, amount: noteForm.amount, reason: noteForm.reason } });
+      setNoteOpen(false);
+      setNoteForm({ noteType: 'credit', reason: '', amount: '' });
+    },
+    onError: (err) => toast.error('فشل إصدار الإشعار: ' + err.message),
+  });
 
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: ['order', orderId],
@@ -233,6 +253,17 @@ export default function OrderDetails() {
 
           {isAdmin && (
             <>
+              {(order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED') ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-400 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-50"
+                  onClick={() => setNoteOpen(true)}
+                >
+                  إصدار إشعار دائن/مدين
+                </Button>
+              ) : (
+              <>
               <Button
                 size="sm"
                 variant="outline"
@@ -272,11 +303,13 @@ export default function OrderDetails() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              </>
+              )}
 
               <Button
                 size="sm"
                 variant="outline"
-                className="border-yellow-400 text-yellow-700 hover:bg-yellow-50"
+                className="border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-50"
                 onClick={() => setHoldDialogOpen(true)}
               >
                 <PauseCircle className="w-3.5 h-3.5 ml-1" />
@@ -285,7 +318,7 @@ export default function OrderDetails() {
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-50">
+                  <Button size="sm" variant="outline" className="border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-50">
                     <RotateCcw className="w-3.5 h-3.5 ml-1" />
                     استرجاع
                   </Button>
@@ -293,18 +326,31 @@ export default function OrderDetails() {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>تأكيد الاسترجاع</AlertDialogTitle>
-                    <AlertDialogDescription>هل تريد تسجيل هذا الطلب كمُسترجع؟</AlertDialogDescription>
+                    <AlertDialogDescription>
+                      {(order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED')
+                        ? 'هذه الفاتورة مُبلَّغة لزاتكا مسبقاً — الاسترجاع هنا يتطلب إصدار إشعار دائن رسمي بدل مجرد تغيير الحالة، حتى يبقى رقم الضريبة المُعلن مطابقاً للواقع.'
+                        : 'هل تريد تسجيل هذا الطلب كمُسترجع؟'}
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => adminAction.mutate({ id: order.id, status: 'returned' })} className="bg-amber-600 hover:bg-amber-700">تأكيد</AlertDialogAction>
+                    {(order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED') ? (
+                      <AlertDialogAction
+                        onClick={() => { setNoteForm({ noteType: 'credit', reason: 'استرجاع الطلب من العميل', amount: String(order.total_price || '') }); setNoteOpen(true); }}
+                        className="bg-amber-600 dark:bg-amber-900/70 hover:bg-amber-700"
+                      >
+                        متابعة لإصدار إشعار دائن
+                      </AlertDialogAction>
+                    ) : (
+                      <AlertDialogAction onClick={() => adminAction.mutate({ id: order.id, status: 'returned' })} className="bg-amber-600 dark:bg-amber-900/70 hover:bg-amber-700">تأكيد</AlertDialogAction>
+                    )}
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                  <Button size="sm" variant="outline" className="border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50">
                     <RefreshCw className="w-3.5 h-3.5 ml-1" />
                     استبدال
                   </Button>
@@ -316,14 +362,14 @@ export default function OrderDetails() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => adminAction.mutate({ id: order.id, status: 'exchanged' })} className="bg-blue-600 hover:bg-blue-700">تأكيد</AlertDialogAction>
+                    <AlertDialogAction onClick={() => adminAction.mutate({ id: order.id, status: 'exchanged' })} className="bg-blue-600 dark:bg-blue-900/70 hover:bg-blue-700">تأكيد</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
+                  <Button size="sm" variant="outline" className="border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50">
                     <XCircle className="w-3.5 h-3.5 ml-1" />
                     إلغاء الفاتورة
                   </Button>
@@ -331,11 +377,24 @@ export default function OrderDetails() {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>إلغاء الفاتورة</AlertDialogTitle>
-                    <AlertDialogDescription>هل أنت متأكد من إلغاء هذه الفاتورة؟ لن تُحتسب في التقارير المالية.</AlertDialogDescription>
+                    <AlertDialogDescription>
+                      {(order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED')
+                        ? 'هذه الفاتورة مُبلَّغة لزاتكا مسبقاً — لا يمكن "إلغاؤها" ببساطة، لأن زاتكا عندها نسخة موقّعة منها. الطريقة الرسمية هي إصدار إشعار دائن بكامل المبلغ يُصفّرها محاسبياً دون حذفها.'
+                        : 'هل أنت متأكد من إلغاء هذه الفاتورة؟ لن تُحتسب في التقارير المالية.'}
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => adminAction.mutate({ id: order.id, status: 'cancelled' })} className="bg-destructive hover:bg-destructive/90">تأكيد الإلغاء</AlertDialogAction>
+                    {(order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED') ? (
+                      <AlertDialogAction
+                        onClick={() => { setNoteForm({ noteType: 'credit', reason: 'إلغاء الفاتورة بالكامل', amount: String(order.total_price || '') }); setNoteOpen(true); }}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        متابعة لإصدار إشعار دائن
+                      </AlertDialogAction>
+                    ) : (
+                      <AlertDialogAction onClick={() => adminAction.mutate({ id: order.id, status: 'cancelled' })} className="bg-destructive hover:bg-destructive/90">تأكيد الإلغاء</AlertDialogAction>
+                    )}
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -403,7 +462,7 @@ export default function OrderDetails() {
                               toast.error('تعذّر إرسال البريد الإلكتروني: ميزة إرسال الإيميل تحتاج ربط خدمة بريد فعلية (لم تُفعّل بعد)');
                             }
                           }}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-90 transition-opacity bg-blue-500"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-90 transition-opacity bg-blue-500 dark:bg-blue-900/60"
                           title="إرسال تحديث الحالة عبر البريد"
                         >
                           <Mail className="w-3.5 h-3.5" />بريد
@@ -457,8 +516,31 @@ export default function OrderDetails() {
                       <p className="text-xs text-muted-foreground">التسليم</p>
                       <p className="font-medium">{order.delivery_method === 'pickup' ? 'استلام من المحل' : 'توصيل'}</p>
                       {order.delivery_address && <p className="text-sm text-muted-foreground">{order.delivery_address}</p>}
+                      {order.delivery_method === 'delivery' && (
+                        order.delivery_lat && order.delivery_lng ? (
+                          <a
+                            href={`https://maps.google.com/?q=${order.delivery_lat},${order.delivery_lng}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline mt-1"
+                          >
+                            <MapPin className="w-3.5 h-3.5" />
+                            فتح موقع التوصيل على الخريطة
+                          </a>
+                        ) : (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">⚠ لا يوجد موقع محدد على الخريطة لهذا الطلب — فقط عنوان نصي</p>
+                        )
+                      )}
                     </div>
                   </div>
+                  {order.delivery_method === 'delivery' && order.delivery_lat && order.delivery_lng && (
+                    <div className="rounded-xl overflow-hidden border" style={{ height: 200 }}>
+                      <iframe
+                        title="موقع التوصيل"
+                        width="100%" height="100%" style={{ border: 0 }}
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${order.delivery_lng - 0.008},${order.delivery_lat - 0.008},${order.delivery_lng + 0.008},${order.delivery_lat + 0.008}&layer=mapnik&marker=${order.delivery_lat},${order.delivery_lng}`}
+                      />
+                    </div>
+                  )}
                   <div className="flex items-center gap-3">
                     <CalendarDays className="w-4 h-4 text-muted-foreground" />
                     <div>
@@ -471,9 +553,9 @@ export default function OrderDetails() {
                     </div>
                   </div>
                   {order.hold_reason && (
-                    <div className="pt-2 border-t border-yellow-200 bg-yellow-50 rounded-lg p-2 mt-2">
-                      <p className="text-xs text-yellow-700 font-bold mb-1">⏸ سبب التوقف</p>
-                      <p className="text-sm text-yellow-800">{order.hold_reason}</p>
+                    <div className="pt-2 border-t border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg p-2 mt-2">
+                      <p className="text-xs text-yellow-700 dark:text-yellow-300 font-bold mb-1">⏸ سبب التوقف</p>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-300">{order.hold_reason}</p>
                     </div>
                   )}
                   {order.notes && (
@@ -498,7 +580,7 @@ export default function OrderDetails() {
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     <Badge
-                      className={`cursor-pointer ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                      className={`cursor-pointer ${order.payment_status === 'paid' ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300'}`}
                       onClick={() => updatePayment.mutate({ 
                         id: order.id, 
                         status: order.payment_status === 'paid' ? 'unpaid' : 'paid' 
@@ -558,7 +640,7 @@ export default function OrderDetails() {
             <Button
               onClick={handleHoldSubmit}
               disabled={!holdReason.trim()}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white"
+              className="bg-yellow-500 dark:bg-yellow-900/60 hover:bg-yellow-600 text-white"
             >
               <PauseCircle className="w-4 h-4 ml-2" />
               تأكيد التوقيف
@@ -607,6 +689,47 @@ export default function OrderDetails() {
             <Button variant="outline" onClick={() => setEditOpen(false)}>إلغاء</Button>
             <Button onClick={() => updateDetails.mutate(editForm)} disabled={updateDetails.isPending}>
               حفظ التعديلات
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إصدار إشعار دائن/مدين للطلب {order.order_number}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              الفاتورة الأصلية مُبلَّغة لزاتكا ولا يمكن تعديلها. هذا الإشعار مستند رسمي منفصل
+              يُرسَل لزاتكا بنفس آلية التوقيع والتسلسل، ويصحح الفاتورة الأصلية دون المساس بها.
+            </p>
+            <div>
+              <Label>نوع الإشعار</Label>
+              <Select value={noteForm.noteType} onValueChange={v => setNoteForm(f => ({ ...f, noteType: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="credit">إشعار دائن (تخفيض مبلغ / استرجاع)</SelectItem>
+                  <SelectItem value="debit">إشعار مدين (زيادة مبلغ)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>المبلغ شامل الضريبة (ر.س)</Label>
+              <Input type="number" step="0.01" value={noteForm.amount} onChange={e => setNoteForm(f => ({ ...f, amount: e.target.value }))} />
+            </div>
+            <div>
+              <Label>السبب (إلزامي)</Label>
+              <Textarea value={noteForm.reason} onChange={e => setNoteForm(f => ({ ...f, reason: e.target.value }))} className="h-20" placeholder="مثال: استرجاع جزئي لخطأ بالسعر المحتسب" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoteOpen(false)}>إلغاء</Button>
+            <Button
+              onClick={() => issueNote.mutate()}
+              disabled={issueNote.isPending || !noteForm.reason.trim() || !(Number(noteForm.amount) > 0)}
+            >
+              {issueNote.isPending ? 'جارٍ الإرسال لزاتكا...' : 'إصدار وإرسال لزاتكا'}
             </Button>
           </DialogFooter>
         </DialogContent>

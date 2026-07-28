@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
-  ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings,
+  ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings, Moon, Sun,
   Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
@@ -85,6 +85,13 @@ export default function Sidebar() {
   const isFinance = isFinanceUser(session?.role); // isAdmin + محاسب
   const isWorkerRole = isWorker(session?.role);   // العامل فقط (وليس الكاشير)
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const toggleDark = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    try { localStorage.setItem('theme', next ? 'dark' : 'light'); } catch {}
+  };
 
   const handleLogout = () => {
     clearSession();
@@ -167,6 +174,13 @@ export default function Sidebar() {
 
       {/* User info + Logout */}
       <div className="p-4 border-t border-sidebar-border">
+        <button
+          onClick={toggleDark}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all w-full mb-2"
+        >
+          {isDark ? <Sun className="w-[18px] h-[18px] shrink-0" /> : <Moon className="w-[18px] h-[18px] shrink-0" />}
+          <span>{isDark ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
+        </button>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">{session?.name || 'Staff'}</p>

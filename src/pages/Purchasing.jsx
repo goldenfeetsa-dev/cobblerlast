@@ -128,6 +128,13 @@ export default function Purchasing() {
     },
   });
 
+  const togglePaid = useMutation({
+    mutationFn: (inv) => db.PurchaseInvoice.update(inv.id, {
+      payment_status: inv.payment_status === 'paid' ? 'unpaid' : 'paid',
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['purchase-invoices'] }),
+  });
+
   // مورد سريع: يُضاف مباشرة لقائمة الموردين الفعلية (نفس صفحة الموردين)
   // ويُختار تلقائياً بفاتورة الشراء الحالية — بدون مغادرة الشاشة
   const createSupplierQuick = useMutation({
@@ -255,9 +262,9 @@ export default function Purchasing() {
                       </Select>
                       {form.supplier_id && (
                         supplierVatOk ? (
-                          <p className="text-[11px] text-green-600 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> رقم ضريبي صالح — تُقبل هذه الفاتورة بالإقرار</p>
+                          <p className="text-[11px] text-green-600 dark:text-green-400 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> رقم ضريبي صالح — تُقبل هذه الفاتورة بالإقرار</p>
                         ) : (
-                          <p className="text-[11px] text-red-600 flex items-center gap-1 font-bold">
+                          <p className="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-1 font-bold">
                             <ShieldAlert className="w-3.5 h-3.5" /> هذا المورد بدون رقم ضريبي صالح — لن تُقبل هذه الفاتورة بالإقرار الضريبي.
                             <Link to="/suppliers" className="underline">أضف الرقم الضريبي أولاً</Link>
                           </p>
@@ -281,7 +288,7 @@ export default function Purchasing() {
                           onChange={e => setQuickSupplier(p => ({ ...p, address: e.target.value }))} className="h-9" />
                       </div>
                       {quickSupplier.vat_number && !isValidVatFormat(quickSupplier.vat_number) && (
-                        <p className="text-[11px] text-amber-600 flex items-center gap-1">
+                        <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
                           <ShieldAlert className="w-3.5 h-3.5" /> الرقم الضريبي لازم يكون 15 رقم ويبدأ وينتهي بـ 3 — بدونه فاتورة هذا المورد لن تُقبل بالإقرار
                         </p>
                       )}
@@ -354,7 +361,7 @@ export default function Purchasing() {
                       </div>
                       <Input className="col-span-2 h-9" type="number" placeholder="الكمية" value={line.quantity} onChange={e => updateLine(i, 'quantity', e.target.value)} />
                       <Input className="col-span-3 h-9" type="number" placeholder="سعر الوحدة" value={line.unit_cost} onChange={e => updateLine(i, 'unit_cost', e.target.value)} />
-                      <button type="button" onClick={() => removeLine(i)} className="col-span-2 text-red-500 flex justify-center">
+                      <button type="button" onClick={() => removeLine(i)} className="col-span-2 text-red-500 dark:text-red-400 flex justify-center">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -385,11 +392,11 @@ export default function Purchasing() {
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">إجمالي ضريبة المدخلات (قابلة للخصم)</p>
-          <p className="text-2xl font-black mt-1 text-green-600">{totalInputVat.toFixed(2)} ر.س</p>
+          <p className="text-2xl font-black mt-1 text-green-600 dark:text-green-400">{totalInputVat.toFixed(2)} ر.س</p>
         </CardContent></Card>
-        <Card className={invalidCount > 0 ? 'border-red-300' : ''}><CardContent className="p-4">
+        <Card className={invalidCount > 0 ? 'border-red-300 dark:border-red-700' : ''}><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">فواتير برقم ضريبي غير صالح ⚠️</p>
-          <p className={`text-2xl font-black mt-1 ${invalidCount > 0 ? 'text-red-600' : ''}`}>{invalidCount}</p>
+          <p className={`text-2xl font-black mt-1 ${invalidCount > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>{invalidCount}</p>
         </CardContent></Card>
       </div>
 
@@ -406,14 +413,14 @@ export default function Purchasing() {
       ) : (
         <div className="space-y-3">
           {invoices.map(inv => (
-            <Card key={inv.id} className={!inv.vat_number_valid_format ? 'border-red-300' : ''}>
+            <Card key={inv.id} className={!inv.vat_number_valid_format ? 'border-red-300 dark:border-red-700' : ''}>
               <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-black">{suppliersById[inv.supplier_id]?.name || 'مورد محذوف'}</p>
                     <Badge variant="outline" className="text-[10px]">{TAX_CLASS_LABEL[inv.tax_classification]}</Badge>
                     {!inv.vat_number_valid_format && (
-                      <Badge className="bg-red-100 text-red-700 text-[10px] flex items-center gap-1">
+                      <Badge className="bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[10px] flex items-center gap-1">
                         <ShieldAlert className="w-3 h-3" /> لن تُقبل بالإقرار
                       </Badge>
                     )}
@@ -429,15 +436,21 @@ export default function Purchasing() {
                   </div>
                   <div className="text-left">
                     <p className="text-xs text-muted-foreground">الضريبة</p>
-                    <p className="font-bold text-sm text-green-600">{Number(inv.vat_amount).toFixed(2)} ر.س</p>
+                    <p className="font-bold text-sm text-green-600 dark:text-green-400">{Number(inv.vat_amount).toFixed(2)} ر.س</p>
                   </div>
+                  <Badge
+                    className={`cursor-pointer text-[10px] ${inv.payment_status === 'paid' ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300'}`}
+                    onClick={() => togglePaid.mutate(inv)}
+                  >
+                    {inv.payment_status === 'paid' ? '✅ مدفوعة' : '⏳ غير مدفوعة (اضغط للتغيير)'}
+                  </Badge>
                   <div className="flex gap-1">
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(inv)}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 dark:text-red-400">
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </AlertDialogTrigger>
@@ -448,7 +461,7 @@ export default function Purchasing() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteMutation.mutate(inv.id)} className="bg-red-600 hover:bg-red-700">حذف</AlertDialogAction>
+                          <AlertDialogAction onClick={() => deleteMutation.mutate(inv.id)} className="bg-red-600 dark:bg-red-900/70 hover:bg-red-700">حذف</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

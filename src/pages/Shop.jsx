@@ -115,7 +115,7 @@ function ProductCard({ product, onAdd, t }) {
         {!product.in_stock && (
           <div className="absolute inset-0 flex items-center justify-center"
             style={{ background: 'rgba(0,0,0,0.6)' }}>
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-900/80 text-red-300">{t('shop.outOfStock')}</span>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-900/80 text-red-300 dark:text-red-300">{t('shop.outOfStock')}</span>
           </div>
         )}
         {product.is_featured && product.in_stock && (
@@ -125,7 +125,7 @@ function ProductCard({ product, onAdd, t }) {
           </div>
         )}
         {discount > 0 && (
-          <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold bg-red-600 text-white">
+          <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold bg-red-600 dark:bg-red-900/70 text-white">
             -{discount}%
           </div>
         )}
