@@ -148,8 +148,8 @@ function Navbar() {
 
         <div className="hidden md:flex items-center gap-6" dir={dir}>
           {links.map(l => l.to
-            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: `${GB}0.5)` }}>{l.label}</Link>
-            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: `${GB}0.5)` }}>{l.label}</a>
+            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: '#5B4A3E' }}>{l.label}</Link>
+            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: '#5B4A3E' }}>{l.label}</a>
           )}
         </div>
 
@@ -304,14 +304,14 @@ function HeroSection() {
               {/* عنوان فرعي H2 غني بالكلمات المفتاحية (تصليح أحذية/شنط بالرياض) —
                   يبقي العنوان الرئيسي H1 شاعرياً/العلامة التجارية كما هو، بينما
                   يعطي جوجل نص واضح ومباشر يطابق ما يبحث عنه الناس فعلياً. */}
-              <h2 className="text-sm md:text-base font-semibold mt-3" style={{ color: `${GB}0.55)` }}>
+              <h2 className="text-sm md:text-base font-semibold mt-3" style={{ color: '#5B4A3E' }}>
                 {t('home.hero.seoSubtitle')}
               </h2>
             </div>
 
             {/* Desc */}
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-base md:text-lg leading-relaxed max-w-lg" style={{ color: `${GB}0.5)` }}>
+              className="text-base md:text-lg leading-relaxed max-w-lg" style={{ color: '#5B4A3E' }}>
               {t('home.hero.desc')}
             </motion.p>
 
@@ -321,7 +321,7 @@ function HeroSection() {
               {t('home.hero.pills').map((p, i) => (
                 <motion.span key={i} whileHover={{ scale: 1.05, borderColor: G }}
                   className="text-xs px-3.5 py-1.5 rounded-full font-medium transition-all cursor-default"
-                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)`, color: `${GB}0.7)` }}>{p}</motion.span>
+                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)`, color: '#5B4A3E' }}>{p}</motion.span>
               ))}
             </motion.div>
 
@@ -364,7 +364,7 @@ function HeroSection() {
                       <div className="text-xl font-black" style={{ color: G }}>
                         <AnimCounter target={s.num} />
                       </div>
-                      <div className="text-xs" style={{ color: `${GB}0.35)` }}>{s.label}</div>
+                      <div className="text-xs" style={{ color: '#6E5C4E' }}>{s.label}</div>
                     </div>
                   </div>
                 );
@@ -408,7 +408,7 @@ function HeroSection() {
               </div>
               <div>
                 <div className="font-black" style={{ color: T }}>{t('home.hero.badgeQuality')}</div>
-                <div style={{ color: `${GB}0.4)` }}>{t('home.hero.badgeQualitySub')}</div>
+                <div style={{ color: '#6E5C4E' }}>{t('home.hero.badgeQualitySub')}</div>
               </div>
             </motion.div>
 
@@ -421,7 +421,7 @@ function HeroSection() {
                 {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: G }} />)}
               </div>
               <div className="text-xs font-black" style={{ color: T }}>{t('home.hero.badgeRating')}</div>
-              <div className="text-xs" style={{ color: `${GB}0.4)` }}>{t('home.hero.badgeRatingSub')}</div>
+              <div className="text-xs" style={{ color: '#6E5C4E' }}>{t('home.hero.badgeRatingSub')}</div>
             </motion.div>
 
             {/* Live indicator */}
@@ -441,7 +441,7 @@ function HeroSection() {
       </motion.div>
 
       {/* Scroll hint */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{ color: `${GB}0.2)` }}>
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{ color: '#8A7969' }}>
         <span className="text-xs tracking-widest">{t('home.hero.scrollHint')}</span>
         <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
           <ChevronDown className="w-5 h-5" />
@@ -489,7 +489,7 @@ function ServicesSection() {
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.services.eyebrow')}</p>
           <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.services.title')}</h2>
-          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: `${GB}0.4)` }}>
+          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
             {t('home.services.desc')}
           </p>
           <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
@@ -520,7 +520,7 @@ function ServicesSection() {
                     {React.createElement(SERVICE_META[i].icon, { className: 'w-3 h-3' })}{s.tag}
                   </span>
                   <h3 className="text-xl font-black mb-2" style={{ color: T }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: `${GB}0.45)` }}>{s.desc}</p>
+                  <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: '#6E5C4E' }}>{s.desc}</p>
                   <Link to="/book">
                     <motion.div whileHover={{ gap: '16px' }} className="flex items-center gap-2 font-bold text-sm"
                       style={{ color: G }}>
@@ -551,7 +551,7 @@ function ServicesSection() {
                       style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{i + 1}</span>
                   </div>
                   <h4 className="font-black mb-1.5" style={{ color: T }}>{step.t}</h4>
-                  <p className="text-xs leading-relaxed" style={{ color: `${GB}0.4)` }}>{step.d}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: '#6E5C4E' }}>{step.d}</p>
                 </FadeIn>
               ))}
             </div>
@@ -572,7 +572,7 @@ function BeforeAfterSection() {
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.beforeAfter.eyebrow')}</p>
           <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.beforeAfter.title')}</h2>
-          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: `${GB}0.4)` }}>
+          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
             {t('home.beforeAfter.desc')}
           </p>
           <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
@@ -590,7 +590,7 @@ function BeforeAfterSection() {
                 />
                 <div className="px-5 py-4 text-center">
                   <p className="font-black text-sm" style={{ color: T }}>{item.label}</p>
-                  <p className="text-[11px] mt-1" style={{ color: `${GB}0.35)` }}>{t('home.beforeAfter.hint')}</p>
+                  <p className="text-[11px] mt-1" style={{ color: '#6E5C4E' }}>{t('home.beforeAfter.hint')}</p>
                 </div>
               </div>
             </FadeIn>
@@ -634,7 +634,7 @@ function RequestServiceSection() {
         <FadeIn className="text-center mb-14">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.request.eyebrow')}</p>
           <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.request.title')}</h2>
-          <p className="text-sm" style={{ color: `${GB}0.4)` }}>{t('home.request.desc')}</p>
+          <p className="text-sm" style={{ color: '#6E5C4E' }}>{t('home.request.desc')}</p>
         </FadeIn>
 
         <AnimatePresence mode="wait">
@@ -645,7 +645,7 @@ function RequestServiceSection() {
                 <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: G }} />
               </motion.div>
               <h3 className="text-2xl font-black mb-2" style={{ color: T }}>{t('home.request.doneTitle')}</h3>
-              <p style={{ color: `${GB}0.5)` }}>{t('home.request.doneDesc')}</p>
+              <p style={{ color: '#5B4A3E' }}>{t('home.request.doneDesc')}</p>
               <button onClick={() => setSent(false)} className="mt-6 text-sm underline" style={{ color: G }}>{t('home.request.sendAnother')}</button>
             </motion.div>
           ) : (
@@ -654,7 +654,7 @@ function RequestServiceSection() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 {[['name', t('home.request.nameLabel'), t('home.request.namePh')], ['phone', t('home.request.phoneLabel'), '05XXXXXXXX']].map(([k, label, ph]) => (
                   <div key={k} className="space-y-2">
-                    <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>{label}</label>
+                    <label className="text-xs font-bold" style={{ color: '#5B4A3E' }}>{label}</label>
                     <input value={form[k]} onChange={e => upd(k, e.target.value)}
                       placeholder={ph} dir={k === 'phone' ? 'ltr' : dir}
                       className="w-full px-4 py-3.5 rounded-xl outline-none text-sm transition-all"
@@ -665,7 +665,7 @@ function RequestServiceSection() {
                 ))}
               </div>
               <div className="mb-5 space-y-2">
-                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>{t('home.request.serviceLabel')}</label>
+                <label className="text-xs font-bold" style={{ color: '#5B4A3E' }}>{t('home.request.serviceLabel')}</label>
                 <select value={form.service} onChange={e => upd('service', e.target.value)}
                   className="w-full px-4 py-3.5 rounded-xl outline-none text-sm"
                   style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: form.service ? T : `${GB}0.3)` }}>
@@ -676,7 +676,7 @@ function RequestServiceSection() {
                 </select>
               </div>
               <div className="mb-8 space-y-2">
-                <label className="text-xs font-bold" style={{ color: `${GB}0.5)` }}>{t('home.request.notesLabel')}</label>
+                <label className="text-xs font-bold" style={{ color: '#5B4A3E' }}>{t('home.request.notesLabel')}</label>
                 <textarea value={form.notes} onChange={e => upd('notes', e.target.value)}
                   placeholder={t('home.request.notesPh')} rows={3}
                   className="w-full px-4 py-3.5 rounded-xl outline-none text-sm resize-none"
@@ -728,7 +728,7 @@ function AboutSection() {
             <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
               {t('home.about.titleLine1')}<br /><span style={{ color: G }}>{t('home.about.titleLine2')}</span>
             </h2>
-            <p className="leading-relaxed text-base mb-8" style={{ color: `${GB}0.45)` }}>
+            <p className="leading-relaxed text-base mb-8" style={{ color: '#6E5C4E' }}>
               {t('home.about.desc')}
             </p>
             <div className="grid grid-cols-2 gap-3 mb-8">
@@ -739,7 +739,7 @@ function AboutSection() {
                   {React.createElement(ABOUT_STAT_ICONS[i], { className: 'w-5 h-5 shrink-0', style: { color: G } })}
                   <div>
                     <div className="text-xl font-black" style={{ color: G }}><AnimCounter target={s.num} /></div>
-                    <div className="text-xs" style={{ color: `${GB}0.35)` }}>{s.label}</div>
+                    <div className="text-xs" style={{ color: '#6E5C4E' }}>{s.label}</div>
                   </div>
                 </motion.div>
               ))}
@@ -783,13 +783,13 @@ function ReviewsSection() {
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: G }} />)}
                 </div>
-                <p className="text-sm leading-relaxed flex-1" style={{ color: `${GB}0.6)` }}>"{r.text}"</p>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: '#5B4A3E' }}>"{r.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-black shrink-0"
                     style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{r.name[0]}</div>
                   <div>
                     <p className="font-bold text-sm" style={{ color: T }}>{r.name}</p>
-                    <p className="text-xs" style={{ color: `${GB}0.3)` }}>{r.service}</p>
+                    <p className="text-xs" style={{ color: '#8A7969' }}>{r.service}</p>
                   </div>
                 </div>
               </motion.div>
@@ -866,7 +866,7 @@ function TrackOrderSection() {
         <FadeIn>
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.track.eyebrow')}</p>
           <h2 className="text-4xl font-black mb-3" style={{ color: T }}>{t('home.track.title')}</h2>
-          <p className="text-sm mb-8" style={{ color: `${GB}0.4)` }}>{t('home.track.desc')}</p>
+          <p className="text-sm mb-8" style={{ color: '#6E5C4E' }}>{t('home.track.desc')}</p>
           <div className="flex gap-3 max-w-md mx-auto mb-6">
             <input value={code} onChange={e => setCode(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()}
@@ -890,7 +890,7 @@ function TrackOrderSection() {
               ) : (
                 <div className="space-y-3">
                   {results.length > 1 && (
-                    <p className="text-xs text-right" style={{ color: `${GB}0.5)` }}>
+                    <p className="text-xs text-right" style={{ color: '#5B4A3E' }}>
                       {t('home.track.multipleFound') || `عدد الطلبات الموجودة: ${results.length}`}
                     </p>
                   )}
@@ -934,7 +934,7 @@ function BranchesSection() {
             <FadeIn key={i} delay={i * 0.1}>
               <motion.div className="rounded-2xl p-6" style={{ background: GB + '0.04)', border: `1px solid ${GB}0.1)` }} whileHover={{ borderColor: GB + '0.3)', y: -4 }}>
                 <h3 className="font-black text-lg mb-3" style={{ color: T }}>{b.name}</h3>
-                <div className="space-y-2 text-sm" style={{ color: `${GB}0.5)` }}>
+                <div className="space-y-2 text-sm" style={{ color: '#5B4A3E' }}>
                   <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: G }} />{b.city}{b.address && ` — ${b.address}`}</div>
                   <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: G }} />{t('home.branches.hours')}</div>
                   {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: G }} /><a href={`tel:${b.phone}`} className="hover:text-yellow-400">{b.phone}</a></div>}
@@ -995,7 +995,7 @@ function Footer() {
         </div>
 
         {/* الوصف */}
-        <p className="text-sm leading-relaxed mx-auto mb-6" style={{ color: `${GB}0.2)`, maxWidth: '340px' }}>
+        <p className="text-sm leading-relaxed mx-auto mb-6" style={{ color: '#8A7969', maxWidth: '340px' }}>
           {t('common.footer.tagline')}
         </p>
 
@@ -1017,7 +1017,7 @@ function Footer() {
 
         {/* روابط تهمك */}
         <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.linksTitle')}</h4>
-        <ul className="space-y-3 text-sm mb-10" style={{ color: `${GB}0.3)` }}>
+        <ul className="space-y-3 text-sm mb-10" style={{ color: '#8A7969' }}>
           {usefulLinks.map(([label, to]) => (
             <li key={to}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
           ))}
@@ -1046,7 +1046,7 @@ function Footer() {
         {/* السجل التجاري */}
         {crNumber && (
           <div className="flex items-center justify-center gap-3 mb-10">
-            <div className="text-sm" style={{ color: `${GB}0.3)` }}>
+            <div className="text-sm" style={{ color: '#8A7969' }}>
               <p className="mb-0.5">{t('common.footer.crLabel')}</p>
               <p className="font-bold" style={{ color: T }}>{crNumber}</p>
             </div>
@@ -1055,7 +1055,7 @@ function Footer() {
         )}
 
         <div className="border-t pt-8" style={{ borderColor: GB + '0.08)' }}>
-          <p className="text-sm" style={{ color: `${GB}0.12)` }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
+          <p className="text-sm" style={{ color: '#8A7969' }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
         </div>
       </div>
     </footer>
