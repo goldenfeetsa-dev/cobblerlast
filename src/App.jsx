@@ -57,6 +57,7 @@ const Purchasing = lazy(() => import('./pages/Purchasing'));
 const TaxDashboard = lazy(() => import('./pages/TaxDashboard'));
 
 import AppLayout from './components/pos/AppLayout';
+import FloatingWhatsApp from './components/shared/FloatingWhatsApp';
 const BookingLanding = lazy(() => import('./pages/BookingLanding'));
 
 const AuthenticatedApp = () => {
@@ -147,6 +148,7 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
       </Routes>
       </Suspense>
+      <FloatingWhatsApp />
     </>
   );
 };

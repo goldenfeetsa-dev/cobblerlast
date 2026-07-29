@@ -30,6 +30,17 @@ import {
   Scissors, Sparkles, Package, ExternalLink, ChevronDown, Gem, ShoppingBag, Twitter, ArrowLeft, ArrowRight, Heart, CheckCircle, Menu, X, CalendarCheck, Smartphone
 } from 'lucide-react';
 
+// أيقونة تيك توك — lucide-react ما فيها شعار تيك توك رسمي، فسويناها
+// كـ SVG مخصص بنفس واجهة أيقونات lucide (className + style.color) عشان
+// تتصرف بنفس طريقة باقي أيقونات السوشيال ميديا بالضبط.
+function TiktokIcon({ className, style }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style} aria-hidden="true">
+      <path d="M16.6 5.82c-.78-.85-1.24-1.95-1.29-3.14h-3.02v13.9c0 1.5-1.22 2.72-2.72 2.72a2.72 2.72 0 0 1 0-5.44c.26 0 .51.04.75.1v-3.06a5.78 5.78 0 0 0-.75-.05 5.78 5.78 0 1 0 5.78 5.78V9.4a8.7 8.7 0 0 0 5.08 1.63V8.01a5.35 5.35 0 0 1-3.83-2.19Z" />
+    </svg>
+  );
+}
+
 // ── Palette (cream / clay — طلب العميل) ─────────────────────────
 const G   = '#A67C68';   // Accent (clay) — كان ذهبي
 const D   = '#EDE4D0';   // درجة كريمية أغمق شوي، تُستخدم لتدرّجات بسيطة (كان غامق جداً)
@@ -966,6 +977,7 @@ function Footer() {
   const instagram = s.social_instagram || 'https://www.instagram.com/ebra.kh8/';
   const whatsapp  = s.social_whatsapp  || '966549678191';
   const twitter   = s.social_twitter;
+  const tiktok    = s.social_tiktok || 'https://www.tiktok.com/@cobblersriyad';
   const phone     = s.phone || '0549678191';
 
   const usefulLinks = [
@@ -1003,6 +1015,7 @@ function Footer() {
         <div className="flex gap-3 justify-center mb-10">
           {[
             { href: instagram, icon: Instagram, color: '#E1306C', label: 'Instagram' },
+            { href: tiktok, icon: TiktokIcon, color: '#000000', label: 'TikTok' },
             { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'WhatsApp' },
             ...(twitter ? [{ href: twitter, icon: Twitter, color: G, label: 'Twitter' }] : []),
           ].map((social, i) => (

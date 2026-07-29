@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const [{ data: brands }, { data: branches }, { data: settingsArr }, { data: crArr }] = await Promise.all([
       supabase.from('brands').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('branches').select('*').eq('is_active', true).order('sort_order'),
-      supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,phone').limit(1),
+      supabase.from('app_settings').select('social_instagram,social_whatsapp,social_twitter,social_tiktok,phone').limit(1),
       supabase.from('zatca_public_info').select('cr_number').limit(1),
     ]);
 
