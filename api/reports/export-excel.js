@@ -7,9 +7,11 @@
  */
 import { createClient } from '@supabase/supabase-js';
 import ExcelJS from 'exceljs';
+import { getSessionFromRequest } from '../_lib/session.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const FINANCE_ROLES = ['owner', 'admin', 'manager', 'accountant'];
 
 const CATEGORY_AR = {
   rent: 'إيجار', salaries: 'رواتب', utilities: 'فواتير خدمات',
@@ -28,6 +30,11 @@ function styleHeaderRow(row) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const session = getSessionFromRequest(req);
+  if (!session) return res.status(401).json({ error: 'unauthenticated' });
+  if (!FINANCE_ROLES.includes(session.role)) return res.status(403).json({ error: 'forbidden' });
+
   if (!SUPABASE_URL || !SERVICE_KEY) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY غير مضبوط' });
 
   const { start, end } = req.body || {};

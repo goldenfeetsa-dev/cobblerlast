@@ -24,9 +24,12 @@ import { buildApplePassBuffer, isApplePassConfigured } from '../_lib/loyalty/app
 import { isGoogleWalletConfigured, upsertLoyaltyObject } from '../_lib/loyalty/googleWallet.js';
 import { generateQrPngBuffer } from '../_lib/loyalty/qrImage.js';
 import { getSupabaseAdmin } from '../_lib/loyalty/supabaseAdmin.js';
+import { getSessionFromRequest } from '../_lib/session.js';
 
 async function handleAdjustPoints(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const session = getSessionFromRequest(req);
+  if (!session) return res.status(401).json({ error: 'unauthenticated' });
   const { member_number, change_amount, reason, performed_by, performed_by_id } = req.body || {};
   if (!member_number || change_amount === undefined || change_amount === null) {
     return res.status(400).json({ error: 'الحقول المطلوبة: member_number و change_amount' });

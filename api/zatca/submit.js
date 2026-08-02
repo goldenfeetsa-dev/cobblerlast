@@ -5,9 +5,13 @@
  * retry worker so both flows can never drift apart again).
  */
 import { signAndSubmitInvoice } from '../_lib/zatcaEngine.js';
+import { getSessionFromRequest } from '../_lib/session.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const session = getSessionFromRequest(req);
+  if (!session) return res.status(401).json({ error: 'unauthenticated' });
 
   const { type, id } = req.body || {};
   if (!type || !id || !['order', 'sale'].includes(type)) {
