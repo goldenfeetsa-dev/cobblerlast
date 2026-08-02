@@ -287,7 +287,10 @@ function CobblerTab({ session }) {
           </div>
 
           {/* فاتورة شركة (B2B) — تُضاف بيانات المشتري (الشركة) هنا فتظهر
-              بالفاتورة كفاتورة صادرة لمنشأة، لا لفرد */}
+              بالفاتورة كفاتورة صادرة لمنشأة، لا لفرد.
+              مخفية بالكامل إذا أوقفها المالك من الإعدادات (b2b_invoicing_enabled) —
+              يمكن إعادة تفعيلها من هناك بدون أي تعديل كود. */}
+          {shopSettings.b2b_invoicing_enabled !== false && (
           <div className="rounded-xl border p-3 space-y-3" style={{ borderColor: 'hsl(var(--border))' }}>
             <div className="flex items-center justify-between">
               <div>
@@ -322,6 +325,7 @@ function CobblerTab({ session }) {
               </div>
             )}
           </div>
+          )}
 
           {knownCustomer && (
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center justify-between">
@@ -521,6 +525,10 @@ function CobblerTab({ session }) {
 // ─── Products Invoice Tab ─────────────────────────────────────────────────────
 function ProductsTab({ session }) {
   const queryClient = useQueryClient();
+  const { data: settingsList = [] } = useQuery({
+    queryKey: ['app-settings'], queryFn: () => db.AppSettings.list(), staleTime: 0,
+  });
+  const shopSettings = settingsList[0] || {};
   const [cart, setCart] = useState([]);
   const [customer, setCustomer] = useState({ name: '', phone: '', is_b2b: false, buyer_company_name: '', buyer_vat_number: '', buyer_cr_number: '', buyer_address: '' });
   const [selectedBranch, setSelectedBranch] = useState(session?.branch_id || '');
@@ -733,6 +741,7 @@ function ProductsTab({ session }) {
               <Input placeholder="رقم الهاتف" value={customer.phone} onChange={e => setCustomer(p => ({...p, phone: e.target.value}))} className="text-sm" />
             </div>
 
+            {shopSettings.b2b_invoicing_enabled !== false && (
             <div className="rounded-lg border p-2.5 space-y-2" style={{ borderColor: 'hsl(var(--border))' }}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold">فاتورة لشركة (B2B)</span>
@@ -754,6 +763,7 @@ function ProductsTab({ session }) {
                 </div>
               )}
             </div>
+            )}
 
             {cart.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">

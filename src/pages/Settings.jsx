@@ -94,6 +94,15 @@ export default function Settings() {
             <Label>تفعيل ضريبة القيمة المضافة (15%)</Label>
             <Switch checked={settings.vat_enabled !== false} onCheckedChange={v => upd('vat_enabled', v)} />
           </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>إصدار فواتير ضريبية لشركات (B2B)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                إيقافها يخفي خيار "فاتورة لشركة" من صفحات إنشاء الطلب فوراً — يمكن إعادة تفعيلها بنفس الزر متى ما رغبت، بدون فقدان أي بيانات سابقة.
+              </p>
+            </div>
+            <Switch checked={settings.b2b_invoicing_enabled !== false} onCheckedChange={v => upd('b2b_invoicing_enabled', v)} />
+          </div>
           <div className="space-y-1.5">
             <ImageUploader
               value={settings.logo_url || ''}
