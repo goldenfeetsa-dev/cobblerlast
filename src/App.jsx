@@ -55,6 +55,9 @@ const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
 const Suppliers = lazy(() => import('./pages/Suppliers'));
 const Purchasing = lazy(() => import('./pages/Purchasing'));
 const TaxDashboard = lazy(() => import('./pages/TaxDashboard'));
+const Careers = lazy(() => import('./pages/Careers'));
+const CareerDetail = lazy(() => import('./pages/CareerDetail'));
+const CareersAdmin = lazy(() => import('./pages/CareersAdmin'));
 
 import AppLayout from './components/pos/AppLayout';
 import FloatingWhatsApp from './components/shared/FloatingWhatsApp';
@@ -106,6 +109,8 @@ const AuthenticatedApp = () => {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/careers/:slug" element={<CareerDetail />} />
 
         {/* Barcode standalone */}
         <Route path="/barcode/:id" element={<BarcodeOnly />} />
@@ -133,6 +138,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/services" element={<ServicesAdmin />} />
           <Route path="/admin/working-hours" element={<WorkingHoursAdmin />} />
           <Route path="/admin/branches" element={<BranchesAdmin />} />
+          <Route path="/admin/careers" element={<CareersAdmin />} />
           <Route path="/audit" element={<AuditLog />} />
           <Route path="/site-analytics" element={<SiteAnalytics />} />
           <Route path="/admin/reviews" element={<ReviewsAdmin />} />

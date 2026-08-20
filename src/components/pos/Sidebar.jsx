@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings, Moon, Sun,
-  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale
+  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale, Briefcase
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';
@@ -68,6 +68,7 @@ const navGroups = [
       { path: '/admin/services', icon: Wrench, label: 'إدارة الخدمات', adminOnly: true },
       { path: '/admin/working-hours', icon: Clock, label: 'أوقات العمل', adminOnly: true },
       { path: '/admin/branches', icon: MapPin, label: 'الفروع', adminOnly: true },
+      { path: '/admin/careers', icon: Briefcase, label: 'الوظائف الشاغرة', adminOnly: true },
       { path: '/zatca', icon: Shield, label: 'زاتكا ZATCA', financeOnly: true },
       { path: '/social-settings', icon: Globe, label: 'التواصل الاجتماعي', adminOnly: true },
       { path: '/loyalty', icon: Star, label: 'بطاقات الولاء', adminOnly: false },

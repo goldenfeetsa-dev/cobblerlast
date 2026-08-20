@@ -23,7 +23,7 @@ function useWhatsappNumber() {
 // الأداة بالخطأ لو نسينا نستثنيها.
 const PUBLIC_PATHS = [
   '/', '/booking', '/book', '/my-bookings', '/my-loyalty',
-  '/reviews', '/shop', '/repair-policy', '/about', '/privacy', '/shipping-policy',
+  '/reviews', '/shop', '/repair-policy', '/about', '/privacy', '/shipping-policy', '/careers',
 ];
 
 export default function FloatingWhatsApp() {
@@ -31,7 +31,9 @@ export default function FloatingWhatsApp() {
   const whatsapp = useWhatsappNumber();
 
   const isPublicPage =
-    PUBLIC_PATHS.includes(location.pathname) || location.pathname.startsWith('/barcode/');
+    PUBLIC_PATHS.includes(location.pathname) ||
+    location.pathname.startsWith('/barcode/') ||
+    location.pathname.startsWith('/careers/');
 
   if (!isPublicPage) return null;
 

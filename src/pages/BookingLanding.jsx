@@ -41,14 +41,14 @@ function TiktokIcon({ className, style }) {
   );
 }
 
-// ── Palette (cream / clay — طلب العميل) ─────────────────────────
-const G   = '#A67C68';   // Accent (clay) — كان ذهبي
-const D   = '#EDE4D0';   // درجة كريمية أغمق شوي، تُستخدم لتدرّجات بسيطة (كان غامق جداً)
-const T   = '#3E322D';   // نص داكن (كان نص فاتح على خلفية غامقة)
-const GB  = 'rgba(166,124,104,'; // نفس G بصيغة rgba قابلة لإضافة شفافية
-const GL  = '#C9A08D';   // تدرّج فاتح للطين، يقابل الذهب الفاتح #C9A08D سابقاً
-const BG1 = '#F4F1EA';   // خلفية القسم الأساسية (كريمي)
-const BG2 = '#EFE9DD';   // خلفية قسم متبادلة (أغمق شوي بدرجة بسيطة، لإحساس بصري بالفصل بين الأقسام)
+// ── Palette الفاخرة الجديدة (بني شوكولاتة غامق + ذهبي مطفي) ──────
+const G   = '#C5A059';   // Accent — ذهبي مطفي (أزرار، شارات، تفاصيل بارزة)
+const D   = '#E8DEC8';   // كريمي أغمق شوي، لتدرّجات بسيطة
+const T   = '#3E2723';   // بني شوكولاتة غامق — لون العلامة الأساسي وكل النصوص الداكنة
+const GB  = 'rgba(197,160,89,'; // نفس G بصيغة rgba قابلة لإضافة شفافية
+const GL  = '#D9BE86';   // تدرّج ذهبي أفتح
+const BG1 = '#F9F7F2';   // خلفية القسم الأساسية — كريمي دافئ نظيف (طلب العميل بالضبط)
+const BG2 = '#F2EDE1';   // خلفية قسم متبادلة (أغمق شوي بدرجة بسيطة، لإحساس بصري بالفصل بين الأقسام)
 
 // ── FadeIn ────────────────────────────────────────────────────────
 function FadeIn({ children, delay = 0, className = '', x = 0, y = 32 }) {
@@ -159,8 +159,8 @@ function Navbar() {
 
         <div className="hidden md:flex items-center gap-6" dir={dir}>
           {links.map(l => l.to
-            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: '#5B4A3E' }}>{l.label}</Link>
-            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:text-yellow-400" style={{ color: '#5B4A3E' }}>{l.label}</a>
+            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#5B4A3E' }}>{l.label}</Link>
+            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#5B4A3E' }}>{l.label}</a>
           )}
         </div>
 
@@ -173,7 +173,7 @@ function Navbar() {
           <Link to="/book" className="hidden sm:block">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               className="text-xs font-black px-5 py-2 rounded-full text-black"
-              style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
+              style={{ background: `linear-gradient(135deg, ${G}, ${GL})`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
               {t('common.nav.bookNow')}
             </motion.div>
           </Link>
@@ -217,7 +217,7 @@ function Navbar() {
               </Link>
               <Link to="/book" onClick={() => setMobileOpen(false)}
                 className="text-center text-sm font-black py-3 rounded-xl text-black mt-1"
-                style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
+                style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>
                 {t('common.nav.bookNow')}
               </Link>
             </div>
@@ -289,7 +289,7 @@ function HeroSection() {
             {/* Main headline */}
             <div>
               <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }}
-                className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2" style={{ color: T }}>
+                className="font-display text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2" style={{ color: T }}>
                 {t('home.hero.titleStart')}
               </motion.h1>
 
@@ -307,7 +307,7 @@ function HeroSection() {
 
               {t('home.hero.titleEnd') && (
                 <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }}
-                  className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1]" style={{ color: T }}>
+                  className="font-display text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1]" style={{ color: T }}>
                   {t('home.hero.titleEnd')}
                 </motion.h1>
               )}
@@ -341,7 +341,7 @@ function HeroSection() {
               className="flex flex-wrap gap-4 items-center">
               <Link to="/book">
                 <MagneticBtn className="group relative px-9 py-4 rounded-2xl font-black text-base text-black overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 16px 50px ${GB}0.45)` }}>
+                  style={{ background: `linear-gradient(135deg, ${G}, ${GL})`, boxShadow: `0 16px 50px ${GB}0.45)` }}>
                   <span className="relative z-10 flex items-center gap-2">
                     {t('home.hero.ctaPrimary')}
                     <motion.div animate={{ x: dir === 'rtl' ? [0, 4, 0] : [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
@@ -349,7 +349,7 @@ function HeroSection() {
                     </motion.div>
                   </span>
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: 'linear-gradient(135deg, #C9A08D, #A67C68)' }} />
+                    style={{ background: `linear-gradient(135deg, ${GL}, ${G})` }} />
                 </MagneticBtn>
               </Link>
 
@@ -412,9 +412,9 @@ function HeroSection() {
             {/* Floating badge — top right */}
             <motion.div
               animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-6 right-2 z-20 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs"
+              className="absolute top-6 end-2 z-20 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs"
               style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid ${GB}0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: `0 8px 30px ${GB}0.2)` }}>
-              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>
                 <CheckCircle className="w-3.5 h-3.5 text-black" />
               </div>
               <div>
@@ -426,7 +426,7 @@ function HeroSection() {
             {/* Floating badge — bottom left */}
             <motion.div
               animate={{ y: [0, 10, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute bottom-10 left-0 z-20 px-4 py-3 rounded-2xl"
+              className="absolute bottom-10 start-0 z-20 px-4 py-3 rounded-2xl"
               style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <div className="flex items-center gap-2 mb-1.5">
                 {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: G }} />)}
@@ -437,7 +437,7 @@ function HeroSection() {
 
             {/* Live indicator */}
             <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute top-1/2 -left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+              className="absolute top-1/2 -start-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
               style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <motion.div className="w-2 h-2 rounded-full" style={{ background: '#22c55e' }}
                 animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
@@ -445,14 +445,14 @@ function HeroSection() {
             </motion.div>
 
             {/* Gold glow under cards */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-20 blur-3xl rounded-full pointer-events-none"
+            <div className="absolute bottom-0 start-1/2 -translate-x-1/2 w-2/3 h-20 blur-3xl rounded-full pointer-events-none"
               style={{ background: `${GB}0.2)` }} />
           </motion.div>
         </div>
       </motion.div>
 
       {/* Scroll hint */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{ color: '#8A7969' }}>
+      <div className="absolute bottom-8 start-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{ color: '#8A7969' }}>
         <span className="text-xs tracking-widest">{t('home.hero.scrollHint')}</span>
         <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
           <ChevronDown className="w-5 h-5" />
@@ -470,7 +470,7 @@ function TickerStrip() {
     <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #E4D8BE, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
       <div className="flex gap-0">
         {[0, 1].map(k => (
-          <motion.div key={k} className="flex gap-10 shrink-0 pr-10"
+          <motion.div key={k} className="flex gap-10 shrink-0 pe-10"
             animate={{ x: ['0%', '-100%'] }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}>
             {items.map((item, i) => (
               <span key={i} className="whitespace-nowrap text-sm font-bold" style={{ color: G }}>{item}</span>
@@ -499,7 +499,7 @@ function ServicesSection() {
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.services.eyebrow')}</p>
-          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.services.title')}</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.services.title')}</h2>
           <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
             {t('home.services.desc')}
           </p>
@@ -521,8 +521,8 @@ function ServicesSection() {
                     whileHover={{ scale: 1.08 }} transition={{ duration: 0.6 }} />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, #0A0500 100%)' }} />
                   {/* Price tag */}
-                  <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl text-xs font-black text-black"
-                    style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{s.price}</div>
+                  <div className="absolute top-4 start-4 px-3 py-1.5 rounded-xl text-xs font-black text-black"
+                    style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{s.price}</div>
                 </div>
 
                 <div className="p-6 flex flex-col flex-1">
@@ -558,8 +558,8 @@ function ServicesSection() {
                       style={{ background: `linear-gradient(135deg, ${GB}0.12), ${GB}0.04))`, border: `1px solid ${GB}0.2)` }}>
                       {React.createElement(STEP_ICONS[i], { className: 'w-6 h-6', style: { color: G } })}
                     </div>
-                    <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center text-black"
-                      style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{i + 1}</span>
+                    <span className="absolute -top-2 -end-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center text-black"
+                      style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{i + 1}</span>
                   </div>
                   <h4 className="font-black mb-1.5" style={{ color: T }}>{step.t}</h4>
                   <p className="text-xs leading-relaxed" style={{ color: '#6E5C4E' }}>{step.d}</p>
@@ -582,7 +582,7 @@ function BeforeAfterSection() {
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.beforeAfter.eyebrow')}</p>
-          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.beforeAfter.title')}</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.beforeAfter.title')}</h2>
           <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
             {t('home.beforeAfter.desc')}
           </p>
@@ -644,7 +644,7 @@ function RequestServiceSection() {
       <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-14">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.request.eyebrow')}</p>
-          <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.request.title')}</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.request.title')}</h2>
           <p className="text-sm" style={{ color: '#6E5C4E' }}>{t('home.request.desc')}</p>
         </FadeIn>
 
@@ -700,7 +700,7 @@ function RequestServiceSection() {
               )}
               <MagneticBtn onClick={submit}
                 className="w-full py-4 rounded-2xl font-black text-base text-black transition-all"
-                style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 12px 40px ${GB}0.4)`, opacity: loading ? 0.7 : 1 }}>
+                style={{ background: `linear-gradient(135deg, ${G}, ${GL})`, boxShadow: `0 12px 40px ${GB}0.4)`, opacity: loading ? 0.7 : 1 }}>
                 {loading ? t('home.request.sending') : t('home.request.send')}
               </MagneticBtn>
             </motion.div>
@@ -736,7 +736,7 @@ function AboutSection() {
           </FadeIn>
           <FadeIn delay={0.15}>
             <p className="text-xs tracking-[0.5em] font-bold mb-4 uppercase" style={{ color: G }}>{t('home.about.eyebrow')}</p>
-            <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
+            <h2 className="font-display text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
               {t('home.about.titleLine1')}<br /><span style={{ color: G }}>{t('home.about.titleLine2')}</span>
             </h2>
             <p className="leading-relaxed text-base mb-8" style={{ color: '#6E5C4E' }}>
@@ -757,7 +757,7 @@ function AboutSection() {
             </div>
             <Link to="/about">
               <MagneticBtn className="px-8 py-3.5 rounded-2xl font-bold text-base text-black"
-                style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)`, boxShadow: `0 8px 30px ${GB}0.3)` }}>
+                style={{ background: `linear-gradient(135deg, ${G}, ${GL})`, boxShadow: `0 8px 30px ${GB}0.3)` }}>
                 {t('home.about.cta')}
               </MagneticBtn>
             </Link>
@@ -782,7 +782,7 @@ function ReviewsSection() {
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-14">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.reviews.eyebrow')}</p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: T }}>{t('home.reviews.title')}</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-black" style={{ color: T }}>{t('home.reviews.title')}</h2>
           <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
         </FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -797,7 +797,7 @@ function ReviewsSection() {
                 <p className="text-sm leading-relaxed flex-1" style={{ color: '#5B4A3E' }}>"{r.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-black shrink-0"
-                    style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>{r.name[0]}</div>
+                    style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{r.name[0]}</div>
                   <div>
                     <p className="font-bold text-sm" style={{ color: T }}>{r.name}</p>
                     <p className="text-xs" style={{ color: '#8A7969' }}>{r.service}</p>
@@ -876,7 +876,7 @@ function TrackOrderSection() {
       <div className="max-w-2xl mx-auto text-center">
         <FadeIn>
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.track.eyebrow')}</p>
-          <h2 className="text-4xl font-black mb-3" style={{ color: T }}>{t('home.track.title')}</h2>
+          <h2 className="font-display text-4xl font-black mb-3" style={{ color: T }}>{t('home.track.title')}</h2>
           <p className="text-sm mb-8" style={{ color: '#6E5C4E' }}>{t('home.track.desc')}</p>
           <div className="flex gap-3 max-w-md mx-auto mb-6">
             <input value={code} onChange={e => setCode(e.target.value)}
@@ -886,7 +886,7 @@ function TrackOrderSection() {
               style={{ background: GB + '0.04)', border: `1px solid ${GB}0.15)`, color: T }} />
             <MagneticBtn onClick={search}
               className="px-6 py-3.5 rounded-2xl font-black text-sm text-black"
-              style={{ background: `linear-gradient(135deg, ${G}, #C9A08D)` }}>
+              style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>
               {loading ? t('home.track.loading') : t('home.track.search')}
             </MagneticBtn>
           </div>
@@ -901,7 +901,7 @@ function TrackOrderSection() {
               ) : (
                 <div className="space-y-3">
                   {results.length > 1 && (
-                    <p className="text-xs text-right" style={{ color: '#5B4A3E' }}>
+                    <p className="text-xs text-start" style={{ color: '#5B4A3E' }}>
                       {t('home.track.multipleFound') || `عدد الطلبات الموجودة: ${results.length}`}
                     </p>
                   )}
@@ -910,7 +910,7 @@ function TrackOrderSection() {
                       transition={{ delay: i * 0.05 }}
                       className="rounded-2xl p-5 text-sm"
                       style={{ background: GB + '0.06)', border: `1px solid ${GB}0.2)` }}>
-                      <div className="text-right space-y-2">
+                      <div className="text-start space-y-2">
                         <div className="font-black text-base" style={{ color: G }}>{r.order_number}</div>
                         <div style={{ color: T }}>{t('home.track.customer')}: {r.customer_name}</div>
                         <div className="text-xl font-black" style={{ color: G }}>{STATUS[r.status] || r.status}</div>
@@ -938,7 +938,7 @@ function BranchesSection() {
       <div className="max-w-5xl mx-auto">
         <FadeIn className="text-center mb-12">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.branches.eyebrow')}</p>
-          <h2 className="text-4xl font-black" style={{ color: T }}>{t('home.branches.title')}</h2>
+          <h2 className="font-display text-4xl font-black" style={{ color: T }}>{t('home.branches.title')}</h2>
         </FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((b, i) => (
@@ -948,7 +948,7 @@ function BranchesSection() {
                 <div className="space-y-2 text-sm" style={{ color: '#5B4A3E' }}>
                   <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: G }} />{b.city}{b.address && ` — ${b.address}`}</div>
                   <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: G }} />{t('home.branches.hours')}</div>
-                  {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: G }} /><a href={`tel:${b.phone}`} className="hover:text-yellow-400">{b.phone}</a></div>}
+                  {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: G }} /><a href={`tel:${b.phone}`} className="hover:opacity-70">{b.phone}</a></div>}
                   {b.maps_url && (
                     <div className="pt-2">
                       <a href={b.maps_url} target="_blank" rel="noopener noreferrer"
@@ -985,6 +985,7 @@ function Footer() {
     [t('common.footer.trackBooking'), '/my-bookings'],
     [t('common.footer.shop'), '/shop'],
     [t('common.footer.about'), '/about'],
+    [t('common.footer.careers'), '/careers'],
     [t('common.footer.repairPolicy'), '/repair-policy'],
     [t('common.footer.shipping'), '/shipping-policy'],
     [t('common.footer.privacy'), '/privacy'],
@@ -1032,7 +1033,7 @@ function Footer() {
         <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.linksTitle')}</h4>
         <ul className="space-y-3 text-sm mb-10" style={{ color: '#8A7969' }}>
           {usefulLinks.map(([label, to]) => (
-            <li key={to}><Link to={to} className="hover:text-yellow-400 transition-colors">{label}</Link></li>
+            <li key={to}><Link to={to} className="hover:opacity-70 transition-colors">{label}</Link></li>
           ))}
         </ul>
 

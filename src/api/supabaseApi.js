@@ -146,6 +146,7 @@ export const db = {
   // Other (booking, reviews, etc.) — kept for compatibility
   Booking:          createEntity('bookings'),
   Service:          createEntity('services'),
+  JobPosting:       createEntity('job_postings'),
   Review:           createEntity('reviews'),
   WorkingHours:     createEntity('working_hours'),
   Brand:            createEntity('brands'),

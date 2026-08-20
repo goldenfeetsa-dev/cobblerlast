@@ -128,6 +128,11 @@
     <!-- الخط يُحمّل بطريقة لا توقف عرض الصفحة (بدل @import داخل CSS الذي كان يوقف تحميل باقي التنسيقات) -->
     <link rel="preload" as="style" data-font-swap href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" /></noscript>
+    <!-- خط Playfair Display للعناوين الفاخرة بالصفحات العامة (يدعم اللاتيني فقط —
+         العناوين العربية تستمر بـ Tajawal بخط عريض، وهذا سلوك مقصود لأنه ما فيه
+         خط serif عربي فاخر مكافئ منتشر بنفس مستوى Playfair) -->
+    <link rel="preload" as="style" data-font-swap href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&display=swap" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&display=swap" /></noscript>
     <script src="/font-loader.js" defer></script>
     <link rel="preconnect" href="https://bwuvldnlfgobqpdfhyql.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://bwuvldnlfgobqpdfhyql.supabase.co" />

@@ -5,7 +5,8 @@ module.exports = {
   theme: {
   	extend: {
   		fontFamily: {
-  			tajawal: ['var(--font-tajawal)']
+  			tajawal: ['var(--font-tajawal)'],
+  			display: ['var(--font-display)']
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

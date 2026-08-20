@@ -7,6 +7,7 @@ Allow: /repair-policy
 Allow: /privacy
 Allow: /shipping-policy
 Allow: /reviews
+Allow: /careers
 
 # صفحة متابعة الحجز الشخصية — تحتوي بيانات ديناميكية خاصة بالعميل
 # ولا تحمل قيمة فهرسة (مُعلَّمة noindex داخل الصفحة نفسها)
@@ -50,3 +51,4 @@ User-agent: Googlebot-Image
 Allow: /
 
 Sitemap: https://needlecobbler.com/sitemap.xml
+Sitemap: https://needlecobbler.com/api/sitemap-careers.xml

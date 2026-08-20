@@ -6,6 +6,7 @@
 @layer base {
   :root {
     --font-tajawal: 'Tajawal', sans-serif;
+    --font-display: 'Playfair Display', 'Tajawal', serif;
     /* ── هوية "إبرة وخيط الإسكافي" — نسخة أقوى وأوضح: بني جلدي دافئ
        بتشبّع أعلى (كان واطي جداً يخليها باهتة)، وتباين أوضح بين
        primary/secondary/accent بدل ما تكون متقاربة ببعض ── */
