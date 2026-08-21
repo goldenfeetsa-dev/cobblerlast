@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
@@ -86,6 +86,15 @@ export default function Sidebar() {
   const isFinance = isFinanceUser(session?.role); // isAdmin + محاسب
   const isWorkerRole = isWorker(session?.role);   // العامل فقط (وليس الكاشير)
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // شبكة أمان: تقفل القائمة تلقائياً عند أي تغيّر بالمسار (تنقّل ببرنامج،
+  // زر رجوع بالمتصفح، إلخ) — بجانب onClick على كل رابط. هذا يمنع بقاء
+  // القائمة/الطبقة الخلفية (backdrop) شغالة وتحجب اللمس، وهو ما يبدو
+  // للمستخدم وكأن الصفحة "علّقت" وما تستجيب.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const toggleDark = () => {
     const next = !isDark;
