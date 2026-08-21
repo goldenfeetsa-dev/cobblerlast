@@ -42,7 +42,10 @@ function TiktokIcon({ className, style }) {
 }
 
 // ── Palette الفاخرة الجديدة (بني شوكولاتة غامق + ذهبي مطفي) ──────
-const G   = '#C5A059';   // Accent — ذهبي مطفي (أزرار، شارات، تفاصيل بارزة)
+const G   = '#C5A059';   // Accent — ذهبي مطفي (خلفيات، حدود، تدرّجات فقط)
+const GT  = '#7A5F2E';   // نفس هوية الذهبي لكن أغمق — للنص والأيقونات حصراً
+                          // (G نفسه تباينه ~2.3:1 فوق الكريمي، يفشل معيار
+                          // WCAG 4.5:1 للنصوص؛ GT يعطي ~5.6:1 وآمن)
 const D   = '#E8DEC8';   // كريمي أغمق شوي، لتدرّجات بسيطة
 const T   = '#3E2723';   // بني شوكولاتة غامق — لون العلامة الأساسي وكل النصوص الداكنة
 const GB  = 'rgba(197,160,89,'; // نفس G بصيغة rgba قابلة لإضافة شفافية
@@ -167,7 +170,7 @@ function Navbar() {
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
           <Link to="/my-bookings" className="hidden md:block text-xs font-bold px-4 py-2 rounded-full transition-all"
-            style={{ color: G, border: `1px solid ${GB}0.3)`, background: GB + '0.05)' }}>
+            style={{ color: GT, border: `1px solid ${GB}0.3)`, background: GB + '0.05)' }}>
             {t('common.nav.trackBooking')}
           </Link>
           <Link to="/book" className="hidden sm:block">
@@ -211,7 +214,7 @@ function Navbar() {
               )}
               <Link to="/my-bookings" onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-2 text-sm font-bold py-3 px-3 rounded-xl mt-1"
-                style={{ color: G, border: `1px solid ${GB}0.25)` }}>
+                style={{ color: GT, border: `1px solid ${GB}0.25)` }}>
                 <CalendarCheck className="w-4 h-4" />
                 {t('common.nav.trackBooking')}
               </Link>
@@ -279,7 +282,7 @@ function HeroSection() {
             {/* Eyebrow */}
             <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}
               className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-bold tracking-widest"
-              style={{ background: GB + '0.08)', border: `1px solid ${GB}0.25)`, color: G }}>
+              style={{ background: GB + '0.08)', border: `1px solid ${GB}0.25)`, color: GT }}>
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
                 <Sparkles className="w-3.5 h-3.5" />
               </motion.div>
@@ -299,7 +302,7 @@ function HeroSection() {
                   <motion.span key={lang + wordIdx}
                     initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }}
                     transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                    className="block" style={{ color: G }}>
+                    className="block" style={{ color: GT }}>
                     {words[wordIdx]}
                   </motion.span>
                 </AnimatePresence>
@@ -357,7 +360,7 @@ function HeroSection() {
                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                   className="flex items-center gap-2.5 px-7 py-4 rounded-2xl font-bold text-sm transition-all"
                   style={{ border: `1px solid ${GB}0.2)`, color: T, background: GB + '0.04)' }}>
-                  <ShoppingBag className="w-4 h-4" style={{ color: G }} />
+                  <ShoppingBag className="w-4 h-4" style={{ color: GT }} />
                   {t('home.hero.ctaSecondary')}
                 </motion.div>
               </Link>
@@ -370,9 +373,9 @@ function HeroSection() {
                 const Icon = statIcons[i];
                 return (
                   <div key={i} className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 shrink-0" style={{ color: G }} />
+                    <Icon className="w-4 h-4 shrink-0" style={{ color: GT }} />
                     <div>
-                      <div className="text-xl font-black" style={{ color: G }}>
+                      <div className="text-xl font-black" style={{ color: GT }}>
                         <AnimCounter target={s.num} />
                       </div>
                       <div className="text-xs" style={{ color: '#6E5C4E' }}>{s.label}</div>
@@ -429,7 +432,7 @@ function HeroSection() {
               className="absolute bottom-10 start-0 z-20 px-4 py-3 rounded-2xl"
               style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <div className="flex items-center gap-2 mb-1.5">
-                {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: G }} />)}
+                {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: GT }} />)}
               </div>
               <div className="text-xs font-black" style={{ color: T }}>{t('home.hero.badgeRating')}</div>
               <div className="text-xs" style={{ color: '#6E5C4E' }}>{t('home.hero.badgeRatingSub')}</div>
@@ -473,7 +476,7 @@ function TickerStrip() {
           <motion.div key={k} className="flex gap-10 shrink-0 pe-10"
             animate={{ x: ['0%', '-100%'] }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}>
             {items.map((item, i) => (
-              <span key={i} className="whitespace-nowrap text-sm font-bold" style={{ color: G }}>{item}</span>
+              <span key={i} className="whitespace-nowrap text-sm font-bold" style={{ color: GT }}>{item}</span>
             ))}
           </motion.div>
         ))}
@@ -498,7 +501,7 @@ function ServicesSection() {
     <section id="services" className="py-32 px-6" style={{ background: '#F4F1EA' }}>
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.services.eyebrow')}</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.services.eyebrow')}</p>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.services.title')}</h2>
           <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
             {t('home.services.desc')}
@@ -527,14 +530,14 @@ function ServicesSection() {
 
                 <div className="p-6 flex flex-col flex-1">
                   <span className="inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-xs font-bold w-fit"
-                    style={{ background: GB + '0.1)', color: G, border: `1px solid ${GB}0.2)` }}>
+                    style={{ background: GB + '0.1)', color: GT, border: `1px solid ${GB}0.2)` }}>
                     {React.createElement(SERVICE_META[i].icon, { className: 'w-3 h-3' })}{s.tag}
                   </span>
                   <h3 className="text-xl font-black mb-2" style={{ color: T }}>{s.title}</h3>
                   <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: '#6E5C4E' }}>{s.desc}</p>
                   <Link to="/book">
                     <motion.div whileHover={{ gap: '16px' }} className="flex items-center gap-2 font-bold text-sm"
-                      style={{ color: G }}>
+                      style={{ color: GT }}>
                       <span>{t('home.services.bookThis')}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </motion.div>
@@ -548,7 +551,7 @@ function ServicesSection() {
         {/* How it works */}
         <FadeIn delay={0.2} className="mt-24">
           <div className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(201,168,76,0.04)', border: `1px solid ${GB}0.1)` }}>
-            <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase text-center" style={{ color: G }}>{t('home.services.howItWorks')}</p>
+            <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase text-center" style={{ color: GT }}>{t('home.services.howItWorks')}</p>
             <h3 className="text-3xl font-black text-center mb-10" style={{ color: T }}>{t('home.services.howItWorksTitle')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {steps.map((step, i) => (
@@ -556,7 +559,7 @@ function ServicesSection() {
                   <div className="relative inline-flex mb-4">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
                       style={{ background: `linear-gradient(135deg, ${GB}0.12), ${GB}0.04))`, border: `1px solid ${GB}0.2)` }}>
-                      {React.createElement(STEP_ICONS[i], { className: 'w-6 h-6', style: { color: G } })}
+                      {React.createElement(STEP_ICONS[i], { className: 'w-6 h-6', style: { color: GT } })}
                     </div>
                     <span className="absolute -top-2 -end-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center text-black"
                       style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{i + 1}</span>
@@ -581,7 +584,7 @@ function BeforeAfterSection() {
     <section id="before-after" className="py-32 px-6" style={{ background: '#EFE9DD' }}>
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.beforeAfter.eyebrow')}</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.beforeAfter.eyebrow')}</p>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.beforeAfter.title')}</h2>
           <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
             {t('home.beforeAfter.desc')}
@@ -643,7 +646,7 @@ function RequestServiceSection() {
     <section id="request" className="py-32 px-6" style={{ background: '#EFE9DD' }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.request.eyebrow')}</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.request.eyebrow')}</p>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.request.title')}</h2>
           <p className="text-sm" style={{ color: '#6E5C4E' }}>{t('home.request.desc')}</p>
         </FadeIn>
@@ -653,11 +656,11 @@ function RequestServiceSection() {
             <motion.div key="done" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center py-16 rounded-3xl" style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)` }}>
               <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.6 }}>
-                <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: G }} />
+                <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: GT }} />
               </motion.div>
               <h3 className="text-2xl font-black mb-2" style={{ color: T }}>{t('home.request.doneTitle')}</h3>
               <p style={{ color: '#5B4A3E' }}>{t('home.request.doneDesc')}</p>
-              <button onClick={() => setSent(false)} className="mt-6 text-sm underline" style={{ color: G }}>{t('home.request.sendAnother')}</button>
+              <button onClick={() => setSent(false)} className="mt-6 text-sm underline" style={{ color: GT }}>{t('home.request.sendAnother')}</button>
             </motion.div>
           ) : (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -735,9 +738,9 @@ function AboutSection() {
               ))}
           </FadeIn>
           <FadeIn delay={0.15}>
-            <p className="text-xs tracking-[0.5em] font-bold mb-4 uppercase" style={{ color: G }}>{t('home.about.eyebrow')}</p>
+            <p className="text-xs tracking-[0.5em] font-bold mb-4 uppercase" style={{ color: GT }}>{t('home.about.eyebrow')}</p>
             <h2 className="font-display text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
-              {t('home.about.titleLine1')}<br /><span style={{ color: G }}>{t('home.about.titleLine2')}</span>
+              {t('home.about.titleLine1')}<br /><span style={{ color: GT }}>{t('home.about.titleLine2')}</span>
             </h2>
             <p className="leading-relaxed text-base mb-8" style={{ color: '#6E5C4E' }}>
               {t('home.about.desc')}
@@ -747,9 +750,9 @@ function AboutSection() {
                 <motion.div key={i} className="rounded-2xl p-4 flex items-center gap-3"
                   style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}
                   whileHover={{ borderColor: GB + '0.3)', scale: 1.02 }}>
-                  {React.createElement(ABOUT_STAT_ICONS[i], { className: 'w-5 h-5 shrink-0', style: { color: G } })}
+                  {React.createElement(ABOUT_STAT_ICONS[i], { className: 'w-5 h-5 shrink-0', style: { color: GT } })}
                   <div>
-                    <div className="text-xl font-black" style={{ color: G }}><AnimCounter target={s.num} /></div>
+                    <div className="text-xl font-black" style={{ color: GT }}><AnimCounter target={s.num} /></div>
                     <div className="text-xs" style={{ color: '#6E5C4E' }}>{s.label}</div>
                   </div>
                 </motion.div>
@@ -781,7 +784,7 @@ function ReviewsSection() {
     <section className="py-32 px-6" style={{ background: '#EFE9DD' }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.reviews.eyebrow')}</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.reviews.eyebrow')}</p>
           <h2 className="font-display text-4xl md:text-5xl font-black" style={{ color: T }}>{t('home.reviews.title')}</h2>
           <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
         </FadeIn>
@@ -792,7 +795,7 @@ function ReviewsSection() {
                 animate={{ background: active === i ? GB + '0.07)' : 'rgba(62,50,45,0.035)', borderColor: active === i ? GB + '0.3)' : 'rgba(62,50,45,0.06)' }}
                 style={{ border: '1px solid' }} whileHover={{ y: -4 }} onClick={() => setActive(i)}>
                 <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: G }} />)}
+                  {[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: GT }} />)}
                 </div>
                 <p className="text-sm leading-relaxed flex-1" style={{ color: '#5B4A3E' }}>"{r.text}"</p>
                 <div className="flex items-center gap-3">
@@ -837,7 +840,7 @@ function BrandsSection() {
     <section className="py-20 px-6" style={{ background: '#F4F1EA', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-12">
-          <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: G }}>{t('home.brands.eyebrow')}</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: GT }}>{t('home.brands.eyebrow')}</p>
           <h3 className="text-2xl md:text-3xl font-black" style={{ color: T }}>{t('home.brands.title')}</h3>
         </FadeIn>
         <LogoMarquee items={list} />
@@ -875,7 +878,7 @@ function TrackOrderSection() {
     <section className="py-28 px-6" style={{ background: '#EFE9DD' }} dir={dir}>
       <div className="max-w-2xl mx-auto text-center">
         <FadeIn>
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.track.eyebrow')}</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.track.eyebrow')}</p>
           <h2 className="font-display text-4xl font-black mb-3" style={{ color: T }}>{t('home.track.title')}</h2>
           <p className="text-sm mb-8" style={{ color: '#6E5C4E' }}>{t('home.track.desc')}</p>
           <div className="flex gap-3 max-w-md mx-auto mb-6">
@@ -911,9 +914,9 @@ function TrackOrderSection() {
                       className="rounded-2xl p-5 text-sm"
                       style={{ background: GB + '0.06)', border: `1px solid ${GB}0.2)` }}>
                       <div className="text-start space-y-2">
-                        <div className="font-black text-base" style={{ color: G }}>{r.order_number}</div>
+                        <div className="font-black text-base" style={{ color: GT }}>{r.order_number}</div>
                         <div style={{ color: T }}>{t('home.track.customer')}: {r.customer_name}</div>
-                        <div className="text-xl font-black" style={{ color: G }}>{STATUS[r.status] || r.status}</div>
+                        <div className="text-xl font-black" style={{ color: GT }}>{STATUS[r.status] || r.status}</div>
                       </div>
                     </motion.div>
                   ))}
@@ -937,7 +940,7 @@ function BranchesSection() {
     <section id="branches" className="py-28 px-6" style={{ background: '#F4F1EA' }} dir={dir}>
       <div className="max-w-5xl mx-auto">
         <FadeIn className="text-center mb-12">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: G }}>{t('home.branches.eyebrow')}</p>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.branches.eyebrow')}</p>
           <h2 className="font-display text-4xl font-black" style={{ color: T }}>{t('home.branches.title')}</h2>
         </FadeIn>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -946,14 +949,14 @@ function BranchesSection() {
               <motion.div className="rounded-2xl p-6" style={{ background: GB + '0.04)', border: `1px solid ${GB}0.1)` }} whileHover={{ borderColor: GB + '0.3)', y: -4 }}>
                 <h3 className="font-black text-lg mb-3" style={{ color: T }}>{b.name}</h3>
                 <div className="space-y-2 text-sm" style={{ color: '#5B4A3E' }}>
-                  <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: G }} />{b.city}{b.address && ` — ${b.address}`}</div>
-                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: G }} />{t('home.branches.hours')}</div>
-                  {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: G }} /><a href={`tel:${b.phone}`} className="hover:opacity-70">{b.phone}</a></div>}
+                  <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: GT }} />{b.city}{b.address && ` — ${b.address}`}</div>
+                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: GT }} />{t('home.branches.hours')}</div>
+                  {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: GT }} /><a href={`tel:${b.phone}`} className="hover:opacity-70">{b.phone}</a></div>}
                   {b.maps_url && (
                     <div className="pt-2">
                       <a href={b.maps_url} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg"
-                        style={{ background: GB + '0.08)', color: G, border: `1px solid ${GB}0.15)` }}>
+                        style={{ background: GB + '0.08)', color: GT, border: `1px solid ${GB}0.15)` }}>
                         <MapPin className="w-3.5 h-3.5" /> {t('home.branches.viewMap') || 'فتح الموقع على الخريطة'}
                       </a>
                     </div>
@@ -1018,7 +1021,7 @@ function Footer() {
             { href: instagram, icon: Instagram, color: '#E1306C', label: 'Instagram' },
             { href: tiktok, icon: TiktokIcon, color: '#000000', label: 'TikTok' },
             { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'WhatsApp' },
-            ...(twitter ? [{ href: twitter, icon: Twitter, color: G, label: 'Twitter' }] : []),
+            ...(twitter ? [{ href: twitter, icon: Twitter, color: GT, label: 'Twitter' }] : []),
           ].map((social, i) => (
             <motion.a key={i} href={social.href} target="_blank" rel="noopener noreferrer"
               aria-label={social.label} whileHover={{ scale: 1.15, y: -2 }}
@@ -1030,7 +1033,7 @@ function Footer() {
         </div>
 
         {/* روابط تهمك */}
-        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.linksTitle')}</h4>
+        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: GT }}>{t('common.footer.linksTitle')}</h4>
         <ul className="space-y-3 text-sm mb-10" style={{ color: '#8A7969' }}>
           {usefulLinks.map(([label, to]) => (
             <li key={to}><Link to={to} className="hover:opacity-70 transition-colors">{label}</Link></li>
@@ -1038,17 +1041,17 @@ function Footer() {
         </ul>
 
         {/* خدمة العملاء */}
-        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: G }}>{t('common.footer.customerServiceTitle')}</h4>
+        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: GT }}>{t('common.footer.customerServiceTitle')}</h4>
         <div className="flex gap-4 justify-center mb-10">
           <motion.a href={`tel:${phone}`} whileHover={{ scale: 1.1, y: -2 }} aria-label={t('common.footer.callUs')}
             className="w-11 h-11 rounded-xl flex items-center justify-center"
             style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
-            <Phone className="w-4 h-4" style={{ color: G }} />
+            <Phone className="w-4 h-4" style={{ color: GT }} />
           </motion.a>
           <motion.a href={`sms:${phone}`} whileHover={{ scale: 1.1, y: -2 }} aria-label={t('common.footer.textUs')}
             className="w-11 h-11 rounded-xl flex items-center justify-center"
             style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
-            <Smartphone className="w-4 h-4" style={{ color: G }} />
+            <Smartphone className="w-4 h-4" style={{ color: GT }} />
           </motion.a>
           <motion.a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.1, y: -2 }} aria-label="WhatsApp"
             className="w-11 h-11 rounded-xl flex items-center justify-center"
