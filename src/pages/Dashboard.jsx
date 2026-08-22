@@ -58,7 +58,7 @@ export default function Dashboard() {
 
   const { data: allOrders } = useQuery({
     queryKey: ['orders', 'dashboard'],
-    queryFn: () => db.Order.list('-created_at', 500),
+    queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at'),
     initialData: [],
   });
 
@@ -66,7 +66,7 @@ export default function Dashboard() {
   // كاملاً من الإيراد الفعلي لأي فرع يبيع منتجات وليس فقط يصلّح
   const { data: allSalesInvoices } = useQuery({
     queryKey: ['sales-invoices-dashboard'],
-    queryFn: () => db.SalesInvoice.list('-created_at', 500),
+    queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at'),
     initialData: [],
   });
 

@@ -72,14 +72,14 @@ export default function AuditLog() {
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders-audit'],
-    queryFn: () => db.Order.list('-created_at', 500),
+    queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at'),
   });
 
   // فواتير بيع المنتجات — كانت مفقودة بالكامل من هذي اللوحة سابقاً، مع أنها
   // إيراد فعلي للمتجر مثل طلبات الإصلاح تماماً
   const { data: salesInvoices = [], isLoading: salesLoading } = useQuery({
     queryKey: ['sales-invoices-audit'],
-    queryFn: () => db.SalesInvoice.list('-created_at', 500),
+    queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at'),
   });
 
   // سجل النشاط الحقيقي — كل حركة (إنشاء/تعديل/حذف) مسجّلة بمعرفة مين
