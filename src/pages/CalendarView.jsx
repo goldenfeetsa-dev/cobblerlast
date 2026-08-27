@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, AlertTriangle, CheckCircle, Clock, Package, X, Bell } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, parseISO } from 'date-fns';
+import { ChevronRight, ChevronLeft, AlertTriangle, CheckCircle, Clock, Package, X, Bell, Truck, CalendarClock } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, parseISO, addDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
 const CAPACITY = 8; // أقصى طاقة استيعابية يومياً
@@ -106,6 +107,141 @@ export function OrderStatusBar() {
   );
 }
 
+// ── بانر تسليمات اليوم (طلبات جاهزة للاستلام اليوم) ──────────────
+export function TodayDeliveriesBanner() {
+  const today = format(new Date(), 'yyyy-MM-dd');
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ['orders-today-deliveries', today],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('id, order_number, customer_name, customer_phone, item_type, status, delivery_date, shelf_location, total_price')
+        .eq('delivery_date', today)
+        .eq('status', 'ready')
+        .order('created_at', { ascending: true });
+      return data || [];
+    },
+    refetchInterval: 30_000,
+  });
+
+  if (orders.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: 'rgba(59,130,246,0.3)' }} dir="rtl">
+      {/* الشريط العلوي */}
+      <div className="flex items-center gap-2 px-5 py-2.5" style={{ background: '#3b82f6' }}>
+        <Truck className="w-4 h-4 text-white" />
+        <span className="text-sm font-black text-white">تسليمات اليوم</span>
+        <span className="text-xs font-bold text-white/80 mr-auto">{orders.length} طلب جاهز للاستلام</span>
+      </div>
+      {/* القائمة */}
+      <div className="divide-y divide-blue-50 bg-white">
+        {orders.map((order, i) => (
+          <Link key={order.id} to={`/orders/${order.id}`}
+            className="flex items-center gap-4 px-5 py-3 hover:bg-blue-50/50 transition-colors" style={{ background: 'rgba(59,130,246,0.04)' }}>
+            <div className="w-2 h-8 rounded-full shrink-0" style={{ background: '#3b82f6' }} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-gray-900">{order.order_number}</span>
+                {order.shelf_location && (
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">رف: {order.shelf_location}</span>
+                )}
+              </div>
+              <div className="text-xs text-gray-500">{order.customer_name}{order.customer_phone ? ` • ${order.customer_phone}` : ''}</div>
+            </div>
+            {order.total_price > 0 && (
+              <span className="text-xs font-bold text-gray-600 shrink-0">{order.total_price} ر.س</span>
+            )}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── قائمة "طلبات يجب إنجازها" — غير المكتملة، بالألوان حسب الاستحقاق ──
+export function PendingCompletionList() {
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ['orders-pending-completion'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('id, order_number, customer_name, customer_phone, item_type, status, delivery_date, created_at, total_price')
+        .not('status', 'in', '(completed,cancelled)')
+        .order('delivery_date', { ascending: true, nullsFirst: false });
+      return data || [];
+    },
+    refetchInterval: 60_000,
+  });
+
+  // تصنيف الطلبات: متأخرة (تنتقل تلقائياً لليوم لحد ما تُنجز) / مستحقة بكرة / لاحقاً / بدون تاريخ
+  const grouped = useMemo(() => {
+    const overdue = [];   // موعدها فات ولسا ما اكتملت — تُعامل كأنها مستحقة اليوم لين تُنجز
+    const dueTomorrow = [];
+    const later = [];
+    const noDate = [];
+    orders.forEach(o => {
+      if (!o.delivery_date) { noDate.push(o); return; }
+      if (o.delivery_date < today) overdue.push(o);
+      else if (o.delivery_date === tomorrow) dueTomorrow.push(o);
+      else if (o.delivery_date > tomorrow) later.push(o);
+      else later.push(o); // === today, not overdue, not due tomorrow — يظهر ضمن "لاحقاً" بحياد
+    });
+    return { overdue, dueTomorrow, later, noDate };
+  }, [orders, today, tomorrow]);
+
+  const total = orders.length;
+  if (total === 0) return null;
+
+  const Row = ({ order, tone }) => {
+    const toneStyles = {
+      red:    { bar: '#ef4444', bg: 'rgba(239,68,68,0.06)',  badge: 'bg-red-100 text-red-700',       label: 'متأخر' },
+      yellow: { bar: '#f59e0b', bg: 'rgba(245,158,11,0.06)', badge: 'bg-amber-100 text-amber-700',   label: 'مستحق بكرة' },
+      gray:   { bar: '#9ca3af', bg: 'transparent',            badge: 'bg-gray-100 text-gray-600',     label: null },
+    }[tone];
+    return (
+      <Link to={`/orders/${order.id}`} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors" style={{ background: toneStyles.bg }}>
+        <div className="w-2 h-8 rounded-full shrink-0" style={{ background: toneStyles.bar }} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-sm text-gray-900">{order.order_number}</span>
+            {toneStyles.label && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${toneStyles.badge}`}>{toneStyles.label}</span>
+            )}
+          </div>
+          <div className="text-xs text-gray-500">
+            {order.customer_name}
+            {order.delivery_date && ` • تسليم: ${format(parseISO(order.delivery_date), 'd MMMM', { locale: ar })}`}
+          </div>
+        </div>
+        <span className="text-xs px-2.5 py-1 rounded-full font-bold shrink-0 bg-gray-100 text-gray-600">
+          {STATUS_CONFIG[order.status]?.label || order.status}
+        </span>
+      </Link>
+    );
+  };
+
+  return (
+    <div className="rounded-2xl border border-gray-100 overflow-hidden bg-white shadow-sm" dir="rtl">
+      <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
+        <CalendarClock className="w-4 h-4 text-gray-500" />
+        <h3 className="font-black text-gray-900">طلبات يجب إنجازها</h3>
+        <span className="text-xs text-gray-400 mr-auto">{total} طلب</span>
+      </div>
+      <div className="divide-y divide-gray-50">
+        {grouped.overdue.map(o => <Row key={o.id} order={o} tone="red" />)}
+        {grouped.dueTomorrow.map(o => <Row key={o.id} order={o} tone="yellow" />)}
+        {grouped.later.map(o => <Row key={o.id} order={o} tone="gray" />)}
+        {grouped.noDate.map(o => <Row key={o.id} order={o} tone="gray" />)}
+      </div>
+    </div>
+  );
+}
+
 // ── التقويم المرئي ────────────────────────────────────────────────
 export default function CalendarView() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -177,6 +313,9 @@ export default function CalendarView() {
 
   return (
     <div className="space-y-4" dir="rtl">
+      {/* تسليمات اليوم */}
+      <TodayDeliveriesBanner />
+
       {/* تنبيهات الضغط */}
       {alerts.length > 0 && (
         <div className="space-y-2">
@@ -318,6 +457,9 @@ export default function CalendarView() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* طلبات يجب إنجازها — تحت جدول التقويم */}
+      <PendingCompletionList />
     </div>
   );
 }
