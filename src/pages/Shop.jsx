@@ -68,7 +68,7 @@ function CartDrawer({ cart, onClose, onRemove }) {
             <p className="text-center py-12 text-sm" style={{ color: 'rgba(62,50,45,0.3)' }}>{t('shop.cartEmpty')}</p>
           ) : cart.map(item => (
             <div key={item.id} className="flex gap-3 rounded-xl p-3" style={{ background: 'rgba(62,50,45,0.045)', border: '1px solid rgba(166,124,104,0.08)' }}>
-              <img src={item.image_url} alt={`${item.name_ar} — ${t('common.brand')}`} className="w-14 h-14 rounded-lg object-cover" />
+              <img src={item.image_url || FALLBACK_IMAGES[0]} alt={`${item.name_ar} — ${t('common.brand')}`} className="w-14 h-14 rounded-lg object-cover shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-bold" style={{ color: '#3E322D' }}>{item.name_ar}</p>
                 <p className="text-xs mt-1" style={{ color: GOLD }}>{item.price} SAR × {item.qty}</p>
