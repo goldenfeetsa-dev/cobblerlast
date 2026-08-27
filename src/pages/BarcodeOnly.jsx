@@ -4,7 +4,7 @@ import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import BarcodeDisplay from '@/components/pos/BarcodeDisplay';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Printer, Download } from 'lucide-react';
+import { ArrowRight, Printer, Download, PackageSearch } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 export default function BarcodeOnly() {
@@ -84,6 +84,10 @@ export default function BarcodeOnly() {
         <Button onClick={handleDownload} variant="outline">
           <Download className="w-4 h-4 ml-2" />
           تنزيل صورة
+        </Button>
+        <Button onClick={() => navigate(`/orders/${orderId}`)} variant="outline">
+          <PackageSearch className="w-4 h-4 ml-2" />
+          فتح الطلب
         </Button>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, AlertTriangle, CheckCircle, Clock, Package, X, Bell, Truck, CalendarClock } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, parseISO, addDays } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
 const CAPACITY = 8; // أقصى طاقة استيعابية يومياً
@@ -162,9 +162,6 @@ export function TodayDeliveriesBanner() {
 
 // ── قائمة "طلبات يجب إنجازها" — غير المكتملة، بالألوان حسب الاستحقاق ──
 export function PendingCompletionList() {
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
-
   const { data: orders = [] } = useQuery({
     queryKey: ['orders-pending-completion'],
     queryFn: async () => {
@@ -178,29 +175,32 @@ export function PendingCompletionList() {
     refetchInterval: 60_000,
   });
 
-  // تصنيف الطلبات: متأخرة (تنتقل تلقائياً لليوم لحد ما تُنجز) / مستحقة بكرة / لاحقاً / بدون تاريخ
+  // تصنيف الطلبات حسب قرب موعد التسليم:
+  // 🔴 أحمر: متأخرة فعلاً، أو تسليمها اليوم/غداً (يوم واحد قبل الاستحقاق) — الأكثر إلحاحاً
+  // 🟡 أصفر: تسليمها بعد يومين أو 3 أيام — تحذير مبكر
+  // رمادي: لاحقاً (4+ أيام) أو بدون تاريخ تسليم
   const grouped = useMemo(() => {
-    const overdue = [];   // موعدها فات ولسا ما اكتملت — تُعامل كأنها مستحقة اليوم لين تُنجز
-    const dueTomorrow = [];
+    const urgent = [];   // متأخر أو مستحق خلال يوم واحد
+    const upcoming = []; // مستحق خلال يومين-3 أيام
     const later = [];
     const noDate = [];
     orders.forEach(o => {
       if (!o.delivery_date) { noDate.push(o); return; }
-      if (o.delivery_date < today) overdue.push(o);
-      else if (o.delivery_date === tomorrow) dueTomorrow.push(o);
-      else if (o.delivery_date > tomorrow) later.push(o);
-      else later.push(o); // === today, not overdue, not due tomorrow — يظهر ضمن "لاحقاً" بحياد
+      const daysUntil = differenceInCalendarDays(parseISO(o.delivery_date), new Date());
+      if (daysUntil <= 1) urgent.push(o);        // فات، اليوم، أو غداً
+      else if (daysUntil <= 3) upcoming.push(o);  // بعد يومين أو 3 أيام
+      else later.push(o);
     });
-    return { overdue, dueTomorrow, later, noDate };
-  }, [orders, today, tomorrow]);
+    return { urgent, upcoming, later, noDate };
+  }, [orders]);
 
   const total = orders.length;
   if (total === 0) return null;
 
   const Row = ({ order, tone }) => {
     const toneStyles = {
-      red:    { bar: '#ef4444', bg: 'rgba(239,68,68,0.06)',  badge: 'bg-red-100 text-red-700',       label: 'متأخر' },
-      yellow: { bar: '#f59e0b', bg: 'rgba(245,158,11,0.06)', badge: 'bg-amber-100 text-amber-700',   label: 'مستحق بكرة' },
+      red:    { bar: '#ef4444', bg: 'rgba(239,68,68,0.06)',  badge: 'bg-red-100 text-red-700',       label: 'عاجل' },
+      yellow: { bar: '#f59e0b', bg: 'rgba(245,158,11,0.06)', badge: 'bg-amber-100 text-amber-700',   label: 'قريب' },
       gray:   { bar: '#9ca3af', bg: 'transparent',            badge: 'bg-gray-100 text-gray-600',     label: null },
     }[tone];
     return (
@@ -233,8 +233,8 @@ export function PendingCompletionList() {
         <span className="text-xs text-gray-400 mr-auto">{total} طلب</span>
       </div>
       <div className="divide-y divide-gray-50">
-        {grouped.overdue.map(o => <Row key={o.id} order={o} tone="red" />)}
-        {grouped.dueTomorrow.map(o => <Row key={o.id} order={o} tone="yellow" />)}
+        {grouped.urgent.map(o => <Row key={o.id} order={o} tone="red" />)}
+        {grouped.upcoming.map(o => <Row key={o.id} order={o} tone="yellow" />)}
         {grouped.later.map(o => <Row key={o.id} order={o} tone="gray" />)}
         {grouped.noDate.map(o => <Row key={o.id} order={o} tone="gray" />)}
       </div>
