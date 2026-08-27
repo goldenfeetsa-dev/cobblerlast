@@ -170,6 +170,9 @@ export default function FinancialReports() {
   const reportedOrders = orders.filter(o => o.zatca_status === 'REPORTED');
   const reportedSales = sales.filter(s => s.zatca_status === 'REPORTED');
   const vatCollected = [...reportedOrders, ...reportedSales].reduce((s, r) => {
+    // نفس إصلاح TaxDashboard: نعتمد على vat_amount المخزَّن فعلياً بدل افتراض 15% دائماً،
+    // لاحترام حالة تعطيل الضريبة (vat_enabled) على مستوى الطلب.
+    if (r.vat_amount != null) return s + Number(r.vat_amount);
     const sub = r.subtotal ?? (r.total_price ? r.total_price / 1.15 : 0);
     return s + sub * 0.15;
   }, 0) + creditNotes.reduce((s, n) => s + (n.note_type === 'credit' ? -(n.vat_amount || 0) : (n.vat_amount || 0)), 0);

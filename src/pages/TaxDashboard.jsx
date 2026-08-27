@@ -106,7 +106,11 @@ export default function TaxDashboard() {
   const reportedSales = sales.filter(s => s.zatca_status === 'REPORTED');
   const unreportedCount = (orders.length + sales.length) - (reportedOrders.length + reportedSales.length);
   const vatCollected = useMemo(() => {
+    // نعتمد على vat_amount المخزَّن فعلياً بكل طلب/فاتورة (وليس إعادة حسابه دائماً
+    // بافتراض 15%) — لأن بعض الطلبات قد تُنشأ والضريبة معطّلة (إعداد vat_enabled
+    // بصفحة الإعدادات)، وبهذي الحالة vat_amount = 0 فعلياً ويجب احترام ذلك.
     const invoicesVat = [...reportedOrders, ...reportedSales].reduce((s, r) => {
+      if (r.vat_amount != null) return s + Number(r.vat_amount);
       const sub = r.subtotal ?? (r.total_price ? r.total_price / 1.15 : 0);
       return s + sub * 0.15;
     }, 0);
