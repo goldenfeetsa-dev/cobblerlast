@@ -211,16 +211,17 @@ function CobblerTab({ session }) {
       return;
     }
 
-    // ✳️ تعديل مهم بناءً على طلب صريح: السعر اللي يدخله الموظف الحين هو
-    // السعر "قبل الضريبة" (subtotal)، والنظام يضيف 15% ضريبة تلقائياً
-    // فوقه ليطلع السعر الإجمالي المطلوب من العميل — بدل الطريقة القديمة
-    // اللي كانت تعتبر الرقم المُدخَل شامل الضريبة أصلاً وتستخرجها للخلف.
-    // مثال: يدخل الموظف 25 ← الإجمالي شامل الضريبة يصير 28.75 ريال.
+    // ✳️ رجوع للطريقة القديمة بناءً على طلب صريح: السعر اللي يدخله
+    // الموظف هو السعر الإجمالي شامل الضريبة أصلاً (مو قبلها) — والنظام
+    // يستخرج السعر قبل الضريبة والضريبة نفسها من داخله بالقسمة، بدل ما
+    // يضيف 15% فوقه.
+    // مثال: يدخل الموظف 25 ← الإجمالي شامل الضريبة يفضل 25 ريال بالظبط
+    // (قبل الضريبة ≈ 21.74، الضريبة ≈ 3.26).
     const enteredPrice = parseFloat(form.total_price) || 0;
     const vatEnabled = shopSettings.vat_enabled !== false;
-    const subtotal = enteredPrice;
-    const vatAmount = vatEnabled ? parseFloat((subtotal * 0.15).toFixed(2)) : 0;
-    const price = parseFloat((subtotal + vatAmount).toFixed(2));
+    const price = enteredPrice;
+    const subtotal = vatEnabled ? parseFloat((price / 1.15).toFixed(2)) : price;
+    const vatAmount = vatEnabled ? parseFloat((price - subtotal).toFixed(2)) : 0;
 
     // وصف عام يجمع كل القطع — يستمر يظهر بصفحة «مهامي» للعامل ولأي كود
     // قديم يعتمد على حقل notes/description النصي فقط
@@ -491,14 +492,14 @@ function CobblerTab({ session }) {
         <CardHeader className="pb-4"><CardTitle className="text-base">الدفع</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>السعر قبل الضريبة (ر.س) *</Label>
+            <Label>السعر الإجمالي شامل الضريبة (ر.س) *</Label>
             <Input type="number" min={0} step={0.01} value={form.total_price}
               onChange={e => update('total_price', e.target.value)} placeholder="0.00" required className="text-xl font-bold h-14" />
-            {/* معاينة حية: توضّح للموظف المبلغ الإجمالي شامل 15% ضريبة قبل ما يحفظ الطلب */}
+            {/* معاينة حية: توضّح للموظف السعر قبل الضريبة المُستخرَج من الإجمالي قبل ما يحفظ الطلب */}
             {form.total_price > 0 && (
               <p className="text-sm font-bold" style={{ color: shopSettings.vat_enabled !== false ? '#059669' : '#6b7280' }}>
                 {shopSettings.vat_enabled !== false
-                  ? `الإجمالي شامل الضريبة (15%): ${(parseFloat(form.total_price) * 1.15).toFixed(2)} ر.س`
+                  ? `قبل الضريبة: ${(parseFloat(form.total_price) / 1.15).toFixed(2)} ر.س — الإجمالي (شامل 15%): ${parseFloat(form.total_price).toFixed(2)} ر.س`
                   : `الإجمالي (الضريبة معطّلة): ${parseFloat(form.total_price).toFixed(2)} ر.س`}
               </p>
             )}

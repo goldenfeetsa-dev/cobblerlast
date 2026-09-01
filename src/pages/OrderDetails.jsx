@@ -128,15 +128,6 @@ export default function OrderDetails() {
     },
   });
 
-  const deleteOrder = useMutation({
-    mutationFn: () => db.Order.delete(orderId),
-    onSuccess: () => {
-      logAudit({ action: 'delete', page: 'تفاصيل الطلب', entity: 'order', entity_id: orderId, details: { order_number: order?.order_number } });
-      toast.success('تم حذف الطلب');
-      navigate('/orders');
-    },
-  });
-
   const updateStatus = useMutation({
     mutationFn: ({ id, status }) => db.Order.update(id, { status: status }),
     onSuccess: (_, vars) => {
@@ -280,29 +271,6 @@ export default function OrderDetails() {
                 <Pencil className="w-3.5 h-3.5 ml-1" />
                 تعديل
               </Button>
-
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/30">
-                    <Trash2 className="w-3.5 h-3.5 ml-1" />
-                    حذف
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>حذف الطلب {order.order_number}؟</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      هذا الإجراء نهائي ولا يمكن التراجع عنه. سيُحذف الطلب بكل بياناته بشكل كامل.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteOrder.mutate()}>
-                      نعم، احذف
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
               </>
               )}
 
@@ -672,7 +640,11 @@ export default function OrderDetails() {
                 </div>
                 <div>
                   <Label>السعر الإجمالي (ر.س)</Label>
-                  <Input type="number" step="0.01" value={editForm.total_price} onChange={e => setEditForm(f => ({ ...f, total_price: parseFloat(e.target.value) || 0 }))} />
+                  <Input type="number" step="0.01" value={editForm.total_price} disabled readOnly
+                    className="bg-muted cursor-not-allowed" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    السعر يُقفل بمجرد إنشاء الطلب — لتعديله أصدر إشعار دائن/مدين بدلاً من ذلك
+                  </p>
                 </div>
               </div>
               <div>
