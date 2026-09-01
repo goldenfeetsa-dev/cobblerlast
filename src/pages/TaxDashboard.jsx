@@ -351,124 +351,141 @@ export default function TaxDashboard() {
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">معاينة الإقرار القابل للتصدير PDF</CardTitle></CardHeader>
             <CardContent>
-              <div ref={statementRef} className="bg-white text-black p-8 rounded-lg" dir="rtl" style={{ fontFamily: "'Tajawal', sans-serif" }}>
-                <div className="flex items-center justify-between border-b-2 pb-4 mb-5" style={{ borderColor: '#6b4226' }}>
-                  <div className="flex items-center gap-3">
-                    <img src="/images/logo-cobblers.png" alt="الشعار" className="w-14 h-14 rounded-lg object-contain" style={{ background: '#6b4226' }} />
+              <div ref={statementRef} className="bg-white text-black p-10" dir="rtl" style={{ fontFamily: "'Tajawal', sans-serif", width: '900px' }}>
+                {/* ── ترويسة رسمية ── */}
+                <div className="flex items-center justify-between border-b-4 pb-5 mb-6" style={{ borderColor: '#4a2e18' }}>
+                  <div className="flex items-center gap-4">
+                    <img src="/images/logo-cobblers.png" alt="الشعار" className="w-16 h-16 rounded-lg object-contain" style={{ background: '#6b4226' }} />
                     <div>
-                      <h2 className="text-lg font-black" style={{ color: '#4a2e18' }}>{zatcaSettings?.seller_name || 'إبرة وخيط الإسكافي'}</h2>
-                      <p className="text-xs text-gray-500">إقرار ضريبة القيمة المضافة (VAT Return)</p>
+                      <h2 className="text-xl font-black" style={{ color: '#4a2e18' }}>{zatcaSettings?.seller_name || 'إبرة وخيط الإسكافي'}</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">التقرير المالي والضريبي التفصيلي</p>
                     </div>
                   </div>
-                  <div className="text-left text-xs text-gray-500">
-                    <p>الفترة: {format(start, 'yyyy-MM-dd')} — {format(end, 'yyyy-MM-dd')}</p>
-                    <p>تاريخ الإعداد: {format(new Date(), 'yyyy-MM-dd')}</p>
-                  </div>
+                  <table dir="rtl" style={{ fontSize: '11px', color: '#6b7280' }}>
+                    <tbody>
+                      <tr><td className="pl-2 text-gray-400">الفترة</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(start, 'yyyy-MM-dd')} — {format(end, 'yyyy-MM-dd')}</td></tr>
+                      <tr><td className="pl-2 text-gray-400">تاريخ الإعداد</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(new Date(), 'yyyy-MM-dd')}</td></tr>
+                    </tbody>
+                  </table>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-                  <div className="p-3 rounded-lg" style={{ background: '#fbf6ee' }}>
-                    <p className="text-[11px] text-gray-500">الرقم الضريبي (VAT)</p>
-                    <p className="font-bold" style={{ color: zatcaSettings?.vat_number ? '#000' : '#b5442e' }}>
-                      {zatcaSettings?.vat_number || 'غير مضبوط بإعدادات زاتكا — يُرجى إدخاله قبل التقديم الرسمي'}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg" style={{ background: '#fbf6ee' }}>
-                    <p className="text-[11px] text-gray-500">السجل التجاري (C.R)</p>
-                    <p className="font-bold">{zatcaSettings?.cr_number || '—'}</p>
-                  </div>
-                </div>
+                <table className="w-full mb-7 text-sm" style={{ borderCollapse: 'separate', borderSpacing: '10px 0' }}>
+                  <tbody>
+                    <tr>
+                      <td className="p-3 rounded-lg w-1/2" style={{ background: '#fbf6ee' }}>
+                        <p style={{ fontSize: '11px', color: '#9ca3af' }}>الرقم الضريبي (VAT)</p>
+                        <p className="font-bold" dir="ltr" style={{ textAlign: 'right', color: zatcaSettings?.vat_number ? '#000' : '#b5442e' }}>
+                          {zatcaSettings?.vat_number || 'غير مضبوط — يُرجى إدخاله قبل التقديم الرسمي'}
+                        </p>
+                      </td>
+                      <td className="p-3 rounded-lg w-1/2" style={{ background: '#fbf6ee' }}>
+                        <p style={{ fontSize: '11px', color: '#9ca3af' }}>السجل التجاري (C.R)</p>
+                        <p className="font-bold" dir="ltr" style={{ textAlign: 'right' }}>{zatcaSettings?.cr_number || '—'}</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
 
-                <div className="mb-4">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#0f766e' }}>القسم الأول — الإيرادات (المبيعات)</div>
-                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
-                    <div className="flex justify-between"><span>إيرادات طلبات الإصلاح (صافي قبل الضريبة) — {completedOrders.length} طلب</span><span className="font-mono font-bold">{fmt(completedOrders.reduce((s, o) => s + Number(o.subtotal ?? (o.total_price ? o.total_price / 1.15 : 0)), 0))}</span></div>
-                    <div className="flex justify-between"><span>إيرادات مبيعات المنتجات (صافي قبل الضريبة) — {completedSales.length} فاتورة</span><span className="font-mono font-bold">{fmt(completedSales.reduce((s, x) => s + Number(x.subtotal ?? (x.total ? x.total / 1.15 : 0)), 0))}</span></div>
-                    <div className="flex justify-between font-bold border-t pt-1.5"><span>إجمالي الإيرادات (قبل الضريبة)</span><span className="font-mono">{fmt(revenueBeforeVat)}</span></div>
+                {/* ── جدول بند: عنوان ملوّن + صفوف رقمية محاذاة تماماً عبر <table> ── */}
+                {[
+                  {
+                    title: 'القسم الأول — الإيرادات (المبيعات)', color: '#0f766e',
+                    rows: [
+                      [`إيرادات طلبات الإصلاح (صافي قبل الضريبة) — ${completedOrders.length} طلب`, fmt(completedOrders.reduce((s, o) => s + Number(o.subtotal ?? (o.total_price ? o.total_price / 1.15 : 0)), 0))],
+                      [`إيرادات مبيعات المنتجات (صافي قبل الضريبة) — ${completedSales.length} فاتورة`, fmt(completedSales.reduce((s, x) => s + Number(x.subtotal ?? (x.total ? x.total / 1.15 : 0)), 0))],
+                    ],
+                    total: ['إجمالي الإيرادات (قبل الضريبة)', fmt(revenueBeforeVat)],
+                  },
+                  {
+                    title: 'القسم الثاني — المشتريات (تكلفة البضاعة/المواد)', color: '#b45309',
+                    rows: [[`إجمالي فواتير المشتريات (قبل الضريبة) — ${purchases.length} فاتورة`, fmt(totalPurchasesBeforeVat)]],
+                    total: null,
+                  },
+                  {
+                    title: 'القسم الثالث — المصروفات التشغيلية (مبوّبة حسب النوع)', color: '#a21caf',
+                    rows: expensesByCategory.length === 0 ? [['لا توجد مصروفات مسجّلة بهذه الفترة', '']] : expensesByCategory.map(([cat, amount]) => [cat, fmt(amount)]),
+                    total: ['إجمالي المصروفات (قبل الضريبة)', fmt(totalExpensesBeforeVat)],
+                  },
+                  {
+                    title: `القسم الرابع — ${netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة'}`, color: netProfit >= 0 ? '#15803d' : '#b91c1c',
+                    rows: [
+                      ['إجمالي الإيرادات', fmt(revenueBeforeVat)],
+                      ['ناقص: إجمالي المشتريات', `(${fmt(totalPurchasesBeforeVat)})`],
+                      ['ناقص: إجمالي المصروفات التشغيلية', `(${fmt(totalExpensesBeforeVat)})`],
+                      ['هامش الربح', `${profitMargin.toFixed(1)}%`],
+                    ],
+                    total: [netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة', `${fmt(Math.abs(netProfit))} ر.س`],
+                    totalColor: netProfit >= 0 ? '#15803d' : '#b91c1c',
+                  },
+                  {
+                    title: 'القسم الخامس — ضريبة المخرجات (المبيعات المُبلَّغة لزاتكا فقط)', color: '#16a34a',
+                    rows: [
+                      ['المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ', fmt(vatCollected / 0.15)],
+                      ['ضريبة القيمة المضافة المستحقة على المبيعات', fmt(vatCollected)],
+                    ],
+                    total: null,
+                    note: unreportedCount > 0
+                      ? `* ${unreportedCount} طلب/فاتورة بهذه الفترة غير مُبلَّغ لزاتكا بعد — غير محتسب هنا (بعكس قسم الإيرادات)`
+                      : (creditNotes.length > 0 ? '* شامل صافي إشعارات الدائن/المدين المُصدرة بهذه الفترة' : null),
+                  },
+                  {
+                    title: 'القسم السادس — ضريبة المدخلات (المشتريات القابلة للخصم)', color: '#2563eb',
+                    rows: [
+                      ['ضريبة فواتير المشتريات القابلة للخصم', fmt(vatPaidPurchases)],
+                      ['ضريبة المصروفات المسجّلة (بفاتورة ضريبية رسمية)', fmt(vatPaidExpenses)],
+                    ],
+                    total: ['الإجمالي القابل للخصم', fmt(vatPaidDeductible)],
+                    note: vatExpensesExcluded > 0 ? `⚠ ${fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
+                  },
+                  {
+                    title: 'القسم السابع — صافي الضريبة المستحقة', color: '#1e3a8a',
+                    rows: [],
+                    total: [netVatDue >= 0 ? 'صافي الضريبة المستحقة (تُسدَّد للهيئة)' : 'صافي الرصيد الضريبي لصالحك', `${fmt(Math.abs(netVatDue))} ر.س`],
+                    totalColor: netVatDue >= 0 ? '#dc2626' : '#16a34a',
+                    big: true,
+                  },
+                ].map((section, idx) => (
+                  <div className="mb-5" key={idx}>
+                    <div className="text-white font-bold px-4 py-2 rounded-t-md" style={{ background: section.color, fontSize: '13px' }}>{section.title}</div>
+                    <table className="w-full border border-t-0 rounded-b-md" style={{ borderCollapse: 'collapse', fontSize: section.big ? '15px' : '13px' }}>
+                      <tbody>
+                        {section.rows.map(([label, value], i) => (
+                          <tr key={i} className={i > 0 ? 'border-t' : ''} style={{ borderColor: '#f3f4f6' }}>
+                            <td className="py-2 px-4" style={{ textAlign: 'right' }}>{label}</td>
+                            <td className="py-2 px-4 font-bold" dir="ltr" style={{ textAlign: 'left', width: '160px', fontVariantNumeric: 'tabular-nums' }}>{value}</td>
+                          </tr>
+                        ))}
+                        {section.total && (
+                          <tr className="border-t-2 font-black" style={{ borderColor: '#d1d5db' }}>
+                            <td className="py-3 px-4" style={{ textAlign: 'right' }}>{section.total[0]}</td>
+                            <td className="py-3 px-4" dir="ltr" style={{ textAlign: 'left', width: '160px', fontVariantNumeric: 'tabular-nums', color: section.totalColor || 'inherit' }}>{section.total[1]}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {section.note && <p style={{ fontSize: '10px', color: '#d97706', marginTop: '4px' }}>{section.note}</p>}
                   </div>
-                </div>
+                ))}
 
-                <div className="mb-4">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#b45309' }}>القسم الثاني — المشتريات (تكلفة البضاعة/المواد)</div>
-                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
-                    <div className="flex justify-between"><span>إجمالي فواتير المشتريات (قبل الضريبة) — {purchases.length} فاتورة</span><span className="font-mono font-bold">{fmt(totalPurchasesBeforeVat)}</span></div>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#a21caf' }}>القسم الثالث — المصروفات التشغيلية (مبوّبة حسب النوع)</div>
-                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
-                    {expensesByCategory.length === 0 ? (
-                      <p className="text-gray-400 text-xs">لا توجد مصروفات مسجّلة بهذه الفترة</p>
-                    ) : expensesByCategory.map(([cat, amount]) => (
-                      <div key={cat} className="flex justify-between"><span>{cat}</span><span className="font-mono font-bold">{fmt(amount)}</span></div>
-                    ))}
-                    <div className="flex justify-between font-bold border-t pt-1.5"><span>إجمالي المصروفات (قبل الضريبة)</span><span className="font-mono">{fmt(totalExpensesBeforeVat)}</span></div>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: netProfit >= 0 ? '#15803d' : '#b91c1c' }}>القسم الرابع — صافي الربح/الخسارة</div>
-                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
-                    <div className="flex justify-between"><span>إجمالي الإيرادات</span><span className="font-mono">{fmt(revenueBeforeVat)}</span></div>
-                    <div className="flex justify-between"><span>ناقص: إجمالي المشتريات</span><span className="font-mono">({fmt(totalPurchasesBeforeVat)})</span></div>
-                    <div className="flex justify-between"><span>ناقص: إجمالي المصروفات التشغيلية</span><span className="font-mono">({fmt(totalExpensesBeforeVat)})</span></div>
-                    <div className="flex justify-between items-center font-bold border-t pt-2 text-base">
-                      <span>{netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة'}</span>
-                      <span className="font-mono" style={{ color: netProfit >= 0 ? '#15803d' : '#b91c1c' }}>{fmt(Math.abs(netProfit))} ر.س</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-400"><span>هامش الربح</span><span className="font-mono">{profitMargin.toFixed(1)}%</span></div>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#16a34a' }}>القسم الخامس — ضريبة المخرجات (المبيعات المُبلَّغة لزاتكا فقط)</div>
-                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
-                    <div className="flex justify-between"><span>المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ</span><span className="font-mono font-bold">{fmt(vatCollected / 0.15)}</span></div>
-                    <div className="flex justify-between"><span>ضريبة القيمة المضافة المستحقة على المبيعات</span><span className="font-mono font-bold">{fmt(vatCollected)}</span></div>
-                    {creditNotes.length > 0 && (
-                      <p className="text-[10px] text-gray-400 pt-1">* شامل صافي إشعارات الدائن/المدين المُصدرة بهذه الفترة</p>
-                    )}
-                    {unreportedCount > 0 && (
-                      <p className="text-[10px] text-amber-600 pt-1">* {unreportedCount} طلب/فاتورة بهذه الفترة غير مُبلَّغ لزاتكا بعد — غير محتسب هنا (بعكس قسم الإيرادات فوق)</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#2563eb' }}>القسم السادس — ضريبة المدخلات (المشتريات القابلة للخصم)</div>
-                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
-                    <div className="flex justify-between"><span>ضريبة فواتير المشتريات القابلة للخصم</span><span className="font-mono font-bold">{fmt(vatPaidPurchases)}</span></div>
-                    <div className="flex justify-between"><span>ضريبة المصروفات المسجّلة (بفاتورة ضريبية رسمية)</span><span className="font-mono font-bold">{fmt(vatPaidExpenses)}</span></div>
-                    <div className="flex justify-between font-bold border-t pt-1.5"><span>الإجمالي القابل للخصم</span><span className="font-mono">{fmt(vatPaidDeductible)}</span></div>
-                  </div>
-                </div>
-                {vatExpensesExcluded > 0 && (
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400 -mt-2 mb-3">
-                    ⚠ {fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة من الإقرار لعدم وجود فاتورة ضريبية رسمية من المورد.
-                  </p>
-                )}
-
-                <div className="mb-6">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#1e3a8a' }}>القسم السابع — صافي الضريبة المستحقة</div>
-                  <div className="border border-t-0 rounded-b-md p-4 flex justify-between items-center">
-                    <span className="font-bold text-sm">{netVatDue >= 0 ? 'صافي الضريبة المستحقة (تُسدَّد للهيئة)' : 'صافي الرصيد الضريبي لصالحك'}</span>
-                    <span className="font-mono font-black text-lg" style={{ color: netVatDue >= 0 ? '#dc2626' : '#16a34a' }}>{fmt(Math.abs(netVatDue))} ر.س</span>
-                  </div>
-                </div>
-
-                {purchases.length > 0 && (
+                {purchases.filter(p => p.vat_number_valid_format).length > 0 && (
                   <div className="mb-4">
-                    <p className="text-xs font-bold text-gray-500 mb-2">تفاصيل فواتير المشتريات القابلة للخصم</p>
-                    <table className="w-full text-xs">
-                      <thead><tr className="border-b text-gray-500"><th className="text-right py-1.5">التاريخ</th><th className="text-right py-1.5">المورد</th><th className="text-right py-1.5">رقم الفاتورة</th><th className="text-left py-1.5">قيمة الضريبة</th></tr></thead>
+                    <p className="text-xs font-bold text-gray-500 mb-2">ملحق — تفاصيل فواتير المشتريات القابلة للخصم</p>
+                    <table className="w-full" style={{ fontSize: '11px', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr className="border-b-2" style={{ borderColor: '#d1d5db', color: '#6b7280' }}>
+                          <th className="py-2 px-3" style={{ textAlign: 'right' }}>التاريخ</th>
+                          <th className="py-2 px-3" style={{ textAlign: 'right' }}>المورد</th>
+                          <th className="py-2 px-3" style={{ textAlign: 'right' }}>رقم الفاتورة</th>
+                          <th className="py-2 px-3" style={{ textAlign: 'left' }}>قيمة الضريبة</th>
+                        </tr>
+                      </thead>
                       <tbody>
                         {purchases.filter(p => p.vat_number_valid_format).map(p => (
-                          <tr key={p.id} className="border-b border-gray-100">
-                            <td className="py-1 text-gray-500">{p.invoice_date}</td>
-                            <td className="py-1">{suppliersById[p.supplier_id] || '—'}</td>
-                            <td className="py-1">{p.invoice_number}</td>
-                            <td className="py-1 text-left font-mono">{fmt(p.vat_amount)}</td>
+                          <tr key={p.id} className="border-b" style={{ borderColor: '#f3f4f6' }}>
+                            <td className="py-1.5 px-3 text-gray-500" dir="ltr" style={{ textAlign: 'right' }}>{p.invoice_date}</td>
+                            <td className="py-1.5 px-3">{suppliersById[p.supplier_id] || '—'}</td>
+                            <td className="py-1.5 px-3" dir="ltr" style={{ textAlign: 'right' }}>{p.invoice_number}</td>
+                            <td className="py-1.5 px-3 font-bold" dir="ltr" style={{ textAlign: 'left', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.vat_amount)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -476,7 +493,7 @@ export default function TaxDashboard() {
                   </div>
                 )}
 
-                <p className="text-[10px] text-gray-400 border-t pt-3 mt-4">
+                <p style={{ fontSize: '10px', color: '#9ca3af', borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginTop: '16px' }}>
                   هذا الملف أداة مساعدة داخلية لتجميع الأرقام قبل تعبئة الإقرار الضريبي الدوري يدوياً عبر
                   بوابة خدمات زاتكا الإلكترونية (zatca.gov.sa) — وليس مستنداً رسمياً يُرفع أو يُقدَّم لزاتكا مباشرة.
                   يُرجى مراجعة الأرقام مع محاسبكم القانوني قبل التقديم الرسمي.
