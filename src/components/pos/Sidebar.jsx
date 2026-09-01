@@ -29,8 +29,6 @@ const navGroups = [
       { path: '/sales', icon: ShoppingCart, label: 'المبيعات والمخازن' },
       { path: '/suppliers', icon: Truck, label: 'الموردون', ownerOnly: true },
       { path: '/purchasing', icon: ShoppingBag, label: 'المشتريات', financeOnly: true },
-      { path: '/workshop', icon: Wrench, label: 'العهدة والورشة' },
-      { path: '/operations', icon: Factory, label: 'الخطة الثانية ⚡', adminOnly: true },
     ]
   },
   {
