@@ -92,7 +92,10 @@ export default async function handler(req, res) {
     ['الرقم الضريبي (VAT Number)', settings?.vat_number || '⚠️ غير مضبوط بإعدادات زاتكا'],
     ['رقم السجل التجاري (CR)', settings?.cr_number || '—'],
     ['الفترة الضريبية', `${startDay} إلى ${endDay}`],
-    ['تاريخ إعداد الملف', new Date().toISOString().slice(0, 10)],
+    ['تاريخ ووقت إعداد الملف', new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Riyadh', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    }).format(new Date()).replace(',', '') + ' (توقيت السعودية)'],
   ];
   bizRows.forEach(([label, val]) => {
     const r = ret.addRow([label, val]);

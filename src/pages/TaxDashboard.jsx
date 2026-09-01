@@ -8,6 +8,7 @@
  * لكل فاتورة حسب صلاحية الرقم الضريبي للمورد.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { secureExpenses, secureZatca } from '@/lib/secureApi';
 import { getSession } from '@/lib/sessionStore';
@@ -56,6 +57,9 @@ export default function TaxDashboard() {
   const [zatcaSettings, setZatcaSettings] = useState(null);
   const [creditNotes, setCreditNotes] = useState([]);
   const [exportingPdf, setExportingPdf] = useState(false);
+  // لحظة إنشاء التقرير بالضبط (تاريخ + ساعة + دقيقة + ثانية) — تُلتقط
+  // وقت الضغط الفعلي على PDF أو Excel، مو وقت فتح الصفحة أو أي إعادة رسم
+  const [preparedAt, setPreparedAt] = useState(null);
   const statementRef = useRef(null);
 
   const [start, end] = range;
@@ -168,6 +172,7 @@ export default function TaxDashboard() {
 
   const exportReturn = async () => {
     setExporting(true);
+    setPreparedAt(new Date());
     try {
       const res = await fetch('/api/reports/export-excel', {
         method: 'POST',
@@ -203,6 +208,10 @@ export default function TaxDashboard() {
   const exportPDF = async () => {
     if (!statementRef.current) return;
     setExportingPdf(true);
+    // flushSync يضمن إن التوقيت (بالثانية) يظهر فعلياً بالـ DOM قبل ما
+    // html2canvas يصوّر المستند — بدون هذا، setState العادي غير متزامن
+    // وممكن يصوّر النسخة قبل التحديث.
+    flushSync(() => setPreparedAt(new Date()));
     try {
       const canvas = await html2canvas(statementRef.current, {
         scale: 3,               // دقة أعلى = جودة طباعة أفضل (كانت 2)
@@ -364,7 +373,7 @@ export default function TaxDashboard() {
                   <table dir="rtl" style={{ fontSize: '11px', color: '#6b7280' }}>
                     <tbody>
                       <tr><td className="pl-2 text-gray-400">الفترة</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(start, 'yyyy-MM-dd')} — {format(end, 'yyyy-MM-dd')}</td></tr>
-                      <tr><td className="pl-2 text-gray-400">تاريخ الإعداد</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(new Date(), 'yyyy-MM-dd')}</td></tr>
+                      <tr><td className="pl-2 text-gray-400">تاريخ ووقت الإعداد</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(preparedAt || new Date(), 'yyyy-MM-dd HH:mm:ss')}</td></tr>
                     </tbody>
                   </table>
                 </div>
