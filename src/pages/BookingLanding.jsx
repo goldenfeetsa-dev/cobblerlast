@@ -866,7 +866,7 @@ function TrackOrderSection() {
       // بعد إغلاق RLS (ميغريشن 026) صار لازم يمر عبر مسار عام من
       // السيرفر يستخدم صلاحية admin — نفس النتيجة والحقول بالضبط،
       // بس بدون الاعتماد على anon key للوصول المباشر لجدول محمي.
-      const res = await fetch(`/api/public/track-order?code=${encodeURIComponent(code)}`);
+      const res = await fetch(`/api/public/site-data?code=${encodeURIComponent(code)}`);
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || 'server_error');
       setResults(json.results || []);
