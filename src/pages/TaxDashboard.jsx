@@ -56,11 +56,11 @@ export default function TaxDashboard() {
   const [suppliersById, setSuppliersById] = useState({});
   const [zatcaSettings, setZatcaSettings] = useState(null);
   const [creditNotes, setCreditNotes] = useState([]);
-  const [exportingPdf, setExportingPdf] = useState(false);
   // لحظة إنشاء التقرير بالضبط (تاريخ + ساعة + دقيقة + ثانية) — تُلتقط
   // وقت الضغط الفعلي على PDF أو Excel، مو وقت فتح الصفحة أو أي إعادة رسم
   const [preparedAt, setPreparedAt] = useState(null);
-  const statementRef = useRef(null);
+  const taxStatementRef = useRef(null);
+  const managementStatementRef = useRef(null);
 
   const [start, end] = range;
 
@@ -170,6 +170,130 @@ export default function TaxDashboard() {
   const netProfit = revenueBeforeVat - totalPurchasesBeforeVat - totalExpensesBeforeVat;
   const profitMargin = revenueBeforeVat > 0 ? (netProfit / revenueBeforeVat) * 100 : 0;
 
+  // ═══ مستند 1: تقرير الأداء الإداري (للمدير/المالك) — بدون أي تفاصيل ضريبية ═══
+  const managementSections = [
+    {
+      title: 'القسم الأول — الإيرادات (المبيعات)', color: '#0f766e',
+      rows: [
+        [`إيرادات طلبات الإصلاح (صافي قبل الضريبة) — ${completedOrders.length} طلب`, fmt(completedOrders.reduce((s, o) => s + Number(o.subtotal ?? (o.total_price ? o.total_price / 1.15 : 0)), 0))],
+        [`إيرادات مبيعات المنتجات (صافي قبل الضريبة) — ${completedSales.length} فاتورة`, fmt(completedSales.reduce((s, x) => s + Number(x.subtotal ?? (x.total ? x.total / 1.15 : 0)), 0))],
+      ],
+      total: ['إجمالي الإيرادات (قبل الضريبة)', fmt(revenueBeforeVat)],
+    },
+    {
+      title: 'القسم الثاني — المشتريات (تكلفة البضاعة/المواد)', color: '#b45309',
+      rows: [[`إجمالي فواتير المشتريات (قبل الضريبة) — ${purchases.length} فاتورة`, fmt(totalPurchasesBeforeVat)]],
+      total: null,
+    },
+    {
+      title: 'القسم الثالث — المصروفات التشغيلية (مبوّبة حسب النوع)', color: '#a21caf',
+      rows: expensesByCategory.length === 0 ? [['لا توجد مصروفات مسجّلة بهذه الفترة', '']] : expensesByCategory.map(([cat, amount]) => [cat, fmt(amount)]),
+      total: ['إجمالي المصروفات (قبل الضريبة)', fmt(totalExpensesBeforeVat)],
+    },
+    {
+      title: `القسم الرابع — ${netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة'}`, color: netProfit >= 0 ? '#15803d' : '#b91c1c',
+      rows: [
+        ['إجمالي الإيرادات', fmt(revenueBeforeVat)],
+        ['ناقص: إجمالي المشتريات', `(${fmt(totalPurchasesBeforeVat)})`],
+        ['ناقص: إجمالي المصروفات التشغيلية', `(${fmt(totalExpensesBeforeVat)})`],
+        ['هامش الربح', `${profitMargin.toFixed(1)}%`],
+      ],
+      total: [netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة', `${fmt(Math.abs(netProfit))} ر.س`],
+      totalColor: netProfit >= 0 ? '#15803d' : '#b91c1c',
+      big: true,
+    },
+  ];
+
+  // ═══ مستند 2: الإقرار الضريبي الرسمي (لزاتكا) — أرقام ضريبية فقط ═══
+  const taxSections = [
+    {
+      title: 'القسم الأول — ضريبة المخرجات (المبيعات المُبلَّغة لزاتكا فقط)', color: '#16a34a',
+      rows: [
+        ['المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ', fmt(vatCollected / 0.15)],
+        ['ضريبة القيمة المضافة المستحقة على المبيعات', fmt(vatCollected)],
+      ],
+      total: null,
+      note: unreportedCount > 0
+        ? `* ${unreportedCount} طلب/فاتورة بهذه الفترة غير مُبلَّغ لزاتكا بعد — غير محتسب هنا`
+        : (creditNotes.length > 0 ? '* شامل صافي إشعارات الدائن/المدين المُصدرة بهذه الفترة' : null),
+    },
+    {
+      title: 'القسم الثاني — ضريبة المدخلات (المشتريات القابلة للخصم)', color: '#2563eb',
+      rows: [
+        ['ضريبة فواتير المشتريات القابلة للخصم', fmt(vatPaidPurchases)],
+        ['ضريبة المصروفات المسجّلة (بفاتورة ضريبية رسمية)', fmt(vatPaidExpenses)],
+      ],
+      total: ['الإجمالي القابل للخصم', fmt(vatPaidDeductible)],
+      note: vatExpensesExcluded > 0 ? `⚠ ${fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
+    },
+    {
+      title: 'القسم الثالث — صافي الضريبة المستحقة', color: '#1e3a8a',
+      rows: [],
+      total: [netVatDue >= 0 ? 'صافي الضريبة المستحقة (تُسدَّد للهيئة)' : 'صافي الرصيد الضريبي لصالحك', `${fmt(Math.abs(netVatDue))} ر.س`],
+      totalColor: netVatDue >= 0 ? '#dc2626' : '#16a34a',
+      big: true,
+    },
+  ];
+
+  const renderSection = (section, idx) => (
+    <div className="mb-5" key={idx}>
+      <div className="text-white font-bold px-4 py-2 rounded-t-md" style={{ background: section.color, fontSize: '13px' }}>{section.title}</div>
+      <table className="w-full border border-t-0 rounded-b-md" style={{ borderCollapse: 'collapse', fontSize: section.big ? '15px' : '13px' }}>
+        <tbody>
+          {section.rows.map(([label, value], i) => (
+            <tr key={i} className={i > 0 ? 'border-t' : ''} style={{ borderColor: '#f3f4f6' }}>
+              <td className="py-2 px-4" style={{ textAlign: 'right' }}>{label}</td>
+              <td className="py-2 px-4 font-bold" dir="ltr" style={{ textAlign: 'left', width: '160px', fontVariantNumeric: 'tabular-nums' }}>{value}</td>
+            </tr>
+          ))}
+          {section.total && (
+            <tr className="border-t-2 font-black" style={{ borderColor: '#d1d5db' }}>
+              <td className="py-3 px-4" style={{ textAlign: 'right' }}>{section.total[0]}</td>
+              <td className="py-3 px-4" dir="ltr" style={{ textAlign: 'left', width: '160px', fontVariantNumeric: 'tabular-nums', color: section.totalColor || 'inherit' }}>{section.total[1]}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      {section.note && <p style={{ fontSize: '10px', color: '#d97706', marginTop: '4px' }}>{section.note}</p>}
+    </div>
+  );
+
+  const DocHeader = ({ subtitle }) => (
+    <>
+      <div className="flex items-center justify-between border-b-4 pb-5 mb-6" style={{ borderColor: '#4a2e18' }}>
+        <div className="flex items-center gap-4">
+          <img src="/images/logo-cobblers.png" alt="الشعار" className="w-16 h-16 rounded-lg object-contain" style={{ background: '#6b4226' }} />
+          <div>
+            <h2 className="text-xl font-black" style={{ color: '#4a2e18' }}>{zatcaSettings?.seller_name || 'إبرة وخيط الإسكافي'}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+        <table dir="rtl" style={{ fontSize: '11px', color: '#6b7280' }}>
+          <tbody>
+            <tr><td className="pl-2 text-gray-400">الفترة</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(start, 'yyyy-MM-dd')} — {format(end, 'yyyy-MM-dd')}</td></tr>
+            <tr><td className="pl-2 text-gray-400">تاريخ ووقت الإعداد</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(preparedAt || new Date(), 'yyyy-MM-dd HH:mm:ss')}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <table className="w-full mb-7 text-sm" style={{ borderCollapse: 'separate', borderSpacing: '10px 0' }}>
+        <tbody>
+          <tr>
+            <td className="p-3 rounded-lg w-1/2" style={{ background: '#fbf6ee' }}>
+              <p style={{ fontSize: '11px', color: '#9ca3af' }}>الرقم الضريبي (VAT)</p>
+              <p className="font-bold" dir="ltr" style={{ textAlign: 'right', color: zatcaSettings?.vat_number ? '#000' : '#b5442e' }}>
+                {zatcaSettings?.vat_number || 'غير مضبوط — يُرجى إدخاله قبل التقديم الرسمي'}
+              </p>
+            </td>
+            <td className="p-3 rounded-lg w-1/2" style={{ background: '#fbf6ee' }}>
+              <p style={{ fontSize: '11px', color: '#9ca3af' }}>السجل التجاري (C.R)</p>
+              <p className="font-bold" dir="ltr" style={{ textAlign: 'right' }}>{zatcaSettings?.cr_number || '—'}</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  );
+
   const exportReturn = async () => {
     setExporting(true);
     setPreparedAt(new Date());
@@ -205,15 +329,16 @@ export default function TaxDashboard() {
   // طول/عرض الصورة الملتقطة فعلياً، بعرض ثابت وواسع (landscape-style)،
   // فتصير النتيجة صفحة واحدة دائماً مهما طال المحتوى، وبدقة أعلى
   // (scale أعلى) لجودة طباعة أوضح.
-  const exportPDF = async () => {
-    if (!statementRef.current) return;
-    setExportingPdf(true);
+  const [exportingWhich, setExportingWhich] = useState(null); // 'tax' | 'management' | null
+  const exportPDF = async (ref, filenamePrefix, which) => {
+    if (!ref.current) return;
+    setExportingWhich(which);
     // flushSync يضمن إن التوقيت (بالثانية) يظهر فعلياً بالـ DOM قبل ما
     // html2canvas يصوّر المستند — بدون هذا، setState العادي غير متزامن
     // وممكن يصوّر النسخة قبل التحديث.
     flushSync(() => setPreparedAt(new Date()));
     try {
-      const canvas = await html2canvas(statementRef.current, {
+      const canvas = await html2canvas(ref.current, {
         scale: 3,               // دقة أعلى = جودة طباعة أفضل (كانت 2)
         backgroundColor: '#ffffff',
         useCORS: true,
@@ -234,12 +359,12 @@ export default function TaxDashboard() {
       });
 
       pdf.addImage(imgData, 'PNG', 0, 0, pageWidthMM, pageHeightMM, undefined, 'FAST');
-      pdf.save(`إقرار-ضريبي-${format(start, 'yyyy-MM-dd')}-${format(end, 'yyyy-MM-dd')}.pdf`);
-      toast.success('تم إنشاء ملف PDF للإقرار الضريبي — صفحة واحدة');
+      pdf.save(`${filenamePrefix}-${format(start, 'yyyy-MM-dd')}-${format(end, 'yyyy-MM-dd')}.pdf`);
+      toast.success('تم إنشاء ملف PDF — صفحة واحدة');
     } catch (err) {
       toast.error('تعذّر إنشاء ملف PDF: ' + (err.message || 'خطأ غير معروف'));
     } finally {
-      setExportingPdf(false);
+      setExportingWhich(null);
     }
   };
 
@@ -259,13 +384,20 @@ export default function TaxDashboard() {
           <Link to="/purchasing"><Button variant="outline"><ShoppingBag className="w-4 h-4 ml-1" /> وحدة المشتريات</Button></Link>
           <Button onClick={load} variant="ghost" size="icon"><RefreshCw className="w-4 h-4" /></Button>
           <Button onClick={exportReturn} disabled={exporting} variant="outline">
-            <FileSpreadsheet className="w-4 h-4 ml-1" /> {exporting ? 'جارِ الإنشاء...' : 'Excel'}
+            <FileSpreadsheet className="w-4 h-4 ml-1" /> {exporting ? 'جارِ الإنشاء...' : 'Excel (كل البيانات)'}
           </Button>
-          <Button onClick={exportPDF} disabled={exportingPdf || loading}>
-            <FileDown className="w-4 h-4 ml-1" /> {exportingPdf ? 'جارِ الإنشاء...' : 'تصدير الإقرار PDF'}
+          <Button onClick={() => exportPDF(taxStatementRef, 'إقرار-ضريبي-زاتكا', 'tax')} disabled={!!exportingWhich || loading} variant="outline" className="border-blue-300 text-blue-700 dark:text-blue-300">
+            <FileDown className="w-4 h-4 ml-1" /> {exportingWhich === 'tax' ? 'جارِ الإنشاء...' : 'الإقرار الضريبي (زاتكا) PDF'}
+          </Button>
+          <Button onClick={() => exportPDF(managementStatementRef, 'تقرير-أداء-إداري', 'management')} disabled={!!exportingWhich || loading}>
+            <FileDown className="w-4 h-4 ml-1" /> {exportingWhich === 'management' ? 'جارِ الإنشاء...' : 'تقرير الأداء (للمدير) PDF'}
           </Button>
         </div>
       </div>
+      <p className="text-xs text-muted-foreground -mt-3">
+        📄 <strong>الإقرار الضريبي</strong>: مستند رسمي بأرقام زاتكا فقط (يُستخدم لتعبئة الإقرار الدوري بالبوابة).
+        📊 <strong>تقرير الأداء</strong>: مستند داخلي للمدير/المالك — الإيرادات والمشتريات والمصروفات وصافي الربح، بدون تفاصيل ضريبية.
+      </p>
 
       <div className="flex gap-2 flex-wrap items-center">
         {Object.keys(PRESETS).map(key => (
@@ -353,128 +485,37 @@ export default function TaxDashboard() {
             </CardContent>
           </Card>
 
-          {/* ═══ قالب الإقرار القابل للطباعة/التصدير PDF ═══
-              هذا هو المستند الرسمي فقط: شعار + بيانات المنشأة + الأقسام
-              الثلاثة + جدول المشتريات — بدون أي عبارات تحذير/أخطاء
-              داخلية (تلك تظهر فوق بالشاشة فقط ولا تُطبع بالمستند). */}
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">معاينة الإقرار القابل للتصدير PDF</CardTitle></CardHeader>
+          {/* ═══ مستند 1: تقرير الأداء الإداري (للمدير/المالك) — بدون أي أرقام ضريبية ═══ */}
+          <Card className="border-2" style={{ borderColor: '#0f766e' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                📊 تقرير الأداء الإداري — للمدير/المالك
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">إيرادات، مشتريات، مصروفات، وصافي الربح — مستند داخلي، بدون تفاصيل ضريبية</p>
+            </CardHeader>
             <CardContent>
-              <div ref={statementRef} className="bg-white text-black p-10" dir="rtl" style={{ fontFamily: "'Tajawal', sans-serif", width: '900px' }}>
-                {/* ── ترويسة رسمية ── */}
-                <div className="flex items-center justify-between border-b-4 pb-5 mb-6" style={{ borderColor: '#4a2e18' }}>
-                  <div className="flex items-center gap-4">
-                    <img src="/images/logo-cobblers.png" alt="الشعار" className="w-16 h-16 rounded-lg object-contain" style={{ background: '#6b4226' }} />
-                    <div>
-                      <h2 className="text-xl font-black" style={{ color: '#4a2e18' }}>{zatcaSettings?.seller_name || 'إبرة وخيط الإسكافي'}</h2>
-                      <p className="text-xs text-gray-500 mt-0.5">التقرير المالي والضريبي التفصيلي</p>
-                    </div>
-                  </div>
-                  <table dir="rtl" style={{ fontSize: '11px', color: '#6b7280' }}>
-                    <tbody>
-                      <tr><td className="pl-2 text-gray-400">الفترة</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(start, 'yyyy-MM-dd')} — {format(end, 'yyyy-MM-dd')}</td></tr>
-                      <tr><td className="pl-2 text-gray-400">تاريخ ووقت الإعداد</td><td className="font-bold text-gray-700" dir="ltr" style={{ textAlign: 'left' }}>{format(preparedAt || new Date(), 'yyyy-MM-dd HH:mm:ss')}</td></tr>
-                    </tbody>
-                  </table>
-                </div>
+              <div ref={managementStatementRef} className="bg-white text-black p-10" dir="rtl" style={{ fontFamily: "'Tajawal', sans-serif", width: '900px' }}>
+                <DocHeader subtitle="تقرير الأداء الإداري (داخلي)" />
+                {managementSections.map(renderSection)}
+                <p style={{ fontSize: '10px', color: '#9ca3af', borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginTop: '16px' }}>
+                  مستند داخلي لمتابعة أداء المنشأة — لا يُستخدم للتقديم الضريبي الرسمي.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-                <table className="w-full mb-7 text-sm" style={{ borderCollapse: 'separate', borderSpacing: '10px 0' }}>
-                  <tbody>
-                    <tr>
-                      <td className="p-3 rounded-lg w-1/2" style={{ background: '#fbf6ee' }}>
-                        <p style={{ fontSize: '11px', color: '#9ca3af' }}>الرقم الضريبي (VAT)</p>
-                        <p className="font-bold" dir="ltr" style={{ textAlign: 'right', color: zatcaSettings?.vat_number ? '#000' : '#b5442e' }}>
-                          {zatcaSettings?.vat_number || 'غير مضبوط — يُرجى إدخاله قبل التقديم الرسمي'}
-                        </p>
-                      </td>
-                      <td className="p-3 rounded-lg w-1/2" style={{ background: '#fbf6ee' }}>
-                        <p style={{ fontSize: '11px', color: '#9ca3af' }}>السجل التجاري (C.R)</p>
-                        <p className="font-bold" dir="ltr" style={{ textAlign: 'right' }}>{zatcaSettings?.cr_number || '—'}</p>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {/* ── جدول بند: عنوان ملوّن + صفوف رقمية محاذاة تماماً عبر <table> ── */}
-                {[
-                  {
-                    title: 'القسم الأول — الإيرادات (المبيعات)', color: '#0f766e',
-                    rows: [
-                      [`إيرادات طلبات الإصلاح (صافي قبل الضريبة) — ${completedOrders.length} طلب`, fmt(completedOrders.reduce((s, o) => s + Number(o.subtotal ?? (o.total_price ? o.total_price / 1.15 : 0)), 0))],
-                      [`إيرادات مبيعات المنتجات (صافي قبل الضريبة) — ${completedSales.length} فاتورة`, fmt(completedSales.reduce((s, x) => s + Number(x.subtotal ?? (x.total ? x.total / 1.15 : 0)), 0))],
-                    ],
-                    total: ['إجمالي الإيرادات (قبل الضريبة)', fmt(revenueBeforeVat)],
-                  },
-                  {
-                    title: 'القسم الثاني — المشتريات (تكلفة البضاعة/المواد)', color: '#b45309',
-                    rows: [[`إجمالي فواتير المشتريات (قبل الضريبة) — ${purchases.length} فاتورة`, fmt(totalPurchasesBeforeVat)]],
-                    total: null,
-                  },
-                  {
-                    title: 'القسم الثالث — المصروفات التشغيلية (مبوّبة حسب النوع)', color: '#a21caf',
-                    rows: expensesByCategory.length === 0 ? [['لا توجد مصروفات مسجّلة بهذه الفترة', '']] : expensesByCategory.map(([cat, amount]) => [cat, fmt(amount)]),
-                    total: ['إجمالي المصروفات (قبل الضريبة)', fmt(totalExpensesBeforeVat)],
-                  },
-                  {
-                    title: `القسم الرابع — ${netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة'}`, color: netProfit >= 0 ? '#15803d' : '#b91c1c',
-                    rows: [
-                      ['إجمالي الإيرادات', fmt(revenueBeforeVat)],
-                      ['ناقص: إجمالي المشتريات', `(${fmt(totalPurchasesBeforeVat)})`],
-                      ['ناقص: إجمالي المصروفات التشغيلية', `(${fmt(totalExpensesBeforeVat)})`],
-                      ['هامش الربح', `${profitMargin.toFixed(1)}%`],
-                    ],
-                    total: [netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة', `${fmt(Math.abs(netProfit))} ر.س`],
-                    totalColor: netProfit >= 0 ? '#15803d' : '#b91c1c',
-                  },
-                  {
-                    title: 'القسم الخامس — ضريبة المخرجات (المبيعات المُبلَّغة لزاتكا فقط)', color: '#16a34a',
-                    rows: [
-                      ['المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ', fmt(vatCollected / 0.15)],
-                      ['ضريبة القيمة المضافة المستحقة على المبيعات', fmt(vatCollected)],
-                    ],
-                    total: null,
-                    note: unreportedCount > 0
-                      ? `* ${unreportedCount} طلب/فاتورة بهذه الفترة غير مُبلَّغ لزاتكا بعد — غير محتسب هنا (بعكس قسم الإيرادات)`
-                      : (creditNotes.length > 0 ? '* شامل صافي إشعارات الدائن/المدين المُصدرة بهذه الفترة' : null),
-                  },
-                  {
-                    title: 'القسم السادس — ضريبة المدخلات (المشتريات القابلة للخصم)', color: '#2563eb',
-                    rows: [
-                      ['ضريبة فواتير المشتريات القابلة للخصم', fmt(vatPaidPurchases)],
-                      ['ضريبة المصروفات المسجّلة (بفاتورة ضريبية رسمية)', fmt(vatPaidExpenses)],
-                    ],
-                    total: ['الإجمالي القابل للخصم', fmt(vatPaidDeductible)],
-                    note: vatExpensesExcluded > 0 ? `⚠ ${fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
-                  },
-                  {
-                    title: 'القسم السابع — صافي الضريبة المستحقة', color: '#1e3a8a',
-                    rows: [],
-                    total: [netVatDue >= 0 ? 'صافي الضريبة المستحقة (تُسدَّد للهيئة)' : 'صافي الرصيد الضريبي لصالحك', `${fmt(Math.abs(netVatDue))} ر.س`],
-                    totalColor: netVatDue >= 0 ? '#dc2626' : '#16a34a',
-                    big: true,
-                  },
-                ].map((section, idx) => (
-                  <div className="mb-5" key={idx}>
-                    <div className="text-white font-bold px-4 py-2 rounded-t-md" style={{ background: section.color, fontSize: '13px' }}>{section.title}</div>
-                    <table className="w-full border border-t-0 rounded-b-md" style={{ borderCollapse: 'collapse', fontSize: section.big ? '15px' : '13px' }}>
-                      <tbody>
-                        {section.rows.map(([label, value], i) => (
-                          <tr key={i} className={i > 0 ? 'border-t' : ''} style={{ borderColor: '#f3f4f6' }}>
-                            <td className="py-2 px-4" style={{ textAlign: 'right' }}>{label}</td>
-                            <td className="py-2 px-4 font-bold" dir="ltr" style={{ textAlign: 'left', width: '160px', fontVariantNumeric: 'tabular-nums' }}>{value}</td>
-                          </tr>
-                        ))}
-                        {section.total && (
-                          <tr className="border-t-2 font-black" style={{ borderColor: '#d1d5db' }}>
-                            <td className="py-3 px-4" style={{ textAlign: 'right' }}>{section.total[0]}</td>
-                            <td className="py-3 px-4" dir="ltr" style={{ textAlign: 'left', width: '160px', fontVariantNumeric: 'tabular-nums', color: section.totalColor || 'inherit' }}>{section.total[1]}</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                    {section.note && <p style={{ fontSize: '10px', color: '#d97706', marginTop: '4px' }}>{section.note}</p>}
-                  </div>
-                ))}
+          {/* ═══ مستند 2: الإقرار الضريبي الرسمي (لزاتكا) — أرقام ضريبية فقط ═══ */}
+          <Card className="border-2" style={{ borderColor: '#1e3a8a' }}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                📄 الإقرار الضريبي الرسمي — زاتكا
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">أرقام ضريبة المخرجات والمدخلات والصافي المستحق فقط — أداة مساعدة لتعبئة الإقرار بالبوابة الرسمية</p>
+            </CardHeader>
+            <CardContent>
+              <div ref={taxStatementRef} className="bg-white text-black p-10" dir="rtl" style={{ fontFamily: "'Tajawal', sans-serif", width: '900px' }}>
+                <DocHeader subtitle="إقرار ضريبة القيمة المضافة (VAT Return)" />
+                {taxSections.map(renderSection)}
 
                 {purchases.filter(p => p.vat_number_valid_format).length > 0 && (
                   <div className="mb-4">
