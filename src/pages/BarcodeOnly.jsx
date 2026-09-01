@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Printer, Download, PackageSearch } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
+// نفس تسميات الأصناف المستخدمة بصفحة إنشاء الطلب (NewOrder.jsx) —
+// عشان يظهر نوع الخدمة بالعربي تحت الباركود بدل قيمة الكود الخام.
+const ITEM_TYPE_LABELS = {
+  shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
+  jacket: 'جاكيت', pants: 'بنطال', shirt: 'قميص', other: 'أخرى',
+};
+
 export default function BarcodeOnly() {
   const navigate = useNavigate();
   const barcodeRef = useRef(null);
@@ -72,8 +79,15 @@ export default function BarcodeOnly() {
         رجوع
       </Button>
 
-      <div ref={barcodeRef} className="bg-white p-6 flex flex-col items-center gap-2">
+      <div ref={barcodeRef} className="bg-white p-6 flex flex-col items-center gap-3">
         <BarcodeDisplay value={order.order_number} width={280} height={80} />
+        {/* اسم العميل صاحب الفاتورة + نوع الخدمة — تحت الباركود والرقم مباشرة */}
+        <div className="flex flex-col items-center gap-0.5 text-center" dir="rtl">
+          <span className="text-sm font-black text-gray-900">{order.customer_name}</span>
+          <span className="text-xs font-bold text-gray-500">
+            {ITEM_TYPE_LABELS[order.item_type] || order.item_type}
+          </span>
+        </div>
       </div>
 
       <div className="flex gap-3">

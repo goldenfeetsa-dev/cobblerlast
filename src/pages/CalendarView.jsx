@@ -107,25 +107,27 @@ export function OrderStatusBar() {
   );
 }
 
-// ── بانر تسليمات اليوم (طلبات جاهزة للاستلام اليوم) ──────────────
+// ── بانر تسليمات اليوم (طلبات جاهزة للاستلام) ─────────────────────
+// ملاحظة مهمة: ما نفلتر على delivery_date = اليوم فقط — أي طلب صار
+// "جاهز" (status=ready) ولسا العميل ما استلمه يبقى ظاهر هنا يومياً
+// تلقائياً (يترحّل لليوم اللي بعده وبعده) لحد ما يُسلَّم فعلياً
+// وتتغيّر حالته لـ completed. الأقدم تسليماً يظهر أول القائمة.
 export function TodayDeliveriesBanner() {
-  const today = format(new Date(), 'yyyy-MM-dd');
-
   const { data: orders = [] } = useQuery({
-    queryKey: ['orders-today-deliveries', today],
+    queryKey: ['orders-today-deliveries'],
     queryFn: async () => {
       const { data } = await supabase
         .from('orders')
         .select('id, order_number, customer_name, customer_phone, item_type, status, delivery_date, shelf_location, total_price')
-        .eq('delivery_date', today)
         .eq('status', 'ready')
-        .order('created_at', { ascending: true });
+        .order('delivery_date', { ascending: true, nullsFirst: false });
       return data || [];
     },
     refetchInterval: 30_000,
   });
 
   if (orders.length === 0) return null;
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   return (
     <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: 'rgba(59,130,246,0.3)' }} dir="rtl">
@@ -137,24 +139,30 @@ export function TodayDeliveriesBanner() {
       </div>
       {/* القائمة */}
       <div className="divide-y divide-blue-50 bg-white">
-        {orders.map((order, i) => (
-          <Link key={order.id} to={`/orders/${order.id}`}
-            className="flex items-center gap-4 px-5 py-3 hover:bg-blue-50/50 transition-colors" style={{ background: 'rgba(59,130,246,0.04)' }}>
-            <div className="w-2 h-8 rounded-full shrink-0" style={{ background: '#3b82f6' }} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-gray-900">{order.order_number}</span>
-                {order.shelf_location && (
-                  <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">رف: {order.shelf_location}</span>
-                )}
+        {orders.map((order) => {
+          const isOverdue = order.delivery_date && order.delivery_date < today;
+          return (
+            <Link key={order.id} to={`/orders/${order.id}`}
+              className="flex items-center gap-4 px-5 py-3 hover:bg-blue-50/50 transition-colors" style={{ background: 'rgba(59,130,246,0.04)' }}>
+              <div className="w-2 h-8 rounded-full shrink-0" style={{ background: '#3b82f6' }} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-gray-900">{order.order_number}</span>
+                  {order.shelf_location && (
+                    <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">رف: {order.shelf_location}</span>
+                  )}
+                  {isOverdue && (
+                    <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">بانتظار الاستلام من {format(parseISO(order.delivery_date), 'd MMMM', { locale: ar })}</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500">{order.customer_name}{order.customer_phone ? ` • ${order.customer_phone}` : ''}</div>
               </div>
-              <div className="text-xs text-gray-500">{order.customer_name}{order.customer_phone ? ` • ${order.customer_phone}` : ''}</div>
-            </div>
-            {order.total_price > 0 && (
-              <span className="text-xs font-bold text-gray-600 shrink-0">{order.total_price} ر.س</span>
-            )}
-          </Link>
-        ))}
+              {order.total_price > 0 && (
+                <span className="text-xs font-bold text-gray-600 shrink-0">{order.total_price} ر.س</span>
+              )}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
