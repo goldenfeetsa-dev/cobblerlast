@@ -51,6 +51,7 @@ export default function TaxDashboard() {
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [allExpenses, setAllExpenses] = useState([]); // بدون فلترة is_vat_applicable — للأرباح والمصروفات الكاملة
   const [suppliersById, setSuppliersById] = useState({});
   const [zatcaSettings, setZatcaSettings] = useState(null);
   const [creditNotes, setCreditNotes] = useState([]);
@@ -76,6 +77,7 @@ export default function TaxDashboard() {
       supabase.from('zatca_credit_debit_notes').select('*').gte('created_at', startISO).lte('created_at', endISO).eq('zatca_status', 'REPORTED'),
     ]);
     setOrders(o || []); setSales(s || []); setPurchases(p || []);
+    setAllExpenses(expensesRaw || []);
     setExpenses((expensesRaw || []).filter((x) => x.is_vat_applicable));
     setSuppliersById(Object.fromEntries((sup || []).map(x => [x.id, x.name])));
     setZatcaSettings(zs || null);
@@ -133,6 +135,36 @@ export default function TaxDashboard() {
 
   const vatPaidDeductible = vatPaidPurchases + vatPaidExpenses;
   const netVatDue = vatCollected - vatPaidDeductible;
+
+  // ═══ القسم الجديد: الإيرادات والمصروفات وصافي الربح (تقرير مفصّل) ═══
+  // ملاحظة مهمة: هذا القسم يعتمد على *كل* الطلبات/الفواتير المكتملة
+  // بالفترة (بغض النظر عن حالة زاتكا) — بعكس قسم ضريبة المخرجات فوق
+  // اللي يقتصر على المُبلَّغة فقط لزاتكا. السبب: الربح الفعلي محاسبياً
+  // لا علاقة له بحالة الإبلاغ لزاتكا، هو إيراد حقيقي تحقق فعلاً.
+  const completedOrders = orders.filter(o => o.status !== 'cancelled');
+  const completedSales = sales; // فواتير المبيعات كلها مكتملة أصلاً وقت الإصدار
+
+  const revenueBeforeVat = useMemo(() => {
+    const fromOrders = completedOrders.reduce((s, o) => s + Number(o.subtotal ?? (o.total_price ? o.total_price / 1.15 : 0)), 0);
+    const fromSales = completedSales.reduce((s, x) => s + Number(x.subtotal ?? (x.total ? x.total / 1.15 : 0)), 0);
+    return fromOrders + fromSales;
+  }, [orders, sales]);
+
+  const totalPurchasesBeforeVat = purchases.reduce((s, p) => s + (Number(p.taxable_amount) || 0), 0);
+
+  const totalExpensesBeforeVat = allExpenses.reduce((s, e) => s + Number(e.subtotal ?? e.amount ?? 0), 0);
+  const expensesByCategory = useMemo(() => {
+    const map = {};
+    allExpenses.forEach(e => {
+      const cat = e.category || 'أخرى';
+      map[cat] = (map[cat] || 0) + Number(e.subtotal ?? e.amount ?? 0);
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [allExpenses]);
+
+  // صافي الربح = الإيرادات (قبل الضريبة) − المشتريات (تكلفة البضاعة/المواد) − المصروفات التشغيلية
+  const netProfit = revenueBeforeVat - totalPurchasesBeforeVat - totalExpensesBeforeVat;
+  const profitMargin = revenueBeforeVat > 0 ? (netProfit / revenueBeforeVat) * 100 : 0;
 
   const exportReturn = async () => {
     setExporting(true);
@@ -348,18 +380,63 @@ export default function TaxDashboard() {
                 </div>
 
                 <div className="mb-4">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#16a34a' }}>القسم الأول — ضريبة المخرجات (المبيعات)</div>
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#0f766e' }}>القسم الأول — الإيرادات (المبيعات)</div>
+                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
+                    <div className="flex justify-between"><span>إيرادات طلبات الإصلاح (صافي قبل الضريبة) — {completedOrders.length} طلب</span><span className="font-mono font-bold">{fmt(completedOrders.reduce((s, o) => s + Number(o.subtotal ?? (o.total_price ? o.total_price / 1.15 : 0)), 0))}</span></div>
+                    <div className="flex justify-between"><span>إيرادات مبيعات المنتجات (صافي قبل الضريبة) — {completedSales.length} فاتورة</span><span className="font-mono font-bold">{fmt(completedSales.reduce((s, x) => s + Number(x.subtotal ?? (x.total ? x.total / 1.15 : 0)), 0))}</span></div>
+                    <div className="flex justify-between font-bold border-t pt-1.5"><span>إجمالي الإيرادات (قبل الضريبة)</span><span className="font-mono">{fmt(revenueBeforeVat)}</span></div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#b45309' }}>القسم الثاني — المشتريات (تكلفة البضاعة/المواد)</div>
+                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
+                    <div className="flex justify-between"><span>إجمالي فواتير المشتريات (قبل الضريبة) — {purchases.length} فاتورة</span><span className="font-mono font-bold">{fmt(totalPurchasesBeforeVat)}</span></div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#a21caf' }}>القسم الثالث — المصروفات التشغيلية (مبوّبة حسب النوع)</div>
+                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
+                    {expensesByCategory.length === 0 ? (
+                      <p className="text-gray-400 text-xs">لا توجد مصروفات مسجّلة بهذه الفترة</p>
+                    ) : expensesByCategory.map(([cat, amount]) => (
+                      <div key={cat} className="flex justify-between"><span>{cat}</span><span className="font-mono font-bold">{fmt(amount)}</span></div>
+                    ))}
+                    <div className="flex justify-between font-bold border-t pt-1.5"><span>إجمالي المصروفات (قبل الضريبة)</span><span className="font-mono">{fmt(totalExpensesBeforeVat)}</span></div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: netProfit >= 0 ? '#15803d' : '#b91c1c' }}>القسم الرابع — صافي الربح/الخسارة</div>
+                  <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
+                    <div className="flex justify-between"><span>إجمالي الإيرادات</span><span className="font-mono">{fmt(revenueBeforeVat)}</span></div>
+                    <div className="flex justify-between"><span>ناقص: إجمالي المشتريات</span><span className="font-mono">({fmt(totalPurchasesBeforeVat)})</span></div>
+                    <div className="flex justify-between"><span>ناقص: إجمالي المصروفات التشغيلية</span><span className="font-mono">({fmt(totalExpensesBeforeVat)})</span></div>
+                    <div className="flex justify-between items-center font-bold border-t pt-2 text-base">
+                      <span>{netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة'}</span>
+                      <span className="font-mono" style={{ color: netProfit >= 0 ? '#15803d' : '#b91c1c' }}>{fmt(Math.abs(netProfit))} ر.س</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400"><span>هامش الربح</span><span className="font-mono">{profitMargin.toFixed(1)}%</span></div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#16a34a' }}>القسم الخامس — ضريبة المخرجات (المبيعات المُبلَّغة لزاتكا فقط)</div>
                   <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
                     <div className="flex justify-between"><span>المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ</span><span className="font-mono font-bold">{fmt(vatCollected / 0.15)}</span></div>
                     <div className="flex justify-between"><span>ضريبة القيمة المضافة المستحقة على المبيعات</span><span className="font-mono font-bold">{fmt(vatCollected)}</span></div>
                     {creditNotes.length > 0 && (
                       <p className="text-[10px] text-gray-400 pt-1">* شامل صافي إشعارات الدائن/المدين المُصدرة بهذه الفترة</p>
                     )}
+                    {unreportedCount > 0 && (
+                      <p className="text-[10px] text-amber-600 pt-1">* {unreportedCount} طلب/فاتورة بهذه الفترة غير مُبلَّغ لزاتكا بعد — غير محتسب هنا (بعكس قسم الإيرادات فوق)</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#2563eb' }}>القسم الثاني — ضريبة المدخلات (المشتريات)</div>
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#2563eb' }}>القسم السادس — ضريبة المدخلات (المشتريات القابلة للخصم)</div>
                   <div className="border border-t-0 rounded-b-md p-3 text-sm space-y-1.5">
                     <div className="flex justify-between"><span>ضريبة فواتير المشتريات القابلة للخصم</span><span className="font-mono font-bold">{fmt(vatPaidPurchases)}</span></div>
                     <div className="flex justify-between"><span>ضريبة المصروفات المسجّلة (بفاتورة ضريبية رسمية)</span><span className="font-mono font-bold">{fmt(vatPaidExpenses)}</span></div>
@@ -373,7 +450,7 @@ export default function TaxDashboard() {
                 )}
 
                 <div className="mb-6">
-                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#1e3a8a' }}>القسم الثالث — الصافي</div>
+                  <div className="text-white text-xs font-bold px-3 py-1.5 rounded-t-md" style={{ background: '#1e3a8a' }}>القسم السابع — صافي الضريبة المستحقة</div>
                   <div className="border border-t-0 rounded-b-md p-4 flex justify-between items-center">
                     <span className="font-bold text-sm">{netVatDue >= 0 ? 'صافي الضريبة المستحقة (تُسدَّد للهيئة)' : 'صافي الرصيد الضريبي لصالحك'}</span>
                     <span className="font-mono font-black text-lg" style={{ color: netVatDue >= 0 ? '#dc2626' : '#16a34a' }}>{fmt(Math.abs(netVatDue))} ر.س</span>
