@@ -20,6 +20,33 @@ export default function OrderNotifications() {
   const prevStatuses  = useRef({});
   const initialized   = useRef(false);
 
+  // ── تنبيه "طلبات يجب تسليمها بعد يومين" — مرة وحدة كل يوم ──────
+  // نستخدم localStorage عشان ما يتكرر التنبيه بكل مرة يفتح فيها
+  // الموظف الصفحة بنفس اليوم — بس مرة وحدة يكفي لتنبيهه.
+  useEffect(() => {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const storageKey = 'due-soon-notified-' + todayKey;
+    if (localStorage.getItem(storageKey)) return;
+
+    const inTwoDays = new Date();
+    inTwoDays.setDate(inTwoDays.getDate() + 2);
+    const targetDate = inTwoDays.toISOString().slice(0, 10);
+
+    supabase.from('orders')
+      .select('id, order_number, customer_name')
+      .eq('delivery_date', targetDate)
+      .not('status', 'in', '(completed,cancelled)')
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          toast.warning(
+            `⏰ ${data.length} طلب لازم يُسلَّم بعد يومين (${data.map(o => o.order_number).join('، ')})`,
+            { duration: 10000 }
+          );
+        }
+        localStorage.setItem(storageKey, '1');
+      });
+  }, []);
+
   useEffect(() => {
     // Load initial statuses
     supabase.from('orders').select('id, status, order_number, customer_name')
