@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import BarcodeDisplay from './BarcodeDisplay';
 import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
@@ -23,6 +23,7 @@ const ITEM_LABELS = {
 export default function ReceiptView({ order, autoPrint = false }) {
   const receiptRef = useRef(null);
   const hasAutoPrinted = useRef(false);
+  const [logoReady, setLogoReady] = useState(false);
 
   // فاتورة منتج (من نظام المبيعات) لها مصفوفة items، بخلاف فاتورة الإصلاح
   // التي تحتوي خدمة واحدة فقط — نفرّق بينهما لعرض الأصناف بشكل صحيح
@@ -86,13 +87,30 @@ export default function ReceiptView({ order, autoPrint = false }) {
   };
 
   // الطباعة الفورية — تُفعَّل تلقائياً مرة واحدة فقط عند فتح الفاتورة بعد
-  // إنشائها مباشرة (autoPrint=true)، بعد تأخير بسيط لضمان تحميل الشعار والصور
+  // إنشائها مباشرة (autoPrint=true). كانت تعتمد على مهلة ثابتة (550ms)
+  // بغض النظر عن جاهزية المحتوى فعلياً — الآن تنتظر جاهزية الإعدادات
+  // والشعار فقط (أسرع ما يمكن، بدون تأخير عشوائي إضافي)، لأن أي تأخير
+  // زائد يزيد احتمال أن يتجاهل المتصفح استدعاء window.print() بصمت
+  // (بعض متصفحات الجوال تربط الطباعة التلقائية بنافذة قصيرة بعد آخر
+  // تفاعل حقيقي من المستخدم).
   useEffect(() => {
-    if (!autoPrint || hasAutoPrinted.current || !settingsFetched) return;
+    if (!autoPrint || hasAutoPrinted.current || !settingsFetched || !logoReady) return;
     hasAutoPrinted.current = true;
-    const timer = setTimeout(() => window.print(), 550);
-    return () => clearTimeout(timer);
-  }, [autoPrint, settingsFetched]);
+    window.print();
+  }, [autoPrint, settingsFetched, logoReady]);
+
+  // شبكة أمان: لو لأي سبب (شعار عالق، خطأ شبكة) الطباعة التلقائية ما
+  // فعّلت خلال ثانيتين، نفعّلها بأي حال — أفضل من فاتورة ما تُطبع إطلاقاً
+  useEffect(() => {
+    if (!autoPrint) return;
+    const safety = setTimeout(() => {
+      if (!hasAutoPrinted.current) {
+        hasAutoPrinted.current = true;
+        window.print();
+      }
+    }, 2000);
+    return () => clearTimeout(safety);
+  }, [autoPrint]);
 
   const Divider = ({ dashed = true }) => (
     <div style={{ borderTop: dashed ? '1px dashed #d1d5db' : '2px solid #111', margin: '10px 0' }} />
@@ -161,6 +179,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         <div style={{ textAlign: 'center', marginBottom: '10px' }}>
           {logoUrl && (
             <img src={logoUrl} alt="logo" crossOrigin="anonymous"
+              onLoad={() => setLogoReady(true)} onError={() => setLogoReady(true)}
               style={{ height: '60px', margin: '0 auto 8px', objectFit: 'contain', display: 'block' }} />
           )}
           <div style={{ fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px' }}>
@@ -406,15 +425,23 @@ export default function ReceiptView({ order, autoPrint = false }) {
 
       {/* Action buttons */}
       <div className="flex justify-center gap-3 receipt-no-print">
-        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90">
-          <Printer className="w-4 h-4 ml-2" />
-          طباعة
+        <Button
+          onClick={handlePrint}
+          className={autoPrint ? 'bg-primary hover:bg-primary/90 h-14 px-8 text-lg font-black shadow-lg animate-pulse' : 'bg-primary hover:bg-primary/90'}
+        >
+          <Printer className={autoPrint ? 'w-6 h-6 ml-2' : 'w-4 h-4 ml-2'} />
+          {autoPrint ? 'اطبع الفاتورة الآن' : 'طباعة'}
         </Button>
         <Button onClick={handleDownload} variant="outline">
           <Download className="w-4 h-4 ml-2" />
           تنزيل صورة
         </Button>
       </div>
+      {autoPrint && (
+        <p className="text-center text-xs text-muted-foreground mt-2 receipt-no-print">
+          فُتحت نافذة الطباعة تلقائياً — لو ما ظهرت عندك، اضغط الزر فوق
+        </p>
+      )}
     </div>
   );
 }
