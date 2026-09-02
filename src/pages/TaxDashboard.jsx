@@ -204,34 +204,27 @@ export default function TaxDashboard() {
     },
   ];
 
-  // ═══ مستند 2: الإقرار الضريبي الرسمي (لزاتكا) — أرقام ضريبية فقط ═══
+  // ═══ مستند 2: الإقرار الضريبي الرسمي (لزاتكا) — مبيعات ومشتريات فقط ═══
   const taxSections = [
     {
-      title: 'القسم الأول — ضريبة المخرجات (المبيعات المُبلَّغة لزاتكا فقط)', color: '#16a34a',
+      title: 'القسم الأول — المبيعات', color: '#16a34a',
       rows: [
-        ['المبيعات الخاضعة للنسبة الأساسية (15%) — صافي المبلغ', fmt(vatCollected / 0.15)],
-        ['ضريبة القيمة المضافة المستحقة على المبيعات', fmt(vatCollected)],
+        ['صافي المبيعات (قبل الضريبة) المُبلَّغة لزاتكا', fmt(vatCollected / 0.15)],
+        ['ضريبة القيمة المضافة على المبيعات', fmt(vatCollected)],
       ],
-      total: null,
+      total: ['إجمالي المبيعات شامل الضريبة', fmt((vatCollected / 0.15) + vatCollected)],
       note: unreportedCount > 0
         ? `* ${unreportedCount} طلب/فاتورة بهذه الفترة غير مُبلَّغ لزاتكا بعد — غير محتسب هنا`
         : (creditNotes.length > 0 ? '* شامل صافي إشعارات الدائن/المدين المُصدرة بهذه الفترة' : null),
     },
     {
-      title: 'القسم الثاني — ضريبة المدخلات (المشتريات القابلة للخصم)', color: '#2563eb',
+      title: 'القسم الثاني — المشتريات', color: '#2563eb',
       rows: [
-        ['ضريبة فواتير المشتريات القابلة للخصم', fmt(vatPaidPurchases)],
-        ['ضريبة المصروفات المسجّلة (بفاتورة ضريبية رسمية)', fmt(vatPaidExpenses)],
+        ['صافي المشتريات (قبل الضريبة)', fmt(totalPurchasesBeforeVat)],
+        ['ضريبة القيمة المضافة على المشتريات (قابلة للخصم)', fmt(vatPaidDeductible)],
       ],
-      total: ['الإجمالي القابل للخصم', fmt(vatPaidDeductible)],
+      total: ['إجمالي المشتريات شامل الضريبة', fmt(totalPurchasesBeforeVat + vatPaidDeductible)],
       note: vatExpensesExcluded > 0 ? `⚠ ${fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
-    },
-    {
-      title: 'القسم الثالث — صافي الضريبة المستحقة', color: '#1e3a8a',
-      rows: [],
-      total: [netVatDue >= 0 ? 'صافي الضريبة المستحقة (تُسدَّد للهيئة)' : 'صافي الرصيد الضريبي لصالحك', `${fmt(Math.abs(netVatDue))} ر.س`],
-      totalColor: netVatDue >= 0 ? '#dc2626' : '#16a34a',
-      big: true,
     },
   ];
 
