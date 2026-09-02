@@ -8,7 +8,7 @@ import { ShoppingCart, Plus, Search, ChevronLeft, ChevronRight, Star, X } from '
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const GOLD = '#A67C68'; // Clay accent (كان ذهبي)
+const GOLD = '#C5A059'; // ذهبي مطفي — نفس هوية الصفحة الرئيسية الفاخرة
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80',
@@ -147,7 +147,7 @@ function ProductCard({ product, onAdd, t }) {
           {product.in_stock && (
             <button onClick={() => onAdd(product)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-black hover:scale-105 transition-all"
-              style={{ background: `linear-gradient(135deg, ${GOLD}, #C9A08D)` }}>
+              style={{ background: `linear-gradient(135deg, ${GOLD}, #D9BE86)` }}>
               <Plus className="w-3.5 h-3.5" />{t('shop.add')}
             </button>
           )}
@@ -245,7 +245,7 @@ export default function Shop() {
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
           <Link to="/book" className="hidden sm:block px-5 h-9 rounded-full text-sm font-bold text-black flex items-center"
-            style={{ background: `linear-gradient(135deg, ${GOLD}, #C9A08D)` }}>{t('shop.bookNow')}</Link>
+            style={{ background: `linear-gradient(135deg, ${GOLD}, #D9BE86)` }}>{t('shop.bookNow')}</Link>
           <button onClick={() => setCartOpen(true)} className="relative p-2 rounded-full"
             style={{ background: 'rgba(166,124,104,0.1)', border: '1px solid rgba(166,124,104,0.2)', color: GOLD }}>
             <ShoppingCart className="w-5 h-5" />
@@ -284,7 +284,7 @@ export default function Shop() {
             <button key={c.key} onClick={() => setActiveCat(c.key)}
               className="px-4 py-2 rounded-full text-sm font-bold transition-all"
               style={{
-                background: activeCat === c.key ? `linear-gradient(135deg, ${GOLD}, #C9A08D)` : 'rgba(62,50,45,0.045)',
+                background: activeCat === c.key ? `linear-gradient(135deg, ${GOLD}, #D9BE86)` : 'rgba(62,50,45,0.045)',
                 color: activeCat === c.key ? '#3E322D' : 'rgba(62,50,45,0.5)',
                 border: activeCat === c.key ? 'none' : '1px solid rgba(166,124,104,0.1)',
               }}>

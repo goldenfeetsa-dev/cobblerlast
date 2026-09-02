@@ -1127,12 +1127,12 @@ export default function BookingLanding() {
       <TickerStrip />
       <ServicesSection />
       <BeforeAfterSection />
-      <RequestServiceSection />
-      <BrandsSection />
-      <AboutSection />
       <ReviewsSection />
-      <TrackOrderSection />
+      <RequestServiceSection />
+      <AboutSection />
+      <BrandsSection />
       <BranchesSection />
+      <TrackOrderSection />
       <Footer />
     </div>
   );
