@@ -135,11 +135,11 @@ export default function ReceiptView({ order, autoPrint = false }) {
             position: fixed; top: 0; left: 0; right: 0;
             /* لا نضع bottom:0 — inset:0 كان يحصر ارتفاع الفاتورة بارتفاع الشاشة
                فقط، فيقصّ أي محتوى بعده (الباركود وما بعده) من الطباعة تمامًا. */
-            width: 80mm; height: auto; max-height: none; overflow: visible;
+            width: 72mm; height: auto; max-height: none; overflow: visible;
             margin: 0 auto; box-shadow: none !important;
           }
           .receipt-no-print { display: none !important; }
-          @page { size: 80mm auto; margin: 0; }
+          @page { size: 72mm auto; margin: 0; }
         }
       `}</style>
 
@@ -148,7 +148,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         <div
           className="receipt-no-print"
           style={{
-            maxWidth: '320px', margin: '0 auto', padding: '10px 14px',
+            maxWidth: '290px', margin: '0 auto', padding: '10px 14px',
             background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
             color: '#991b1b', fontSize: '12px', textAlign: 'center', lineHeight: '1.6',
           }}
@@ -168,7 +168,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
           color: '#111111',
           padding: '20px 16px',
           borderRadius: '12px',
-          maxWidth: '320px',
+          maxWidth: '290px',
           margin: '0 auto',
           fontFamily: "'Tajawal', 'Arial', sans-serif",
           direction: 'rtl',

@@ -48,8 +48,8 @@ export default function BarcodeOnly() {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; }
-          img { width: 80mm; display: block; }
-          @media print { body { width: 80mm; } }
+          img { width: 72mm; display: block; }
+          @media print { body { width: 72mm; } }
         </style>
       </head>
       <body>
