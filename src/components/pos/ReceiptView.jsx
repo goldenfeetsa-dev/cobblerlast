@@ -113,13 +113,13 @@ export default function ReceiptView({ order, autoPrint = false }) {
   }, [autoPrint]);
 
   const Divider = ({ dashed = true }) => (
-    <div style={{ borderTop: dashed ? '1px dashed #d1d5db' : '2px solid #111', margin: '10px 0' }} />
+    <div style={{ borderTop: dashed ? '1px dashed #4b5563' : '2px solid #000', margin: '10px 0' }} />
   );
 
   const Row = ({ label, value, bold = false, large = false }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-      <span style={{ color: '#6b7280', fontSize: large ? '12px' : '10px' }}>{label}</span>
-      <span style={{ fontWeight: bold ? 'bold' : 'normal', fontSize: large ? '13px' : '10px', color: '#111' }}>{value}</span>
+      <span style={{ color: '#000000', fontSize: large ? '12px' : '10px', fontWeight: '600' }}>{label}</span>
+      <span style={{ fontWeight: bold ? '900' : 'bold', fontSize: large ? '13px' : '10px', color: '#000000' }}>{value}</span>
     </div>
   );
 
@@ -165,12 +165,13 @@ export default function ReceiptView({ order, autoPrint = false }) {
         ref={receiptRef}
         style={{
           background: '#ffffff',
-          color: '#111111',
+          color: '#000000',
           padding: '20px 16px',
           borderRadius: '12px',
           maxWidth: '290px',
           margin: '0 auto',
           fontFamily: "'Tajawal', 'Arial', sans-serif",
+          fontWeight: '500',
           direction: 'rtl',
           boxShadow: '0 0 0 1px #e5e7eb',
         }}
@@ -186,12 +187,12 @@ export default function ReceiptView({ order, autoPrint = false }) {
             {shopName}
           </div>
           {header && (
-            <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{header}</div>
+            <div style={{ fontSize: '9px', color: '#000000', marginTop: '2px' }}>{header}</div>
           )}
 
           {/* ZATCA required fields — نعرضها بالعربي والإنجليزي معاً، وهذا هو
               الشكل المعتمد في أغلب الفواتير الضريبية المبسّطة بالسعودية */}
-          <div style={{ marginTop: '6px', fontSize: '9px', color: '#374151', lineHeight: '1.7' }}>
+          <div style={{ marginTop: '6px', fontSize: '9px', color: '#000000', lineHeight: '1.7' }}>
             {crNumber && (
               <div>
                 <span>السجل التجاري / CR No: </span>
@@ -236,7 +237,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         <Divider />
 
         {/* ── CUSTOMER ── */}
-        <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#000000', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           بيانات العميل
         </div>
         <div>
@@ -249,9 +250,9 @@ export default function ReceiptView({ order, autoPrint = false }) {
           <>
             <div style={{
               marginTop: '6px', padding: '6px 8px', borderRadius: '6px',
-              background: '#f3f4f6', border: '1px dashed #9ca3af',
+              background: '#f3f4f6', border: '1px dashed #4b5563',
             }}>
-              <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#374151', marginBottom: '3px' }}>
+              <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#000000', marginBottom: '3px' }}>
                 فاتورة صادرة لمنشأة / Tax Invoice for a Business (B2B)
               </div>
               <Row label="اسم الشركة" value={order.buyer_company_name || '—'} bold />
@@ -265,12 +266,12 @@ export default function ReceiptView({ order, autoPrint = false }) {
         <Divider />
 
         {/* ── ITEMS ── */}
-        <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#6b7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#000000', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           {isProductInvoice ? 'الأصناف المباعة' : 'تفاصيل الخدمة'}
         </div>
 
         {/* Table header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', fontWeight: 'bold', borderBottom: '1px solid #e5e7eb', paddingBottom: '3px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', fontWeight: 'bold', borderBottom: '1px solid #000000', paddingBottom: '3px', marginBottom: '4px' }}>
           <span style={{ flex: 3 }}>الصنف / الخدمة</span>
           <span style={{ flex: 1, textAlign: 'center' }}>الكمية</span>
           <span style={{ flex: 2, textAlign: 'left' }}>السعر</span>
@@ -308,7 +309,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
           <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {order.photos.map((url, i) => (
               <img key={i} src={url} alt="" crossOrigin="anonymous"
-                style={{ width: '52px', height: '52px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e5e7eb' }} />
+                style={{ width: '52px', height: '52px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #4b5563' }} />
             ))}
           </div>
         )}
@@ -354,7 +355,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         {order.notes && (
           <>
             <Divider />
-            <div style={{ fontSize: '9px', color: '#374151' }}>
+            <div style={{ fontSize: '9px', color: '#000000' }}>
               <span style={{ fontWeight: 'bold' }}>ملاحظات: </span>{order.notes}
             </div>
           </>
@@ -364,9 +365,9 @@ export default function ReceiptView({ order, autoPrint = false }) {
 
         {/* ── BARCODE ── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
-          <div style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '4px' }}>باركود الطلب</div>
+          <div style={{ fontSize: '10px', color: '#000000', marginBottom: '4px' }}>باركود الطلب</div>
           <BarcodeDisplay value={order.order_number} width={200} height={45} />
-          <div style={{ fontSize: '9px', color: '#374151', marginTop: '2px', fontWeight: 'bold', letterSpacing: '1px' }}>
+          <div style={{ fontSize: '9px', color: '#000000', marginTop: '2px', fontWeight: 'bold', letterSpacing: '1px' }}>
             {order.order_number}
           </div>
         </div>
@@ -374,7 +375,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         {/* ── ZATCA QR ── */}
         {vatEnabled && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '4px' }}>
-            <div style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '4px' }}>
+            <div style={{ fontSize: '10px', color: '#000000', marginBottom: '4px' }}>
               رمز QR — التحقق من الفاتورة (ZATCA)
             </div>
             <QRCodeCanvas value={zatcaQR} size={96} bgColor="#ffffff" fgColor="#000000" level="M" />
@@ -385,7 +386,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '3px',
-                fontSize: '7px',
+                fontSize: '9px',
                 padding: '2px 6px',
                 borderRadius: '99px',
                 background: order.zatca_status === 'REPORTED' || order.zatca_status === 'CLEARED'
@@ -400,7 +401,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
                     : 'بانتظار الإرسال'}
               </div>
             )}
-            <div style={{ fontSize: '7px', color: '#9ca3af', marginTop: '3px', textAlign: 'center', maxWidth: '200px', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '9px', color: '#000000', marginTop: '3px', textAlign: 'center', maxWidth: '200px', lineHeight: '1.4' }}>
               امسح الرمز للتحقق من صحة الفاتورة الضريبية وفق متطلبات هيئة الزكاة والضريبة والجمارك
             </div>
           </div>
@@ -409,15 +410,15 @@ export default function ReceiptView({ order, autoPrint = false }) {
         {terms && (
           <>
             <Divider />
-            <div style={{ fontSize: '8px', color: '#9ca3af', textAlign: 'center', lineHeight: '1.5' }}>{terms}</div>
+            <div style={{ fontSize: '10px', color: '#000000', textAlign: 'center', lineHeight: '1.5' }}>{terms}</div>
           </>
         )}
 
         {/* Footer */}
         <Divider dashed={false} />
-        <div style={{ textAlign: 'center', fontSize: '9px', color: '#6b7280', lineHeight: '1.6' }}>
+        <div style={{ textAlign: 'center', fontSize: '9px', color: '#000000', lineHeight: '1.6' }}>
           <div style={{ fontWeight: 'bold' }}>{footer}</div>
-          <div style={{ marginTop: '2px', color: '#9ca3af', fontSize: '8px' }}>
+          <div style={{ marginTop: '2px', color: '#000000', fontSize: '10px' }}>
             تم الإصدار بتاريخ: {format(createdDate, 'dd/MM/yyyy HH:mm')}
           </div>
         </div>
