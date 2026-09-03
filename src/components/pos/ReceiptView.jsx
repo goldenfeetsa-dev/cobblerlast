@@ -36,7 +36,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
   });
   const settings = settingsList[0] || {};
   const shopName = settings.shop_name || 'مؤسسة إبرة وخيط الإسكافي للتجارة';
-  const logoUrl = settings.logo_url || '/images/logo-cobblers.png';
+  const logoUrl = settings.logo_url || '/images/logo-cobblers-receipt.png';
   const header = settings.receipt_header || 'خدمات التصليح والخياطة للأحذية والحقائب الجلدية';
   const footer = settings.receipt_footer || 'شكراً لثقتكم بنا — نسعد بخدمتكم دائماً';
   const terms = settings.terms_conditions || '';
@@ -181,7 +181,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
           {logoUrl && (
             <img src={logoUrl} alt="logo" crossOrigin="anonymous"
               onLoad={() => setLogoReady(true)} onError={() => setLogoReady(true)}
-              style={{ height: '90px', margin: '0 auto 8px', objectFit: 'contain', display: 'block' }} />
+              style={{ width: '92%', maxWidth: '260px', height: 'auto', margin: '0 auto 8px', objectFit: 'contain', display: 'block' }} />
           )}
           <div style={{ fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px' }}>
             {shopName}
