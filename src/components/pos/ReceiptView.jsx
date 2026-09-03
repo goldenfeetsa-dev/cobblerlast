@@ -331,8 +331,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         {/* Grand total */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: '#111', color: '#fff', borderRadius: '6px',
-          padding: '6px 10px', marginTop: '6px', fontSize: '13px', fontWeight: 'bold'
+          borderTop: '2px solid #000000', paddingTop: '6px', marginTop: '6px', fontSize: '14px', fontWeight: '900', color: '#000000'
         }}>
           <span>الإجمالي شامل الضريبة</span>
           <span style={{ direction: 'ltr' }}>{order.total_price?.toFixed(2)} ر.س</span>
