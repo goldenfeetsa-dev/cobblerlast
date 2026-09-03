@@ -365,7 +365,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         {/* ── BARCODE ── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
           <div style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '4px' }}>باركود الطلب</div>
-          <BarcodeDisplay value={order.order_number} width={230} height={45} />
+          <BarcodeDisplay value={order.order_number} width={200} height={45} />
           <div style={{ fontSize: '9px', color: '#374151', marginTop: '2px', fontWeight: 'bold', letterSpacing: '1px' }}>
             {order.order_number}
           </div>
