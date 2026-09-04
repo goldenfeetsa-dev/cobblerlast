@@ -23,7 +23,7 @@ function useWhatsappNumber() {
 // الأداة بالخطأ لو نسينا نستثنيها.
 const PUBLIC_PATHS = [
   '/', '/booking', '/book', '/my-bookings', '/my-loyalty',
-  '/reviews', '/shop', '/repair-policy', '/about', '/privacy', '/shipping-policy', '/careers',
+  '/reviews', '/shop', '/repair-policy', '/about', '/privacy', '/shipping-policy', '/careers', '/track',
 ];
 
 export default function FloatingWhatsApp() {

@@ -59,6 +59,16 @@
   </url>
 
   <url>
+    <loc>https://needlecobbler.com/track</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://needlecobbler.com/track"/>
+    <xhtml:link rel="alternate" hreflang="ar-SA" href="https://needlecobbler.com/track"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://needlecobbler.com/track"/>
+  </url>
+
+  <url>
     <loc>https://needlecobbler.com/about</loc>
     <lastmod>2026-07-10</lastmod>
     <changefreq>monthly</changefreq>
