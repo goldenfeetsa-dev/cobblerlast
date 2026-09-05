@@ -18,6 +18,12 @@ const ITEM_LABELS = {
   jacket: 'جاكيت', pants: 'بنطال', shirt: 'قميص', other: 'أخرى'
 };
 
+// طلب صريح: إيقاف مؤقت لصورة باركود QR الخاص بزاتكا وشارة "فاتورة
+// ضريبية" أعلى الفاتورة — تصير فاتورة عادية لحين ما يُطلب تفعيلها
+// مجدداً. غيّر هذي القيمة لـ true عشان ترجعهم.
+const SHOW_ZATCA_TAX_LABEL = false;
+const SHOW_ZATCA_QR = false;
+
 // autoPrint: إذا كانت true، تُفتح نافذة الطباعة تلقائياً بمجرد جاهزية الفاتورة
 // (تُستخدم مباشرة بعد إصدار طلب/فاتورة جديدة، بدون أي ضغطة إضافية من الموظف)
 export default function ReceiptView({ order, autoPrint = false }) {
@@ -207,7 +213,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
             </div>
           </div>
 
-          {vatEnabled && (
+          {vatEnabled && SHOW_ZATCA_TAX_LABEL && (
             <div style={{
               display: 'inline-block',
               marginTop: '6px',
@@ -372,7 +378,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
         </div>
 
         {/* ── ZATCA QR ── */}
-        {vatEnabled && (
+        {vatEnabled && SHOW_ZATCA_QR && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '4px' }}>
             <div style={{ fontSize: '10px', color: '#000000', marginBottom: '4px' }}>
               رمز QR — التحقق من الفاتورة (ZATCA)
