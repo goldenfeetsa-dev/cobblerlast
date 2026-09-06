@@ -80,8 +80,6 @@ export default function Leaderboard() {
     initialData: [],
   });
 
-  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
-
   const now = new Date();
   const cutoff = period === 'daily'   ? startOfDay(now)
                : period === 'monthly' ? startOfMonth(now)
@@ -97,6 +95,9 @@ export default function Leaderboard() {
   );
 
   const branchSummary = useMemo(() => summarizeByBranch(transactions), [transactions]);
+
+  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
+
   const branches = ['all', ...branchSummary.map(b => b.branch_name)];
 
   const branchTx = branchFilter === 'all'

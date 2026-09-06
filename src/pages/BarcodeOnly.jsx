@@ -6,6 +6,8 @@ import BarcodeDisplay from '@/components/pos/BarcodeDisplay';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Printer, Download, PackageSearch } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 // نفس تسميات الأصناف المستخدمة بصفحة إنشاء الطلب (NewOrder.jsx) —
 // عشان يظهر نوع الخدمة بالعربي تحت الباركود بدل قيمة الكود الخام.
@@ -81,11 +83,18 @@ export default function BarcodeOnly() {
 
       <div ref={barcodeRef} className="bg-white p-6 flex flex-col items-center gap-3">
         <BarcodeDisplay value={order.order_number} width={280} height={80} />
-        {/* اسم العميل صاحب الفاتورة + نوع الخدمة — تحت الباركود والرقم مباشرة */}
+        {/* اسم العميل صاحب الفاتورة + نوع الخدمة + تاريخ التسليم — تحت الباركود
+            والرقم مباشرة. تاريخ التسليم مهم جداً لعامل التسليم/الفرز، فهو
+            بارز بخط عريض ومحاط بإطار خفيف حتى ينتبه له أول ما يشوف الملصق. */}
         <div className="flex flex-col items-center gap-0.5 text-center" dir="rtl">
           <span className="text-sm font-black text-gray-900">{order.customer_name}</span>
           <span className="text-xs font-bold text-gray-500">
             {ITEM_TYPE_LABELS[order.item_type] || order.item_type}
+          </span>
+          <span className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded border border-gray-300 text-[11px] font-black text-gray-900">
+            تاريخ التسليم: {order.delivery_date
+              ? format(new Date(order.delivery_date), 'd MMMM yyyy', { locale: ar })
+              : 'غير محدد'}
           </span>
         </div>
       </div>

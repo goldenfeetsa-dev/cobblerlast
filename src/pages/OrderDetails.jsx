@@ -13,7 +13,7 @@ import ReceiptView from '@/components/pos/ReceiptView';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
 import { shouldHidePhotos } from '@/lib/photoCleanup';
-import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, RefreshCw, XCircle, PauseCircle, MessageCircle, Mail, CalendarDays, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, RefreshCw, XCircle, PauseCircle, MessageCircle, Mail, CalendarDays, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';

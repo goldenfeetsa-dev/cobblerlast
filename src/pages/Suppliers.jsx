@@ -50,9 +50,6 @@ export default function Suppliers() {
     queryKey: ['inventory-items'], queryFn: () => db.InventoryItem.list('-created_at', 500),
   });
 
-  // بناءً على طلب صريح: الموردون تظهر للمالك فقط، مو لكل أدوار الإدارة/المحاسب
-  if (session?.role !== ROLES.OWNER) return <Navigate to="/pos" replace />;
-
   const saveMutation = useMutation({
     mutationFn: (data) => editingSupplier
       ? db.Supplier.update(editingSupplier.id, data)
@@ -104,6 +101,9 @@ export default function Suppliers() {
   };
 
   const itemsById = useMemo(() => Object.fromEntries(items.map(i => [i.id, i])), [items]);
+
+  // بناءً على طلب صريح: الموردون تظهر للمالك فقط، مو لكل أدوار الإدارة/المحاسب
+  if (session?.role !== ROLES.OWNER) return <Navigate to="/pos" replace />;
 
   const supplierProducts = (supplierId) =>
     links.filter(l => l.supplier_id === supplierId).map(l => itemsById[l.item_id]).filter(Boolean);

@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings, Moon, Sun,
-  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, Factory, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale, Briefcase
+  Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale, Briefcase
 } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';

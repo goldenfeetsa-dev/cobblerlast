@@ -59,6 +59,7 @@ export default function TaxDashboard() {
   // لحظة إنشاء التقرير بالضبط (تاريخ + ساعة + دقيقة + ثانية) — تُلتقط
   // وقت الضغط الفعلي على PDF أو Excel، مو وقت فتح الصفحة أو أي إعادة رسم
   const [preparedAt, setPreparedAt] = useState(null);
+  const [exportingWhich, setExportingWhich] = useState(null); // 'tax' | 'management' | null
   const taxStatementRef = useRef(null);
   const managementStatementRef = useRef(null);
 
@@ -89,7 +90,7 @@ export default function TaxDashboard() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [start, end]);
+  useEffect(() => { load();   }, [start, end]);
 
   const applyPreset = (key) => { setPreset(key); setRange(PRESETS[key]()); };
 
@@ -104,8 +105,6 @@ export default function TaxDashboard() {
     setPreset('custom');
     setRange([start, new Date(val + 'T00:00:00')]);
   };
-
-  if (!session?.role || !isFinanceUser(session.role)) return <Navigate to="/pos" replace />;
 
   // ── ضريبة المخرجات (المبيعات) — فقط المُبلَّغة فعلياً لزاتكا ──
   const reportedOrders = orders.filter(o => o.zatca_status === 'REPORTED');
@@ -165,6 +164,8 @@ export default function TaxDashboard() {
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [allExpenses]);
+
+  if (!session?.role || !isFinanceUser(session.role)) return <Navigate to="/pos" replace />;
 
   // صافي الربح = الإيرادات (قبل الضريبة) − المشتريات (تكلفة البضاعة/المواد) − المصروفات التشغيلية
   const netProfit = revenueBeforeVat - totalPurchasesBeforeVat - totalExpensesBeforeVat;
@@ -322,7 +323,6 @@ export default function TaxDashboard() {
   // طول/عرض الصورة الملتقطة فعلياً، بعرض ثابت وواسع (landscape-style)،
   // فتصير النتيجة صفحة واحدة دائماً مهما طال المحتوى، وبدقة أعلى
   // (scale أعلى) لجودة طباعة أوضح.
-  const [exportingWhich, setExportingWhich] = useState(null); // 'tax' | 'management' | null
   const exportPDF = async (ref, filenamePrefix, which) => {
     if (!ref.current) return;
     setExportingWhich(which);

@@ -89,16 +89,16 @@ export default function AuditLog() {
     queryFn: () => db.AuditLog.list('-created_at', 300),
   });
 
-  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
-
-  const isLoading = ordersLoading || salesLoading;
-  const periodStart = getPeriodStart(period);
-
   // كل العمليات (إصلاح + بيع) موحّدة بمصفوفة واحدة — هذا أساس دقة الأرقام
   const allTransactions = useMemo(
     () => unifyTransactions(orders, salesInvoices),
     [orders, salesInvoices]
   );
+
+  if (!['admin','owner','manager'].includes(session?.role)) return <Navigate to="/pos" replace />;
+
+  const isLoading = ordersLoading || salesLoading;
+  const periodStart = getPeriodStart(period);
 
   const branches = [...new Set(allTransactions.map(t => t.branch_name).filter(Boolean))];
   const uniqueEmployees = [...new Set(allTransactions.map(t => t.employee_name).filter(Boolean))];

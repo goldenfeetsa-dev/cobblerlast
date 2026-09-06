@@ -15,7 +15,7 @@ import { db } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
 import { FINANCE_ROLES } from '@/lib/roles';
 import { Navigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import {
   ShoppingBag, Plus, Pencil, Trash2, ShieldCheck, ShieldAlert, Receipt,
-  Package, X, Sparkles, Loader2, Wallet, UserPlus,
+  Package, Sparkles, Loader2, Wallet, UserPlus,
 } from 'lucide-react';
 import DocumentUploader from '@/components/common/DocumentUploader';
 import { isValidVatFormat, VAT_RATE_DEFAULT } from '@/lib/vatValidation';
@@ -64,9 +64,6 @@ export default function Purchasing() {
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['purchase-invoices'], queryFn: () => db.PurchaseInvoice.list('-invoice_date', 300),
   });
-
-  // موظف مالي فقط (مالك/مدير/إداري/محاسب) — نفس صلاحيات الفواتير والتقارير المالية
-  if (!session?.role || !FINANCE_ROLES.includes(session.role)) return <Navigate to="/pos" replace />;
 
   const suppliersById = useMemo(() => Object.fromEntries(suppliers.map(s => [s.id, s])), [suppliers]);
   const itemsById = useMemo(() => Object.fromEntries(items.map(i => [i.id, i])), [items]);
@@ -158,6 +155,9 @@ export default function Purchasing() {
     },
     onError: (e) => toast.error(`تعذّر إضافة المورد: ${e.message || 'خطأ غير معروف'}`),
   });
+
+  // موظف مالي فقط (مالك/مدير/إداري/محاسب) — نفس صلاحيات الفواتير والتقارير المالية
+  if (!session?.role || !FINANCE_ROLES.includes(session.role)) return <Navigate to="/pos" replace />;
 
   const openNew = () => { setEditingInvoice(null); setForm(emptyInvoice()); setLines([emptyLine()]); setDialogOpen(true); };
   const openEdit = async (inv) => {

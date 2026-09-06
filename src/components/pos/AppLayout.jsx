@@ -7,9 +7,7 @@ import { getSession } from '@/lib/sessionStore';
 import { useGlobalBarcodeScanner } from '@/hooks/useGlobalBarcodeScanner';
 import { db } from '@/api/supabaseApi';
 import { toast } from 'sonner';
-import {
-  isFullAdmin, isFinanceUser, isCashier, isWorker,
-  getHomePath, WORKER_ALLOWED_PREFIXES, CASHIER_DENIED_PREFIXES,
+import { isCashier, isWorker, WORKER_ALLOWED_PREFIXES, CASHIER_DENIED_PREFIXES,
 } from '@/lib/roles';
 
 export default function AppLayout() {

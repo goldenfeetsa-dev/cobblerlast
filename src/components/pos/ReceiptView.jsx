@@ -249,6 +249,14 @@ export default function ReceiptView({ order, autoPrint = false }) {
         <div>
           <Row label="الاسم" value={order.customer_name} bold />
           {order.customer_phone && <Row label="الجوال" value={order.customer_phone} />}
+          {/* تاريخ التسليم — مهم جداً للعميل والموظف، لازم يبان بوضوح تحت
+              الاسم مباشرة بخط عريض، وليس مثل باقي الحقول العادية */}
+          {!isProductInvoice && order.delivery_date && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '3px 0', fontWeight: 'bold', border: '1px solid #000000', borderRadius: '4px', padding: '3px 6px' }}>
+              <span>تاريخ التسليم</span>
+              <span>{format(new Date(order.delivery_date), 'dd/MM/yyyy')}</span>
+            </div>
+          )}
         </div>
 
         {/* ── B2B BUYER (فاتورة شركة) ── */}
