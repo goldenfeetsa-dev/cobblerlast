@@ -148,7 +148,7 @@ function Navbar() {
     <motion.nav className="fixed top-0 inset-x-0 z-50 px-6"
       initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
       <div className={`max-w-7xl mx-auto mt-3 rounded-2xl px-5 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-2xl' : ''}`}
-        style={{ background: scrolled ? 'rgba(244,241,234,0.92)' : 'rgba(244,241,234,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${scrolled ? GB + '0.2)' : GB + '0.08)'}` }}>
+        style={{ background: scrolled ? 'rgba(244,241,234,0.78)' : 'rgba(244,241,234,0.45)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', border: `1px solid ${scrolled ? GB + '0.25)' : GB + '0.1)'}`, boxShadow: scrolled ? `0 8px 32px rgba(62,39,35,0.08), inset 0 1px 0 rgba(255,255,255,0.5)` : 'inset 0 1px 0 rgba(255,255,255,0.3)' }}>
         <Link to="/" dir={dir}>
           <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
             <img
@@ -416,7 +416,7 @@ function HeroSection() {
             <motion.div
               animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute top-6 end-2 z-20 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs"
-              style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid ${GB}0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: `0 8px 30px ${GB}0.2)` }}>
+              style={{ background: 'rgba(244,241,234,0.72)', border: `1px solid ${GB}0.35)`, backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', boxShadow: `0 8px 30px ${GB}0.2), inset 0 1px 0 rgba(255,255,255,0.5)` }}>
               <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>
                 <CheckCircle className="w-3.5 h-3.5 text-black" />
               </div>
@@ -430,7 +430,7 @@ function HeroSection() {
             <motion.div
               animate={{ y: [0, 10, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
               className="absolute bottom-10 start-0 z-20 px-4 py-3 rounded-2xl"
-              style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid ${GB}0.2)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+              style={{ background: 'rgba(244,241,234,0.72)', border: `1px solid ${GB}0.28)`, backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', boxShadow: `0 8px 24px ${GB}0.15), inset 0 1px 0 rgba(255,255,255,0.5)` }}>
               <div className="flex items-center gap-2 mb-1.5">
                 {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: GT }} />)}
               </div>
@@ -460,6 +460,78 @@ function HeroSection() {
         <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
           <ChevronDown className="w-5 h-5" />
         </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ── Scroll-driven Craft Motion ───────────────────────────────────
+// المشهد لا يعمل كفيديو: كل حركة مرتبطة مباشرة بنسبة نزول المستخدم.
+function CraftMotionSection() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
+  const shoeY = useTransform(scrollYProgress, [0, .18, .42, .68, 1], [80, 10, -5, -20, -35]);
+  const shoeScale = useTransform(scrollYProgress, [0, .18, .55, 1], [.72, .9, 1.04, 1]);
+  const shoeRotate = useTransform(scrollYProgress, [0, .3, .62, 1], [-7, -2, 3, 0]);
+  const shoeX = useTransform(scrollYProgress, [0, .5, 1], [0, 18, 0]);
+  const needleX = useTransform(scrollYProgress, [0, .18, .35, .55, .75, 1], [180, 110, 30, -35, -105, -160]);
+  const needleY = useTransform(scrollYProgress, [0, .18, .35, .55, .75, 1], [-80, -15, 55, -5, 45, 0]);
+  const needleRotate = useTransform(scrollYProgress, [0, .2, .4, .6, .8, 1], [55, 25, -12, 18, -18, -38]);
+  const threadPath = useTransform(scrollYProgress, [0, .08, .18, .3, .42, .55, .68, .82, 1], [0, 8, 18, 32, 47, 62, 76, 90, 100]);
+  const glow = useTransform(scrollYProgress, [0, .2, .45, .7, 1], [0.08, .25, .5, .35, .7]);
+  const textOpacity = useTransform(scrollYProgress, [.72, .84, 1], [0, 1, 1]);
+  const textY = useTransform(scrollYProgress, [.72, .9, 1], [35, 0, -5]);
+
+  return (
+    <section ref={ref} className="relative h-[240vh]" style={{ background: '#120C08' }} dir="rtl">
+      <div className="sticky top-0 h-screen overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 opacity-40" style={{ backgroundImage: `linear-gradient(rgba(197,160,89,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(197,160,89,.045) 1px, transparent 1px)`, backgroundSize: '70px 70px' }} />
+        <motion.div className="absolute w-[55vw] h-[55vw] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(197,160,89,.18), transparent 65%)', opacity: glow, filter: 'blur(28px)' }} />
+
+        <div className="relative w-full max-w-6xl h-full mx-auto px-6 flex items-center justify-center">
+          <div className="absolute top-[14%] text-center z-30 pointer-events-none">
+            <motion.p style={{ opacity: useTransform(scrollYProgress, [0,.18], [1,0]) }} className="text-[10px] tracking-[.45em] font-bold" >CRAFTED BY PRECISION</motion.p>
+            <motion.h2 style={{ opacity: useTransform(scrollYProgress, [0,.22], [1,0]), y: useTransform(scrollYProgress, [0,.22], [0,-30]) }} className="font-display text-3xl md:text-5xl font-black mt-3 text-[#E8DEC8]">الصنعة تبدأ من خيط</motion.h2>
+          </div>
+
+          <motion.div style={{ x: shoeX, y: shoeY, scale: shoeScale, rotate: shoeRotate }} className="relative z-10 w-[min(62vw,620px)] aspect-[1.35/1] flex items-center justify-center">
+            <div className="absolute inset-x-[10%] bottom-[5%] h-[18%] rounded-full bg-black/70 blur-2xl" />
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=90" alt="حذاء يُخاط بعناية" className="relative w-full h-full object-contain drop-shadow-[0_35px_45px_rgba(0,0,0,.7)]" />
+            <motion.div className="absolute -inset-8 rounded-full pointer-events-none" style={{ boxShadow: '0 0 90px rgba(197,160,89,.35)', opacity: glow }} />
+          </motion.div>
+
+          {/* الإبرة تتحرك مع الـscroll وتخترق مسار الخياطة بصرياً */}
+          <motion.div style={{ x: needleX, y: needleY, rotate: needleRotate }} className="absolute z-30 pointer-events-none w-32 h-10 md:w-44 md:h-12">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[88%] h-[3px] rounded-full bg-gradient-to-l from-[#f5d78d] via-[#C5A059] to-[#6d4e1f] shadow-[0_0_12px_rgba(197,160,89,.9)]" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border border-[#E8DEC8] shadow-[0_0_14px_rgba(197,160,89,.8)]" />
+            <div className="absolute left-5 top-1/2 w-2 h-2 -translate-y-1/2 rounded-full bg-[#F5D78D]" />
+          </motion.div>
+
+          {/* خيط SVG طويل؛ strokeDashoffset يتقدم مع النزول */}
+          <svg className="absolute inset-0 w-full h-full z-20 pointer-events-none" viewBox="0 0 1200 800" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="goldThread" x1="0" x2="1"><stop offset="0" stopColor="#7A5F2E"/><stop offset=".45" stopColor="#F5D78D"/><stop offset="1" stopColor="#C5A059"/></linearGradient>
+              <filter id="threadGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <motion.path d="M980 560 C860 480 920 390 790 420 S650 570 560 455 S410 350 300 470" fill="none" stroke="url(#goldThread)" strokeWidth="4" strokeLinecap="round" filter="url(#threadGlow)" pathLength="100" style={{ pathLength: threadPath }} />
+          </svg>
+
+          {/* أذرع روبوتية بسيطة — تدخل أثناء مرحلة الخياطة */}
+          <motion.div style={{ opacity: useTransform(scrollYProgress, [.15,.25,.78,.9], [0,1,1,0]) }} className="absolute z-[25] left-[8%] top-[40%] w-36 h-8 origin-right rounded-full bg-gradient-to-r from-[#33271e] via-[#b08a49] to-[#e1c47e] shadow-lg rotate-[18deg] pointer-events-none" />
+          <motion.div style={{ opacity: useTransform(scrollYProgress, [.15,.25,.78,.9], [0,1,1,0]) }} className="absolute z-[25] right-[8%] top-[42%] w-36 h-8 origin-left rounded-full bg-gradient-to-l from-[#33271e] via-[#b08a49] to-[#e1c47e] shadow-lg rotate-[-18deg] pointer-events-none" />
+
+          <motion.div style={{ opacity: textOpacity, y: textY }} className="absolute bottom-[16%] z-40 text-center">
+            <div className="mx-auto mb-5 h-px w-28 bg-gradient-to-r from-transparent via-[#C5A059] to-transparent" />
+            <p className="text-[#D9BE86] text-xs tracking-[.4em] mb-3">THE COBBLER'S SIGNATURE</p>
+            <h3 className="font-display text-4xl md:text-6xl font-black text-[#F4E8CE] drop-shadow-[0_0_24px_rgba(197,160,89,.35)]">إبرة وخيط الإسكافي</h3>
+            <p className="mt-4 text-[#A9977F] text-sm">كل غرزة لها قصة.</p>
+          </motion.div>
+
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 text-[#A9977F] text-[10px] tracking-[.3em]">
+            <span>SCROLL TO CRAFT</span>
+            <motion.div animate={{ y:[0,7,0] }} transition={{ duration:1.4, repeat:Infinity }} className="w-px h-10 bg-gradient-to-b from-[#C5A059] to-transparent" />
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -1124,6 +1196,7 @@ export default function BookingLanding() {
       </Helmet>
       <Navbar />
       <HeroSection />
+      <CraftMotionSection />
       <TickerStrip />
       <ServicesSection />
       <BeforeAfterSection />
