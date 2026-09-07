@@ -83,6 +83,50 @@ function createEntity(tableName) {
   };
 }
 
+// ── Secure Entity Factory ───────────────────────────────────────
+// نفس واجهة createEntity بالضبط (list/filter/get/create/update/delete)
+// — بس تمر عبر /api/secure/data (كوكي جلسة HttpOnly + تحقق دور
+// بالسيرفر) بدل استعلام مباشر لـ Supabase بمفتاح anon. أي صفحة
+// تستخدم db.Customer (مثلاً) ما تحتاج تتغيّر إطلاقاً — نفس الاستدعاءات.
+async function secureFetch(path, options = {}) {
+  const res = await fetch(path, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `فشل الطلب (${res.status})`);
+  }
+  return res.json();
+}
+
+function createSecureEntity(resource) {
+  const base = `/api/secure/data?resource=${resource}`;
+  return {
+    async list(orderBy = '-created_at', limit = 200) {
+      const params = new URLSearchParams({ op: 'list', orderBy, limit: String(limit) });
+      return secureFetch(`${base}&${params}`);
+    },
+    async filter(filters = {}, orderBy = '-created_at', limit = 200) {
+      const params = new URLSearchParams({ op: 'filter', orderBy, limit: String(limit), filters: JSON.stringify(filters) });
+      return secureFetch(`${base}&${params}`);
+    },
+    async get(id) {
+      return secureFetch(`${base}&op=get&id=${encodeURIComponent(id)}`);
+    },
+    async create(record) {
+      return secureFetch(base, { method: 'POST', body: JSON.stringify(record) });
+    },
+    async update(id, record) {
+      return secureFetch(`${base}&id=${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(record) });
+    },
+    async delete(id) {
+      return secureFetch(`${base}&id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    },
+  };
+}
+
 // ── File Upload ──────────────────────────────────────────────
 async function uploadFile({ file, bucket = 'order-photos' }) {
   const ext  = file.name.split('.').pop() || 'jpg';
@@ -119,7 +163,7 @@ export const db = {
   // Core entities
   Order:            createEntity('orders'),
   Employee:         createEntity('employees'),
-  Customer:         createEntity('customers'),
+  Customer:         createSecureEntity('customers'),
   Branch:           createEntity('branches'),
   InventoryItem:    createEntity('inventory_items'),
   Supplier:         createEntity('suppliers'),
