@@ -8,12 +8,13 @@ import { supabase } from '@/lib/supabaseClient';
 // فيعيد React Query جلبه من قاعدة البيانات مباشرة — بدون انتظار
 // انتهاء staleTime وبدون الحاجة لإعادة تحميل الصفحة يدوياً.
 const WATCHED_TABLES = [
-  'orders', 'customers', 'employees', 'branches',
+  'orders', 'employees', 'branches',
   'inventory_items', 'suppliers', 'supplier_products', 'products',
-  // ملاحظة: 'expenses' اتشالت من هنا — الجدول أصبح مقفول بالكامل عن anon
-  // (BFF فقط عبر /api/secure/expenses)، فالمزامنة اللحظية القديمة ما
-  // كانت ستوصل أي بيانات فعلياً بعد التشديد. صفحة المحاسبة تعيد الجلب
-  // بنفسها بعد كل عملية إضافة/تعديل مباشرة بدل الاعتماد على Realtime.
+  // ملاحظة: 'expenses' و'customers' اتشالوا من هنا — الجدولين أصبحوا
+  // مقفولين بالكامل عن anon (BFF فقط عبر /api/secure/*)، فالمزامنة
+  // اللحظية القديمة ما كانت ستوصل أي بيانات فعلياً بعد التشديد.
+  // الصفحات المعنية تعيد الجلب بنفسها بعد كل عملية مباشرة بدل الاعتماد
+  // على Realtime.
   'sales_invoices', 'audit_logs', 'app_settings',
   'loyalty_cards', 'loyalty_stamps', 'loyalty_settings',
   'loyalty_members', 'loyalty_points_transactions',
