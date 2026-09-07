@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { supabase } from '@/lib/supabaseClient';
+import { APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 
 const AuthContext = createContext();
 
@@ -12,7 +13,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // نجلب الإعدادات في الخلفية بدون توقف
-    supabase.from('app_settings').select('*').limit(1)
+    supabase.from('app_settings').select(APP_SETTINGS_SAFE_COLUMNS).limit(1)
       .then(({ data }) => { if (data?.[0]) setAppPublicSettings(data[0]); })
       .catch(() => {});
   }, []);

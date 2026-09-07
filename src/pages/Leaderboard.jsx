@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { db } from '@/api/supabaseApi';
+import { db, EMPLOYEE_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -62,7 +62,7 @@ export default function Leaderboard() {
 
   const { data: employees = [], isLoading: empLoading } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => db.Employee.list(),
+    queryFn: () => db.Employee.list('-created_at', 200, EMPLOYEE_SAFE_COLUMNS),
     initialData: [],
   });
 

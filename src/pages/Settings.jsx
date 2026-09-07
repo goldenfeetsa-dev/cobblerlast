@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
+import { APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { Settings2, Save, Loader2, Building2, Receipt } from 'lucide-react';
 import ImageUploader from '@/components/common/ImageUploader';
 
@@ -15,7 +16,7 @@ export default function Settings() {
   const [saving, setSaving]     = useState(false);
 
   useEffect(() => {
-    supabase.from('app_settings').select('*').limit(1)
+    supabase.from('app_settings').select(APP_SETTINGS_SAFE_COLUMNS).limit(1)
       .then(({ data }) => { setSettings(data?.[0] || {}); setLoading(false); });
   }, []);
 
@@ -25,7 +26,7 @@ export default function Settings() {
       if (settings.id) {
         await supabase.from('app_settings').update(settings).eq('id', settings.id);
       } else {
-        const { data } = await supabase.from('app_settings').insert(settings).select().single();
+        const { data } = await supabase.from('app_settings').insert(settings).select(APP_SETTINGS_SAFE_COLUMNS).single();
         setSettings(data);
       }
       toast.success('✅ تم حفظ الإعدادات');

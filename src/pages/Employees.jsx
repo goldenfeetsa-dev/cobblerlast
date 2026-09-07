@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '@/api/supabaseApi';
+import { db, EMPLOYEE_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin, getHomePath } from '@/lib/roles';
@@ -35,7 +35,7 @@ export default function Employees() {
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => db.Employee.list(),
+    queryFn: () => db.Employee.list('-created_at', 200, EMPLOYEE_SAFE_COLUMNS),
     initialData: [],
   });
 
@@ -57,9 +57,9 @@ export default function Employees() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (editingEmployee) {
-        return db.Employee.update(editingEmployee.id, data);
+        return db.Employee.update(editingEmployee.id, data, EMPLOYEE_SAFE_COLUMNS);
       }
-      return db.Employee.create(data);
+      return db.Employee.create(data, EMPLOYEE_SAFE_COLUMNS);
     },
     onSuccess: (result, data) => {
       logAudit({
@@ -81,7 +81,10 @@ export default function Employees() {
 
   const openEdit = (emp) => {
     setEditingEmployee(emp);
-    setForm({ name: emp.name, pin: emp.pin, role: emp.role, branch_id: emp.branch_id || '', branch_name: emp.branch_name || '' });
+    // ملاحظة أمنية: pin ما يرجع مع قائمة الموظفين بعد الحين (محمي على
+    // مستوى قاعدة البيانات) — لازم المدير يكتب PIN جديد عند التعديل
+    // بدل ما يشوف القديم، وهذا سلوك متعمد لحماية الأكواد
+    setForm({ name: emp.name, pin: '', role: emp.role, branch_id: emp.branch_id || '', branch_name: emp.branch_name || '' });
     setDialogOpen(true);
   };
 
@@ -92,11 +95,18 @@ export default function Employees() {
   };
 
   const handleSave = () => {
-    if (!form.name || !form.pin || form.pin.length !== 4) {
+    const pinRequired = !editingEmployee; // إضافة جديدة تحتاج PIN إجباري؛ التعديل يقدر يسيبه فاضي (يفضل كما هو)
+    if (!form.name || (pinRequired && (!form.pin || form.pin.length !== 4))) {
       toast.error('الاسم ورقم PIN مطلوبان');
       return;
     }
-    saveMutation.mutate({ name: form.name, pin: form.pin, role: form.role, is_active: true, branch_id: form.branch_id || null, branch_name: form.branch_name });
+    if (form.pin && form.pin.length !== 4) {
+      toast.error('رقم PIN لازم يكون 4 أرقام بالضبط');
+      return;
+    }
+    const payload = { name: form.name, role: form.role, is_active: true, branch_id: form.branch_id || null, branch_name: form.branch_name };
+    if (form.pin) payload.pin = form.pin; // ما نرسل pin فاضي — يخلي القديم كما هو بالتعديل
+    saveMutation.mutate(payload);
   };
 
   const onBranchChange = (branchId) => {

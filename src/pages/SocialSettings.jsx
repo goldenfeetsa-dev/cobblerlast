@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
+import { APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
 import { Instagram, MessageCircle, Twitter, Globe, Phone, MapPin, Save, Loader2, ExternalLink } from 'lucide-react';
@@ -17,7 +18,7 @@ export default function SocialSettings() {
   const [saving, setSaving]     = useState(false);
 
   useEffect(() => {
-    supabase.from('app_settings').select('*').limit(1)
+    supabase.from('app_settings').select(APP_SETTINGS_SAFE_COLUMNS).limit(1)
       .then(({ data }) => { setSettings(data?.[0] || {}); setLoading(false); });
   }, []);
 
@@ -37,7 +38,7 @@ export default function SocialSettings() {
       if (settings.id) {
         await supabase.from('app_settings').update(settings).eq('id', settings.id);
       } else {
-        const { data } = await supabase.from('app_settings').insert(settings).select().single();
+        const { data } = await supabase.from('app_settings').insert(settings).select(APP_SETTINGS_SAFE_COLUMNS).single();
         setSettings(data);
       }
       toast.success('✅ تم حفظ بيانات التواصل الاجتماعي');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '@/api/supabaseApi';
+import { db, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -72,7 +72,7 @@ export default function Customers() {
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => db.AppSettings.list(), staleTime: 0,
+    queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
     initialData: [],
   });
   const { data: planList } = useQuery({

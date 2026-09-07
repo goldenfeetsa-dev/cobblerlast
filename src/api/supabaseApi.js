@@ -7,6 +7,14 @@ import { secureExpenses } from '@/lib/secureApi';
 
 // ── Generic Entity Factory ──────────────────────────────────────
 // list() / get() / create() / update() / delete() / filter() لكل جدول
+// أعمدة آمنة فقط (بدون أسرار) — يُستخدم صراحة مع employees و
+// app_settings لأن عمود pin (كود دخول الموظف) والأعمدة السرية بـ
+// app_settings (zatca_cert, zatca_private_key, twilio_sid, twilio_token)
+// مقفولة على مستوى قاعدة البيانات نفسها لـ anon/authenticated — أي
+// select('*') عليهم سيفشل بخطأ صلاحيات.
+export const EMPLOYEE_SAFE_COLUMNS = 'id, name, role, branch_id, branch_name, is_active, total_orders, total_revenue, created_at, avatar_url, auth_user_id';
+export const APP_SETTINGS_SAFE_COLUMNS = 'id, shop_name, vat_number, cr_number, city, address, phone, logo_url, vat_enabled, vat_rate, currency, zatca_enabled, zatca_sandbox, zatca_connected, moyasar_publishable_key, updated_at, social_instagram, social_whatsapp, social_twitter, social_snapchat, social_tiktok, google_maps_url, b2b_invoicing_enabled';
+
 function createEntity(tableName) {
   return {
     async list(orderBy = '-created_at', limit = 200, columns = '*') {
@@ -21,23 +29,23 @@ function createEntity(tableName) {
       return data || [];
     },
 
-    async get(id) {
+    async get(id, columns = '*') {
       const { data, error } = await supabase
-        .from(tableName).select('*').eq('id', id).single();
+        .from(tableName).select(columns).eq('id', id).single();
       if (error) throw new Error(error.message);
       return data;
     },
 
-    async create(record) {
+    async create(record, columns = '*') {
       const { data, error } = await supabase
-        .from(tableName).insert(record).select().single();
+        .from(tableName).insert(record).select(columns).single();
       if (error) throw new Error(error.message);
       return data;
     },
 
-    async update(id, record) {
+    async update(id, record, columns = '*') {
       const { data, error } = await supabase
-        .from(tableName).update(record).eq('id', id).select().single();
+        .from(tableName).update(record).eq('id', id).select(columns).single();
       if (error) throw new Error(error.message);
       return data;
     },

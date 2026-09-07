@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { db } from '@/api/supabaseApi';
+import { db, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Navigate } from 'react-router-dom';
@@ -244,7 +244,7 @@ export default function OperationsDashboard() {
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
-    queryFn: () => db.AppSettings.list(), staleTime: 0,
+    queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
     initialData: [],
   });
   const freeAfter = plan?.loyalty_free_after || settingsList[0]?.stamps_required || 4;

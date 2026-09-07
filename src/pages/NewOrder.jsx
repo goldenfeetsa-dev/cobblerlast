@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '@/api/supabaseApi';
+import { db, EMPLOYEE_SAFE_COLUMNS, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { generateOrderNumber } from '@/lib/barcodeUtils';
@@ -77,14 +77,14 @@ function CobblerTab({ session }) {
     queryKey: ['customers'], queryFn: () => db.Customer.list(), initialData: [],
   });
   const { data: settingsList = [] } = useQuery({
-    queryKey: ['app-settings'], queryFn: () => db.AppSettings.list(), staleTime: 0,
+    queryKey: ['app-settings'], queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
   });
   const { data: planList2 } = useQuery({
     queryKey: ['operations-plan'], queryFn: () => db.OperationsPlan.list(), initialData: [],
   });
   // قائمة الفنيين لتخصيص كل قطعة لفني مسؤول عنها
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'], queryFn: () => db.Employee.list(), initialData: [],
+    queryKey: ['employees'], queryFn: () => db.Employee.list('-created_at', 200, EMPLOYEE_SAFE_COLUMNS), initialData: [],
   });
   const technicians = employees.filter(e => e.is_active !== false);
 
@@ -166,13 +166,12 @@ function CobblerTab({ session }) {
       }
 
       if (session?.id) {
-        const emp = await db.Employee.list();
-        const me = emp.find(e => e.id === session.id);
+        const me = await db.Employee.get(session.id, EMPLOYEE_SAFE_COLUMNS).catch(() => null);
         if (me) {
           await db.Employee.update(me.id, {
             total_orders: (me.total_orders || 0) + 1,
             total_revenue: (me.total_revenue || 0) + price,
-          });
+          }, EMPLOYEE_SAFE_COLUMNS);
         }
       }
 
@@ -541,7 +540,7 @@ function CobblerTab({ session }) {
 function ProductsTab({ session }) {
   const queryClient = useQueryClient();
   const { data: settingsList = [] } = useQuery({
-    queryKey: ['app-settings'], queryFn: () => db.AppSettings.list(), staleTime: 0,
+    queryKey: ['app-settings'], queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
   });
   const shopSettings = settingsList[0] || {};
   const [cart, setCart] = useState([]);
