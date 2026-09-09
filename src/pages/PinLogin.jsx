@@ -51,6 +51,15 @@ export default function PinLogin() {
         return;
       }
 
+      // مهم: كان أي رد غير ناجح (حتى خطأ سيرفر حقيقي 500 بعد نجاح فحص
+      // الـ PIN فعلياً) يُعرض دائماً كـ"PIN غير صحيح" — يضلّل المستخدم
+      // ويخفي المشكلة الحقيقية. نميّز الحين بين خطأ PIN فعلي وأي خطأ آخر.
+      if (res.status >= 500 || result.error === 'server_error') {
+        setError(`خطأ بالخادم — ${result.error || 'حاول مرة ثانية بعد شوي'} (${res.status})`);
+        setPinKey(k => k + 1);
+        return;
+      }
+
       const attemptsLeft = result.attempts_left;
       setError(attemptsLeft != null ? `رقم PIN غير صحيح — المحاولات المتبقية ${attemptsLeft}` : 'رقم PIN غير صحيح');
       setPinKey(k => k + 1);
