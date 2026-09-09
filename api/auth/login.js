@@ -64,6 +64,15 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('api/auth/login error', err);
-    return res.status(500).json({ success: false, error: 'server_error' });
+    // تشخيصي مؤقت: نظهر تفاصيل الخطأ الحقيقية بالرد نفسه — ما قدرت
+    // أوصل للوقات Vercel من عندي (مشكلة اتصال مستمرة)، وهذا أسرع طريقة
+    // نعرف فيها السبب الحقيقي بدل التخمين. بُرجع لرسالة عامة بعد ما
+    // نحسم السبب.
+    return res.status(500).json({
+      success: false,
+      error: 'server_error',
+      debug_message: err?.message || String(err),
+      debug_hasSupabaseUrl: !!SUPABASE_URL,
+    });
   }
 }
