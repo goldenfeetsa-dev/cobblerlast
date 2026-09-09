@@ -103,6 +103,12 @@ function CobblerTab({ session }) {
     ? customers.find(c => normalizePhone(c.phone) === normalizePhone(form.customer_phone))
     : null;
 
+  // بحث بالاسم كمان (مو بس الجوال) — العميل ممكن يتذكر اسمه أسهل
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+  const nameMatches = form.customer_name.trim().length >= 2
+    ? customers.filter(c => c.name?.toLowerCase().includes(form.customer_name.trim().toLowerCase())).slice(0, 6)
+    : [];
+
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const addPiece = () => setPieces(prev => [...prev, newPiece()]);
@@ -298,16 +304,41 @@ function CobblerTab({ session }) {
       <Card>
         <CardHeader className="pb-4"><CardTitle className="text-base">بيانات العميل</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 relative">
             <div className="space-y-2">
               <Label>اسم العميل *</Label>
-              <Input value={form.customer_name} onChange={e => update('customer_name', e.target.value)} placeholder="الاسم الكامل" required />
+              <Input
+                value={form.customer_name}
+                onChange={e => { update('customer_name', e.target.value); setShowNameSuggestions(true); }}
+                onFocus={() => setShowNameSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowNameSuggestions(false), 150)}
+                placeholder="الاسم الكامل" required autoComplete="off"
+              />
+              {/* اقتراحات مطابقة بالاسم — العميل ممكن يتذكر الاسم بدل الرقم */}
+              {showNameSuggestions && form.customer_name.trim().length >= 2 && nameMatches.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full max-w-[calc(50%-8px)] bg-white dark:bg-stone-900 border rounded-xl shadow-lg overflow-hidden">
+                  {nameMatches.map(c => (
+                    <button
+                      key={c.id} type="button"
+                      onMouseDown={() => {
+                        update('customer_name', c.name);
+                        update('customer_phone', c.phone || '');
+                        setShowNameSuggestions(false);
+                      }}
+                      className="w-full text-right px-3 py-2 text-sm hover:bg-stone-50 dark:hover:bg-stone-800 flex items-center justify-between border-b last:border-b-0"
+                    >
+                      <span className="font-bold">{c.name}</span>
+                      <span className="text-xs text-muted-foreground" dir="ltr">{c.phone}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>رقم الهاتف</Label>
               <Input value={form.customer_phone} onChange={e => {
                 update('customer_phone', e.target.value);
-                const found = customers.find(c => c.phone === e.target.value);
+                const found = customers.find(c => normalizePhone(c.phone) === normalizePhone(e.target.value));
                 if (found && !form.customer_name) update('customer_name', found.name);
               }} placeholder="05XXXXXXXX" />
             </div>
