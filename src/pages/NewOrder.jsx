@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, EMPLOYEE_SAFE_COLUMNS, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
+import { supabase } from '@/lib/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { generateOrderNumber } from '@/lib/barcodeUtils';
 import PhotoUploader from '@/components/pos/PhotoUploader';
+import DeliveryDatePicker from '@/components/pos/DeliveryDatePicker';
 import ReceiptView from '@/components/pos/ReceiptView';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -91,8 +93,14 @@ function CobblerTab({ session }) {
   const { submitInvoice } = useZATCA();
   const shopSettings = settingsList[0] || {};
   const freeAfterUI = planList2[0]?.loyalty_free_after || 4;
+  // توحيد صيغة رقم الجوال قبل المقارنة — كان يعتمد على تطابق حرفي
+  // تام (===)، فلو الرقم محفوظ بصيغة مختلفة شوي عن المكتوب (مثلاً
+  // برمز الدولة 966XXXXXXXXX مقابل 0XXXXXXXXX بدون رمز الدولة)، ما
+  // كان يلقى العميل الموجود فعلاً أبداً. نوحّدها لآخر 9 أرقام فقط
+  // (تتجاهل رمز الدولة والصفر البادئ) قبل المقارنة.
+  const normalizePhone = (p) => String(p || '').replace(/\D/g, '').slice(-9);
   const knownCustomer = form.customer_phone.length >= 9
-    ? customers.find(c => c.phone === form.customer_phone)
+    ? customers.find(c => normalizePhone(c.phone) === normalizePhone(form.customer_phone))
     : null;
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
@@ -194,11 +202,24 @@ function CobblerTab({ session }) {
     onError: (e) => toast.error(`فشل حفظ الطلب: ${e.message || 'خطأ غير معروف'}`),
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.delivery_date) {
       toast.error('تاريخ التسليم مطلوب — لازم تحدده قبل حفظ الطلب');
+      return;
+    }
+
+    // إعادة تحقق مباشرة من القاعدة (مو من الكاش المحلي) وقت الحفظ —
+    // شبكة أمان لو تغيّر العدد بلحظة موازية (موظف ثاني حجز آخر مكان
+    // بنفس اليوم) بين ما فتح النموذج ولحظة الحفظ
+    const { count: dayCount, error: countErr } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('delivery_date', form.delivery_date)
+      .neq('status', 'cancelled');
+    if (!countErr && dayCount >= 8) {
+      toast.error('هذا اليوم صار ممتلئاً (8 طلبات) — اختر تاريخ تسليم ثاني');
       return;
     }
 
@@ -479,9 +500,10 @@ function CobblerTab({ session }) {
           )}
           <div className="space-y-2">
             <Label>تاريخ التسليم *</Label>
-            <Input type="date" min={format(new Date(), 'yyyy-MM-dd')} value={form.delivery_date}
-              onChange={e => update('delivery_date', e.target.value)} required />
-            <p className="text-xs text-muted-foreground">يظهر الطلب في صفحة التقويم/المهام باليوم المحدد هنا</p>
+            <DeliveryDatePicker value={form.delivery_date} onChange={(d) => update('delivery_date', d)} />
+            <p className="text-xs text-muted-foreground">
+              🟢 متاح — 🟡 شبه ممتلئ — 🔴 ممتلئ (8 طلبات فأكثر، ما يُسمح بالإضافة)
+            </p>
           </div>
         </CardContent>
       </Card>
