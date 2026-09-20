@@ -256,7 +256,7 @@ export default function TaxDashboard() {
     <>
       <div className="flex items-center justify-between border-b-4 pb-5 mb-6" style={{ borderColor: '#000000' }}>
         <div className="flex items-center gap-4">
-          <img src="/images/logo-cobblers.png" alt="الشعار" className="w-16 h-16 rounded-lg object-contain" style={{ background: '#000000' }} />
+          <img src="/images/cobblers-official-mark-white.png" alt="الشعار" className="w-16 h-16 rounded-lg object-contain p-2" style={{ background: '#000000' }} />
           <div>
             <h2 className="text-xl font-black" style={{ color: '#000000' }}>{zatcaSettings?.seller_name || 'إبرة وخيط الإسكافي'}</h2>
             <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>

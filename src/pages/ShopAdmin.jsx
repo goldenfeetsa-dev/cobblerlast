@@ -5,7 +5,7 @@ import { getSession } from '@/lib/sessionStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Package, Star, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Star, ToggleLeft, ToggleRight, AlertTriangle } from 'lucide-react';
 import ProductImageUploader from '@/components/shop/ProductImageUploader';
 import { toast } from 'sonner';
 
@@ -73,7 +73,9 @@ function ProductForm({ initial, onSave, onCancel }) {
         </div>
       </div>
       {!form.image_url && (
-        <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">⚠️ بدون صورة حقيقية، لن يظهر المنتج في نتائج بحث الصور بجوجل، وسيُستبدل بصورة عامة مؤقتة في المتجر.</p>
+        <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />بدون صورة حقيقية، لن يظهر المنتج في نتائج بحث الصور بجوجل، وسيُستبدل بصورة عامة مؤقتة في المتجر.
+        </p>
       )}
       <div className="flex gap-3">
         <Button onClick={() => onSave(form)} className="bg-primary" disabled={!form.name_ar || !form.price}>حفظ</Button>

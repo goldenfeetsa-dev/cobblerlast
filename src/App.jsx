@@ -47,6 +47,8 @@ const ReviewsAdmin = lazy(() => import('./pages/ReviewsAdmin'));
 const BrandsAdmin = lazy(() => import('./pages/BrandsAdmin'));
 const Shop = lazy(() => import('./pages/Shop'));
 const ShopAdmin = lazy(() => import('./pages/ShopAdmin'));
+const AuctionMarket = lazy(() => import('./pages/AuctionMarket'));
+const AuctionAdmin = lazy(() => import('./pages/AuctionAdmin'));
 const RepairPolicy = lazy(() => import('./pages/RepairPolicy'));
 const OperationsDashboard = lazy(() => import('./pages/OperationsDashboard'));
 const SalesSystem = lazy(() => import('./pages/SalesSystem'));
@@ -106,6 +108,7 @@ const AuthenticatedApp = () => {
         <Route path="/my-loyalty" element={<MyLoyalty />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/auction" element={<AuctionMarket />} />
         <Route path="/repair-policy" element={<RepairPolicy />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -146,6 +149,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/reviews" element={<ReviewsAdmin />} />
           <Route path="/admin/brands" element={<BrandsAdmin />} />
           <Route path="/admin/shop" element={<ShopAdmin />} />
+          <Route path="/admin/auction" element={<AuctionAdmin />} />
           <Route path="/operations" element={<OperationsDashboard />} />
           <Route path="/sales" element={<SalesSystem />} />
           <Route path="/workshop" element={<WorkshopSystem />} />

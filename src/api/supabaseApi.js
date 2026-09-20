@@ -209,7 +209,51 @@ export const db = {
   WorkshopSettlement: createEntity('workshop_settlements'),
   OperationsPlan:   createEntity('operations_plans'),
   WorkflowStage:    createEntity('workflow_stages'),
+  // سوق المزاد — القطع المجدّدة المعروضة للمزايدة المباشرة
+  AuctionListing:   createEntity('auction_listings'),
+  // سجل المزايدات — لا تحديث ولا حذف (RLS تمنعهما عمداً)، فقط list/create.
+  // التحقق من صحة المبلغ وتحديث current_price يتم داخل trigger على
+  // مستوى قاعدة البيانات (SECURITY DEFINER) وليس هنا، حتى لو حاول أحد
+  // تجاوز الواجهة.
+  AuctionBid:       createEntity('auction_bids'),
 };
+
+// ── Auction bidding helper ──────────────────────────────────────
+// trigger قاعدة البيانات (handle_new_auction_bid) يتحقق من الحد الأدنى
+// وحالة المزاد ذرّياً (SECURITY DEFINER + قفل صف)، ويرفع رسائل خطأ
+// عربية جاهزة للعرض مباشرة (مثال: "أقل مزايدة مقبولة الآن ٧٥٠ ريال")
+// — لذا لا حاجة لترجمة الخطأ هنا، فقط تمريره كما هو.
+export async function placeBid({ listingId, bidderName, bidderPhone, amount }) {
+  if (!bidderPhone) throw new Error('رقم الجوال مطلوب لتسجيل المزايدة');
+  return db.AuctionBid.create({
+    listing_id: listingId,
+    bidder_name: bidderName,
+    bidder_phone: bidderPhone,
+    amount,
+  });
+}
+
+// يجلب القطع النشطة مع اسم/شعار البراند وعدد المزايدات (بدون عمود
+// bid_count مخزّن — نحسبه من auction_bids مباشرة عبر تجميع Supabase)
+export async function listActiveAuctions() {
+  const { data, error } = await supabase
+    .from('auction_listings')
+    .select('*, brand:brands(name, name_ar, logo_url), auction_bids(count)')
+    .eq('status', 'active')
+    .order('ends_at', { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data || []).map((l) => ({ ...l, bid_count: l.auction_bids?.[0]?.count || 0 }));
+}
+
+// منتجات دكّة الإسكافي مع اسم/شعار البراند (لعرضه أسفل كل قطعة)
+export async function listShopProductsWithBrand() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*, brand:brands(name, name_ar, logo_url)')
+    .order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+}
 
 // ── Storage ────────────────────────────────────────────────────
 export const storage = { uploadFile, deleteFile };

@@ -6,6 +6,7 @@ module.exports = {
   	extend: {
   		fontFamily: {
   			tajawal: ['var(--font-tajawal)'],
+  			almarai: ['var(--font-tajawal)'],
   			display: ['var(--font-display)']
   		},
   		borderRadius: {
@@ -54,6 +55,7 @@ module.exports = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
+  			'brand-brass': 'hsl(var(--brand-brass))',
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',

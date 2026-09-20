@@ -113,8 +113,8 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-primary">
-            <img src="/images/logo-cobblers.png" alt="إبرة وخيط الإسكافي" className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-primary flex items-center justify-center p-1.5">
+            <img src="/images/cobblers-official-mark-white.png" alt="إبرة وخيط الإسكافي" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="font-bold text-sm">إبرة وخيط الإسكافي</h1>
@@ -214,7 +214,7 @@ export default function Sidebar() {
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2 mr-2">
-          <img src="/images/logo-cobblers.png" alt="إبرة وخيط الإسكافي" className="w-6 h-6 rounded-md object-cover" />
+          <img src="/images/cobblers-official-mark-white.png" alt="إبرة وخيط الإسكافي" className="w-6 h-6 rounded-md object-contain" />
           <span className="font-bold text-sm">إبرة وخيط الإسكافي</span>
         </div>
       </div>
