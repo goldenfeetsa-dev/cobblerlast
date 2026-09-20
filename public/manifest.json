@@ -4,7 +4,7 @@
   "description": "نظام إدارة ورشة إصلاح الأحذية والحقائب الفاخرة",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6efe4",
+  "background_color": "#e6d9bf",
   "theme_color": "#5f341a",
   "lang": "ar",
   "dir": "rtl",

@@ -52,8 +52,8 @@ const D   = '#ead9c2';   // secondary — كريمي أغمق شوي، لتدر�
 const T   = '#24140b';   // foreground — النص الأساسي الداكن في كل الموقع
 const GB  = 'rgba(169,128,63,'; // نفس G (brand-brass) بصيغة rgba قابلة لإضافة شفافية
 const GL  = '#d4ab6d';   // تدرّج ذهبي/برونزي أفتح (brand-brass في الوضع الداكن)
-const BG1 = '#f6efe4';   // background — خلفية القسم الأساسية
-const BG2 = '#ede3d3';   // muted — خلفية قسم متبادلة، لإحساس بصري بالفصل بين الأقسام
+const BG1 = '#e6d9bf';   // background — بيج واضح (كان قريب جداً من الأبيض)
+const BG2 = '#dcccac';   // قسم متبادل أغمق شوي، لإحساس بصري بالفصل بين الأقسام
 
 // ── FadeIn ────────────────────────────────────────────────────────
 function FadeIn({ children, delay = 0, className = '', x = 0, y = 32 }) {

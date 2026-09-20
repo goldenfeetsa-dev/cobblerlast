@@ -13,11 +13,11 @@
        والمزاد. كل قيمة HSL هنا محوّلة مباشرة من قيم HEX في
        design-system tokens.json حتى تبقى الواجهة والـ Design System
        متطابقين تماماً ── */
-    --background: 37 50% 93%;
+    --background: 37 42% 86%;
     --foreground: 22 53% 9%;
-    --card: 35 100% 98%;
+    --card: 35 55% 95%;
     --card-foreground: 22 53% 9%;
-    --popover: 35 100% 98%;
+    --popover: 35 55% 95%;
     --popover-foreground: 22 53% 9%;
     --primary: 23 57% 24%;
     --primary-foreground: 33 69% 95%;
