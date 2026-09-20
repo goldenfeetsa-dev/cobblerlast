@@ -10,7 +10,7 @@ import ProductImageUploader from '@/components/shop/ProductImageUploader';
 import { toast } from 'sonner';
 
 const CATEGORIES = { bags: 'حقائب', shoes: 'أحذية', accessories: 'إكسسوارات', other: 'أخرى' };
-const STATUSES = { active: 'نشط', ended: 'منتهي', sold: 'مباع', cancelled: 'ملغي' };
+const STATUSES = { active: 'نشط', pending: 'بانتظار المراجعة', ended: 'منتهي', sold: 'مباع', cancelled: 'ملغي' };
 
 // نفس ٤ ساعات وقت افتراضي لانتهاء المزاد عند الإضافة — يقدر التاجر يغيّرها
 function defaultEndsAt() {
@@ -181,11 +181,16 @@ export default function AuctionAdmin() {
                       <span className="font-bold">{l.title_ar}</span>
                       {l.is_featured && <Star className="w-3.5 h-3.5 text-yellow-500 dark:text-yellow-400 fill-yellow-500" />}
                       <Badge variant="outline">{CATEGORIES[l.category] || l.category}</Badge>
-                      <Badge variant={l.status === 'active' ? 'default' : 'outline'}>{STATUSES[l.status] || l.status}</Badge>
+                      <Badge variant={l.status === 'active' ? 'default' : l.status === 'pending' ? 'destructive' : 'outline'}>{STATUSES[l.status] || l.status}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
                       السعر الحالي: <span className="font-bold text-primary">{l.current_price} ر.س</span> · ينتهي: {new Date(l.ends_at).toLocaleString('ar-SA')}
                     </p>
+                    {l.submitter_name && (
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                        📨 مقدَّمة من: {l.submitter_name} — <span dir="ltr">{l.submitter_phone}</span>
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2 shrink-0">
                     {l.status === 'active' ? (
