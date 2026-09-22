@@ -38,10 +38,16 @@ export default function BarcodeOnly() {
 
   const handlePrint = async () => {
     if (!barcodeRef.current) return;
-    const canvas = await html2canvas(barcodeRef.current, { scale: 3, backgroundColor: '#ffffff' });
-    const imgData = canvas.toDataURL('image/png');
+    // نفتح النافذة فوراً (بشكل متزامن، قبل أي await) — لو فتحناها بعد
+    // انتظار html2canvas، بعض المتصفحات تعتبرها نافذة منبثقة غير موثوقة
+    // (فقدت سياق "تفاعل المستخدم" الحقيقي) وتحجبها بصمت بدون أي خطأ ظاهر.
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+    printWindow.document.write('<p style="font-family:sans-serif;text-align:center;margin-top:40px;">جارٍ التجهيز...</p>');
+
+    const canvas = await html2canvas(barcodeRef.current, { scale: 3, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/png');
+    printWindow.document.open();
     printWindow.document.write(`
       <html>
       <head>
@@ -110,9 +116,9 @@ export default function BarcodeOnly() {
               </span>
             </div>
           )}
-          <div style={{ display: 'flex', background: '#000' }}>
-            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#fff', padding: '3px 4px', borderLeft: '1px solid #fff' }}>التسليم</span>
-            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#fff', padding: '3px 4px', textAlign: 'center' }} dir="ltr">
+          <div style={{ display: 'flex' }}>
+            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التسليم</span>
+            <span style={{ flex: 1, fontSize: '11px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }} dir="ltr">
               {order.delivery_date ? format(new Date(order.delivery_date), 'd/M') : '—'}
             </span>
           </div>
