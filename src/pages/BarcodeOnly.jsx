@@ -50,8 +50,8 @@ export default function BarcodeOnly() {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; }
-          img { width: 72mm; display: block; }
-          @media print { body { width: 72mm; } }
+          img { width: 50mm; display: block; }
+          @media print { body { width: 50mm; } @page { size: 50mm auto; margin: 0; } }
         </style>
       </head>
       <body>
@@ -81,21 +81,43 @@ export default function BarcodeOnly() {
         رجوع
       </Button>
 
-      <div ref={barcodeRef} className="bg-white p-6 flex flex-col items-center gap-3">
-        <BarcodeDisplay value={order.order_number} width={280} height={80} />
-        {/* اسم العميل صاحب الفاتورة + نوع الخدمة + تاريخ التسليم — تحت الباركود
-            والرقم مباشرة. تاريخ التسليم مهم جداً لعامل التسليم/الفرز، فهو
-            بارز بخط عريض ومحاط بإطار خفيف حتى ينتبه له أول ما يشوف الملصق. */}
-        <div className="flex flex-col items-center gap-0.5 text-center" dir="rtl">
-          <span className="text-sm font-black text-gray-900">{order.customer_name}</span>
-          <span className="text-xs font-bold text-gray-500">
-            {ITEM_TYPE_LABELS[order.item_type] || order.item_type}
-          </span>
-          <span className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded border border-gray-300 text-[11px] font-black text-gray-900">
-            تاريخ التسليم: {order.delivery_date
-              ? format(new Date(order.delivery_date), 'd MMMM yyyy', { locale: ar })
-              : 'غير محدد'}
-          </span>
+      {/* تذكرة الطلب — مصمّمة بشكل شبكي مرتب لمقاس 50مم (مكينة الباركود
+          الفعلية)، بدل النص المكدّس السابق. الهدف: أي موظف يشوفها ويفهم
+          كل المعلومات المهمة بلمحة واحدة بدون ما يقرأ سطر سطر. */}
+      <div ref={barcodeRef} className="bg-white flex flex-col items-center" dir="rtl"
+        style={{ width: '189px' /* ≈50mm @96dpi */, padding: '10px 8px', fontFamily: "'Tajawal', 'Arial', sans-serif" }}>
+
+        {/* رقم الطلب — أكبر وأوضح عنصر بالملصق، أول شي تشوفه العين */}
+        <div style={{ fontSize: '15px', fontWeight: '900', color: '#000', marginBottom: '4px', letterSpacing: '0.5px' }}>
+          {order.order_number}
+        </div>
+
+        <BarcodeDisplay value={order.order_number} width={165} height={40} />
+
+        {/* شبكة معلومات مضغوطة بخطوط فاصلة واضحة — بدل نص عادي متتالي */}
+        <div style={{ width: '100%', marginTop: '6px', border: '1px solid #000', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>العميل</span>
+            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }}>{order.customer_name}</span>
+          </div>
+          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>نوع القطعة</span>
+            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }}>{ITEM_TYPE_LABELS[order.item_type] || order.item_type}</span>
+          </div>
+          {(order.description || order.notes) && (
+            <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+              <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التصليح</span>
+              <span style={{ flex: 1, fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', textAlign: 'center', lineHeight: '1.3' }}>
+                {(order.description || order.notes || '').slice(0, 60)}
+              </span>
+            </div>
+          )}
+          <div style={{ display: 'flex', background: '#000' }}>
+            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#fff', padding: '3px 4px', borderLeft: '1px solid #fff' }}>التسليم</span>
+            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#fff', padding: '3px 4px', textAlign: 'center' }}>
+              {order.delivery_date ? format(new Date(order.delivery_date), 'd MMM', { locale: ar }) : '—'}
+            </span>
+          </div>
         </div>
       </div>
 
