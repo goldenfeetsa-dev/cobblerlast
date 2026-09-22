@@ -14,7 +14,7 @@ export default function ScanBarcode() {
 
   const handleScan = async (e) => {
     e.preventDefault();
-    const trimmed = code.trim();
+    const trimmed = code.trim().replace(/-\d+$/, ''); // يشيل رقم القطعة الفرعي إن وجد (NT123-2 → NT123)
     if (!trimmed) return;
 
     setLoading(true);

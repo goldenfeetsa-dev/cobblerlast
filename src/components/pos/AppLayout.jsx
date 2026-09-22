@@ -18,13 +18,16 @@ export default function AppLayout() {
   // قارئ الباركود يعمل من أي شاشة داخل نقطة البيع (بما فيها "طلب جديد")
   // بدون الحاجة للذهاب لصفحة "مسح الباركود" — بمجرد مسح أي كود يفتح الطلب مباشرة
   useGlobalBarcodeScanner(async (code) => {
+    // الباركود ممكن يكون لقطعة مفردة برقم فرعي (NT123-2) — نشيله قبل
+    // البحث عشان يلقى الطلب الأصلي بغض النظر عن أي قطعة تحديداً انمسحت
+    const baseCode = code.replace(/-\d+$/, '');
     try {
-      const matches = await db.Order.filter({ order_number: code }, '-created_at', 1);
+      const matches = await db.Order.filter({ order_number: baseCode }, '-created_at', 1);
       if (matches?.[0]) {
-        toast.success(`📦 فُتح الطلب ${code}`);
+        toast.success(`📦 فُتح الطلب ${baseCode}`);
         navigate(`/orders/${matches[0].id}`);
       } else {
-        toast.error(`لا يوجد طلب بالرقم ${code}`);
+        toast.error(`لا يوجد طلب بالرقم ${baseCode}`);
       }
     } catch {
       toast.error('تعذّر البحث عن الباركود، تحقق من الاتصال');

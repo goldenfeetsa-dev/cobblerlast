@@ -15,9 +15,57 @@ const ITEM_TYPE_LABELS = {
   jacket: 'جاكيت', pants: 'بنطال', shirt: 'قميص', other: 'أخرى',
 };
 
+// بطاقة ملصق واحدة — تُستخدم لكل قطعة على حدة (مو للطلب كامل) عشان
+// كل قطعة فعلية تاخذ ملصقها المستقل القابل للمسح بدل ملصق واحد
+// يغطّي الطلب كامل وتضيع بقية القطع.
+function LabelCard({ barcodeValue, order, piece, pieceIndex, totalPieces }) {
+  return (
+    <div className="bcd-label bg-white flex flex-col items-center" dir="rtl"
+      style={{ width: '189px', padding: '10px 8px', fontFamily: "'Tajawal', 'Arial', sans-serif" }}>
+
+      {totalPieces > 1 && (
+        <div style={{ fontSize: '10px', fontWeight: '900', color: '#000', marginBottom: '3px' }}>
+          قطعة {pieceIndex + 1} / {totalPieces}
+        </div>
+      )}
+
+      <BarcodeDisplay value={barcodeValue} width={130} height={36} />
+
+      <div style={{ width: '100%', marginTop: '6px', border: '1px solid #000', borderRadius: '4px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+          <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>العميل</span>
+          <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }}>{order.customer_name}</span>
+        </div>
+        <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+          <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>رقم العميل</span>
+          <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }} dir="ltr">{order.customer_phone || '—'}</span>
+        </div>
+        <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+          <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>نوع القطعة</span>
+          <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }}>{ITEM_TYPE_LABELS[piece.item_type] || piece.item_type}</span>
+        </div>
+        {(piece.description) && (
+          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التصليح</span>
+            <span style={{ flex: 1, fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', textAlign: 'center', lineHeight: '1.3' }}>
+              {(piece.description || '').slice(0, 60)}
+            </span>
+          </div>
+        )}
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التسليم</span>
+          <span style={{ flex: 1, fontSize: '11px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }} dir="ltr">
+            {order.delivery_date ? format(new Date(order.delivery_date), 'd/M') : '—'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BarcodeOnly() {
   const navigate = useNavigate();
-  const barcodeRef = useRef(null);
+  const containerRef = useRef(null);
   const pathParts = window.location.pathname.split('/');
   const orderId = pathParts[pathParts.length - 1];
 
@@ -27,9 +75,16 @@ export default function BarcodeOnly() {
     enabled: !!orderId,
   });
 
+  // لو الطلب فيه أكثر من قطعة (order_items)، نصدر ملصق مستقل لكل قطعة
+  // برقم فرعي (NT123-1, NT123-2...) — كل قطعة فعلية تاخذ ملصقها الخاص
+  // بدل ملصق واحد للطلب كامل تضيع فيه بقية القطع
+  const pieces = (order?.order_items && order.order_items.length > 0)
+    ? order.order_items
+    : (order ? [{ item_type: order.item_type, description: order.description || order.notes || '' }] : []);
+
   const handleDownload = async () => {
-    if (!barcodeRef.current) return;
-    const canvas = await html2canvas(barcodeRef.current, { scale: 3, backgroundColor: '#ffffff' });
+    if (!containerRef.current) return;
+    const canvas = await html2canvas(containerRef.current, { scale: 3, backgroundColor: '#ffffff' });
     const link = document.createElement('a');
     link.download = `باركود-${order?.order_number || orderId}.png`;
     link.href = canvas.toDataURL('image/png');
@@ -37,7 +92,7 @@ export default function BarcodeOnly() {
   };
 
   const handlePrint = async () => {
-    if (!barcodeRef.current) return;
+    if (!containerRef.current) return;
     // نفتح النافذة فوراً (بشكل متزامن، قبل أي await) — لو فتحناها بعد
     // انتظار html2canvas، بعض المتصفحات تعتبرها نافذة منبثقة غير موثوقة
     // (فقدت سياق "تفاعل المستخدم" الحقيقي) وتحجبها بصمت بدون أي خطأ ظاهر.
@@ -45,8 +100,16 @@ export default function BarcodeOnly() {
     if (!printWindow) return;
     printWindow.document.write('<p style="font-family:sans-serif;text-align:center;margin-top:40px;">جارٍ التجهيز...</p>');
 
-    const canvas = await html2canvas(barcodeRef.current, { scale: 3, backgroundColor: '#ffffff' });
-    const imgData = canvas.toDataURL('image/png');
+    // نصوّر كل ملصق قطعة على حدة (مو الحاوية كلها دفعة وحدة) — عشان
+    // كل قطعة تطبع بصفحة/ملصق مستقل فعلياً على مكينة الباركود، بدل
+    // صورة واحدة طويلة فيها كل الملصقات ملزّقة ببعض.
+    const labelEls = containerRef.current.querySelectorAll('.bcd-label');
+    const images = [];
+    for (const el of labelEls) {
+      const canvas = await html2canvas(el, { scale: 3, backgroundColor: '#ffffff' });
+      images.push(canvas.toDataURL('image/png'));
+    }
+
     printWindow.document.open();
     printWindow.document.write(`
       <html>
@@ -54,13 +117,15 @@ export default function BarcodeOnly() {
         <meta charset="utf-8"/>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; }
+          body { background: white; }
+          .page { width: 50mm; display: flex; justify-content: center; align-items: center; page-break-after: always; }
+          .page:last-child { page-break-after: auto; }
           img { width: 50mm; display: block; }
-          @media print { body { width: 50mm; } @page { size: 50mm auto; margin: 0; } }
+          @media print { @page { size: 50mm auto; margin: 0; } }
         </style>
       </head>
       <body>
-        <img src="${imgData}" />
+        ${images.map((src) => `<div class="page"><img src="${src}" /></div>`).join('')}
         <script>
           window.onload = function() { window.print(); window.close(); }
         </script>
@@ -86,49 +151,31 @@ export default function BarcodeOnly() {
         رجوع
       </Button>
 
+      {pieces.length > 1 && (
+        <p className="text-sm font-bold text-muted-foreground -mb-4">
+          {pieces.length} قطع — كل وحدة بملصقها المستقل
+        </p>
+      )}
+
       {/* تذكرة الطلب — مصمّمة بشكل شبكي مرتب لمقاس 50مم (مكينة الباركود
-          الفعلية)، بدل النص المكدّس السابق. الهدف: أي موظف يشوفها ويفهم
-          كل المعلومات المهمة بلمحة واحدة بدون ما يقرأ سطر سطر. */}
-      <div ref={barcodeRef} className="bg-white flex flex-col items-center" dir="rtl"
-        style={{ width: '189px' /* ≈50mm @96dpi */, padding: '10px 8px', fontFamily: "'Tajawal', 'Arial', sans-serif" }}>
-
-        <BarcodeDisplay value={order.order_number} width={130} height={36} />
-
-        {/* شبكة معلومات مضغوطة بخطوط فاصلة واضحة — بدل نص عادي متتالي */}
-        <div style={{ width: '100%', marginTop: '6px', border: '1px solid #000', borderRadius: '4px', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>العميل</span>
-            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }}>{order.customer_name}</span>
-          </div>
-          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>رقم العميل</span>
-            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }} dir="ltr">{order.customer_phone || '—'}</span>
-          </div>
-          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>نوع القطعة</span>
-            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }}>{ITEM_TYPE_LABELS[order.item_type] || order.item_type}</span>
-          </div>
-          {(order.description || order.notes) && (
-            <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-              <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التصليح</span>
-              <span style={{ flex: 1, fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', textAlign: 'center', lineHeight: '1.3' }}>
-                {(order.description || order.notes || '').slice(0, 60)}
-              </span>
-            </div>
-          )}
-          <div style={{ display: 'flex' }}>
-            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التسليم</span>
-            <span style={{ flex: 1, fontSize: '11px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }} dir="ltr">
-              {order.delivery_date ? format(new Date(order.delivery_date), 'd/M') : '—'}
-            </span>
-          </div>
-        </div>
+          الفعلية). ملصق مستقل لكل قطعة، مرقّمة فرعياً (NT123-1, -2...) */}
+      <div ref={containerRef} className="flex flex-wrap items-start justify-center gap-4">
+        {pieces.map((piece, i) => (
+          <LabelCard
+            key={i}
+            barcodeValue={pieces.length > 1 ? `${order.order_number}-${i + 1}` : order.order_number}
+            order={order}
+            piece={piece}
+            pieceIndex={i}
+            totalPieces={pieces.length}
+          />
+        ))}
       </div>
 
       <div className="flex gap-3">
         <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90">
           <Printer className="w-4 h-4 ml-2" />
-          طباعة
+          طباعة {pieces.length > 1 ? `(${pieces.length} ملصقات)` : ''}
         </Button>
         <Button onClick={handleDownload} variant="outline">
           <Download className="w-4 h-4 ml-2" />
