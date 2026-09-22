@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Printer, Download, PackageSearch } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
 
 // نفس تسميات الأصناف المستخدمة بصفحة إنشاء الطلب (NewOrder.jsx) —
 // عشان يظهر نوع الخدمة بالعربي تحت الباركود بدل قيمة الكود الخام.
@@ -87,18 +86,17 @@ export default function BarcodeOnly() {
       <div ref={barcodeRef} className="bg-white flex flex-col items-center" dir="rtl"
         style={{ width: '189px' /* ≈50mm @96dpi */, padding: '10px 8px', fontFamily: "'Tajawal', 'Arial', sans-serif" }}>
 
-        {/* رقم الطلب — أكبر وأوضح عنصر بالملصق، أول شي تشوفه العين */}
-        <div style={{ fontSize: '15px', fontWeight: '900', color: '#000', marginBottom: '4px', letterSpacing: '0.5px' }}>
-          {order.order_number}
-        </div>
-
-        <BarcodeDisplay value={order.order_number} width={165} height={40} />
+        <BarcodeDisplay value={order.order_number} width={130} height={36} />
 
         {/* شبكة معلومات مضغوطة بخطوط فاصلة واضحة — بدل نص عادي متتالي */}
         <div style={{ width: '100%', marginTop: '6px', border: '1px solid #000', borderRadius: '4px', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
             <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>العميل</span>
             <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }}>{order.customer_name}</span>
+          </div>
+          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
+            <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>رقم العميل</span>
+            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#000', padding: '3px 4px', textAlign: 'center' }} dir="ltr">{order.customer_phone || '—'}</span>
           </div>
           <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
             <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#000', padding: '3px 4px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>نوع القطعة</span>
@@ -114,8 +112,8 @@ export default function BarcodeOnly() {
           )}
           <div style={{ display: 'flex', background: '#000' }}>
             <span style={{ width: '38%', fontSize: '9px', fontWeight: '700', color: '#fff', padding: '3px 4px', borderLeft: '1px solid #fff' }}>التسليم</span>
-            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#fff', padding: '3px 4px', textAlign: 'center' }}>
-              {order.delivery_date ? format(new Date(order.delivery_date), 'd MMM', { locale: ar }) : '—'}
+            <span style={{ flex: 1, fontSize: '10px', fontWeight: '900', color: '#fff', padding: '3px 4px', textAlign: 'center' }} dir="ltr">
+              {order.delivery_date ? format(new Date(order.delivery_date), 'd/M') : '—'}
             </span>
           </div>
         </div>
