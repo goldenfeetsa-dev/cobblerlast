@@ -100,39 +100,47 @@ export default function BarcodeOnly() {
     if (!printWindow) return;
     printWindow.document.write('<p style="font-family:sans-serif;text-align:center;margin-top:40px;">جارٍ التجهيز...</p>');
 
-    // نصوّر كل ملصق قطعة على حدة (مو الحاوية كلها دفعة وحدة) — عشان
-    // كل قطعة تطبع بصفحة/ملصق مستقل فعلياً على مكينة الباركود، بدل
-    // صورة واحدة طويلة فيها كل الملصقات ملزّقة ببعض.
-    const labelEls = containerRef.current.querySelectorAll('.bcd-label');
-    const images = [];
-    for (const el of labelEls) {
-      const canvas = await html2canvas(el, { scale: 3, backgroundColor: '#ffffff' });
-      images.push(canvas.toDataURL('image/png'));
-    }
+    try {
+      // نصوّر كل ملصق قطعة على حدة (بالتوازي، مو بالتسلسل) — عشان كل
+      // قطعة تطبع بصفحة/ملصق مستقل فعلياً على مكينة الباركود، بدل صورة
+      // واحدة طويلة فيها كل الملصقات ملزّقة ببعض. أي خطأ هنا كان يوقف
+      // التنفيذ بصمت (النافذة تفضل عالقة على "جارٍ التجهيز" للأبد) —
+      // صار الخطأ يظهر فعلياً برسالة واضحة بدل ما يختفي بصمت.
+      const labelEls = Array.from(containerRef.current.querySelectorAll('.bcd-label'));
+      if (labelEls.length === 0) throw new Error('ما فيه أي ملصق للتصوير');
 
-    printWindow.document.open();
-    printWindow.document.write(`
-      <html>
-      <head>
-        <meta charset="utf-8"/>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { background: white; }
-          .page { width: 50mm; display: flex; justify-content: center; align-items: center; page-break-after: always; }
-          .page:last-child { page-break-after: auto; }
-          img { width: 50mm; display: block; }
-          @media print { @page { size: 50mm auto; margin: 0; } }
-        </style>
-      </head>
-      <body>
-        ${images.map((src) => `<div class="page"><img src="${src}" /></div>`).join('')}
-        <script>
-          window.onload = function() { window.print(); window.close(); }
-        </script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
+      const images = await Promise.all(
+        labelEls.map((el) => html2canvas(el, { scale: 3, backgroundColor: '#ffffff' }).then((canvas) => canvas.toDataURL('image/png')))
+      );
+
+      printWindow.document.open();
+      printWindow.document.write(`
+        <html>
+        <head>
+          <meta charset="utf-8"/>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { background: white; }
+            .page { width: 50mm; display: flex; justify-content: center; align-items: center; page-break-after: always; }
+            .page:last-child { page-break-after: auto; }
+            img { width: 50mm; display: block; }
+            @media print { @page { size: 50mm auto; margin: 0; } }
+          </style>
+        </head>
+        <body>
+          ${images.map((src) => `<div class="page"><img src="${src}" /></div>`).join('')}
+          <script>
+            window.onload = function() { window.print(); window.close(); }
+          </script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (err) {
+      printWindow.document.open();
+      printWindow.document.write(`<p style="font-family:sans-serif;text-align:center;margin-top:40px;color:#b91c1c;">تعذّرت الطباعة: ${err?.message || 'خطأ غير معروف'}<br/>أغلق هذي النافذة وجرّب مرة ثانية.</p>`);
+      printWindow.document.close();
+    }
   };
 
   if (!order) {
