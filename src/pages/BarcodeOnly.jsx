@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
@@ -66,6 +66,7 @@ function LabelCard({ barcodeValue, order, piece, pieceIndex, totalPieces }) {
 export default function BarcodeOnly() {
   const navigate = useNavigate();
   const containerRef = useRef(null);
+  const [autoPrinted, setAutoPrinted] = useState(false);
   const pathParts = window.location.pathname.split('/');
   const orderId = pathParts[pathParts.length - 1];
 
@@ -82,6 +83,16 @@ export default function BarcodeOnly() {
     ? order.order_items
     : (order ? [{ item_type: order.item_type, description: order.description || order.notes || '' }] : []);
 
+  // طباعة تلقائية أول ما البيانات تجهز — نفس آلية الفاتورة بالضبط،
+  // بضغطة وحدة بدون تأخير مصطنع
+  useEffect(() => {
+    if (order && !autoPrinted) {
+      setAutoPrinted(true);
+      const t = setTimeout(() => window.print(), 300);
+      return () => clearTimeout(t);
+    }
+  }, [order, autoPrinted]);
+
   const handleDownload = async () => {
     if (!containerRef.current) return;
     const canvas = await html2canvas(containerRef.current, { scale: 3, backgroundColor: '#ffffff' });
@@ -89,58 +100,6 @@ export default function BarcodeOnly() {
     link.download = `باركود-${order?.order_number || orderId}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-  };
-
-  const handlePrint = async () => {
-    if (!containerRef.current) return;
-    // نفتح النافذة فوراً (بشكل متزامن، قبل أي await) — لو فتحناها بعد
-    // انتظار html2canvas، بعض المتصفحات تعتبرها نافذة منبثقة غير موثوقة
-    // (فقدت سياق "تفاعل المستخدم" الحقيقي) وتحجبها بصمت بدون أي خطأ ظاهر.
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write('<p style="font-family:sans-serif;text-align:center;margin-top:40px;">جارٍ التجهيز...</p>');
-
-    try {
-      // نصوّر كل ملصق قطعة على حدة (بالتوازي، مو بالتسلسل) — عشان كل
-      // قطعة تطبع بصفحة/ملصق مستقل فعلياً على مكينة الباركود، بدل صورة
-      // واحدة طويلة فيها كل الملصقات ملزّقة ببعض. أي خطأ هنا كان يوقف
-      // التنفيذ بصمت (النافذة تفضل عالقة على "جارٍ التجهيز" للأبد) —
-      // صار الخطأ يظهر فعلياً برسالة واضحة بدل ما يختفي بصمت.
-      const labelEls = Array.from(containerRef.current.querySelectorAll('.bcd-label'));
-      if (labelEls.length === 0) throw new Error('ما فيه أي ملصق للتصوير');
-
-      const images = await Promise.all(
-        labelEls.map((el) => html2canvas(el, { scale: 3, backgroundColor: '#ffffff' }).then((canvas) => canvas.toDataURL('image/png')))
-      );
-
-      printWindow.document.open();
-      printWindow.document.write(`
-        <html>
-        <head>
-          <meta charset="utf-8"/>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { background: white; }
-            .page { width: 50mm; display: flex; justify-content: center; align-items: center; page-break-after: always; }
-            .page:last-child { page-break-after: auto; }
-            img { width: 50mm; display: block; }
-            @media print { @page { size: 50mm auto; margin: 0; } }
-          </style>
-        </head>
-        <body>
-          ${images.map((src) => `<div class="page"><img src="${src}" /></div>`).join('')}
-          <script>
-            window.onload = function() { window.print(); window.close(); }
-          </script>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
-    } catch (err) {
-      printWindow.document.open();
-      printWindow.document.write(`<p style="font-family:sans-serif;text-align:center;margin-top:40px;color:#b91c1c;">تعذّرت الطباعة: ${err?.message || 'خطأ غير معروف'}<br/>أغلق هذي النافذة وجرّب مرة ثانية.</p>`);
-      printWindow.document.close();
-    }
   };
 
   if (!order) {
@@ -154,20 +113,39 @@ export default function BarcodeOnly() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-8">
-      <Button variant="ghost" className="absolute top-4 right-4" onClick={() => navigate(-1)}>
+      {/* أنماط الطباعة — نفس آلية الفاتورة بالضبط: تطبع الصفحة الحالية
+          مباشرة (بدون فتح أي نافذة/تبويب ثاني)، وتُخفي كل شيء إلا
+          الملصقات. كل ملصق قطعة يصير صفحة طباعة مستقلة (page-break)
+          فتخرج كل قطعة على ورقة منفصلة فعلياً من مكينة الباركود. */}
+      <style>{`
+        @media print {
+          html, body { height: auto !important; overflow: visible !important; }
+          body * { visibility: hidden; }
+          #bcd-print-area, #bcd-print-area * { visibility: visible; }
+          #bcd-print-area {
+            position: fixed; top: 0; left: 0; right: 0;
+            width: 50mm; height: auto; max-height: none; overflow: visible;
+            margin: 0 auto; box-shadow: none !important;
+          }
+          .bcd-no-print { display: none !important; }
+          .bcd-label { page-break-after: always; }
+          .bcd-label:last-child { page-break-after: auto; }
+          @page { size: 50mm auto; margin: 0; }
+        }
+      `}</style>
+
+      <Button variant="ghost" className="absolute top-4 right-4 bcd-no-print" onClick={() => navigate(-1)}>
         <ArrowRight className="w-4 h-4 ml-2" />
         رجوع
       </Button>
 
       {pieces.length > 1 && (
-        <p className="text-sm font-bold text-muted-foreground -mb-4">
-          {pieces.length} قطع — كل وحدة بملصقها المستقل
+        <p className="text-sm font-bold text-muted-foreground -mb-4 bcd-no-print">
+          {pieces.length} قطع — كل وحدة بملصقها المستقل بورقة منفصلة
         </p>
       )}
 
-      {/* تذكرة الطلب — مصمّمة بشكل شبكي مرتب لمقاس 50مم (مكينة الباركود
-          الفعلية). ملصق مستقل لكل قطعة، مرقّمة فرعياً (NT123-1, -2...) */}
-      <div ref={containerRef} className="flex flex-wrap items-start justify-center gap-4">
+      <div id="bcd-print-area" ref={containerRef} className="flex flex-wrap items-start justify-center gap-4">
         {pieces.map((piece, i) => (
           <LabelCard
             key={i}
@@ -180,8 +158,8 @@ export default function BarcodeOnly() {
         ))}
       </div>
 
-      <div className="flex gap-3">
-        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90">
+      <div className="flex gap-3 bcd-no-print">
+        <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90">
           <Printer className="w-4 h-4 ml-2" />
           طباعة {pieces.length > 1 ? `(${pieces.length} ملصقات)` : ''}
         </Button>
