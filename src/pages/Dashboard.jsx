@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import FinancialReport from '@/components/dashboard/FinancialReport';
 import { unifyTransactions, summarizeByBranch } from '@/lib/analytics';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const PERIODS = [
   { key: 'today', label: 'اليوم' },
@@ -179,7 +180,7 @@ export default function Dashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="إجمالي العمليات" value={transactions.length} subtitle={`${pendingOrders.length} إصلاح قيد الانتظار`} icon={ShoppingBag} accentClass="bg-primary" />
-        <StatCard title="الإيرادات" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`${paidOrders.length} عملية مدفوعة`} icon={Wallet} accentClass="bg-primary" />
+        <StatCard title="الإيرادات" value={`$<SarAmount value={totalRevenue.toFixed(0)} />`} subtitle={`${paidOrders.length} عملية مدفوعة`} icon={Wallet} accentClass="bg-primary" />
         <StatCard title="العملاء" value={customers.length} icon={Users} accentClass="bg-primary" />
         <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
       </div>
@@ -204,7 +205,7 @@ export default function Dashboard() {
                     <span className="font-bold text-sm truncate">{b.branch_name}</span>
                     {i === 0 && <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />}
                   </div>
-                  <p className="text-xl font-black">{b.revenue.toFixed(0)} <span className="text-xs font-normal text-muted-foreground">ر.س</span></p>
+                  <p className="text-xl font-black"><SarAmount value={b.revenue} decimals={0} /></p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {b.count} عملية — {b.repairCount} إصلاح · {b.saleCount} بيع
                   </p>

@@ -16,6 +16,7 @@ import { isFullAdmin } from '@/lib/roles';
 import { logAudit } from '@/lib/auditLog';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const ORDER_STATUS_LABELS = {
   pending: 'قيد الانتظار', in_progress: 'جارٍ التنفيذ', ready: 'جاهز',
@@ -315,7 +316,7 @@ export default function Customers() {
                       </div>
                     </div>
                     <div className="text-left shrink-0">
-                      <p className="text-sm font-bold">{o.total_price?.toFixed(0)} ر.س</p>
+                      <p className="text-sm font-bold"><SarAmount value={o.total_price?.toFixed(0)} /></p>
                       <Badge variant="outline" className="text-[10px] mt-0.5">
                         {ORDER_STATUS_LABELS[o.status] || o.status}
                       </Badge>

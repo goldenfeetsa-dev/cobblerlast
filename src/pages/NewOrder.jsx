@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { useZATCA } from '@/lib/zatca/useZATCA';
 import { notifyCustomerDirect } from '@/lib/notifyCustomer';
 import LocationPicker from '@/components/shared/LocationPicker';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const ITEM_TYPES = [
   { value: 'shoes', label: 'أحذية' },
@@ -400,7 +401,7 @@ function CobblerTab({ session }) {
                 <UserCheck className="w-4 h-4 text-primary" />
                 <div>
                   <p className="text-sm font-bold">{knownCustomer.name} — عميل معروف ✅</p>
-                  <p className="text-xs text-muted-foreground">{knownCustomer.total_orders || 0} طلب · {(knownCustomer.total_spent || 0).toFixed(0)} ر.س</p>
+                  <p className="text-xs text-muted-foreground">{knownCustomer.total_orders || 0} طلب · <SarAmount value={(knownCustomer.total_spent || 0).toFixed(0)} /></p>
                 </div>
               </div>
               <div>
@@ -560,8 +561,8 @@ function CobblerTab({ session }) {
             {form.total_price > 0 && (
               <p className="text-sm font-bold" style={{ color: shopSettings.vat_enabled !== false ? '#059669' : '#6b7280' }}>
                 {shopSettings.vat_enabled !== false
-                  ? `قبل الضريبة: ${(parseFloat(form.total_price) / 1.15).toFixed(2)} ر.س — الإجمالي (شامل 15%): ${parseFloat(form.total_price).toFixed(2)} ر.س`
-                  : `الإجمالي (الضريبة معطّلة): ${parseFloat(form.total_price).toFixed(2)} ر.س`}
+                  ? `قبل الضريبة: $<SarAmount value={(parseFloat(form.total_price) / 1.15).toFixed(2)} /> — الإجمالي (شامل 15%): $<SarAmount value={parseFloat(form.total_price).toFixed(2)} />`
+                  : `الإجمالي (الضريبة معطّلة): $<SarAmount value={parseFloat(form.total_price).toFixed(2)} />`}
               </p>
             )}
           </div>
@@ -792,7 +793,7 @@ function ProductsTab({ session }) {
                       {(item.warehouse_qty || 0) > 0 ? 'بالمستودع فقط — يحتاج تحويل' : 'نفد المخزون'}
                     </p>
                   )}
-                  <p className="text-sm font-bold text-primary mt-1">{item.sell_price} ر.س</p>
+                  <p className="text-sm font-bold text-primary mt-1"><SarAmount value={item.sell_price} /></p>
                 </button>
               );
             })}
@@ -852,7 +853,7 @@ function ProductsTab({ session }) {
                   <div key={line.item_id} className="flex items-center gap-2 rounded-lg bg-muted/30 p-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">{line.item_name}</p>
-                      <p className="text-xs text-muted-foreground">{line.sell_price} ر.س × {line.qty}</p>
+                      <p className="text-xs text-muted-foreground"><SarAmount value={line.sell_price} /> × {line.qty}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <button type="button" onClick={() => updateQty(line.item_id, -1)} className="w-6 h-6 rounded-md bg-muted flex items-center justify-center">
@@ -873,16 +874,16 @@ function ProductsTab({ session }) {
 
             <div className="border-t pt-3 space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>قبل الضريبة</span><span>{subtotal.toFixed(2)} ر.س</span>
+                <span>قبل الضريبة</span><span><SarAmount value={subtotal.toFixed(2)} /></span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>ضريبة 15%</span><span>{vatAmt.toFixed(2)} ر.س</span>
+                <span>ضريبة 15%</span><span><SarAmount value={vatAmt.toFixed(2)} /></span>
               </div>
               <div className="flex justify-between font-bold text-base">
-                <span>الإجمالي</span><span className="text-primary">{total.toFixed(2)} ر.س</span>
+                <span>الإجمالي</span><span className="text-primary"><SarAmount value={total.toFixed(2)} /></span>
               </div>
               <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
-                <span>الربح الإجمالي</span><span>{grossProfit.toFixed(2)} ر.س</span>
+                <span>الربح الإجمالي</span><span><SarAmount value={grossProfit.toFixed(2)} /></span>
               </div>
             </div>
 

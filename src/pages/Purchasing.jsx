@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import DocumentUploader from '@/components/common/DocumentUploader';
 import { isValidVatFormat, VAT_RATE_DEFAULT } from '@/lib/vatValidation';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const TAX_CLASS_LABEL = { raw_material: 'مادة خام خاضعة (15%)', expense: 'مصروف آخر' };
 
@@ -340,7 +341,7 @@ export default function Purchasing() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground -mt-2">
-                  الإجمالي: {((Number(form.taxable_amount) || 0) + (Number(form.vat_amount) || 0)).toFixed(2)} ر.س
+                  الإجمالي: <SarAmount value={((Number(form.taxable_amount) || 0) + (Number(form.vat_amount) || 0)).toFixed(2)} />
                 </p>
 
                 {/* ربط بنود الفاتورة بالمخزون */}
@@ -366,7 +367,7 @@ export default function Purchasing() {
                       </button>
                     </div>
                   ))}
-                  {linesTotal > 0 && <p className="text-[11px] text-muted-foreground">إجمالي بنود المخزون: {linesTotal.toFixed(2)} ر.س — يفيد كمرجع لتعبئة "المبلغ الخاضع للضريبة" أعلاه</p>}
+                  {linesTotal > 0 && <p className="text-[11px] text-muted-foreground">إجمالي بنود المخزون: <SarAmount value={linesTotal.toFixed(2)} /> — يفيد كمرجع لتعبئة "المبلغ الخاضع للضريبة" أعلاه</p>}
                 </div>
 
                 <div className="space-y-1.5">
@@ -392,7 +393,7 @@ export default function Purchasing() {
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">إجمالي ضريبة المدخلات (قابلة للخصم)</p>
-          <p className="text-2xl font-black mt-1 text-green-600 dark:text-green-400">{totalInputVat.toFixed(2)} ر.س</p>
+          <p className="text-2xl font-black mt-1 text-green-600 dark:text-green-400"><SarAmount value={totalInputVat.toFixed(2)} /></p>
         </CardContent></Card>
         <Card className={invalidCount > 0 ? 'border-red-300 dark:border-red-700' : ''}><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">فواتير برقم ضريبي غير صالح ⚠️</p>
@@ -432,11 +433,11 @@ export default function Purchasing() {
                 <div className="flex items-center gap-4">
                   <div className="text-left">
                     <p className="text-xs text-muted-foreground">الخاضع للضريبة</p>
-                    <p className="font-bold text-sm">{Number(inv.taxable_amount).toFixed(2)} ر.س</p>
+                    <p className="font-bold text-sm"><SarAmount value={Number(inv.taxable_amount).toFixed(2)} /></p>
                   </div>
                   <div className="text-left">
                     <p className="text-xs text-muted-foreground">الضريبة</p>
-                    <p className="font-bold text-sm text-green-600 dark:text-green-400">{Number(inv.vat_amount).toFixed(2)} ر.س</p>
+                    <p className="font-bold text-sm text-green-600 dark:text-green-400"><SarAmount value={Number(inv.vat_amount).toFixed(2)} /></p>
                   </div>
                   <Badge
                     className={`cursor-pointer text-[10px] ${inv.payment_status === 'paid' ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300'}`}

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const EMPTY = { name: '', name_ar: '', category: 'shoes', description: '', price: '', duration_minutes: 30, is_active: true };
 
@@ -77,7 +78,7 @@ export default function ServicesAdmin() {
                     </div>
                     <p className="text-xs text-stone-500 mb-2">{s.description}</p>
                     <div className="flex items-center gap-3">
-                      <span className="text-amber-600 dark:text-amber-400 font-bold text-sm flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{s.price} ر.س</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-bold text-sm flex items-center gap-1"><Tag className="w-3.5 h-3.5" /><SarAmount value={s.price} /></span>
                       <span className="text-stone-400 text-xs flex items-center gap-1"><Clock className="w-3 h-3" />{s.duration_minutes} د</span>
                     </div>
                   </div>

@@ -33,6 +33,7 @@ import {
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const EXPENSE_CATEGORIES = {
   rent: 'إيجار', salaries: 'رواتب', utilities: 'فواتير خدمات',
@@ -310,7 +311,7 @@ export default function FinancialReports() {
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="month" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip formatter={(v) => `${fmt(v)} ر.س`} />
+                <Tooltip formatter={(v) => `$<SarAmount value={fmt(v)} />`} />
                 <Legend />
                 <Bar dataKey="الإيراد" fill="#16a34a" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="المصاريف" fill="#dc2626" radius={[4, 4, 0, 0]} />
@@ -329,7 +330,7 @@ export default function FinancialReports() {
                   <Pie data={expenseByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => e.name}>
                     {expenseByCategory.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => `${fmt(v)} ر.س`} />
+                  <Tooltip formatter={(v) => `$<SarAmount value={fmt(v)} />`} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -436,7 +437,7 @@ function SummaryCard({ icon: Icon, label, value, color, sub }) {
       <CardContent className="p-4">
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2 ${colors[color]}`}><Icon className="w-4.5 h-4.5" /></div>
         <div className="text-xs text-gray-500">{label}</div>
-        <div className="text-lg font-black">{fmt(value)} <span className="text-xs font-normal text-gray-400">ر.س</span></div>
+        <div className="text-lg font-black"><SarAmount value={value} /></div>
         {sub && <div className="text-[11px] text-gray-400 mt-0.5 truncate">{sub}</div>}
       </CardContent>
     </Card>

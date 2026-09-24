@@ -12,6 +12,7 @@ import { ClipboardList, Search, ExternalLink, Calendar, Building2, User, Activit
 import { format } from 'date-fns';
 import { unifyTransactions } from '@/lib/analytics';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const ACTION_LABELS = {
   create: { label: 'إنشاء', class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },
@@ -195,13 +196,13 @@ export default function AuditLog() {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card className="border-indigo-100 dark:border-indigo-800">
           <CardContent className="p-3 text-center">
-            <p className="text-lg font-black text-indigo-700 dark:text-indigo-300">{repairRevenue.toFixed(0)} ر.س</p>
+            <p className="text-lg font-black text-indigo-700 dark:text-indigo-300"><SarAmount value={repairRevenue.toFixed(0)} /></p>
             <p className="text-xs text-muted-foreground mt-0.5">إيراد الإصلاح</p>
           </CardContent>
         </Card>
         <Card className="border-cyan-100 dark:border-cyan-800">
           <CardContent className="p-3 text-center">
-            <p className="text-lg font-black text-cyan-700 dark:text-cyan-300">{saleRevenue.toFixed(0)} ر.س</p>
+            <p className="text-lg font-black text-cyan-700 dark:text-cyan-300"><SarAmount value={saleRevenue.toFixed(0)} /></p>
             <p className="text-xs text-muted-foreground mt-0.5">إيراد بيع المنتجات</p>
           </CardContent>
         </Card>
@@ -338,7 +339,7 @@ export default function AuditLog() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{t.employee_name || '—'}</td>
-                      <td className="px-4 py-3 font-bold">{t.amount?.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">ر.س</span></td>
+                      <td className="px-4 py-3 font-bold"><SarAmount value={t.amount} /></td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1">
                           <Badge className={`text-[10px] w-fit ${payment.class}`}>{payment.label}</Badge>

@@ -27,6 +27,7 @@ import {
   ShoppingBag, RefreshCw,
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 // ملاحظة مهمة: locale 'ar-SA' يعرض الأرقام بالهندي (٠١٢٣٤...) في أغلب
 // المتصفحات، وهذا كان سبب ظهور أرقام غير مقروءة/غير متوافقة مع الأنظمة
@@ -199,7 +200,7 @@ export default function TaxDashboard() {
         ['ناقص: إجمالي المصروفات التشغيلية', `(${fmt(totalExpensesBeforeVat)})`],
         ['هامش الربح', `${profitMargin.toFixed(1)}%`],
       ],
-      total: [netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة', `${fmt(Math.abs(netProfit))} ر.س`],
+      total: [netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة', `$<SarAmount value={fmt(Math.abs(netProfit))} />`],
       totalColor: netProfit >= 0 ? '#15803d' : '#b91c1c',
       big: true,
     },
@@ -225,7 +226,7 @@ export default function TaxDashboard() {
         ['ضريبة القيمة المضافة على المشتريات (قابلة للخصم)', fmt(vatPaidDeductible)],
       ],
       total: ['إجمالي المشتريات شامل الضريبة', fmt(totalPurchasesBeforeVat + vatPaidDeductible)],
-      note: vatExpensesExcluded > 0 ? `⚠ ${fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
+      note: vatExpensesExcluded > 0 ? `⚠ $<SarAmount value={fmt(vatExpensesExcluded)} /> ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
     },
   ];
 
@@ -427,7 +428,7 @@ export default function TaxDashboard() {
           {invalidPurchases.length > 0 && (
             <div className="rounded-xl border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-800 dark:text-red-300 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 shrink-0" />
-              فيه {invalidPurchases.length} فاتورة شراء بمبلغ ضريبة {fmt(vatPaidExcluded)} ر.س مستبعدة من الخصم لأن موردها بدون رقم ضريبي صالح —
+              فيه {invalidPurchases.length} فاتورة شراء بمبلغ ضريبة <SarAmount value={fmt(vatPaidExcluded)} /> مستبعدة من الخصم لأن موردها بدون رقم ضريبي صالح —
               <Link to="/suppliers" className="underline font-bold">حدّث بيانات الموردين</Link>
             </div>
           )}
@@ -436,19 +437,19 @@ export default function TaxDashboard() {
             <Card className="border-green-200 dark:border-green-800">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-green-700 dark:text-green-300"><TrendingUp className="w-4 h-4" /><p className="text-xs font-bold">ضريبة المخرجات (المبيعات)</p></div>
-                <p className="text-2xl font-black mt-2 text-green-700 dark:text-green-300">{fmt(vatCollected)} ر.س</p>
+                <p className="text-2xl font-black mt-2 text-green-700 dark:text-green-300"><SarAmount value={fmt(vatCollected)} /></p>
               </CardContent>
             </Card>
             <Card className="border-blue-200 dark:border-blue-800">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300"><TrendingDown className="w-4 h-4" /><p className="text-xs font-bold">ضريبة المدخلات القابلة للخصم (المشتريات)</p></div>
-                <p className="text-2xl font-black mt-2 text-blue-700 dark:text-blue-300">{fmt(vatPaidDeductible)} ر.س</p>
+                <p className="text-2xl font-black mt-2 text-blue-700 dark:text-blue-300"><SarAmount value={fmt(vatPaidDeductible)} /></p>
               </CardContent>
             </Card>
             <Card className={netVatDue >= 0 ? 'border-primary/30' : 'border-green-300 dark:border-green-700'}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2"><Scale className="w-4 h-4" /><p className="text-xs font-bold">صافي الضريبة المستحقة للهيئة</p></div>
-                <p className={`text-2xl font-black mt-2 ${netVatDue >= 0 ? '' : 'text-green-600 dark:text-green-400'}`}>{fmt(Math.abs(netVatDue))} ر.س</p>
+                <p className={`text-2xl font-black mt-2 ${netVatDue >= 0 ? '' : 'text-green-600 dark:text-green-400'}`}><SarAmount value={fmt(Math.abs(netVatDue))} /></p>
                 <p className="text-[11px] text-muted-foreground mt-1">{netVatDue >= 0 ? 'مبلغ يجب سداده للهيئة' : 'رصيد ضريبي لصالحك (استرداد/ترحيل)'}</p>
               </CardContent>
             </Card>
@@ -466,7 +467,7 @@ export default function TaxDashboard() {
                     <p className="text-xs text-muted-foreground">{p.invoice_date}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs">ضريبة: {fmt(p.vat_amount)} ر.س</span>
+                    <span className="text-xs">ضريبة: <SarAmount value={fmt(p.vat_amount)} /></span>
                     {p.vat_number_valid_format ? (
                       <Badge className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 text-[10px]">قابلة للخصم</Badge>
                     ) : (

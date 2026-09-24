@@ -25,6 +25,7 @@ import {
 import { format } from 'date-fns';
 import ReceiptView from '@/components/pos/ReceiptView';
 import { salesInvoiceToReceipt } from '@/lib/invoiceAdapter';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
@@ -172,8 +173,8 @@ function InventoryTab({ items, branches, session }) {
                       {(item.branch_qty || {})[b.id] || 0}
                     </td>
                   ))}
-                  <td className="py-2.5 px-3 text-muted-foreground">{item.cost_price} ر.س</td>
-                  <td className="py-2.5 px-3 font-medium">{item.sell_price || '-'} ر.س</td>
+                  <td className="py-2.5 px-3 text-muted-foreground"><SarAmount value={item.cost_price} /></td>
+                  <td className="py-2.5 px-3 font-medium"><SarAmount value={item.sell_price || '-'} /></td>
                   <td className="py-2.5 px-3">
                     <div className="flex gap-1.5 justify-end">
                       <Button size="sm" variant="outline" className="text-xs gap-1"
@@ -515,7 +516,7 @@ function InvoiceTab({ items, branches, session }) {
                 className="rounded-xl border p-3 text-right hover:border-primary hover:bg-primary/5 transition-all">
                 <p className="font-medium text-sm mb-1 line-clamp-1">{item.name}</p>
                 <p className="text-xs text-muted-foreground">متوفر: {(item.branch_qty || {})[selectedBranch] || 0} {UNITS[item.unit]}</p>
-                <p className="text-sm font-bold text-primary mt-1">{item.sell_price} ر.س</p>
+                <p className="text-sm font-bold text-primary mt-1"><SarAmount value={item.sell_price} /></p>
               </button>
             ))}
             {branchItems.length === 0 && (
@@ -543,7 +544,7 @@ function InvoiceTab({ items, branches, session }) {
                     <p className="text-xs text-muted-foreground">{inv.customer_name} · {inv.branch_name}</p>
                   </div>
                   <div className="text-left">
-                    <p className="font-bold">{inv.total?.toFixed(0)} ر.س</p>
+                    <p className="font-bold"><SarAmount value={inv.total?.toFixed(0)} /></p>
                     <Badge variant="outline" className="text-[10px]">{inv.payment_method === 'cash' ? 'نقد' : 'شبكة'}</Badge>
                   </div>
                 </div>
@@ -579,7 +580,7 @@ function InvoiceTab({ items, branches, session }) {
                   <div key={line.item_id} className="flex items-center gap-2 rounded-lg bg-muted/30 p-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">{line.item_name}</p>
-                      <p className="text-xs text-muted-foreground">{line.sell_price} ر.س × {line.qty}</p>
+                      <p className="text-xs text-muted-foreground"><SarAmount value={line.sell_price} /> × {line.qty}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <button onClick={() => updateQty(line.item_id, -1)} className="w-6 h-6 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80">
@@ -600,16 +601,16 @@ function InvoiceTab({ items, branches, session }) {
 
             <div className="border-t pt-3 space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>المجموع قبل الضريبة</span><span>{subtotal.toFixed(2)} ر.س</span>
+                <span>المجموع قبل الضريبة</span><span><SarAmount value={subtotal.toFixed(2)} /></span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>ضريبة 15%</span><span>{vatAmt.toFixed(2)} ر.س</span>
+                <span>ضريبة 15%</span><span><SarAmount value={vatAmt.toFixed(2)} /></span>
               </div>
               <div className="flex justify-between font-bold text-base">
-                <span>الإجمالي</span><span className="text-primary">{total.toFixed(2)} ر.س</span>
+                <span>الإجمالي</span><span className="text-primary"><SarAmount value={total.toFixed(2)} /></span>
               </div>
               <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
-                <span>إجمالي الربح</span><span>{grossProfit.toFixed(2)} ر.س</span>
+                <span>إجمالي الربح</span><span><SarAmount value={grossProfit.toFixed(2)} /></span>
               </div>
             </div>
 
@@ -676,7 +677,7 @@ function TransferReportTab({ movements, branches }) {
                 <td className="py-2 px-3 font-medium">{m.item_name}</td>
                 <td className="py-2 px-3 text-muted-foreground">{m.branch_name || m.to_location}</td>
                 <td className="py-2 px-3 text-center">{m.quantity} {UNITS[m.unit] || m.unit}</td>
-                <td className="py-2 px-3">{((m.cost_price || 0) * m.quantity).toFixed(2)} ر.س</td>
+                <td className="py-2 px-3"><SarAmount value={((m.cost_price || 0) * m.quantity).toFixed(2)} /></td>
                 <td className="py-2 px-3 text-muted-foreground text-xs">{m.created_at ? format(new Date(m.created_at), 'yyyy/MM/dd') : '-'}</td>
               </tr>
             ))}

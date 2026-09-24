@@ -14,6 +14,7 @@ import {
   Users, ShoppingBag, AlertCircle, ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const STAGES = [
   { key: 'reception',          label: 'الاستلام',            icon: Package,        color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300',    border: 'border-blue-200 dark:border-blue-800' },
@@ -93,7 +94,7 @@ function BranchCard({ branchName, orders }) {
           </div>
           <div className="rounded-xl p-3 bg-muted/50">
             <p className="text-xs text-muted-foreground mb-0.5">الإيرادات</p>
-            <p className="text-base font-bold">{revenue.toFixed(0)} ر.س</p>
+            <p className="text-base font-bold"><SarAmount value={revenue.toFixed(0)} /></p>
           </div>
           <div className="rounded-xl p-3 bg-muted/50">
             <p className="text-xs text-muted-foreground mb-0.5">الإنتاجية</p>

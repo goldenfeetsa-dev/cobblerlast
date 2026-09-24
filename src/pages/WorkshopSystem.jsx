@@ -16,6 +16,7 @@ import {
   ClipboardList, Calculator, ShieldCheck, TrendingDown
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
@@ -122,7 +123,7 @@ function WithdrawalTab({ items, session }) {
           {selectedItem && form.qty && (
             <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-sm flex items-center justify-between">
               <span>التكلفة التقديرية:</span>
-              <span className="font-bold">{(parseFloat(form.qty) * selectedItem.cost_price).toFixed(2)} ر.س</span>
+              <span className="font-bold"><SarAmount value={(parseFloat(form.qty) * selectedItem.cost_price).toFixed(2)} /></span>
             </div>
           )}
           <Button disabled={!form.item_id || !form.qty || withdraw.isPending} onClick={() => withdraw.mutate()}>
@@ -140,7 +141,7 @@ function WithdrawalTab({ items, session }) {
               مسحوباتي — {monthLabel(monthKey)}
             </CardTitle>
             <Badge className="bg-primary/10 text-primary border-0">
-              الإجمالي: {myTotal.toFixed(2)} ر.س
+              الإجمالي: <SarAmount value={myTotal.toFixed(2)} />
             </Badge>
           </div>
         </CardHeader>
@@ -153,7 +154,7 @@ function WithdrawalTab({ items, session }) {
                   <p className="text-xs text-muted-foreground">{w.quantity_withdrawn} {UNITS[w.unit] || w.unit} · {w.notes}</p>
                 </div>
                 <div className="text-left">
-                  <p className="font-bold">{w.total_cost?.toFixed(2)} ر.س</p>
+                  <p className="font-bold"><SarAmount value={w.total_cost?.toFixed(2)} /></p>
                   <Badge variant={w.settled ? 'default' : 'outline'} className="text-[10px]">
                     {w.settled ? 'تمت التسوية' : 'قيد الانتظار'}
                   </Badge>
@@ -259,14 +260,14 @@ function SettlementTab({ items, session }) {
       `قيد محاسبي — تسوية مصروفات الورشة`,
       `الشهر: ${monthLabel(selectedMonth)}`,
       `─────────────────────────────────`,
-      `مدين: حساب مصروفات الورشة   ${data.totalWorkshopCost.toFixed(2)} ر.س`,
-      `دائن: حساب مخزون الورشة      ${data.totalWorkshopCost.toFixed(2)} ر.س`,
+      `مدين: حساب مصروفات الورشة   $<SarAmount value={data.totalWorkshopCost.toFixed(2)} />`,
+      `دائن: حساب مخزون الورشة      $<SarAmount value={data.totalWorkshopCost.toFixed(2)} />`,
       `─────────────────────────────────`,
-      `إجمالي إيراد الشهر (منتجات + طلبات إصلاح): ${data.totalSalesRevenue.toFixed(2)} ر.س`,
-      `تكلفة البضاعة المباعة: ${data.totalSalesCost.toFixed(2)} ر.س`,
-      `إجمالي ربح المبيعات:   ${data.grossProfit.toFixed(2)} ر.س`,
-      `(-) تكاليف الورشة:    ${data.totalWorkshopCost.toFixed(2)} ر.س`,
-      `= صافي الربح الحقيقي:  ${data.netProfit.toFixed(2)} ر.س`,
+      `إجمالي إيراد الشهر (منتجات + طلبات إصلاح): $<SarAmount value={data.totalSalesRevenue.toFixed(2)} />`,
+      `تكلفة البضاعة المباعة: $<SarAmount value={data.totalSalesCost.toFixed(2)} />`,
+      `إجمالي ربح المبيعات:   $<SarAmount value={data.grossProfit.toFixed(2)} />`,
+      `(-) تكاليف الورشة:    $<SarAmount value={data.totalWorkshopCost.toFixed(2)} />`,
+      `= صافي الربح الحقيقي:  $<SarAmount value={data.netProfit.toFixed(2)} />`,
       `─────────────────────────────────`,
       `اعتمد بواسطة: ${session?.name || 'المدير'}`,
       `تاريخ الاعتماد: ${format(new Date(), 'yyyy/MM/dd HH:mm')}`,
@@ -366,7 +367,7 @@ function SettlementTab({ items, session }) {
               ].map((s, i) => (
                 <div key={i} className="rounded-xl bg-muted/40 p-3 text-center">
                   <p className={`text-xl font-black ${s.color}`}>{s.val?.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{s.label} ر.س</p>
+                  <p className="text-xs text-muted-foreground mt-0.5"><SarAmount value={s.label} /></p>
                 </div>
               ))}
             </div>
@@ -434,8 +435,8 @@ function SettlementTab({ items, session }) {
                                 className="w-24 h-7 text-sm text-center mx-auto"
                               />
                             </td>
-                            <td className="py-2 px-3 text-muted-foreground">{si.cost_price} ر.س</td>
-                            <td className="py-2 px-3 font-bold text-red-600 dark:text-red-400">{si.total_cost.toFixed(2)} ر.س</td>
+                            <td className="py-2 px-3 text-muted-foreground"><SarAmount value={si.cost_price} /></td>
+                            <td className="py-2 px-3 font-bold text-red-600 dark:text-red-400"><SarAmount value={si.total_cost.toFixed(2)} /></td>
                           </tr>
                         ))}
                       </tbody>
@@ -477,7 +478,7 @@ function SettlementTab({ items, session }) {
                   <p className="text-xs text-muted-foreground">اعتمد بواسطة: {s.approved_by}</p>
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-primary">{s.net_profit?.toFixed(0)} ر.س</p>
+                  <p className="font-bold text-primary"><SarAmount value={s.net_profit?.toFixed(0)} /></p>
                   <p className="text-xs text-muted-foreground">صافي الربح</p>
                 </div>
               </div>
@@ -570,8 +571,8 @@ function WorkshopStockTab({ items, session }) {
                 <td className="py-2.5 px-3 text-center font-bold">
                   {item.workshop_qty || 0} {UNITS[item.unit] || item.unit}
                 </td>
-                <td className="py-2.5 px-3 text-muted-foreground">{item.cost_price} ر.س</td>
-                <td className="py-2.5 px-3 font-medium">{((item.workshop_qty || 0) * item.cost_price).toFixed(2)} ر.س</td>
+                <td className="py-2.5 px-3 text-muted-foreground"><SarAmount value={item.cost_price} /></td>
+                <td className="py-2.5 px-3 font-medium"><SarAmount value={((item.workshop_qty || 0) * item.cost_price).toFixed(2)} /></td>
               </tr>
             ))}
           </tbody>

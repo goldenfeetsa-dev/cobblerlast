@@ -10,6 +10,7 @@ import { FileText, Search, Wrench, ShoppingBag, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import ReceiptView from '@/components/pos/ReceiptView';
 import { salesInvoiceToReceipt } from '@/lib/invoiceAdapter';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const PAYMENT_LABELS = { cash: 'نقداً', network: 'شبكة', credit: 'آجل' };
 
@@ -150,7 +151,7 @@ export default function Invoices() {
                       <p className="text-xs text-muted-foreground">{row.created_at && format(new Date(row.created_at), 'dd/MM/yyyy HH:mm')}</p>
                       <Badge variant="outline" className="text-[10px]">{PAYMENT_LABELS[row.payment_method] || row.payment_method || '—'}</Badge>
                     </div>
-                    <p className="font-black text-primary w-20 text-left">{row.total?.toFixed(0)} ر.س</p>
+                    <p className="font-black text-primary w-20 text-left"><SarAmount value={row.total?.toFixed(0)} /></p>
 
                     {row.kind === 'repair' ? (
                       <Link to={`/orders/${row.raw.id}`}>

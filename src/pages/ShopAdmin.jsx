@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Package, Star, ToggleLeft, ToggleRight, AlertTriangle } from 'lucide-react';
 import ProductImageUploader from '@/components/shop/ProductImageUploader';
 import { toast } from 'sonner';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const CATEGORIES = {
   soles: 'نعال وأكواع',
@@ -156,7 +157,7 @@ export default function ShopAdmin() {
                       <Badge variant={p.in_stock ? 'default' : 'destructive'}>{p.in_stock ? 'متوفر' : 'نفذ'}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5 truncate">{p.description}</p>
-                    <span className="text-sm font-bold text-primary">{p.price} ر.س</span>
+                    <span className="text-sm font-bold text-primary"><SarAmount value={p.price} /></span>
                     {p.original_price && <span className="text-xs text-muted-foreground line-through mr-2">{p.original_price}</span>}
                   </div>
                   <div className="flex gap-2 shrink-0">

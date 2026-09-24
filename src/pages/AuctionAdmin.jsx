@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Gavel, Star } from 'lucide-react';
 import ProductImageUploader from '@/components/shop/ProductImageUploader';
 import { toast } from 'sonner';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const CATEGORIES = { bags: 'حقائب', shoes: 'أحذية', accessories: 'إكسسوارات', other: 'أخرى' };
 const STATUSES = { active: 'نشط', pending: 'بانتظار المراجعة', ended: 'منتهي', sold: 'مباع', cancelled: 'ملغي' };
@@ -184,7 +185,7 @@ export default function AuctionAdmin() {
                       <Badge variant={l.status === 'active' ? 'default' : l.status === 'pending' ? 'destructive' : 'outline'}>{STATUSES[l.status] || l.status}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      السعر الحالي: <span className="font-bold text-primary">{l.current_price} ر.س</span> · ينتهي: {new Date(l.ends_at).toLocaleString('ar-SA')}
+                      السعر الحالي: <span className="font-bold text-primary"><SarAmount value={l.current_price} /></span> · ينتهي: {new Date(l.ends_at).toLocaleString('ar-SA')}
                     </p>
                     {l.submitter_name && (
                       <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">

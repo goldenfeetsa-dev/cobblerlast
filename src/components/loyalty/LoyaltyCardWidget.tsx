@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 // ── ختمة واحدة ──────────────────────────────────────────────
 function Stamp({ filled, isFree }: { filled: boolean; isFree?: boolean }) {
@@ -111,7 +112,7 @@ function CardDisplay({ card, onRedeem, onRefresh }: any) {
       {/* Stats footer */}
       <div className="bg-black/20 px-5 py-3 flex justify-between text-xs text-amber-200/60">
         <span>{card.total_orders || 0} خدمة إجمالاً</span>
-        <span>{(card.total_spent || 0).toFixed(0)} ر.س أجمالي</span>
+        <span><SarAmount value={(card.total_spent || 0).toFixed(0)} /> أجمالي</span>
         {card.last_service_at && (
           <span>آخر زيارة: {new Date(card.last_service_at).toLocaleDateString('ar-SA')}</span>
         )}

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { format, startOfDay, startOfMonth, startOfYear } from 'date-fns';
 import { unifyTransactions, summarizeEmployeePerformance, summarizeByBranch } from '@/lib/analytics';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const PERIODS = [
   { key: 'daily',   label: 'اليوم' },
@@ -183,7 +184,7 @@ export default function Leaderboard() {
                       <p className="text-lg font-black">{topBranch?.branch_name}</p>
                     </div>
                   </div>
-                  <p className="text-2xl font-black text-primary">{topBranch?.revenue.toFixed(0)} ر.س</p>
+                  <p className="text-2xl font-black text-primary"><SarAmount value={topBranch?.revenue.toFixed(0)} /></p>
                 </div>
               </CardContent>
             </Card>
@@ -208,7 +209,7 @@ export default function Leaderboard() {
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>{b.repairCount} إصلاح</span>
                       <span>{b.saleCount} بيع</span>
-                      <span className="font-bold text-foreground">{b.revenue.toFixed(0)} ر.س</span>
+                      <span className="font-bold text-foreground"><SarAmount value={b.revenue.toFixed(0)} /></span>
                     </div>
                   </div>
                 ))}

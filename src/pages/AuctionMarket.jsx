@@ -7,6 +7,7 @@ import { X, Check } from 'lucide-react';
 import { db, listActiveAuctions, listShopProductsWithBrand, placeBid, storage } from '@/api/supabaseApi';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 // ── أيقونات SVG أصلية (نفس تصميم أيقونات الصفحة الرئيسية بالضبط —
 // لا إيموجي إطلاقاً، طبقاً لطلب العميل الصريح) ──────────────────────
@@ -75,7 +76,7 @@ function BrandBadge({ brand }) {
 
 function formatSAR(n, isAr) {
   const num = Math.round(Number(n) || 0);
-  return isAr ? `${toArabicDigits(num)} ر.س` : `${num} SAR`;
+  return isAr ? `$<SarAmount value={toArabicDigits(num)} />` : `${num} SAR`;
 }
 
 // ── بطاقة قطعة دكّة الإسكافي (شراء فوري) ────────────────────────────
@@ -170,7 +171,7 @@ function BidDialog({ listing, isAr, dir, onClose, onSuccess }) {
   const submit = async () => {
     setError('');
     if (!name.trim() || !phone.trim()) { setError(isAr ? 'الاسم والجوال مطلوبان' : 'Name and phone are required'); return; }
-    if (Number(amount) < minBid) { setError(isAr ? `أقل مزايدة مقبولة ${minBid} ر.س` : `Minimum bid is ${minBid} SAR`); return; }
+    if (Number(amount) < minBid) { setError(isAr ? `أقل مزايدة مقبولة $<SarAmount value={minBid} />` : `Minimum bid is ${minBid} SAR`); return; }
     setLoading(true);
     try {
       await placeBid({ listingId: listing.id, bidderName: name.trim(), bidderPhone: phone.trim(), amount: Number(amount) });
@@ -190,7 +191,7 @@ function BidDialog({ listing, isAr, dir, onClose, onSuccess }) {
         <button onClick={onClose} className="absolute top-4 start-4" style={{ color: 'hsl(var(--muted-foreground))' }}><X className="w-5 h-5" /></button>
         <h3 className="font-black text-lg mb-1 text-center" style={{ color: 'hsl(var(--foreground))' }}>{listing.title_ar}</h3>
         <p className="text-xs text-center mb-5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-          {isAr ? `الحد الأدنى للمزايدة: ${minBid} ر.س` : `Minimum bid: ${minBid} SAR`}
+          {isAr ? `الحد الأدنى للمزايدة: $<SarAmount value={minBid} />` : `Minimum bid: ${minBid} SAR`}
         </p>
         <div className="space-y-3">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={isAr ? 'الاسم' : 'Name'}

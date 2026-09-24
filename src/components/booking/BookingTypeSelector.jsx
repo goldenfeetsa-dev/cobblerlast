@@ -2,6 +2,7 @@ import React from 'react';
 import { Store, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MapLocationPicker from './MapLocationPicker';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const DELIVERY_FEE = 25;
 
@@ -38,7 +39,7 @@ export default function BookingTypeSelector({ bookingType, address, location, on
           <p className={cn("font-bold text-sm", bookingType === 'home_visit' ? "text-amber-700 dark:text-amber-300" : "text-stone-600")}>
             توصيل
           </p>
-          <p className="text-xs text-stone-400 mt-0.5">+{DELIVERY_FEE} ر.س</p>
+          <p className="text-xs text-stone-400 mt-0.5">+<SarAmount value={DELIVERY_FEE} /></p>
         </button>
       </div>
 

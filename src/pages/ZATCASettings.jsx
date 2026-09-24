@@ -29,6 +29,7 @@ import { secureZatca } from '@/lib/secureApi';
 import { getSession } from '@/lib/sessionStore';
 import { isFinanceUser } from '@/lib/roles';
 import { isValidVatFormat, normalizeDigits } from '@/lib/vatValidation';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 // نعيد استخدام نفس دالة التحقق المستخدمة بباقي الشاشات (NewOrder) بدل نسخة
 // محلية منفصلة — كانت هذي النسخة المحلية سبب فشل صامت لو الرقم مكتوب
@@ -326,7 +327,7 @@ export default function ZATCASettings() {
                   <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-sm flex-wrap">
                     <Badge variant="outline">{r.kind}</Badge>
                     <span className="font-mono font-medium">{r.number}</span>
-                    <span className="text-gray-500">{r.amount?.toFixed?.(2)} ر.س</span>
+                    <span className="text-gray-500"><SarAmount value={r.amount?.toFixed?.(2)} /></span>
                     <Badge className="bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300">{r.zatca_error_category || 'غير مصنّف'}</Badge>
                     <span className="text-xs text-gray-400 mr-auto">{r.zatca_retry_count} محاولات</span>
                   </div>

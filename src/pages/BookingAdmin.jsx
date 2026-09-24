@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const STATUS_CONFIG = {
   pending:     { label: 'قيد الانتظار',  color: 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' },
@@ -109,7 +110,7 @@ export default function BookingAdmin() {
           { label: 'انتظار',    value: stats.pending,             color: 'text-yellow-600 dark:text-yellow-400' },
           { label: 'مؤكدة',    value: stats.confirmed,           color: 'text-blue-600 dark:text-blue-400' },
           { label: 'مكتملة',   value: stats.completed,           color: 'text-green-600 dark:text-green-400' },
-          { label: 'الإيرادات', value: `${stats.revenue.toFixed(0)} ر.س`, color: 'text-amber-600 dark:text-amber-400' },
+          { label: 'الإيرادات', value: `$<SarAmount value={stats.revenue.toFixed(0)} />`, color: 'text-amber-600 dark:text-amber-400' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-2xl border border-stone-200 p-4 text-center">
             <p className={cn("text-2xl font-black", s.color)}>{s.value}</p>
@@ -221,7 +222,7 @@ export default function BookingAdmin() {
                             موقع العميل
                           </a>
                         )}
-                        <span className="font-bold text-amber-600 dark:text-amber-400">{booking.total_price} ر.س</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400"><SarAmount value={booking.total_price} /></span>
                       </div>
                     </div>
 

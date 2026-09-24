@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, AlertTriangle, CheckCircle, Clock, Package, X, Bell, Truck, CalendarClock } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const CAPACITY = 8; // أقصى طاقة استيعابية يومياً
 
@@ -158,7 +159,7 @@ export function TodayDeliveriesBanner() {
                 <div className="text-xs text-gray-500">{order.customer_name}{order.customer_phone ? ` • ${order.customer_phone}` : ''}</div>
               </div>
               {order.total_price > 0 && (
-                <span className="text-xs font-bold text-gray-600 shrink-0">{order.total_price} ر.س</span>
+                <span className="text-xs font-bold text-gray-600 shrink-0"><SarAmount value={order.total_price} /></span>
               )}
             </Link>
           );
@@ -455,7 +456,7 @@ export default function CalendarView() {
                         {cfg.label}
                       </span>
                       {order.total_price > 0 && (
-                        <span className="text-xs font-bold text-gray-600 shrink-0">{order.total_price} ر.س</span>
+                        <span className="text-xs font-bold text-gray-600 shrink-0"><SarAmount value={order.total_price} /></span>
                       )}
                     </motion.div>
                   );

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const VAT_RATE = 0.15;
 
@@ -67,7 +68,7 @@ export default function BookingConfirmation({ booking }) {
         </div>
         <div className="border-t border-stone-100 pt-3 flex items-center justify-between">
           <span className="text-stone-500 text-sm">الإجمالي مع الضريبة</span>
-          <span className="text-xl font-black text-amber-600 dark:text-amber-400">{total} ر.س</span>
+          <span className="text-xl font-black text-amber-600 dark:text-amber-400"><SarAmount value={total} /></span>
         </div>
       </div>
 

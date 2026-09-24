@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { UserCog, Plus, Pencil, Trash2, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { logAudit } from '@/lib/auditLog';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 
 const ROLE_LABELS = {
@@ -243,7 +244,7 @@ export default function Employees() {
                 </div>
                 <div className="flex gap-4 text-sm text-muted-foreground">
                   <span>{emp.total_orders || 0} طلب</span>
-                  <span>{(emp.total_revenue || 0).toFixed(0)} ر.س</span>
+                  <span><SarAmount value={(emp.total_revenue || 0).toFixed(0)} /></span>
                 </div>
                 {emp.role && (
                   <Badge variant="outline" className={`text-[10px] ${(ROLE_LABELS[emp.role]||ROLE_LABELS.staff).color}`}>

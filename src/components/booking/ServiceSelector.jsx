@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { db } from '@/api/supabaseApi';
 import { Scissors, ShoppingBag, Check, Clock, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SarAmount } from '@/components/shared/SarCurrency';
 
 const categoryIcons = { shoes: Scissors, bags: ShoppingBag };
 const categoryLabels = { shoes: 'أحذية', bags: 'شنط' };
@@ -50,7 +51,7 @@ export default function ServiceSelector({ selectedService, onSelect }) {
                     <div className="flex items-center gap-3 mt-2">
                       <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold text-sm">
                         <Tag className="w-3.5 h-3.5" />
-                        {service.price} ر.س
+                        <SarAmount value={service.price} />
                       </span>
                       <span className="flex items-center gap-1 text-stone-400 text-xs">
                         <Clock className="w-3 h-3" />
