@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import BarcodeDisplay from './BarcodeDisplay';
+import { SarAmount } from '@/components/shared/SarCurrency';
 import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
 import { format } from 'date-fns';
@@ -297,7 +298,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
               <span style={{ flex: 3 }}>{line.item_name}</span>
               <span style={{ flex: 1, textAlign: 'center' }}>{line.qty}</span>
-              <span style={{ flex: 2, textAlign: 'left' }}>{(line.sell_price * line.qty).toFixed(2)} ر.س</span>
+              <span style={{ flex: 2, textAlign: 'left' }}><SarAmount value={line.sell_price * line.qty} /></span>
             </div>
           ))
         ) : (
@@ -305,7 +306,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
             <span style={{ flex: 3 }}>{ITEM_LABELS[order.item_type] || order.item_type}</span>
             <span style={{ flex: 1, textAlign: 'center' }}>{order.quantity || 1}</span>
-            <span style={{ flex: 2, textAlign: 'left' }}>{subtotal?.toFixed(2)} ر.س</span>
+            <span style={{ flex: 2, textAlign: 'left' }}><SarAmount value={subtotal} /></span>
           </div>
         )}
 
@@ -334,11 +335,11 @@ export default function ReceiptView({ order, autoPrint = false }) {
         <div>
           {vatEnabled ? (
             <>
-              <Row label="المجموع قبل الضريبة" value={`${subtotal?.toFixed(2)} ر.س`} />
-              <Row label="ضريبة القيمة المضافة (15%)" value={`${vatAmount?.toFixed(2)} ر.س`} />
+              <Row label="المجموع قبل الضريبة" value={<SarAmount value={subtotal} />} />
+              <Row label="ضريبة القيمة المضافة (15%)" value={<SarAmount value={vatAmount} />} />
             </>
           ) : (
-            <Row label="المجموع" value={`${order.total_price?.toFixed(2)} ر.س`} />
+            <Row label="المجموع" value={<SarAmount value={order.total_price} />} />
           )}
         </div>
 
@@ -348,7 +349,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
           borderTop: '2px solid #000000', paddingTop: '6px', marginTop: '6px', fontSize: '14px', fontWeight: '900', color: '#000000'
         }}>
           <span>الإجمالي شامل الضريبة</span>
-          <span style={{ direction: 'ltr' }}>{order.total_price?.toFixed(2)} ر.س</span>
+          <SarAmount value={order.total_price} style={{ fontSize: '14px', fontWeight: '900' }} />
         </div>
 
         {/* Payment */}

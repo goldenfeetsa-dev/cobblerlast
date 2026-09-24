@@ -56,6 +56,7 @@ const Invoices = lazy(() => import('./pages/Invoices'));
 const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
 const Suppliers = lazy(() => import('./pages/Suppliers'));
 const Purchasing = lazy(() => import('./pages/Purchasing'));
+const Returns = lazy(() => import('./pages/Returns'));
 const TaxDashboard = lazy(() => import('./pages/TaxDashboard'));
 const Careers = lazy(() => import('./pages/Careers'));
 const TrackItem = lazy(() => import('./pages/TrackItem'));
@@ -155,6 +156,7 @@ const AuthenticatedApp = () => {
           <Route path="/workshop" element={<WorkshopSystem />} />
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/purchasing" element={<Purchasing />} />
+          <Route path="/returns" element={<Returns />} />
           <Route path="/tax-dashboard" element={<TaxDashboard />} />
       </Route>
         <Route path="*" element={<PageNotFound />} />

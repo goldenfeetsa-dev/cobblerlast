@@ -3,6 +3,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* رمز الريال السعودي الجديد الرسمي — خط مخصص مستضاف محلياً (يونيكود
+   الرمز الفعلي U+20C1 جديد جداً على مستوى Unicode 17.0، ولا يدعمه أي
+   خط شائع حالياً بما فيها Tajawal/Almarai — لو استخدمناه مباشرة بيطلع
+   مربع فاضي). هذا الخط المخصص يربط حرف # برسمة الرمز الرسمي نفسه. */
+@font-face {
+  font-family: 'SAR-Symbol';
+  src: url('/fonts/saudi-riyal-symbol.woff') format('woff'),
+       url('/fonts/saudi-riyal-symbol.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+.sar-symbol {
+  font-family: 'SAR-Symbol' !important;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+}
+.sar-symbol::before {
+  content: '\0023';
+}
+
 @layer base {
   :root {
     --font-tajawal: 'Almarai', 'Tajawal', system-ui, sans-serif;
