@@ -19,58 +19,31 @@ const ITEM_TYPE_LABELS = {
 // كل قطعة فعلية تاخذ ملصقها المستقل القابل للمسح بدل ملصق واحد
 // يغطّي الطلب كامل وتضيع بقية القطع.
 //
-// مقاس الملصق الفعلي المُشترى: 50×100مم (189×378px @96dpi) — التصميم
-// يملأ المساحة الكاملة بتباعد مريح بدل ما يتكدّس بربع المساحة العلوية.
+// مقاس الملصق الفعلي المُشترى: 50×25مم (189×94.5px @96dpi) — طلب صريح:
+// شي صغير عملي (مو بوليصة شحن)، فتركت بس أهم المعلومات للتعرّف السريع
+// على القطعة (باركود + رقم + نوع + تاريخ تسليم). اسم/جوال العميل
+// وتفاصيل التصليح موجودين بالفاتورة الأصلية، ما نكرّرهم هنا.
 function LabelCard({ barcodeValue, order, piece, pieceIndex, totalPieces }) {
   return (
-    <div className="bcd-label bg-white flex flex-col items-center" dir="rtl"
-      style={{ width: '189px', height: '378px', padding: '16px 12px', fontFamily: "'Tajawal', 'Arial', sans-serif", boxSizing: 'border-box' }}>
+    <div className="bcd-label bg-white flex flex-col items-center justify-center" dir="rtl"
+      style={{ width: '189px', height: '94.5px', padding: '4px 8px', fontFamily: "'Tajawal', 'Arial', sans-serif", boxSizing: 'border-box' }}>
 
-      {/* اسم المحل — يعطي الملصق هوية واضحة، مو بس رقم مجرّد */}
-      <div style={{ fontSize: '13px', fontWeight: '900', color: '#000', marginBottom: '2px', letterSpacing: '0.3px' }}>
-        إبرة وخيط الإسكافي
-      </div>
+      <BarcodeDisplay value={barcodeValue} width={140} height={30} />
 
-      {totalPieces > 1 && (
-        <div style={{ fontSize: '11px', fontWeight: '900', color: '#000', marginBottom: '8px', background: '#f3f3f3', border: '1px solid #000', borderRadius: '4px', padding: '2px 10px' }}>
-          قطعة {pieceIndex + 1} / {totalPieces}
-        </div>
-      )}
-
-      <div style={{ marginTop: totalPieces > 1 ? '4px' : '14px', marginBottom: '6px' }}>
-        <BarcodeDisplay value={barcodeValue} width={160} height={58} />
-      </div>
-      <div style={{ fontSize: '13px', fontWeight: '900', color: '#000', letterSpacing: '1px', marginBottom: '16px' }} dir="ltr">
+      <div style={{ fontSize: '11px', fontWeight: '900', color: '#000', letterSpacing: '0.5px', margin: '2px 0' }} dir="ltr">
         {barcodeValue}
       </div>
 
-      <div style={{ width: '100%', border: '1px solid #000', borderRadius: '6px', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-          <span style={{ width: '38%', fontSize: '11px', fontWeight: '700', color: '#000', padding: '7px 6px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>العميل</span>
-          <span style={{ flex: 1, fontSize: '12px', fontWeight: '900', color: '#000', padding: '7px 6px', textAlign: 'center' }}>{order.customer_name}</span>
-        </div>
-        <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-          <span style={{ width: '38%', fontSize: '11px', fontWeight: '700', color: '#000', padding: '7px 6px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>رقم العميل</span>
-          <span style={{ flex: 1, fontSize: '12px', fontWeight: '900', color: '#000', padding: '7px 6px', textAlign: 'center' }} dir="ltr">{order.customer_phone || '—'}</span>
-        </div>
-        <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-          <span style={{ width: '38%', fontSize: '11px', fontWeight: '700', color: '#000', padding: '7px 6px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>نوع القطعة</span>
-          <span style={{ flex: 1, fontSize: '12px', fontWeight: '900', color: '#000', padding: '7px 6px', textAlign: 'center' }}>{ITEM_TYPE_LABELS[piece.item_type] || piece.item_type}</span>
-        </div>
-        {(piece.description) && (
-          <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
-            <span style={{ width: '38%', fontSize: '11px', fontWeight: '700', color: '#000', padding: '7px 6px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التصليح</span>
-            <span style={{ flex: 1, fontSize: '11px', fontWeight: '700', color: '#000', padding: '7px 6px', textAlign: 'center', lineHeight: '1.4' }}>
-              {(piece.description || '').slice(0, 80)}
-            </span>
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '9px', fontWeight: '700', color: '#000' }}>
+        <span>{ITEM_TYPE_LABELS[piece.item_type] || piece.item_type}</span>
+        <span style={{ color: '#999' }}>·</span>
+        <span dir="ltr">{order.delivery_date ? format(new Date(order.delivery_date), 'd/M') : '—'}</span>
+        {totalPieces > 1 && (
+          <>
+            <span style={{ color: '#999' }}>·</span>
+            <span>{pieceIndex + 1}/{totalPieces}</span>
+          </>
         )}
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '38%', fontSize: '11px', fontWeight: '700', color: '#000', padding: '7px 6px', borderLeft: '1px solid #000', background: '#f3f3f3' }}>التسليم</span>
-          <span style={{ flex: 1, fontSize: '14px', fontWeight: '900', color: '#000', padding: '7px 6px', textAlign: 'center' }} dir="ltr">
-            {order.delivery_date ? format(new Date(order.delivery_date), 'd/M') : '—'}
-          </span>
-        </div>
       </div>
     </div>
   );
@@ -141,9 +114,9 @@ export default function BarcodeOnly() {
             margin: 0 auto; box-shadow: none !important;
           }
           .bcd-no-print { display: none !important; }
-          .bcd-label { page-break-after: always; width: 50mm !important; height: 100mm !important; }
+          .bcd-label { page-break-after: always; width: 50mm !important; height: 25mm !important; }
           .bcd-label:last-child { page-break-after: auto; }
-          @page { size: 50mm 100mm; margin: 0; }
+          @page { size: 50mm 25mm; margin: 0; }
         }
       `}</style>
 
