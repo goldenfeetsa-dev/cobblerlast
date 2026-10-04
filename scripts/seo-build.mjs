@@ -100,6 +100,7 @@ const navHtml = () => `<nav><a href="/">الرئيسية</a> · <a href="/book">
 
 function bodyFor(page) {
   const h = (t) => `<h1>${esc(t)}</h1>`;
+  const sp = ar.shippingPolicy, pv = ar.privacyPolicy, st = ar.home.track?.status || {};
   let inner;
   if (page.path === '/') {
     inner = h('إبرة وخيط الإسكافي — تصليح أحذية وشنط جلدية في الرياض') +
@@ -117,6 +118,47 @@ function bodyFor(page) {
     inner = h('من نحن — إبرة وخيط الإسكافي') + `<p>${esc(ar.about.heroDesc)}</p>` +
       ar.about.storyParas.map((p) => `<p>${esc(p)}</p>`).join('') +
       `<h2>${esc(ar.about.valuesTitle)}</h2><ul>${ar.about.values.map((v) => `<li><strong>${esc(v.title)}:</strong> ${esc(v.desc)}</li>`).join('')}</ul>` + contactHtml();
+  } else if (page.path === '/shipping-policy') {
+    inner = h(sp.title) + `<p>${esc(sp.subtitle)}</p>` +
+      `<h2>خطوات الخدمة</h2><ol>${sp.steps.map((x) => `<li><strong>${esc(x.title)}:</strong> ${esc(x.desc)}</li>`).join('')}</ol>` +
+      `<h2>${esc(sp.coverageTitle)}</h2><p><strong>${esc(sp.coverageInside)}</strong> ${esc(sp.coverageInsideDesc)}</p><p><strong>${esc(sp.coverageOutside)}</strong> ${esc(sp.coverageOutsideDesc)}</p>` +
+      `<h2>${esc(sp.timesTitle)}</h2><ul><li><strong>${esc(sp.workDays)}</strong> ${esc(sp.workDaysDesc)}</li><li><strong>${esc(sp.responseTime)}</strong> ${esc(sp.responseTimeDesc)}</li><li><strong>${esc(sp.completionTime)}</strong> ${esc(sp.completionTimeDesc)}</li></ul>` +
+      `<h2>${esc(sp.feesTitle)}</h2>${li(sp.fees.map((f) => `${f.zone}: ${f.price}`))}` +
+      `<h2>${esc(sp.trackTitle)}</h2><p>${esc(sp.trackDesc)}</p>${li(sp.trackItems)}` + contactHtml();
+  } else if (page.path === '/privacy') {
+    inner = h(pv.title) + (pv.lastUpdate ? `<p>${esc(pv.lastUpdate)}</p>` : '') + pv.sections.map((s) =>
+      `<h2>${esc(s.title)}</h2>` + (s.body || []).map((b) => `<p>${esc(b)}</p>`).join('') +
+      (s.intro ? `<p>${esc(s.intro)}</p>` : '') + (s.items ? li(s.items) : '') +
+      (s.intro2 ? `<p>${esc(s.intro2)}</p>` : '') + (s.items2 ? li(s.items2) : '')).join('') + contactHtml();
+  } else if (page.path === '/shop') {
+    inner = h('متجر إبرة وخيط — مستلزمات العناية بالأحذية والحقائب') + `<p>${esc(ar.shop.subtitle)}.</p>` +
+      `<h2>أقسام المتجر</h2>${li(ar.shop.categories.filter((c) => c.key !== 'all').map((c) => c.label))}` +
+      `<p>الطلب يتم عبر السلة ثم واتساب، والتوصيل داخل الرياض (مجاني للطلبات فوق 200 ريال). ${esc(ar.shop.needSomethingElse)}.</p>` + contactHtml();
+  } else if (page.path === '/book') {
+    inner = h('احجز موعد تصليح حذاء أو حقيبة في الرياض') +
+      `<p>اختر الخدمة والتاريخ ونوع الخدمة (استلام من موقعك أو زيارة الفرع)، ونؤكد معك التفاصيل.</p>` +
+      `<h2>خدماتنا</h2><ul>${SITE.services.map((s) => `<li><strong>${esc(s.name)}</strong> — ${esc(s.desc)}</li>`).join('')}</ul>` +
+      `<h2>${esc(ar.home.services.howItWorksTitle)}</h2><ol>${ar.home.services.steps.map((s) => `<li><strong>${esc(s.t)}:</strong> ${esc(s.d)}</li>`).join('')}</ol>` +
+      `<p>الأسعار تبدأ من 80 ريال لترميم الأحذية و150 ريال لتجديد الحقائب و50 ريال للتلميع والتلوين، والسعر النهائي يُحدَّد بعد فحص القطعة وبموافقتك.</p>` + contactHtml();
+  } else if (page.path === '/auction') {
+    inner = h('سوق المزاد — قطع جلدية مجدّدة للمزايدة') +
+      `<p>نعرض حقائب وأحذية جلدية رمّمناها وجدّدناها بأيدي حرفيينا للمزايدة المباشرة. كل مزاد له عدّاد تنازلي لوقت الانتهاء، وأقل مزايدة مسموحة تظهر على كل قطعة.</p>` +
+      `<h2>كيف تشارك؟</h2><ol><li>اختر القطعة وتصفّح حالتها وصورها قبل وبعد الترميم.</li><li>اضغط «زايد الآن» وأدخل اسمك وجوالك ومبلغ المزايدة.</li><li>صاحب أعلى مزايدة عند انتهاء المزاد يفوز بالقطعة.</li></ol>` +
+      `<h2>اعرض قطعتك للبيع</h2><p>تقدر ترسل قطعتك عبر زر «بيع قطعتك»، وفريقنا يراجعها ويتواصل معك لتحديد سعر البداية ووقت الانتهاء قبل نشرها.</p>` +
+      `<h2>تصفّح حسب الماركة</h2><p>${SITE.brands.map(esc).join('، ')}.</p>` + contactHtml();
+  } else if (page.path === '/track') {
+    const stages = ['pending', 'in_progress', 'ready', 'completed'].map((k) => st[k]).filter(Boolean);
+    inner = h('أين قطعتك الآن؟ تتبّع طلب التصليح') +
+      `<p>أدخل رقم الطلب (المكتوب على الفاتورة) أو رقم جوالك لتعرف مرحلة تصليح حذائك أو حقيبتك لحظة بلحظة.</p>` +
+      (stages.length ? `<h2>مراحل الطلب</h2><ol>${stages.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : '') +
+      `<p>يمكن أيضاً متابعة الطلب عبر رسائل واتساب التلقائية عند كل مرحلة أو بالتواصل المباشر مع فريقنا.</p>` + contactHtml();
+  } else if (page.path === '/reviews') {
+    inner = h('آراء عملاء إبرة وخيط الإسكافي') + `<p>${esc(ar.reviews.subtitle)}.</p>` +
+      `<p>عملاؤنا يشاركون تجربتهم مع تصليح الأحذية وترميم الحقائب الجلدية في الرياض. تقدر تضيف تقييمك بإدخال اسمك والخدمة ورقم طلبك.</p>` + contactHtml();
+  } else if (page.path === '/careers') {
+    inner = h('وظائف إبرة وخيط الإسكافي') +
+      `<p>نبحث عن حرفيين وفنيين متخصصين في إصلاح الأحذية والحقائب الجلدية للانضمام لفريقنا في الرياض. تصفّح الوظائف المتاحة وقدّم مباشرة من الصفحة.</p>` +
+      `<p>ورشة سعودية بدأت عام ${SITE.founded} في قلب الرياض، وتعمل مع علامات فاخرة مثل ${SITE.brands.slice(0, 3).map(esc).join('، ')}.</p>` + contactHtml();
   } else {
     inner = h(page.title.split('|')[0].trim()) + `<p>${esc(page.description)}</p>` + contactHtml();
   }

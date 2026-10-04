@@ -6,7 +6,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { FAQ } from '@/lib/seo/siteData';
+import { FAQ, PAGES } from '@/lib/seo/siteData';
+const HOME_SEO = PAGES.find((p) => p.path === '/');
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import LogoMarquee from '@/components/LogoMarquee';
@@ -1316,26 +1317,26 @@ export default function BookingLanding() {
       <Helmet>
         <html lang={isAr ? 'ar' : 'en'} />
         <title>{isAr
-          ? 'إبرة وخيط الإسكافي | تصليح أحذية وشنط بالرياض — إصلاح وتجديد الأحذية والحقائب الجلدية والبسطار العسكري'
+          ? HOME_SEO.title
           : 'Ebra & Khait Cobbler | Shoe & Bag Repair in Riyadh, Saudi Arabia'}</title>
         <meta name="description" content={isAr
-          ? 'إبرة وخيط الإسكافي — تصليح أحذية بالرياض وتصليح شنط بالرياض على يد حرفيين سعوديين متخصصين في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة والبسطار العسكري. خدمات ترميم وتلميع وتغيير النعال لأرقى الماركات. احجز موعدك الآن!'
+          ? HOME_SEO.description
           : 'Ebra & Khait Cobbler — Saudi craftsmen specialized in repairing and restoring luxury shoes, leather bags, sneakers, and military boots in Riyadh. Restoration, polishing, sole replacement for top brands. Book now!'} />
         <meta name="keywords" content={isAr
           ? 'إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, تبديل نعل, خياطة حذاء جلد, تنظيف حقائب جلدية, إصلاح سحاب حقيبة, إصلاح أحذية فاخرة, أفضل إسكافي في الرياض, إسكافي منزلي الرياض, اسكافي قريب مني, وين الاقي اسكافي زين, تصليح كوتشي, تصليح جزمة, تصليح صرمايه, صيانة احذيه, تصليح شنطة جلد, تصليح بسطار عسكري, صيانة بسطار الجيش, تبديل نعل بسطار عسكري, اصلاح جزمة عسكرية, تصليح بوت عسكري, بسطار الجيش السعودي, إصلاح أحذية العليا, إصلاح أحذية الملز, إصلاح أحذية النخيل, إصلاح أحذية حي السفارات, تصليح حذاء جلد أصلي, تلوين جلد, صيانة حقائب فاخرة, استلام وتوصيل إصلاح أحذية, حجز موعد إسكافي, shoe repair riyadh, leather bag repair riyadh, luxury shoe restoration, cobbler riyadh, shoe sole replacement riyadh, leather shine and polish, military boot repair riyadh'
           : 'shoe repair riyadh, cobbler riyadh, leather bag repair riyadh, luxury shoe restoration, shoe sole replacement riyadh, sneaker repair riyadh, military boot repair riyadh, army boot resole saudi arabia, handbag repair saudi arabia, leather care riyadh, best cobbler riyadh, shoe shine riyadh, luxury handbag restoration riyadh, zipper repair riyadh'} />
-        <link rel="canonical" href="https://needlecobbler.com/" />
+        <link rel="canonical" href="https://www.needlecobbler.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large" />
         <meta property="og:type" content="business.business" />
         <meta property="og:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة - الرياض' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair — Riyadh'} />
         <meta property="og:description" content={isAr ? 'حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة. خدمة استلام وتوصيل في الرياض.' : 'Saudi craftsmen specialized in repairing luxury shoes and leather bags. Pickup & delivery service in Riyadh.'} />
-        <meta property="og:url" content="https://needlecobbler.com/" />
-        <meta property="og:image" content="https://needlecobbler.com/og-image.jpg" />
+        <meta property="og:url" content="https://www.needlecobbler.com/" />
+        <meta property="og:image" content="https://www.needlecobbler.com/og-image.jpg" />
         <meta property="og:locale" content={isAr ? 'ar_SA' : 'en_US'} />
         <meta property="og:site_name" content={isAr ? 'إبرة وخيط الإسكافي' : 'Ebra & Khait Cobbler'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair'} />
-        <meta name="twitter:image" content="https://needlecobbler.com/og-image.jpg" />
+        <meta name="twitter:image" content="https://www.needlecobbler.com/og-image.jpg" />
         {/* البيانات المنظمة (LocalBusiness/FAQPage/WebSite) تُحقن بالـHTML الثابت عند البناء — scripts/seo-build.mjs */}
       </Helmet>
       <Navbar />

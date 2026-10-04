@@ -40,7 +40,7 @@ export default function CareerDetail() {
   }
 
   const ApplyIcon = { whatsapp: MessageCircle, email: Mail, phone: Phone, link: ExternalLink }[job.apply_method];
-  const pageUrl = `https://needlecobbler.com/careers/${job.slug}`;
+  const pageUrl = `https://www.needlecobbler.com/careers/${job.slug}`;
   const metaDesc = (job.description || job.title).slice(0, 155);
 
   return (
@@ -71,7 +71,7 @@ export default function CareerDetail() {
           "hiringOrganization": {
             "@type": "Organization",
             "name": "إبرة وخيط الإسكافي",
-            "sameAs": "https://needlecobbler.com",
+            "sameAs": "https://www.needlecobbler.com",
           },
           "jobLocation": {
             "@type": "Place",

@@ -8,6 +8,8 @@ import { db, listActiveAuctions, listShopProductsWithBrand, placeBid, storage } 
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { SarAmount } from '@/components/shared/SarCurrency';
+import { PAGES } from '@/lib/seo/siteData';
+const AUCTION_SEO = PAGES.find((p) => p.path === '/auction');
 
 // ── أيقونات SVG أصلية (نفس تصميم أيقونات الصفحة الرئيسية بالضبط —
 // لا إيموجي إطلاقاً، طبقاً لطلب العميل الصريح) ──────────────────────
@@ -383,11 +385,11 @@ export default function AuctionMarket() {
   return (
     <div dir={dir} style={{ background: 'hsl(var(--background))', minHeight: '100vh' }} className="font-tajawal">
       <Helmet>
-        <title>{isAr ? 'دكّة الإسكافي وسوق المزاد | إبرة وخيط الإسكافي — الرياض' : "Cobbler's Bench & Auction Market | Cobblers — Riyadh"}</title>
+        <title>{isAr ? AUCTION_SEO.title : "Cobbler's Bench & Auction Market | Cobblers — Riyadh"}</title>
         <meta name="description" content={isAr
-          ? 'تسوّق مستلزمات وقطع مجدّدة بسعر ثابت من دكّة الإسكافي، أو زايد مباشرة على قطع جلدية فاخرة نادرة في سوق المزاد.'
+          ? AUCTION_SEO.description
           : 'Shop fixed-price refurbished pieces from the Cobbler\'s Bench, or bid live on rare refurbished leather pieces in the Auction Market.'} />
-        <link rel="canonical" href="https://needlecobbler.com/auction" />
+        <link rel="canonical" href="https://www.needlecobbler.com/auction" />
       </Helmet>
 
       {/* Nav */}

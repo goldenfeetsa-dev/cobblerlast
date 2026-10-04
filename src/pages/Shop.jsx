@@ -207,30 +207,30 @@ export default function Shop() {
   return (
     <div dir={dir} style={{ background: '#ede3d3', minHeight: '100vh', fontFamily: "'Almarai', 'Tajawal', sans-serif" }}>
       <Helmet>
-        <title>{isAr ? 'متجر إبرة وخيط | منتجات العناية بالأحذية والحقائب الفاخرة - الرياض' : "Cobbler's Shop | Shoe & Leather Bag Care Products — Riyadh"}</title>
+        <title>{isAr ? 'متجر إبرة وخيط | مستلزمات العناية بالأحذية والحقائب - الرياض' : "Cobbler's Shop | Shoe & Leather Bag Care Products — Riyadh"}</title>
         <meta name="description" content={isAr
           ? 'تسوق منتجات العناية بالأحذية والحقائب الجلدية الفاخرة والبسطار العسكري — نعال، كريمات تلميع، جلود، وأدوات احترافية. توصيل في الرياض.'
           : 'Shop premium products for caring for shoes, leather bags, sneakers, and military boots — soles, polish creams, leathers, and professional tools. Delivery in Riyadh.'} />
         <meta name="keywords" content={isAr
           ? 'متجر أحذية الرياض, كريم تلميع أحذية, نعال جلدي, صبغة جلد, منتجات العناية بالجلود, فرشاة تلميع أحذية, واقي جلد, ملمع أحذية فاخر, أدوات صيانة الحقائب الجلدية, مستلزمات تصليح بسطار عسكري, shop shoe care riyadh, leather care products riyadh'
           : 'shop shoe care riyadh, leather care products riyadh, shoe polish cream, leather sole, leather dye, shoe care accessories, military boot supplies riyadh'} />
-        <link rel="canonical" href="https://needlecobbler.com/shop" />
+        <link rel="canonical" href="https://www.needlecobbler.com/shop" />
         <meta property="og:title" content={isAr ? 'متجر إبرة وخيط — منتجات العناية بالأحذية والحقائب' : "Cobbler's Shop — Shoe & Bag Care Products"} />
         <meta property="og:description" content={isAr ? 'منتجات احترافية للعناية بالأحذية والحقائب الجلدية. توصيل في الرياض.' : 'Professional products for shoe and leather bag care. Delivery in Riyadh.'} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://needlecobbler.com/shop" />
+        <meta property="og:url" content="https://www.needlecobbler.com/shop" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "ItemList",
           "name": "منتجات إبرة وخيط الإسكافي",
-          "url": "https://needlecobbler.com/shop",
+          "url": "https://www.needlecobbler.com/shop",
           "numberOfItems": filtered.length,
           "itemListElement": filtered.slice(0, 20).map((p, i) => ({
             "@type": "ListItem",
             "position": i + 1,
             "item": {
               "@type": "Product",
-              "@id": `https://needlecobbler.com/shop#product-${p.id}`,
+              "@id": `https://www.needlecobbler.com/shop#product-${p.id}`,
               "name": p.name_ar || p.name,
               "description": p.description || p.name_ar,
               "image": p.image_url,
@@ -241,8 +241,8 @@ export default function Shop() {
                 "price": p.price,
                 "priceCurrency": "SAR",
                 "availability": p.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                "url": `https://needlecobbler.com/shop#product-${p.id}`,
-                "seller": { "@type": "Organization", "name": "إبرة وخيط الإسكافي", "url": "https://needlecobbler.com" },
+                "url": `https://www.needlecobbler.com/shop#product-${p.id}`,
+                "seller": { "@type": "Organization", "name": "إبرة وخيط الإسكافي", "url": "https://www.needlecobbler.com" },
                 "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
               }
             }

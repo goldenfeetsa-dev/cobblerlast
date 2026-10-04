@@ -51,5 +51,5 @@ Disallow: /api/loyalty/
 Disallow: /api/zatca/
 Disallow: /api/reports/
 
-Sitemap: https://needlecobbler.com/sitemap.xml
-Sitemap: https://needlecobbler.com/api/sitemap-careers.xml
+Sitemap: https://www.needlecobbler.com/sitemap.xml
+Sitemap: https://www.needlecobbler.com/api/sitemap-careers.xml

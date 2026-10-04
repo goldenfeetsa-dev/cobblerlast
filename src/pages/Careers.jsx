@@ -31,12 +31,12 @@ export default function Careers() {
       <Helmet>
         <title>{title}</title>
         <meta name="description" content={desc} />
-        <link rel="canonical" href="https://needlecobbler.com/careers" />
+        <link rel="canonical" href="https://www.needlecobbler.com/careers" />
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={desc} />
-        <meta property="og:url" content="https://needlecobbler.com/careers" />
+        <meta property="og:url" content="https://www.needlecobbler.com/careers" />
         {jobs.length > 0 && (
           <script type="application/ld+json">{JSON.stringify({
             "@context": "https://schema.org",
@@ -44,7 +44,7 @@ export default function Careers() {
             "itemListElement": jobs.map((j, i) => ({
               "@type": "ListItem",
               "position": i + 1,
-              "url": `https://needlecobbler.com/careers/${j.slug}`,
+              "url": `https://www.needlecobbler.com/careers/${j.slug}`,
             })),
           })}</script>
         )}
