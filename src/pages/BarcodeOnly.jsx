@@ -2,52 +2,10 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
-import BarcodeDisplay from '@/components/pos/BarcodeDisplay';
+import BarcodeLabel, { getOrderPieces } from '@/components/pos/BarcodeLabel';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Printer, Download, PackageSearch } from 'lucide-react';
 import html2canvas from 'html2canvas';
-import { format } from 'date-fns';
-
-// نفس تسميات الأصناف المستخدمة بصفحة إنشاء الطلب (NewOrder.jsx) —
-// عشان يظهر نوع الخدمة بالعربي تحت الباركود بدل قيمة الكود الخام.
-const ITEM_TYPE_LABELS = {
-  shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
-  jacket: 'جاكيت', pants: 'بنطال', shirt: 'قميص', other: 'أخرى',
-};
-
-// بطاقة ملصق واحدة — تُستخدم لكل قطعة على حدة (مو للطلب كامل) عشان
-// كل قطعة فعلية تاخذ ملصقها المستقل القابل للمسح بدل ملصق واحد
-// يغطّي الطلب كامل وتضيع بقية القطع.
-//
-// مقاس الملصق الفعلي المُشترى: 50×25مم (189×94.5px @96dpi) — طلب صريح:
-// شي صغير عملي (مو بوليصة شحن)، فتركت بس أهم المعلومات للتعرّف السريع
-// على القطعة (باركود + رقم + نوع + تاريخ تسليم). اسم/جوال العميل
-// وتفاصيل التصليح موجودين بالفاتورة الأصلية، ما نكرّرهم هنا.
-function LabelCard({ barcodeValue, order, piece, pieceIndex, totalPieces }) {
-  return (
-    <div className="bcd-label bg-white flex flex-col items-center justify-center" dir="rtl"
-      style={{ width: '189px', height: '94.5px', padding: '4px 8px', fontFamily: "'Tajawal', 'Arial', sans-serif", boxSizing: 'border-box' }}>
-
-      <BarcodeDisplay value={barcodeValue} width={140} height={30} />
-
-      <div style={{ fontSize: '11px', fontWeight: '900', color: '#000', letterSpacing: '0.5px', margin: '2px 0' }} dir="ltr">
-        {barcodeValue}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '9px', fontWeight: '700', color: '#000' }}>
-        <span>{ITEM_TYPE_LABELS[piece.item_type] || piece.item_type}</span>
-        <span style={{ color: '#999' }}>·</span>
-        <span dir="ltr">{order.delivery_date ? format(new Date(order.delivery_date), 'd/M') : '—'}</span>
-        {totalPieces > 1 && (
-          <>
-            <span style={{ color: '#999' }}>·</span>
-            <span>{pieceIndex + 1}/{totalPieces}</span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function BarcodeOnly() {
   const navigate = useNavigate();
@@ -65,9 +23,7 @@ export default function BarcodeOnly() {
   // لو الطلب فيه أكثر من قطعة (order_items)، نصدر ملصق مستقل لكل قطعة
   // برقم فرعي (NT123-1, NT123-2...) — كل قطعة فعلية تاخذ ملصقها الخاص
   // بدل ملصق واحد للطلب كامل تضيع فيه بقية القطع
-  const pieces = (order?.order_items && order.order_items.length > 0)
-    ? order.order_items
-    : (order ? [{ item_type: order.item_type, description: order.description || order.notes || '' }] : []);
+  const pieces = getOrderPieces(order);
 
   // طباعة تلقائية أول ما البيانات تجهز — نفس آلية الفاتورة بالضبط،
   // بضغطة وحدة بدون تأخير مصطنع
@@ -114,9 +70,9 @@ export default function BarcodeOnly() {
             margin: 0 auto; box-shadow: none !important;
           }
           .bcd-no-print { display: none !important; }
-          .bcd-label { page-break-after: always; width: 50mm !important; height: 25mm !important; }
+          .bcd-label { page-break-after: always; width: 50mm !important; height: auto !important; }
           .bcd-label:last-child { page-break-after: auto; }
-          @page { size: 50mm 25mm; margin: 0; }
+          @page { size: 50mm auto; margin: 0; }
         }
       `}</style>
 
@@ -133,14 +89,7 @@ export default function BarcodeOnly() {
 
       <div id="bcd-print-area" ref={containerRef} className="flex flex-wrap items-start justify-center gap-4">
         {pieces.map((piece, i) => (
-          <LabelCard
-            key={i}
-            barcodeValue={pieces.length > 1 ? `${order.order_number}-${i + 1}` : order.order_number}
-            order={order}
-            piece={piece}
-            pieceIndex={i}
-            totalPieces={pieces.length}
-          />
+          <BarcodeLabel key={i} order={order} piece={piece} pieceIndex={i} totalPieces={pieces.length} />
         ))}
       </div>
 

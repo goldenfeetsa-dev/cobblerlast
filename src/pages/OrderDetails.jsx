@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import PhotoCarousel from '@/components/pos/PhotoCarousel';
 import ReceiptView from '@/components/pos/ReceiptView';
+import BarcodeLabel, { getOrderPieces } from '@/components/pos/BarcodeLabel';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
 import { shouldHidePhotos } from '@/lib/photoCleanup';
@@ -586,6 +587,26 @@ export default function OrderDetails() {
 
         <TabsContent value="receipt">
           <ReceiptView order={order} autoPrint={justCreated} />
+
+          {/* ملصقات الباركود تحت الفاتورة — ملصق لكل قطعة (اسم العميل، رقمه،
+              نوع القطعة، التصليح، التسليم) عشان تعرف صاحب كل قطعة مباشرة.
+              ما تدخل بطباعة الفاتورة (الفاتورة تطبع نفسها بس)؛ للطباعة
+              زر يفتح صفحة طباعة الملصقات. */}
+          <div className="mt-8 border-t pt-6 print:hidden">
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+              <h3 className="font-black text-base">ملصقات الباركود ({getOrderPieces(order).length})</h3>
+              <Button variant="outline" size="sm" onClick={() => navigate(`/barcode/${order.id}`)}>
+                طباعة الملصقات
+              </Button>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4">
+              {getOrderPieces(order).map((piece, i, arr) => (
+                <div key={i} className="border rounded-lg overflow-hidden bg-white">
+                  <BarcodeLabel order={order} piece={piece} pieceIndex={i} totalPieces={arr.length} />
+                </div>
+              ))}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
