@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@/api/supabaseApi';
 import { useQuery } from '@tanstack/react-query';
@@ -10,7 +11,6 @@ import html2canvas from 'html2canvas';
 export default function BarcodeOnly() {
   const navigate = useNavigate();
   const containerRef = useRef(null);
-  const [autoPrinted, setAutoPrinted] = useState(false);
   const pathParts = window.location.pathname.split('/');
   const orderId = pathParts[pathParts.length - 1];
 
@@ -25,15 +25,17 @@ export default function BarcodeOnly() {
   // بدل ملصق واحد للطلب كامل تضيع فيه بقية القطع
   const pieces = getOrderPieces(order);
 
-  // طباعة تلقائية أول ما البيانات تجهز — نفس آلية الفاتورة بالضبط،
-  // بضغطة وحدة بدون تأخير مصطنع
+  // طباعة تلقائية أول ما بيانات الطلب تجهز — مرة وحدة فقط.
+  // (كان الكود السابق يلغي مؤقّته بنفسه: setAutoPrinted يعيد التصيير
+  // فيشتغل cleanup الـeffect ويمسح الـsetTimeout قبل ما ينفّذ، فما كانت
+  // الطباعة التلقائية تشتغل أبداً. الحين نستخدم ref بدون إلغاء.)
+  const autoPrintedRef = useRef(false);
   useEffect(() => {
-    if (order && !autoPrinted) {
-      setAutoPrinted(true);
-      const t = setTimeout(() => window.print(), 300);
-      return () => clearTimeout(t);
+    if (order && !autoPrintedRef.current) {
+      autoPrintedRef.current = true;
+      setTimeout(() => window.print(), 600);
     }
-  }, [order, autoPrinted]);
+  }, [order]);
 
   const handleDownload = async () => {
     if (!containerRef.current) return;
@@ -60,19 +62,22 @@ export default function BarcodeOnly() {
           الملصقات. كل ملصق قطعة يصير صفحة طباعة مستقلة (page-break)
           فتخرج كل قطعة على ورقة منفصلة فعلياً من مكينة الباركود. */}
       <style>{`
+        /* نسخة الطباعة: حاوية مستقلة مرتبطة مباشرة بـ body (portal) — تظهر
+           بالطباعة فقط، وكل شي ثاني بالصفحة يختفي. بدون position:fixed
+           (كان يقصّ كل الملصقات بعد الأول لأن العناصر الثابتة ما تتوزع
+           على صفحات) — الحين كل ملصق يطلع على ورقة 50×100مم مستقلة. */
+        #bcd-print-root { display: none; }
         @media print {
-          html, body { height: auto !important; overflow: visible !important; }
-          body * { visibility: hidden; }
-          #bcd-print-area, #bcd-print-area * { visibility: visible; }
-          #bcd-print-area {
-            position: fixed; top: 0; left: 0; right: 0;
-            width: 50mm; height: auto; max-height: none; overflow: visible;
-            margin: 0 auto; box-shadow: none !important;
+          body > *:not(#bcd-print-root) { display: none !important; }
+          html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; height: auto !important; overflow: visible !important; }
+          #bcd-print-root { display: block !important; }
+          #bcd-print-root .bcd-label {
+            width: 50mm !important; height: 100mm !important; overflow: hidden;
+            page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid;
           }
+          #bcd-print-root .bcd-label:last-child { page-break-after: auto; break-after: auto; }
           .bcd-no-print { display: none !important; }
-          .bcd-label { page-break-after: always; width: 50mm !important; height: auto !important; }
-          .bcd-label:last-child { page-break-after: auto; }
-          @page { size: 50mm auto; margin: 0; }
+          @page { size: 50mm 100mm; margin: 0; }
         }
       `}</style>
 
@@ -87,11 +92,21 @@ export default function BarcodeOnly() {
         </p>
       )}
 
-      <div id="bcd-print-area" ref={containerRef} className="flex flex-wrap items-start justify-center gap-4">
+      <div id="bcd-preview-area" ref={containerRef} className="flex flex-wrap items-start justify-center gap-4">
         {pieces.map((piece, i) => (
           <BarcodeLabel key={i} order={order} piece={piece} pieceIndex={i} totalPieces={pieces.length} />
         ))}
       </div>
+
+      {/* نسخة الطباعة (مخفية بالشاشة) — ملصق لكل قطعة، كل واحد بصفحة مستقلة */}
+      {createPortal(
+        <div id="bcd-print-root">
+          {pieces.map((piece, i) => (
+            <BarcodeLabel key={i} order={order} piece={piece} pieceIndex={i} totalPieces={pieces.length} />
+          ))}
+        </div>,
+        document.body
+      )}
 
       <div className="flex gap-3 bcd-no-print">
         <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90">

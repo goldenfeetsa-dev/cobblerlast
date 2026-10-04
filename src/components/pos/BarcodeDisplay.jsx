@@ -1,7 +1,7 @@
 import React from 'react';
 import { generateCode128Bars } from '@/lib/barcodeUtils';
 
-export default function BarcodeDisplay({ value, width = 250, height = 60 }) {
+export default function BarcodeDisplay({ value, width = 250, height = 60, showValue = true }) {
   const bars = generateCode128Bars(value);
   const totalUnits = bars.reduce((sum, b) => sum + b.width, 0);
   const unitWidth = width / totalUnits;
@@ -24,7 +24,7 @@ export default function BarcodeDisplay({ value, width = 250, height = 60 }) {
           return rect;
         })}
       </svg>
-      <p className="text-xs font-mono mt-1 tracking-widest">{value}</p>
+      {showValue && <p className="text-xs font-mono mt-1 tracking-widest">{value}</p>}
     </div>
   );
 }
