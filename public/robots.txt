@@ -1,54 +1,55 @@
+# robots.txt — إبرة وخيط الإسكافي
+# ─────────────────────────────────────────────────────────────────
+# سياسة الزحف: كل الصفحات العامة مسموحة لمحركات البحث ولزواحف الذكاء
+# الاصطناعي عمداً (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot,
+# PerplexityBot, Google-Extended, Applebot-Extended, Bingbot...) لأن ظهور
+# الموقع في إجابات ChatGPT وClaude وPerplexity وجوجل AI Overviews مقصود.
+# لا نكرّر مجموعات مستقلة لكل زاحف: أي مجموعة مسماة تتجاهل مجموعة * (فتضيع
+# قيود صفحات الإدارة) — كان هذا خلل المجموعة المخصصة لـGooglebot سابقاً.
+# لمنع تدريب نموذج معيّن فقط (مع بقاء ظهورك بالبحث) أضف مجموعة مسماة له
+# واكرّر فيها نفس قائمة Disallow بالأسفل.
+
 User-agent: *
 Allow: /
-Allow: /book
-Allow: /shop
-Allow: /about
-Allow: /repair-policy
-Allow: /privacy
-Allow: /shipping-policy
-Allow: /reviews
-Allow: /careers
 
-# صفحة متابعة الحجز الشخصية — تحتوي بيانات ديناميكية خاصة بالعميل
-# ولا تحمل قيمة فهرسة (مُعلَّمة noindex داخل الصفحة نفسها)
+# صفحات خاصة بالعميل (بيانات ديناميكية) — لا قيمة فهرسة
 Disallow: /my-bookings
-
-# منع الوصول لكل صفحات الإدارة والنظام
+Disallow: /my-loyalty
 Disallow: /login
-Disallow: /pos
-Disallow: /orders
-Disallow: /new-order
+
+# لوحة الإدارة والنظام (خلف تسجيل الدخول)
+Disallow: /admin/
+Disallow: /audit
+Disallow: /calendar
 Disallow: /customers
 Disallow: /employees
-Disallow: /settings
-Disallow: /social-settings
-Disallow: /admin/
-Disallow: /zatca
-Disallow: /loyalty
-Disallow: /audit
-Disallow: /dashboard
-Disallow: /sales
-Disallow: /workshop
-Disallow: /scan
-Disallow: /barcode/
+Disallow: /financial-reports
+Disallow: /invoices
 Disallow: /leaderboard
-Disallow: /site-analytics
+Disallow: /loyalty
+Disallow: /loyalty-members
+Disallow: /new-order
 Disallow: /operations
-Disallow: /calendar
-Disallow: /staff
-
-# Google Bot
-User-agent: Googlebot
-Allow: /
-Allow: /shop
-Disallow: /login
+Disallow: /orders
 Disallow: /pos
-Disallow: /admin/
-Disallow: /my-bookings
-
-# Google Image Bot
-User-agent: Googlebot-Image
-Allow: /
+Disallow: /purchasing
+Disallow: /returns
+Disallow: /sales
+Disallow: /scan
+Disallow: /settings
+Disallow: /site-analytics
+Disallow: /social-settings
+Disallow: /staff
+Disallow: /suppliers
+Disallow: /tax-dashboard
+Disallow: /workshop
+Disallow: /zatca
+Disallow: /barcode/
+Disallow: /api/auth/
+Disallow: /api/secure/
+Disallow: /api/loyalty/
+Disallow: /api/zatca/
+Disallow: /api/reports/
 
 Sitemap: https://needlecobbler.com/sitemap.xml
 Sitemap: https://needlecobbler.com/api/sitemap-careers.xml

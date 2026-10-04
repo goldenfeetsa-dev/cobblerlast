@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PinPad from '@/components/pos/PinPad';
@@ -73,6 +74,7 @@ export default function PinLogin() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-black" style={{ color: '#1A0F00' }}>إبرة وخيط الإسكافي</h1>

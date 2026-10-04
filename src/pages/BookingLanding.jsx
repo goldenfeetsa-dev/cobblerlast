@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { FAQ } from '@/lib/seo/siteData';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import LogoMarquee from '@/components/LogoMarquee';
@@ -1123,6 +1124,40 @@ function TrackOrderSection() {
 }
 
 // ── Branches ──────────────────────────────────────────────────────
+// ── الأسئلة الشائعة — نفس المصدر (src/lib/seo/siteData.js) اللي يغذّي
+// FAQPage JSON-LD وllms.txt، فالإجابات للزائر ولمحركات الذكاء متطابقة.
+// <details> الأصلي: يشتغل بدون JavaScript وكل الإجابات ظاهرة للزواحف.
+function FaqSection() {
+  const { lang, dir } = useLanguage();
+  const items = FAQ[lang === 'ar' ? 'ar' : 'en'];
+  return (
+    <section id="faq" className="py-28 px-6" style={{ background: BG2 }} dir={dir}>
+      <div className="max-w-3xl mx-auto">
+        <FadeIn className="text-center mb-12">
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>
+            {lang === 'ar' ? 'أسئلة شائعة' : 'FAQ'}
+          </p>
+          <h2 className="font-display text-4xl font-black" style={{ color: T }}>
+            {lang === 'ar' ? 'كل ما تحتاج تعرفه قبل التصليح' : 'Everything to know before your repair'}
+          </h2>
+        </FadeIn>
+        <div className="space-y-3">
+          {items.map((f, i) => (
+            <details key={i} className="group rounded-2xl px-6 py-5 cursor-pointer"
+              style={{ background: '#fff', border: `1px solid ${GB}0.2)` }}>
+              <summary className="font-bold text-base list-none flex items-center justify-between gap-4" style={{ color: T }}>
+                <h3 className="font-bold text-base">{f.q}</h3>
+                <span aria-hidden="true" className="text-xl transition-transform group-open:rotate-45" style={{ color: GT }}>+</span>
+              </summary>
+              <p className="mt-3 text-sm leading-7" style={{ color: '#5a4636' }}>{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function BranchesSection() {
   const { t, dir } = useLanguage();
   const { data: siteData } = useSiteData();
@@ -1301,18 +1336,7 @@ export default function BookingLanding() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair'} />
         <meta name="twitter:image" content="https://needlecobbler.com/og-image.jpg" />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "LocalBusiness",
-          "name": "إبرة وخيط الإسكافي",
-          "alternateName": "Ebra & Khait Cobbler",
-          "url": "https://needlecobbler.com",
-          "telephone": "+966549678191",
-          "priceRange": "$$",
-          "address": { "@type": "PostalAddress", "addressLocality": "الرياض", "addressCountry": "SA" },
-          "openingHoursSpecification": [{ "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"], "opens": "09:00", "closes": "22:00" }],
-          "sameAs": ["https://www.instagram.com/ebra.kh8/"]
-        })}</script>
+        {/* البيانات المنظمة (LocalBusiness/FAQPage/WebSite) تُحقن بالـHTML الثابت عند البناء — scripts/seo-build.mjs */}
       </Helmet>
       <Navbar />
       <HeroSection />
@@ -1325,6 +1349,7 @@ export default function BookingLanding() {
       <RequestServiceSection />
       <AboutSection />
       <BrandsSection />
+      <FaqSection />
       <BranchesSection />
       <TrackOrderSection />
       <Footer />

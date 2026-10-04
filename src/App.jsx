@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
+import HeadDedupe from '@/components/seo/HeadDedupe';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
 
   return (
     <>
+      <HeadDedupe />
       <Suspense fallback={
         <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#060300' }}>
           <div className="flex flex-col items-center gap-4">
