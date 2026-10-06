@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { Shield } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 const GOLD = '#A67C68';
 const TEXT = '#3E322D';
@@ -26,10 +27,8 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen font-tajawal" style={{ background: '#EFE9DD', color: TEXT }} dir={dir}>
       <Helmet>
-        <title>{isAr ? 'سياسة الخصوصية | إبرة وخيط الإسكافي' : 'Privacy Policy | Ebra & Khait Cobbler'}</title>
-        <meta name="description" content={isAr
-          ? 'سياسة الخصوصية لموقع إبرة وخيط الإسكافي — كيف نتعامل مع بياناتك الشخصية ونحمي خصوصيتك.'
-          : 'Privacy Policy for Ebra & Khait Cobbler — how we handle your personal data and protect your privacy.'} />
+        <title>{pageSeo('/privacy', isAr).title}</title>
+        <meta name="description" content={pageSeo('/privacy', isAr).description} />
         <link rel="canonical" href="https://www.needlecobbler.com/privacy" />
         <meta name="robots" content="index, follow" />
       </Helmet>

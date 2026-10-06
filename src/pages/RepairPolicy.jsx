@@ -5,6 +5,7 @@ import { Shield, Clock, CheckCircle, AlertCircle, CreditCard, Package, Scissors,
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 const GOLD = '#A67C68';
 const BG = '#EFE9DD';
@@ -44,10 +45,8 @@ export default function RepairPolicy() {
   return (
     <div dir={dir} style={{ background: BG, minHeight: '100vh', fontFamily: "'Tajawal', sans-serif" }}>
       <Helmet>
-        <title>{isAr ? 'سياسة الإصلاح والضمان | إبرة وخيط الإسكافي — الرياض' : 'Repair & Warranty Policy | Ebra & Khait Cobbler — Riyadh'}</title>
-        <meta name="description" content={isAr
-          ? 'تعرف على سياسة إصلاح الأحذية والحقائب الجلدية في إبرة وخيط الإسكافي: مدة التسليم، ضمان الجودة لمدة 30 يوماً، طرق الدفع، وشروط الاستلام والتقييم في الرياض.'
-          : 'Learn about our shoe and leather bag repair policy: delivery time, 30-day quality guarantee, payment methods, and pickup and assessment terms in Riyadh.'} />
+        <title>{pageSeo('/repair-policy', isAr).title}</title>
+        <meta name="description" content={pageSeo('/repair-policy', isAr).description} />
         <meta name="keywords" content={isAr
           ? 'سياسة إصلاح الأحذية, ضمان إصلاح الأحذية, مدة تصليح الحذاء, أسعار إصلاح الأحذية الرياض, ضمان تجديد الحقائب, شروط استلام القطع الجلدية'
           : 'shoe repair policy, shoe repair warranty, shoe repair turnaround time, shoe repair prices riyadh, bag renewal warranty, leather item intake terms'} />

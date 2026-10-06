@@ -94,34 +94,65 @@ export const FAQ = {
 /** صفحات الموقع العامة القابلة للفهرسة — العنوان/الوصف للصفحات الداخلية */
 export const PAGES = [
   { path: '/', priority: '1.0', changefreq: 'weekly',
+    en: { title: 'Ebra & Khait Cobbler | Shoe & Luxury Bag Repair in Riyadh', description: 'Riyadh cobbler for shoe repair and luxury leather bag restoration (Hermès, Louis Vuitton, Chanel), travel bags and military boots. Pickup, 30-day guarantee.' },
     title: 'إبرة وخيط الإسكافي | تصليح أحذية وشنط جلدية بالرياض',
     description: 'تصليح وترميم الأحذية والحقائب الجلدية الفاخرة في الرياض (هيرمس، لويس فيتون، شانيل). استلام من موقعك، ضمان 30 يوماً، وتتبع مباشر لقطعتك.' },
   { path: '/book', priority: '0.9', changefreq: 'weekly',
+    en: { title: 'Book a Shoe or Bag Repair in Riyadh | Ebra & Khait Cobbler', description: 'Book your appointment online to repair or restore your shoes or leather bags in Riyadh. Choose the service and time; pickup and delivery within Riyadh.' },
     title: 'احجز موعد تصليح حذاء أو حقيبة في الرياض | إبرة وخيط الإسكافي',
     description: 'احجز موعدك أونلاين لتصليح الأحذية أو ترميم الحقائب الجلدية في الرياض. اختر الخدمة والوقت، ونستلم قطعتك من موقعك.' },
   { path: '/shop', priority: '0.8', changefreq: 'weekly',
+    en: { title: "Cobbler's Shop | Shoe & Leather Bag Care Products — Riyadh", description: 'Shop products for caring for shoes, leather bags, sneakers and military boots — soles, polish creams, leathers and professional tools. Delivery in Riyadh.' },
     title: 'متجر إبرة وخيط | مستلزمات العناية بالأحذية والحقائب - الرياض',
     description: 'تسوق منتجات العناية بالأحذية والحقائب الجلدية الفاخرة والبسطار العسكري — نعال، كريمات تلميع، جلود، وأدوات احترافية. توصيل في الرياض.' },
   { path: '/auction', priority: '0.7', changefreq: 'daily',
+    en: { title: 'Auction Market | Restored Leather Bags & Shoes — Ebra & Khait', description: 'Restored leather pieces renewed by our craftsmen, open for live bidding. Join an auction or submit your own piece for sale.' },
     title: 'سوق المزاد | حقائب وأحذية جلدية مجدّدة — إبرة وخيط',
     description: 'قطع جلدية مجدّدة ومرمّمة بأيدي حرفيينا تُعرض للمزايدة المباشرة. شارك بالمزاد أو اعرض قطعتك للبيع.' },
   { path: '/reviews', priority: '0.7', changefreq: 'weekly',
+    en: { title: 'Customer Reviews | Ebra & Khait Cobbler — Riyadh', description: 'Read customer reviews of Ebra & Khait Cobbler’s shoe and leather bag repair services in Riyadh, and share your own experience.' },
     title: 'آراء العملاء | إبرة وخيط الإسكافي — الرياض',
     description: 'اطلع على تجارب عملائنا مع خدمات تصليح وترميم الأحذية والحقائب الجلدية في إبرة وخيط الإسكافي بالرياض.' },
   { path: '/about', priority: '0.7', changefreq: 'monthly',
+    en: { title: 'About Us | Ebra & Khait Cobbler — Saudi Craftsmen in Riyadh', description: 'The story of Ebra & Khait Cobbler: a Saudi workshop founded in 2013 in Riyadh, specialized in repairing and restoring luxury leather shoes and bags.' },
     title: 'من نحن | إبرة وخيط الإسكافي — حرفيون سعوديون في الرياض',
     description: 'قصة إبرة وخيط الإسكافي: ورشة سعودية بدأت عام 2013 في الرياض متخصصة في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة.' },
   { path: '/repair-policy', priority: '0.6', changefreq: 'monthly',
+    en: { title: 'Repair & Warranty Policy | Ebra & Khait Cobbler — Riyadh', description: 'Our repair policy: delivery times, 30-day quality guarantee, payment methods, and pickup and assessment terms in Riyadh.' },
     title: 'سياسة الإصلاح والضمان | إبرة وخيط الإسكافي — الرياض',
     description: 'مدة التسليم، ضمان الجودة لمدة 30 يوماً، طرق الدفع، وشروط الاستلام والتقييم في إبرة وخيط الإسكافي بالرياض.' },
   { path: '/track', priority: '0.5', changefreq: 'monthly',
+    en: { title: 'Where Is Your Item? Track Your Repair | Ebra & Khait Cobbler', description: 'Track your shoe or bag repair step by step — item received, in progress, ready for pickup — using your order number or phone number.' },
     title: 'أين قطعتك الآن؟ تتبّع طلب التصليح | إبرة وخيط الإسكافي',
     description: 'تتبّع مرحلة تصليح حذائك أو حقيبتك خطوة بخطوة (استلمنا قطعتك، جارٍ التنفيذ، جاهز للاستلام) برقم الطلب أو رقم الجوال.' },
   { path: '/careers', priority: '0.6', changefreq: 'weekly',
+    en: { title: 'Careers | Ebra & Khait Cobbler — Jobs in Riyadh', description: 'Join our team of craftsmen in Riyadh. Browse open positions at Ebra & Khait Cobbler and apply directly from the site.' },
     title: 'وظائف إبرة وخيط الإسكافي | فرص عمل في الرياض',
     description: 'انضم لفريق حرفيينا في الرياض. تعرّف على الوظائف المتاحة في إبرة وخيط الإسكافي وقدّم طلبك مباشرة من الموقع.' },
   { path: '/shipping-policy', priority: '0.4', changefreq: 'yearly',
+    en: { title: 'Shipping & Pickup Policy | Ebra & Khait Cobbler', description: 'Pickup and delivery inside Riyadh at Ebra & Khait Cobbler: coverage areas, working hours and delivery fees.' },
     title: 'سياسة الشحن والتوصيل | إبرة وخيط الإسكافي', description: 'تفاصيل الاستلام والتوصيل داخل الرياض لخدمات إبرة وخيط الإسكافي: مناطق التغطية، مواعيد العمل، ورسوم التوصيل.' },
   { path: '/privacy', priority: '0.3', changefreq: 'yearly',
+    en: { title: 'Privacy Policy | Ebra & Khait Cobbler', description: 'Privacy policy of Ebra & Khait Cobbler: what information we collect, how we use and protect it, and your rights over your personal data.' },
     title: 'سياسة الخصوصية | إبرة وخيط الإسكافي', description: 'سياسة الخصوصية لموقع إبرة وخيط الإسكافي: المعلومات التي نجمعها، كيف نستخدمها ونحميها، وحقوقك في بياناتك الشخصية.' },
 ];
+
+/** العنوان والوصف حسب اللغة — يقرؤه الموقع (Helmet) وسكربت البناء فلا يتضاربان */
+export function pageSeo(path, isAr) {
+  const p = PAGES.find((x) => x.path === path);
+  if (!p) return { title: '', description: '' };
+  return isAr ? { title: p.title, description: p.description } : p.en;
+}
+
+/** نسخة إنجليزية لحقائق النشاط (للصفحات /en وllms.txt والبيانات المنظمة) */
+export const SITE_EN = {
+  description: 'Saudi workshop in Riyadh specialized in repairing, restoring and renewing luxury leather shoes and bags, sneakers and military boots.',
+  branchName: 'Al Aziziyah Branch', street: 'Al Aziziyah district', locality: 'Riyadh',
+  services: [
+    { name: 'Leather shoe repair and restoration', desc: 'Sole replacement, stitching, polishing, heels, lining, stretching and leather replacement.' },
+    { name: 'Leather bag and handbag restoration', desc: 'Zippers, handles and straps, base, re-covering, leather replacement, colour renewal and stitching.' },
+    { name: 'Leather polishing and dyeing', desc: 'Lasting colours and European techniques to restore the original colour and shine.' },
+    { name: 'Sneaker and military boot repair', desc: 'Sole replacement, stitching and full maintenance.' },
+  ],
+  brands: ['Hermès', 'Louis Vuitton', 'Chanel', 'Gucci', 'Dior', 'Dolce & Gabbana'],
+};

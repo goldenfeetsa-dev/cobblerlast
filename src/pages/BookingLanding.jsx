@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { FAQ, PAGES } from '@/lib/seo/siteData';
+import { SERVICE_PAGES } from '@/lib/seo/services';
 const HOME_SEO = PAGES.find((p) => p.path === '/');
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
@@ -1125,6 +1126,39 @@ function TrackOrderSection() {
 }
 
 // ── Branches ──────────────────────────────────────────────────────
+// ── روابط الخدمات التفصيلية — تربط الرئيسية بصفحات الهبوط (روابط داخلية
+// حقيقية تساعد جوجل والزواحف تكتشف كل خدمة وتفهم تخصصك).
+function ServiceLinksSection() {
+  const { lang, dir } = useLanguage();
+  const isAr = lang === 'ar';
+  const pre = isAr ? '' : '/en';
+  return (
+    <section id="service-pages" className="py-24 px-6" style={{ background: BG1 }} dir={dir}>
+      <div className="max-w-5xl mx-auto">
+        <FadeIn className="text-center mb-10">
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>
+            {isAr ? 'تخصصاتنا' : 'Specialties'}
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-black" style={{ color: T }}>
+            {isAr ? 'تصليح أحذية وشنط في الرياض — اختر خدمتك' : 'Shoe & bag repair in Riyadh — choose your service'}
+          </h2>
+        </FadeIn>
+        <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {SERVICE_PAGES.map((s) => (
+            <li key={s.slug}>
+              <Link to={`${pre}/services/${s.slug}`} className="block rounded-2xl px-5 py-4 font-bold text-sm h-full transition-shadow hover:shadow-md"
+                style={{ background: '#fff', border: `1px solid ${GB}0.25)`, color: T }}>
+                {s[isAr ? 'ar' : 'en'].name}
+                <span className="block text-xs font-normal mt-1" style={{ color: '#6E5C4E' }}>{s[isAr ? 'ar' : 'en'].h1}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 // ── الأسئلة الشائعة — نفس المصدر (src/lib/seo/siteData.js) اللي يغذّي
 // FAQPage JSON-LD وllms.txt، فالإجابات للزائر ولمحركات الذكاء متطابقة.
 // <details> الأصلي: يشتغل بدون JavaScript وكل الإجابات ظاهرة للزواحف.
@@ -1318,10 +1352,10 @@ export default function BookingLanding() {
         <html lang={isAr ? 'ar' : 'en'} />
         <title>{isAr
           ? HOME_SEO.title
-          : 'Ebra & Khait Cobbler | Shoe & Bag Repair in Riyadh, Saudi Arabia'}</title>
+          : HOME_SEO.en.title}</title>
         <meta name="description" content={isAr
           ? HOME_SEO.description
-          : 'Ebra & Khait Cobbler — Saudi craftsmen specialized in repairing and restoring luxury shoes, leather bags, sneakers, and military boots in Riyadh. Restoration, polishing, sole replacement for top brands. Book now!'} />
+          : HOME_SEO.en.description} />
         <meta name="keywords" content={isAr
           ? 'إصلاح أحذية الرياض, تجديد حقائب جلدية, ترميم أحذية فاخرة, إسكافي الرياض, إبرة وخيط, تلميع أحذية, تبديل نعل, خياطة حذاء جلد, تنظيف حقائب جلدية, إصلاح سحاب حقيبة, إصلاح أحذية فاخرة, أفضل إسكافي في الرياض, إسكافي منزلي الرياض, اسكافي قريب مني, وين الاقي اسكافي زين, تصليح كوتشي, تصليح جزمة, تصليح صرمايه, صيانة احذيه, تصليح شنطة جلد, تصليح بسطار عسكري, صيانة بسطار الجيش, تبديل نعل بسطار عسكري, اصلاح جزمة عسكرية, تصليح بوت عسكري, بسطار الجيش السعودي, إصلاح أحذية العليا, إصلاح أحذية الملز, إصلاح أحذية النخيل, إصلاح أحذية حي السفارات, تصليح حذاء جلد أصلي, تلوين جلد, صيانة حقائب فاخرة, استلام وتوصيل إصلاح أحذية, حجز موعد إسكافي, shoe repair riyadh, leather bag repair riyadh, luxury shoe restoration, cobbler riyadh, shoe sole replacement riyadh, leather shine and polish, military boot repair riyadh'
           : 'shoe repair riyadh, cobbler riyadh, leather bag repair riyadh, luxury shoe restoration, shoe sole replacement riyadh, sneaker repair riyadh, military boot repair riyadh, army boot resole saudi arabia, handbag repair saudi arabia, leather care riyadh, best cobbler riyadh, shoe shine riyadh, luxury handbag restoration riyadh, zipper repair riyadh'} />
@@ -1350,6 +1384,7 @@ export default function BookingLanding() {
       <RequestServiceSection />
       <AboutSection />
       <BrandsSection />
+      <ServiceLinksSection />
       <FaqSection />
       <BranchesSection />
       <TrackOrderSection />

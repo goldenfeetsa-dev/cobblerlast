@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { Truck, Clock, MapPin, Package, CheckCircle, Phone } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 const GOLD = '#A67C68';
 const TEXT = '#3E322D';
@@ -29,10 +30,8 @@ export default function ShippingPolicy() {
   return (
     <div className="min-h-screen font-tajawal" style={{ background: '#EFE9DD', color: TEXT }} dir={dir}>
       <Helmet>
-        <title>{isAr ? 'سياسة التوصيل والاستلام | إبرة وخيط الإسكافي' : 'Shipping & Pickup Policy | Ebra & Khait Cobbler'}</title>
-        <meta name="description" content={isAr
-          ? 'تعرف على سياسة التوصيل والاستلام في إبرة وخيط الإسكافي — نستلم من موقعك ونوصل لبابك داخل الرياض.'
-          : 'Learn about our shipping and pickup policy at Ebra & Khait Cobbler — we pick up from your location and deliver to your door in Riyadh.'} />
+        <title>{pageSeo('/shipping-policy', isAr).title}</title>
+        <meta name="description" content={pageSeo('/shipping-policy', isAr).description} />
         <meta name="keywords" content={isAr
           ? 'استلام وتوصيل إصلاح أحذية, توصيل مجاني إصلاح أحذية الرياض, استلام حذاء من المنزل, خدمة توصيل تجديد حقائب جلدية الرياض'
           : 'shoe repair pickup delivery, free shoe repair delivery riyadh, home shoe pickup, leather bag renewal delivery riyadh'} />

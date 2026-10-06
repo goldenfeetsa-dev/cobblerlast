@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Plus, Search, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 const GOLD = '#a9803f'; // برونزي — brand-brass، مأخوذ من هوية الشعار الرسمي
 
@@ -207,10 +208,8 @@ export default function Shop() {
   return (
     <div dir={dir} style={{ background: '#ede3d3', minHeight: '100vh', fontFamily: "'Almarai', 'Tajawal', sans-serif" }}>
       <Helmet>
-        <title>{isAr ? 'متجر إبرة وخيط | مستلزمات العناية بالأحذية والحقائب - الرياض' : "Cobbler's Shop | Shoe & Leather Bag Care Products — Riyadh"}</title>
-        <meta name="description" content={isAr
-          ? 'تسوق منتجات العناية بالأحذية والحقائب الجلدية الفاخرة والبسطار العسكري — نعال، كريمات تلميع، جلود، وأدوات احترافية. توصيل في الرياض.'
-          : 'Shop premium products for caring for shoes, leather bags, sneakers, and military boots — soles, polish creams, leathers, and professional tools. Delivery in Riyadh.'} />
+        <title>{pageSeo('/shop', isAr).title}</title>
+        <meta name="description" content={pageSeo('/shop', isAr).description} />
         <meta name="keywords" content={isAr
           ? 'متجر أحذية الرياض, كريم تلميع أحذية, نعال جلدي, صبغة جلد, منتجات العناية بالجلود, فرشاة تلميع أحذية, واقي جلد, ملمع أحذية فاخر, أدوات صيانة الحقائب الجلدية, مستلزمات تصليح بسطار عسكري, shop shoe care riyadh, leather care products riyadh'
           : 'shop shoe care riyadh, leather care products riyadh, shoe polish cream, leather sole, leather dye, shoe care accessories, military boot supplies riyadh'} />

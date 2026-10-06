@@ -385,10 +385,10 @@ export default function AuctionMarket() {
   return (
     <div dir={dir} style={{ background: 'hsl(var(--background))', minHeight: '100vh' }} className="font-tajawal">
       <Helmet>
-        <title>{isAr ? AUCTION_SEO.title : "Cobbler's Bench & Auction Market | Cobblers — Riyadh"}</title>
+        <title>{isAr ? AUCTION_SEO.title : AUCTION_SEO.en.title}</title>
         <meta name="description" content={isAr
           ? AUCTION_SEO.description
-          : 'Shop fixed-price refurbished pieces from the Cobbler\'s Bench, or bid live on rare refurbished leather pieces in the Auction Market.'} />
+          : AUCTION_SEO.en.description} />
         <link rel="canonical" href="https://www.needlecobbler.com/auction" />
       </Helmet>
 

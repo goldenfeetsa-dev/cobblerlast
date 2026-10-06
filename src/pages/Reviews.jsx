@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 function StarRating({ value, onChange }) {
   const [hover, setHover] = useState(0);
@@ -62,10 +63,8 @@ export default function Reviews() {
   return (
     <div className="min-h-screen font-tajawal" style={{ background: '#F4F1EA' }} dir={dir}>
       <Helmet>
-        <title>{isAr ? 'تقييمات وآراء العملاء | إبرة وخيط الإسكافي — الرياض' : 'Customer Reviews | Ebra & Khait Cobbler — Riyadh'}</title>
-        <meta name="description" content={isAr
-          ? 'اطّلع على تقييمات وآراء عملاء إبرة وخيط الإسكافي الحقيقية حول خدمات إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض، وشاركنا تجربتك.'
-          : "Check out real reviews from Ebra & Khait Cobbler customers about our luxury shoe and leather bag repair services in Riyadh, and share your own experience."} />
+        <title>{pageSeo('/reviews', isAr).title}</title>
+        <meta name="description" content={pageSeo('/reviews', isAr).description} />
         <meta name="keywords" content={isAr
           ? 'تقييمات إسكافي الرياض, آراء العملاء إصلاح أحذية, مراجعات تجديد حقائب جلدية, أفضل إسكافي الرياض تقييمات'
           : 'cobbler reviews riyadh, shoe repair customer reviews, leather bag repair reviews, best cobbler riyadh reviews'} />

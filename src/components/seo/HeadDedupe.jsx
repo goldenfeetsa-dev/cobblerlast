@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { isPublicPath, normalize } from '@/lib/seo/routes';
+import { SITE } from '@/lib/seo/siteData';
 
 /**
  * وسوم <head> الثابتة تُحقن وقت البناء (scripts/seo-build.mjs) لتشوفها الزواحف
@@ -18,6 +20,13 @@ export default function HeadDedupe() {
   const { pathname } = useLocation();
   useEffect(() => {
     const run = () => {
+      // canonical ذاتي المرجع للصفحات العامة (/shop للعربي و/en/shop للإنجليزي) —
+      // صفحات React تكتب canonical عربي ثابت، وبدون هذا الإنجليزي يشاور للعربي
+      if (isPublicPath(pathname)) {
+        const c = document.head.querySelector('link[rel="canonical"][data-rh]') || document.head.querySelector('link[rel="canonical"]');
+        const want = SITE.url + (normalize(pathname) === '/' ? '/' : normalize(pathname));
+        if (c && c.getAttribute('href') !== want) c.setAttribute('href', want);
+      }
       for (const sel of SELECTORS) {
         if (document.head.querySelector(`${sel}[data-rh]`)) {
           document.head.querySelectorAll(`${sel}:not([data-rh])`).forEach((el) => el.remove());

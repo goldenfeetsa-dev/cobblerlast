@@ -18,6 +18,7 @@ import BookingConfirmation from '@/components/booking/BookingConfirmation';
 import ItemPhotosUploader from '@/components/booking/ItemPhotosUploader';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 const VAT_RATE = 0.15;
 
@@ -136,10 +137,8 @@ export default function BookingWizard() {
   return (
     <div className="min-h-screen bg-stone-50 py-8 px-4" dir={dir}>
       <Helmet>
-        <title>{isAr ? 'احجز موعد إصلاح | إبرة وخيط الإسكافي — الرياض' : 'Book a Repair Appointment | Ebra & Khait Cobbler — Riyadh'}</title>
-        <meta name="description" content={isAr
-          ? 'احجز موعدك الآن لإصلاح أو تجديد حذائك أو حقيبتك الجلدية الفاخرة. اختر الخدمة، حدد الموعد، واستلم قطعتك في أفضل حالة — استلام وتوصيل داخل الرياض.'
-          : 'Book your appointment now to repair or restore your luxury shoe or leather bag. Choose the service, pick a time, and get your item back in the best condition — pickup and delivery within Riyadh.'} />
+        <title>{pageSeo('/book', isAr).title}</title>
+        <meta name="description" content={pageSeo('/book', isAr).description} />
         <meta name="keywords" content={isAr
           ? 'حجز موعد إصلاح أحذية, حجز إسكافي الرياض, حجز تجديد حقيبة جلدية, طلب إصلاح حذاء أونلاين, استلام وتوصيل إصلاح أحذية الرياض'
           : 'book shoe repair appointment, book cobbler riyadh, book leather bag renewal, online shoe repair request, shoe repair pickup delivery riyadh'} />

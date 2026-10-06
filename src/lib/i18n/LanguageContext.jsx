@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { AnimatePresence, motion } from 'framer-motion';
 import { Globe } from 'lucide-react';
 import { translations } from './translations';
+import { isPublicPath, langOfPath } from '@/lib/seo/routes';
 
 const LanguageContext = createContext(null);
 const STORAGE_KEY = 'cobbler_lang';
@@ -15,6 +16,10 @@ const CURTAIN_TOTAL_MS = FADE_DURATION_MS * 2 + FADE_HOLD_MS;
 
 function getInitialLang() {
   if (typeof window === 'undefined') return 'ar';
+  // الصفحات العامة: اللغة من الرابط (/en = إنجليزي، غير ذلك عربي) — هذا اللي
+  // تفهرسه محركات البحث. بقية صفحات النظام تبقى على اللغة المحفوظة.
+  const path = window.location.pathname;
+  if (isPublicPath(path)) return langOfPath(path);
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved === 'ar' || saved === 'en') return saved;
@@ -71,6 +76,11 @@ export function LanguageProvider({ children }) {
     return () => { clearTimeout(revealTimer); clearTimeout(endTimer); };
   }, [incomingLang]);
 
+  // تغيير فوري بدون ستارة — لمزامنة اللغة مع الرابط (تحميل أول/رجوع المتصفح)
+  const forceLang = useCallback((next) => {
+    if (next === 'ar' || next === 'en') setLangState(next);
+  }, []);
+
   const toggleLang = useCallback(() => {
     setLang(lang === 'ar' ? 'en' : 'ar');
   }, [lang, setLang]);
@@ -84,7 +94,7 @@ export function LanguageProvider({ children }) {
   }, [lang]);
 
   return (
-    <LanguageContext.Provider value={{ lang, dir, setLang, toggleLang, t }}>
+    <LanguageContext.Provider value={{ lang, dir, setLang, forceLang, toggleLang, t }}>
       {children}
       <AnimatePresence>
         {transitioning && <LanguageTransitionCurtain targetLang={incomingLang} />}

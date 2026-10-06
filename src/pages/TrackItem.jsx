@@ -5,6 +5,7 @@ import { Package, Wrench, CheckCircle2, Home, XCircle, Search, ArrowRight, Arrow
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 // نفس هوية الصفحة الرئيسية الفاخرة (بني شوكولاتة + ذهبي مطفي)
 const T   = '#3E2723';
@@ -148,8 +149,8 @@ export default function TrackItem() {
   return (
     <div dir={dir} style={{ background: BG1, minHeight: '100vh', fontFamily: "'Tajawal', sans-serif", position: 'relative', overflow: 'hidden' }}>
       <Helmet>
-        <title>{t('home.track.title')} | إبرة وخيط الإسكافي</title>
-        <meta name="description" content={t('home.track.desc')} />
+        <title>{pageSeo('/track', isAr).title}</title>
+        <meta name="description" content={pageSeo('/track', isAr).description} />
       </Helmet>
 
       {/* توهج خلفي زخرفي — يعطي إحساس عمق وفخامة بدل خلفية مسطحة */}

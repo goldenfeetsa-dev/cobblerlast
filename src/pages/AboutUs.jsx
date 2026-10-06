@@ -6,6 +6,7 @@ import { Award, Heart, Users, Shield } from 'lucide-react';
 import { useTrackVisit } from '@/hooks/useTrackVisit';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { pageSeo } from '@/lib/seo/siteData';
 
 const GOLD = '#A67C68';
 const DARK = '#F4F1EA';
@@ -39,10 +40,8 @@ export default function AboutUs() {
   return (
     <div className="min-h-screen font-tajawal" style={{ background: '#EFE9DD', color: TEXT }} dir={dir}>
       <Helmet>
-        <title>{isAr ? 'من نحن | إبرة وخيط الإسكافي — حرفيون سعوديون في الرياض' : 'About Us | Ebra & Khait Cobbler — Saudi Craftsmen in Riyadh'}</title>
-        <meta name="description" content={isAr
-          ? 'تعرف على قصة إبرة وخيط الإسكافي — حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة في الرياض منذ أكثر من 10 سنوات.'
-          : 'Learn the story of Ebra & Khait Cobbler — Saudi craftsmen specialized in repairing and restoring luxury shoes and leather bags in Riyadh for over 10 years.'} />
+        <title>{pageSeo('/about', isAr).title}</title>
+        <meta name="description" content={pageSeo('/about', isAr).description} />
         <meta name="keywords" content={isAr
           ? 'من نحن, إبرة وخيط الإسكافي, حرفيون سعوديون, إصلاح أحذية الرياض, تاريخ الشركة, ورشة إصلاح أحذية سعودية, خبرة إصلاح جلود, فريق حرفيين متخصصين الرياض'
           : 'about us, ebra khait cobbler, saudi craftsmen, shoe repair riyadh, company history, saudi shoe repair workshop, leather repair expertise, specialized craftsmen team riyadh'} />

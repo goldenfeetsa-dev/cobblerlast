@@ -6,6 +6,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import HeadDedupe from '@/components/seo/HeadDedupe';
+import LangByUrl from '@/components/seo/LangByUrl';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
@@ -58,6 +59,7 @@ const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
 const Suppliers = lazy(() => import('./pages/Suppliers'));
 const Purchasing = lazy(() => import('./pages/Purchasing'));
 const Returns = lazy(() => import('./pages/Returns'));
+const ServicePage = lazy(() => import('./pages/ServicePage'));
 const TaxDashboard = lazy(() => import('./pages/TaxDashboard'));
 const Careers = lazy(() => import('./pages/Careers'));
 const TrackItem = lazy(() => import('./pages/TrackItem'));
@@ -86,6 +88,7 @@ const AuthenticatedApp = () => {
   return (
     <>
       <HeadDedupe />
+      <LangByUrl />
       <Suspense fallback={
         <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#060300' }}>
           <div className="flex flex-col items-center gap-4">
@@ -118,6 +121,21 @@ const AuthenticatedApp = () => {
         <Route path="/shipping-policy" element={<ShippingPolicy />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/track" element={<TrackItem />} />
+        {/* ── النسخة الإنجليزية (/en/...) — رابط مستقل لكل صفحة عامة للفهرسة ── */}
+        <Route path="/en" element={<BookingLanding />} />
+        <Route path="/en/book" element={<BookingWizard />} />
+        <Route path="/en/shop" element={<Shop />} />
+        <Route path="/en/auction" element={<AuctionMarket />} />
+        <Route path="/en/reviews" element={<Reviews />} />
+        <Route path="/en/about" element={<AboutUs />} />
+        <Route path="/en/repair-policy" element={<RepairPolicy />} />
+        <Route path="/en/track" element={<TrackItem />} />
+        <Route path="/en/careers" element={<Careers />} />
+        <Route path="/en/careers/:slug" element={<CareerDetail />} />
+        <Route path="/en/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/en/privacy" element={<PrivacyPolicy />} />
+        <Route path="/services/:slug" element={<ServicePage />} />
+        <Route path="/en/services/:slug" element={<ServicePage />} />
         <Route path="/careers/:slug" element={<CareerDetail />} />
 
         {/* Barcode standalone */}
