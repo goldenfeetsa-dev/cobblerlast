@@ -60,6 +60,7 @@ const Suppliers = lazy(() => import('./pages/Suppliers'));
 const Purchasing = lazy(() => import('./pages/Purchasing'));
 const Returns = lazy(() => import('./pages/Returns'));
 const ServicePage = lazy(() => import('./pages/ServicePage'));
+const AreaPage = lazy(() => import('./pages/AreaPage'));
 const TaxDashboard = lazy(() => import('./pages/TaxDashboard'));
 const Careers = lazy(() => import('./pages/Careers'));
 const TrackItem = lazy(() => import('./pages/TrackItem'));
@@ -136,6 +137,8 @@ const AuthenticatedApp = () => {
         <Route path="/en/privacy" element={<PrivacyPolicy />} />
         <Route path="/services/:slug" element={<ServicePage />} />
         <Route path="/en/services/:slug" element={<ServicePage />} />
+        <Route path="/areas/:slug" element={<AreaPage />} />
+        <Route path="/en/areas/:slug" element={<AreaPage />} />
         <Route path="/careers/:slug" element={<CareerDetail />} />
 
         {/* Barcode standalone */}

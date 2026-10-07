@@ -47,6 +47,19 @@ export const KEYWORDS = {
       'اسكافي العزيزية', 'تصليح احذية جنوب الرياض', 'تصليح احذية شمال الرياض', 'استلام وتوصيل احذية الرياض',
       'تصليح احذية توصيل', 'خدمة استلام شنط للتصليح', 'تصليح احذية اونلاين', 'اسكافي اونلاين',
     ],
+    'الرياض والأحياء (نية محلية)': [
+      'تصليح احذية الرياض', 'اسكافي الرياض', 'اسكافي حطين', 'تصليح احذية حطين', 'تصليح شنط حطين', 'اسكافي الملقا', 'تصليح شنط الملقا',
+      'اسكافي النرجس', 'اسكافي الياسمين', 'تصليح احذية الياسمين', 'اسكافي النخيل', 'اسكافي العليا', 'تصليح شنط العليا', 'تصليح احذية العليا',
+      'اسكافي السليمانية', 'اسكافي الملز', 'اسكافي الروضة', 'اسكافي النسيم', 'تصليح احذية النسيم', 'اسكافي الشفا', 'تصليح احذية الشفا',
+      'اسكافي دار البيضاء', 'اسكافي ديراب', 'اسكافي لبن', 'اسكافي نمار', 'اسكافي السويدي', 'اسكافي عرقة',
+      'اسكافي شمال الرياض', 'تصليح احذية شمال الرياض', 'اسكافي جنوب الرياض', 'تصليح شنط جنوب الرياض', 'اسكافي شرق الرياض', 'تصليح احذية شرق الرياض',
+      'اسكافي غرب الرياض', 'تصليح احذية غرب الرياض', 'اسكافي وسط الرياض', 'تصليح احذية وسط الرياض',
+      'اسكافي يستلم من البيت الرياض', 'تصليح شنط ماركات الرياض', 'ترميم شنط لويس فيتون شمال الرياض',
+    ],
+    'السعودية (الشحن من خارج الرياض)': [
+      'تصليح احذية السعودية', 'اسكافي السعودية', 'تصليح شنط السعودية', 'ترميم شنط ماركات السعودية', 'ارسال احذية للتصليح',
+      'ارسال شنط للتصليح بالشحن', 'تصليح احذية من خارج الرياض', 'ارسال حذاء للتصليح من جدة', 'ارسال شنطة للتصليح من الدمام', 'تصليح شنط سفر بالشحن',
+    ],
     'أسئلة وأسعار (بحث معلوماتي)': [
       'كم سعر تصليح حذاء', 'سعر تغيير نعل حذاء', 'سعر ترميم شنطة جلد', 'اسعار اصلاح الشنط',
       'كم يكلف تغيير سحاب شنطة', 'هل يمكن تصليح شنطة جلد', 'علاج تقشر جلد الشنطة', 'اصلاح جلد متشقق',
@@ -72,6 +85,12 @@ export const KEYWORDS = {
     'Luxury & designer': [
       'luxury bag repair Riyadh', 'designer bag repair Saudi Arabia', 'designer handbag restoration', 'Louis Vuitton repair Riyadh',
       'Louis Vuitton bag restoration', 'Hermes bag repair Riyadh', 'Chanel bag repair Riyadh', 'Gucci bag repair', 'Dior bag repair',
+    ],
+    'Riyadh districts & Saudi Arabia': [
+      'shoe repair Hittin Riyadh', 'cobbler Al Malqa Riyadh', 'shoe repair Olaya Riyadh', 'bag repair Al Olaya', 'cobbler Al Yasmin Riyadh',
+      'cobbler North Riyadh', 'shoe repair North Riyadh', 'cobbler South Riyadh', 'shoe repair South Riyadh', 'cobbler East Riyadh', 'cobbler West Riyadh',
+      'shoe repair Al Aziziyah Riyadh', 'shoe repair Al Naseem Riyadh', 'shoe repair Saudi Arabia by mail', 'send shoes for repair Saudi Arabia',
+      'send handbag for repair Saudi Arabia', 'luxury bag repair Saudi Arabia', 'shoe repair pickup Riyadh all districts',
     ],
     'Service & questions': [
       'shoe repair pickup and delivery Riyadh', 'how much does shoe repair cost', 'how much to repair a leather bag', 'cracked leather bag repair',

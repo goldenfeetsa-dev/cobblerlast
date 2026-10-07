@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SITE, SITE_EN, FAQ, PAGES } from '../src/lib/seo/siteData.js';
 import { SERVICE_PAGES } from '../src/lib/seo/services.js';
+import { ALL_AREAS, areaContent, SECTORS, DISTRICTS } from '../src/lib/seo/areas.js';
 import { translations } from '../src/lib/i18n/translations.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -32,6 +33,10 @@ const REG = [
   ...PAGES.map((p) => ({ path: p.path, priority: p.priority, changefreq: p.changefreq, kind: 'page', ar: { title: p.title, description: p.description }, en: p.en })),
   ...SERVICE_PAGES.map((s) => ({ path: `/services/${s.slug}`, priority: '0.8', changefreq: 'monthly', kind: 'service', svc: s,
     ar: { title: s.ar.title, description: s.ar.description }, en: { title: s.en.title, description: s.en.description } })),
+  ...ALL_AREAS.map((a) => ({ path: `/areas/${a.slug}`, priority: a.kind === 'city' ? '0.8' : a.kind === 'sector' ? '0.7' : a.kind === 'country' ? '0.6' : '0.6',
+    changefreq: 'monthly', kind: 'area', area: a,
+    ar: { title: areaContent(a.slug, 'ar').title, description: areaContent(a.slug, 'ar').description },
+    en: { title: areaContent(a.slug, 'en').title, description: areaContent(a.slug, 'en').description } })),
 ];
 const pathOf = (p, lang) => (lang === 'ar' ? p : p === '/' ? '/en' : '/en' + p);
 const urlOf = (p, lang) => { const x = pathOf(p, lang); return x === '/' ? SITE.url + '/' : SITE.url + x; };
@@ -92,6 +97,18 @@ function graphFor(page, lang) {
   const webType = page.path === '/about' ? 'AboutPage' : page.path === '/shop' ? 'CollectionPage' : 'WebPage';
   const nodes = [{ '@type': webType, '@id': `${url}#webpage`, url, name: meta.title, description: meta.description, inLanguage: lang, isPartOf: { '@id': `${SITE.url}/#website` }, about: { '@id': BUSINESS_ID } },
     { '@type': 'BreadcrumbList', itemListElement: crumbs }, { '@type': 'LocalBusiness', '@id': BUSINESS_ID, name: SITE.nameAr, url: SITE.url + '/' }];
+  if (page.kind === 'area') {
+    const c = areaContent(page.area.slug, lang);
+    crumbs.length = 1;
+    if (c.parent) crumbs.push({ '@type': 'ListItem', position: 2, name: c.parent.name, item: SITE.url + c.parent.href });
+    crumbs.push({ '@type': 'ListItem', position: crumbs.length + 1, name: c.name, item: url });
+    nodes[1] = { '@type': 'BreadcrumbList', itemListElement: crumbs };
+    nodes.push({ '@type': 'Service', '@id': `${url}#service`, name: c.h1, description: c.description, serviceType: lang === 'ar' ? 'تصليح وترميم الأحذية والحقائب الجلدية' : 'Shoe and leather bag repair', inLanguage: lang,
+      areaServed: c.kind === 'country' ? { '@type': 'Country', name: lang === 'ar' ? 'المملكة العربية السعودية' : 'Saudi Arabia' }
+        : { '@type': 'Place', name: lang === 'ar' ? `${c.name}، الرياض` : `${c.name}, Riyadh`, containedInPlace: { '@type': 'City', name: lang === 'ar' ? 'الرياض' : 'Riyadh' } },
+      provider: { '@id': BUSINESS_ID }, url });
+    nodes.push(faqNode(lang, c.faq, `${url}#faq`));
+  }
   if (page.kind === 'service') {
     const c = page.svc[lang];
     nodes.push({ '@type': 'Service', '@id': `${url}#service`, name: c.h1, description: c.description, serviceType: c.name, inLanguage: lang,
@@ -110,6 +127,7 @@ function contactHtml(lang) {
     `<p>${SITE.sameAs.map((u) => `<a href="${u}">${esc(u.replace(/^https?:\/\/(www\.)?/, ''))}</a>`).join(' · ')}</p>`;
 }
 const navHtml = (lang) => `<nav>${S[lang].nav.map(([p, l]) => `<a href="${pathOf(p, lang)}">${esc(l)}</a>`).join(' · ')}</nav>` +
+  `<p><a href="${pathOf('/areas/riyadh', lang)}">${lang === 'ar' ? 'مناطق الخدمة في الرياض' : 'Riyadh service areas'}</a> · <a href="${pathOf('/areas/saudi-arabia', lang)}">${lang === 'ar' ? 'الشحن من أنحاء السعودية' : 'Shipping across Saudi Arabia'}</a></p>` +
   `<p>${REG.filter((r) => r.kind === 'service').map((r) => `<a href="${pathOf(r.path, lang)}">${esc(r.svc[lang].name)}</a>`).join(' · ')}</p>` +
   `<p><a href="${urlOf('/', lang === 'ar' ? 'en' : 'ar')}" hreflang="${lang === 'ar' ? 'en' : 'ar'}" lang="${lang === 'ar' ? 'en' : 'ar'}">${lang === 'ar' ? 'English' : 'العربية'}</a></p>`;
 
@@ -118,7 +136,18 @@ function bodyFor(page, lang) {
   const sp = tr.shippingPolicy, pv = tr.privacyPolicy, st = tr.home.track?.status || {}, ar = lang === 'ar';
   const steps = (arr) => `<ol>${arr.map((s) => `<li><strong>${esc(s.t || s.title)}:</strong> ${esc(s.d || s.desc)}</li>`).join('')}</ol>`;
   let inner;
-  if (page.kind === 'service') {
+  if (page.kind === 'area') {
+    const c = areaContent(page.area.slug, lang), link = (x) => `<a href="${x.href}">${esc(x.name)}</a>`;
+    inner = h(c.h1) + `<p>${esc(c.intro)}</p><p>${esc(c.fees)} ${ar ? 'ساعات العمل' : 'Working hours'}: ${esc(c.hours)}.</p>`;
+    if (c.kind === 'city') inner += c.sectors.map((s) => `<h2>${link(s)}</h2><p>${s.districts.map(link).join(' · ')}</p>`).join('');
+    if (c.kind === 'sector') inner += `<h2>${ar ? 'الأحياء' : 'Districts'}</h2><p>${c.districts.map(link).join(' · ')}</p>`;
+    if (c.kind === 'district') inner += `<p>${ar ? 'ضمن' : 'Part of'} ${link(c.parent)}.</p>` + (c.near.length ? `<h2>${ar ? 'أحياء قريبة' : 'Nearby districts'}</h2><p>${c.near.map(link).join(' · ')}</p>` : '');
+    if (c.kind === 'country') inner += `<h2>${ar ? 'خطوات الإرسال من خارج الرياض' : 'How to send items from outside Riyadh'}</h2><ol>${c.steps.map((x) => `<li>${esc(x)}</li>`).join('')}</ol><p>${c.cities.map(esc).join(ar ? '، ' : ', ')}.</p>`;
+    inner += `<h2>${ar ? 'خدماتنا' : 'Our services'}</h2><ul>${c.services.map((x) => `<li>${link(x)}</li>`).join('')}</ul>` +
+      (['city', 'country'].includes(c.kind) ? `<h2>${esc(tr.home.services.howItWorksTitle)}</h2>${steps(tr.home.services.steps)}` : '') +
+      `<h2>${ar ? 'أسئلة شائعة' : 'FAQ'}</h2>${c.faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}` +
+      `<p><a href="${pathOf('/book', lang)}">${ar ? 'احجز موعدك' : 'Book your repair'}</a></p>` + contactHtml(lang);
+  } else if (page.kind === 'service') {
     const c = page.svc[lang], others = SERVICE_PAGES.filter((s) => s.slug !== page.svc.slug);
     inner = h(c.h1) + `<p>${esc(c.intro)}</p><h2>${T.covers_h}</h2>${li(c.covers)}<p>${esc(c.extra)}</p>` +
       `<h2>${esc(tr.home.services.howItWorksTitle)}</h2>${steps(tr.home.services.steps)}` +
@@ -228,6 +257,12 @@ ${REG.filter((r) => r.kind === 'service').map((r) => `- [${r.svc.ar.name}](${url
 - الدفع / Payment: نقداً، تحويل بنكي، Apple Pay، مدى · cash, bank transfer, Apple Pay, Mada
 - الأسعار تبدأ من / Prices start from: ترميم الأحذية 80 ريال · تجديد الحقائب 150 ريال · التلميع والتلوين 50 ريال (السعر النهائي بعد الفحص / final price after inspection)
 - التوصيل / Delivery: مجاني داخل الرياض فوق 200 ريال، 30 ريال دونها · free in Riyadh above SAR 200, SAR 30 below
+
+## التغطية الجغرافية / Coverage
+- الرياض (كل الأحياء بالاستلام والتوصيل) / Riyadh, all districts with pickup and delivery: ${urlOf('/areas/riyadh', 'ar')} · ${urlOf('/areas/riyadh', 'en')}
+- الجهات / Sectors: ${SECTORS.map((s) => `[${s.ar}](${urlOf('/areas/' + s.slug, 'ar')})`).join('، ')}
+- أحياء / Districts: ${DISTRICTS.map((d) => d.ar).join('، ')} (${DISTRICTS.map((d) => d.en).join(', ')})
+- السعودية (من خارج الرياض بالشحن عبر أرامكس) / Saudi Arabia by courier: ${urlOf('/areas/saudi-arabia', 'ar')} · ${urlOf('/areas/saudi-arabia', 'en')}
 
 ## صفحات مهمة / Key pages
 ${REG.filter((r) => r.kind === 'page' && ['/', '/book', '/repair-policy', '/about', '/shop', '/auction', '/track', '/reviews', '/shipping-policy'].includes(r.path)).map((r) => `- [${r.ar.title.split('|')[0].trim()}](${urlOf(r.path, 'ar')}) · [EN](${urlOf(r.path, 'en')})`).join('\n')}

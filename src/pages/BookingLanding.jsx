@@ -8,6 +8,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { FAQ, PAGES } from '@/lib/seo/siteData';
 import { SERVICE_PAGES } from '@/lib/seo/services';
+import { SECTORS, DISTRICTS } from '@/lib/seo/areas';
 const HOME_SEO = PAGES.find((p) => p.path === '/');
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
@@ -1159,6 +1160,38 @@ function ServiceLinksSection() {
   );
 }
 
+// ── مناطق الخدمة — روابط داخلية لصفحات الرياض والأحياء والسعودية
+function AreasSection() {
+  const { lang, dir } = useLanguage();
+  const isAr = lang === 'ar';
+  const pre = isAr ? '' : '/en';
+  const top = ['hittin', 'malqa', 'olaya', 'yasmin', 'naseem', 'aziziyah', 'shifa', 'rawdah'].map((s) => DISTRICTS.find((d) => d.slug === s));
+  const chip = { background: '#fff', border: `1px solid ${GB}0.3)`, color: T };
+  return (
+    <section id="areas" className="py-24 px-6" style={{ background: BG2 }} dir={dir}>
+      <div className="max-w-4xl mx-auto text-center">
+        <FadeIn>
+          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{isAr ? 'مناطق الخدمة' : 'Service areas'}</p>
+          <h2 className="font-display text-3xl md:text-4xl font-black mb-4" style={{ color: T }}>
+            {isAr ? 'نخدم كل أحياء الرياض بالاستلام والتوصيل' : 'We serve every Riyadh district with pickup & delivery'}
+          </h2>
+          <p className="text-sm mb-8 leading-7" style={{ color: '#5a4636' }}>
+            {isAr ? 'فرعنا في العزيزية جنوب الرياض، ونستلم قطعتك من موقعك في أي حي. ومن خارج الرياض نستقبلها بالشحن عبر أرامكس.' : 'Our branch is in Al Aziziyah, South Riyadh, and we collect your item from any district. From outside Riyadh we receive it by courier via Aramex.'}
+          </p>
+        </FadeIn>
+        <ul className="flex flex-wrap justify-center gap-2 mb-5">
+          <li><Link to={`${pre}/areas/riyadh`} className="inline-block rounded-full px-5 py-2 text-sm font-black" style={{ background: G, color: '#000' }}>{isAr ? 'كل أحياء الرياض' : 'All Riyadh districts'}</Link></li>
+          {SECTORS.map((s) => <li key={s.slug}><Link to={`${pre}/areas/${s.slug}`} className="inline-block rounded-full px-4 py-2 text-xs font-bold" style={chip}>{isAr ? s.ar : s.en}</Link></li>)}
+        </ul>
+        <ul className="flex flex-wrap justify-center gap-2 mb-5">
+          {top.map((d) => <li key={d.slug}><Link to={`${pre}/areas/${d.slug}`} className="inline-block rounded-full px-4 py-2 text-xs font-bold" style={chip}>{isAr ? `حي ${d.ar}` : d.en}</Link></li>)}
+        </ul>
+        <Link to={`${pre}/areas/saudi-arabia`} className="text-xs font-bold underline" style={{ color: GT }}>{isAr ? 'من خارج الرياض؟ أرسل قطعتك بالشحن من أي مدينة بالسعودية' : 'Outside Riyadh? Send your item by courier from anywhere in Saudi Arabia'}</Link>
+      </div>
+    </section>
+  );
+}
+
 // ── الأسئلة الشائعة — نفس المصدر (src/lib/seo/siteData.js) اللي يغذّي
 // FAQPage JSON-LD وllms.txt، فالإجابات للزائر ولمحركات الذكاء متطابقة.
 // <details> الأصلي: يشتغل بدون JavaScript وكل الإجابات ظاهرة للزواحف.
@@ -1385,6 +1418,7 @@ export default function BookingLanding() {
       <AboutSection />
       <BrandsSection />
       <ServiceLinksSection />
+      <AreasSection />
       <FaqSection />
       <BranchesSection />
       <TrackOrderSection />
