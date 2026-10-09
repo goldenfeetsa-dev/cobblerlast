@@ -17,6 +17,7 @@ export const SITE = {
   phone: '+966549678191',
   logo: 'https://www.needlecobbler.com/images/cobblers-app-icon.png',
   image: 'https://www.needlecobbler.com/og-image.jpg',
+  indexNowKey: '42b5a24b9b1aa4f6def01bcec0a7a624', // ملف المفتاح بـpublic/42b5a24b9b1aa4f6def01bcec0a7a624.txt — يثبت لـBing/Yandex إنك صاحب الموقع
   gscVerification: '', // ← ضع هنا رمز التحقق من Google Search Console (content فقط)
   bingVerification: '',
   sameAs: [

@@ -290,6 +290,23 @@ ${FAQ.en.map((f) => `**${f.q}**\n${f.a}`).join('\n\n')}
 `;
 }
 
+// ───────────── IndexNow: إخطار Bing/Yandex فور النشر ─────────────
+// جوجل ما يدعم IndexNow (يحتاج Search Console)، لكن Bing هو اللي يغذّي بحث
+// ChatGPT وCopilot وجزءاً من DuckDuckGo/Yahoo. يشتغل فقط ببناء الإنتاج على
+// Vercel، وبأقصى مهلة 8 ثواني، وأي فشل يُتجاهل (لا يؤثر على النشر أبداً).
+async function pingIndexNow() {
+  if (process.env.VERCEL_ENV !== 'production' || !SITE.indexNowKey) { console.log('[seo-build] IndexNow: تخطّي (ليس بناء إنتاج)'); return; }
+  const urlList = REG.flatMap((p) => LANGS.map((l) => urlOf(p.path, l)));
+  const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, signal: ctrl.signal,
+      body: JSON.stringify({ host: new URL(SITE.url).host, key: SITE.indexNowKey, keyLocation: `${SITE.url}/${SITE.indexNowKey}.txt`, urlList }),
+    });
+    console.log(`[seo-build] IndexNow: أُرسل ${urlList.length} رابط → HTTP ${res.status}`);
+  } catch (e) { console.warn('[seo-build] IndexNow فشل (تم تجاهله):', e.message); } finally { clearTimeout(t); }
+}
+
 // ───────────── التنفيذ (آمن: لا يفشّل البناء) ─────────────
 function main() {
   const tplPath = path.join(DIST, 'index.html');
@@ -311,4 +328,4 @@ function main() {
   fs.writeFileSync(path.join(DIST, 'llms-full.txt'), llmsFull());
   console.log(`[seo-build] ✓ ${pending.length} صفحة (${REG.length} × ${LANGS.length} لغة) + sitemap.xml + llms.txt + llms-full.txt`);
 }
-try { main(); } catch (e) { console.warn('[seo-build] تم التخطّي بسبب خطأ (البناء لم يتأثر):', e.message); }
+try { main(); await pingIndexNow(); } catch (e) { console.warn('[seo-build] تم التخطّي بسبب خطأ (البناء لم يتأثر):', e.message); }
