@@ -30,6 +30,7 @@ const navGroups = [
       { path: '/suppliers', icon: Truck, label: 'الموردون', ownerOnly: true },
       { path: '/purchasing', icon: ShoppingBag, label: 'المشتريات', financeOnly: true },
       { path: '/returns', icon: Undo2, label: 'المرتجعات' },
+      { path: '/admin/partners', icon: Truck, label: 'الشركاء', adminOnly: true },
     ]
   },
   {

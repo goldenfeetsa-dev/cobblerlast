@@ -16,6 +16,7 @@ Allow: /
 Disallow: /my-bookings
 Disallow: /my-loyalty
 Disallow: /login
+Disallow: /partner
 
 # لوحة الإدارة والنظام (خلف تسجيل الدخول)
 Disallow: /admin/

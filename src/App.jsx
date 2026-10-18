@@ -58,6 +58,8 @@ const Invoices = lazy(() => import('./pages/Invoices'));
 const WorkshopSystem = lazy(() => import('./pages/WorkshopSystem'));
 const Suppliers = lazy(() => import('./pages/Suppliers'));
 const Purchasing = lazy(() => import('./pages/Purchasing'));
+const PartnerPortal = lazy(() => import('./pages/PartnerPortal'));
+const PartnersAdmin = lazy(() => import('./pages/PartnersAdmin'));
 const Returns = lazy(() => import('./pages/Returns'));
 const ServicePage = lazy(() => import('./pages/ServicePage'));
 const AreaPage = lazy(() => import('./pages/AreaPage'));
@@ -122,6 +124,7 @@ const AuthenticatedApp = () => {
         <Route path="/shipping-policy" element={<ShippingPolicy />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/track" element={<TrackItem />} />
+        <Route path="/partner" element={<PartnerPortal />} />
         {/* ── النسخة الإنجليزية (/en/...) — رابط مستقل لكل صفحة عامة للفهرسة ── */}
         <Route path="/en" element={<BookingLanding />} />
         <Route path="/en/book" element={<BookingWizard />} />
@@ -180,6 +183,7 @@ const AuthenticatedApp = () => {
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/purchasing" element={<Purchasing />} />
           <Route path="/returns" element={<Returns />} />
+          <Route path="/admin/partners" element={<PartnersAdmin />} />
           <Route path="/tax-dashboard" element={<TaxDashboard />} />
       </Route>
         <Route path="*" element={<PageNotFound />} />

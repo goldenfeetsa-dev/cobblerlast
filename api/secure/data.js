@@ -30,6 +30,33 @@ const RESOURCES = {
 
 export default async function handler(req, res) {
   const resourceKey = String(req.query.resource || '');
+
+  // ── الشركاء (B2B): إدارة عبر دوال Postgres، للمالك/المدير فقط ──
+  if (resourceKey === 'partners') {
+    const sess = getSessionFromRequest(req);
+    if (!sess) return res.status(401).json({ error: 'unauthenticated' });
+    if (!['owner', 'admin'].includes(sess.role)) return res.status(403).json({ error: 'forbidden' });
+    const sb = getSupabaseAdmin();
+    try {
+      let r;
+      if (req.method === 'GET') r = await sb.rpc('partner_admin_list');
+      else if (req.method === 'POST') {
+        const name = String(req.body?.name || '').trim().slice(0, 80);
+        if (!name) return res.status(400).json({ error: 'missing_name' });
+        r = await sb.rpc('partner_admin_create', { p_name: name });
+      } else if (req.method === 'PATCH') {
+        if (!req.query.id) return res.status(400).json({ error: 'missing_id' });
+        r = await sb.rpc('partner_admin_set_active', { p_id: String(req.query.id), p_active: !!req.body?.is_active });
+        if (!r.error) return res.status(200).json({ ok: true });
+      } else return res.status(405).json({ error: 'method_not_allowed' });
+      if (r.error) throw r.error;
+      return res.status(200).json(r.data);
+    } catch (err) {
+      console.error('api/secure/data (partners) error', err);
+      return res.status(500).json({ error: err.message || 'server_error' });
+    }
+  }
+
   const resource = RESOURCES[resourceKey];
   if (!resource) return res.status(404).json({ error: 'unknown_resource' });
 

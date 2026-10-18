@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getSession } from '@/lib/sessionStore';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import VoiceNote from '@/components/pos/VoiceNote';
 import { Scissors, Package, CheckCircle, Clock, Search, Filter, CalendarDays } from 'lucide-react';
 
 const ITEM_LABELS = {
@@ -212,6 +213,11 @@ export default function StaffOrders() {
                             className="w-16 h-16 rounded-lg object-cover border border-gray-100 shrink-0" />
                         ))}
                       </div>
+                    )}
+
+                    {/* إملاء صوتي — نص صافي فقط */}
+                    {['pending', 'in_progress', 'ready'].includes(order.status) && (
+                      <VoiceNote order={order} onSaved={() => queryClient.invalidateQueries({ queryKey: ['staff-orders'] })} />
                     )}
 
                     {/* Action button */}
