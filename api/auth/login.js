@@ -14,6 +14,13 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
+  // تشخيص صريح: نذكر اسم المتغير الناقص فقط (بدون أي قيمة)
+  const missing = [!process.env.SESSION_SECRET && 'SESSION_SECRET', !SUPABASE_URL && 'SUPABASE_URL'].filter(Boolean);
+  if (missing.length) {
+    console.error('api/auth/login: missing env', missing.join(','));
+    return res.status(500).json({ success: false, error: 'config_missing', missing });
+  }
+
   const { pin } = req.body || {};
   if (!pin || typeof pin !== 'string' || !/^\d{4}$/.test(pin)) {
     return res.status(400).json({ success: false, error: 'invalid_pin' });
