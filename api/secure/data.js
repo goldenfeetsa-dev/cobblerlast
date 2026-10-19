@@ -57,6 +57,50 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── مساعد الفني الذكي: يفهم الطلب ويرد، عبر Claude API (مفتاح على السيرفر فقط) ──
+  if (resourceKey === 'tech-ai') {
+    const sess = getSessionFromRequest(req);
+    if (!sess) return res.status(401).json({ error: 'unauthenticated' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });
+    try {
+      const { order_id, text, history } = req.body || {};
+      const said = String(text || '').slice(0, 600);
+      if (!order_id || !said) return res.status(400).json({ error: 'missing_fields' });
+      const { data: o, error } = await getSupabaseAdmin().from('orders')
+        .select('order_number,item_type,description,notes,status,order_items,shelf_location,delivery_date').eq('id', order_id).single();
+      if (error || !o) return res.status(404).json({ error: 'order_not_found' });
+      const hist = (Array.isArray(history) ? history : []).slice(-6)
+        .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 600) }));
+      const system = `أنت مساعد صوتي لفني ورشة إصلاح أحذية وحقائب وجلديات في الرياض. الفني يداه مشغولتان ويتكلم معك بالعامية السعودية.
+مهمتك: تفهم كلامه بالنسبة للطلب أدناه، تجيب بجملة أو جملتين قصيرتين بالعربية، وتستخرج ملاحظة العمل إن ذكر عملاً أنجزه أو قياساً أو ملاحظة.
+أجب بـ JSON فقط بدون أي نص آخر: {"reply":"ردك المنطوق","note":"ملاحظة نصية موحّدة مختصرة أو سلسلة فارغة","mark_ready":true|false}
+- mark_ready=true فقط إذا قال بوضوح إنه خلّص/أنجز القطعة.
+- لا تخترع معلومات غير موجودة بالطلب. لو سأل عن شيء لا تعرفه قل ذلك.
+- لا تذكر أسعاراً ولا بيانات عميل.
+الطلب: ${JSON.stringify(o)}`;
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 300, system, messages: [...hist, { role: 'user', content: said }] }),
+      });
+      if (!r.ok) throw new Error(`ai_http_${r.status}`);
+      const j = await r.json();
+      const raw = (j.content || []).map((c) => c.text || '').join('');
+      let out;
+      try { out = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)); } catch { out = { reply: raw.slice(0, 300), note: '', mark_ready: false }; }
+      return res.status(200).json({
+        reply: String(out.reply || '').slice(0, 400),
+        note: String(out.note || '').slice(0, 300),
+        mark_ready: out.mark_ready === true,
+      });
+    } catch (err) {
+      console.error('api/secure/data (tech-ai) error', err);
+      return res.status(502).json({ error: 'ai_failed' });
+    }
+  }
+
   const resource = RESOURCES[resourceKey];
   if (!resource) return res.status(404).json({ error: 'unknown_resource' });
 

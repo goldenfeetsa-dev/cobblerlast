@@ -16,6 +16,45 @@ export default function VoiceNote({ order, onSaved }) {
   const recRef = useRef(null);
   const [typed, setTyped] = useState('');
 
+  const historyRef = useRef([]);
+
+  const speak = (msg) => {
+    try {
+      if (!msg || !window.speechSynthesis) return;
+      const u = new SpeechSynthesisUtterance(msg);
+      u.lang = 'ar-SA';
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch { /* ignore */ }
+  };
+
+  // مساعد ذكي: يفهم الطلب ويرد صوتياً؛ إن لم يتوفر نرجع للتحليل المحلي
+  const ask = async (raw) => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/secure/data?resource=tech-ai', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: order.id, text: raw, history: historyRef.current }),
+      });
+      if (!res.ok) throw new Error('ai');
+      const r = await res.json();
+      historyRef.current = [...historyRef.current, { role: 'user', content: raw }, { role: 'assistant', content: r.reply }].slice(-8);
+      toast.message(r.reply);
+      speak(r.reply);
+      if (r.note || r.mark_ready) {
+        const stamp = new Date().toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'short', timeStyle: 'short' });
+        const patch = { notes: [order.notes, r.note && `[ورشة ${stamp}] ${r.note}`].filter(Boolean).join('\n').slice(0, 2000) };
+        if (r.mark_ready && ['pending', 'in_progress'].includes(order.status)) patch.status = 'ready';
+        const { error } = await supabase.from('orders').update(patch).eq('id', order.id);
+        if (error) toast.error('تعذّر الحفظ'); else onSaved?.();
+      }
+      setSaving(false);
+    } catch {
+      setSaving(false);
+      await save(raw); // بدون ذكاء اصطناعي
+    }
+  };
+
   const save = async (raw) => {
     const { text, done } = parseDictation(raw);
     if (!text && !done) return toast.error('لم أفهم الكلام، أعد المحاولة');
@@ -38,7 +77,7 @@ export default function VoiceNote({ order, onSaved }) {
       <div className="flex gap-2">
         <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="اكتب أو أملِ بميكروفون لوحة المفاتيح"
           className="flex-1 rounded-xl border-2 px-3 py-2 text-sm" style={{ borderColor: '#7c4a1e' }} />
-        <button type="button" disabled={saving || !typed.trim()} onClick={async () => { await save(typed); setTyped(''); }}
+        <button type="button" disabled={saving || !typed.trim()} onClick={async () => { await ask(typed); setTyped(''); }}
           className="px-4 rounded-xl text-white font-bold text-sm disabled:opacity-50" style={{ background: '#7c4a1e' }}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ'}
         </button>
@@ -55,7 +94,7 @@ export default function VoiceNote({ order, onSaved }) {
     let heard = '';
     rec.onresult = (e) => { heard = Array.from(e.results).map((r) => r[0].transcript).join(' '); };
     rec.onerror = (e) => { setListening(false); toast.error(e.error === 'not-allowed' ? 'اسمح بالميكروفون من إعدادات المتصفح' : 'تعذّر التقاط الصوت'); };
-    rec.onend = () => { setListening(false); if (heard.trim()) save(heard); };
+    rec.onend = () => { setListening(false); if (heard.trim()) ask(heard); };
     recRef.current = rec;
     setListening(true);
     rec.start();
@@ -65,7 +104,7 @@ export default function VoiceNote({ order, onSaved }) {
     <button onClick={toggle} disabled={saving} type="button"
       className="w-full py-2.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 border-2 transition-all disabled:opacity-60"
       style={listening ? { background: '#fee2e2', borderColor: '#ef4444', color: '#b91c1c' } : { background: '#fff', borderColor: '#7c4a1e', color: '#7c4a1e' }}>
-      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : listening ? <><MicOff className="w-4 h-4" /> جارٍ الاستماع… اضغط للإيقاف</> : <><Mic className="w-4 h-4" /> إملاء ملاحظة صوتية</>}
+      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : listening ? <><MicOff className="w-4 h-4" /> جارٍ الاستماع… اضغط للإيقاف</> : <><Mic className="w-4 h-4" /> تكلّم مع المساعد</>}
     </button>
   );
 }
