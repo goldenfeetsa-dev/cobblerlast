@@ -14,8 +14,7 @@ export default function VoiceNote({ order, onSaved }) {
   const [listening, setListening] = useState(false);
   const [saving, setSaving] = useState(false);
   const recRef = useRef(null);
-
-  if (!SR) return null; // المتصفح لا يدعم الإملاء — نخفي الزر
+  const [typed, setTyped] = useState('');
 
   const save = async (raw) => {
     const { text, done } = parseDictation(raw);
@@ -32,6 +31,20 @@ export default function VoiceNote({ order, onSaved }) {
     toast.success(done ? `تم الحفظ وإغلاق الطلب: ${text}` : `تم الحفظ: ${text}`);
     onSaved?.();
   };
+
+  // متصفح بدون Web Speech (مثل آيفون): حقل نص — زر الميكروفون في لوحة مفاتيح الجوال يُملي فيه
+  if (!SR) {
+    return (
+      <div className="flex gap-2">
+        <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="اكتب أو أملِ بميكروفون لوحة المفاتيح"
+          className="flex-1 rounded-xl border-2 px-3 py-2 text-sm" style={{ borderColor: '#7c4a1e' }} />
+        <button type="button" disabled={saving || !typed.trim()} onClick={async () => { await save(typed); setTyped(''); }}
+          className="px-4 rounded-xl text-white font-bold text-sm disabled:opacity-50" style={{ background: '#7c4a1e' }}>
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ'}
+        </button>
+      </div>
+    );
+  }
 
   const toggle = () => {
     if (listening) { recRef.current?.stop(); return; }

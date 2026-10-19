@@ -18,6 +18,7 @@ import { ArrowLeft, Clock, User, Package, CreditCard, MapPin, Star, RotateCcw, R
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
+import VoiceNote from '@/components/pos/VoiceNote';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -531,7 +532,12 @@ export default function OrderDetails() {
                   {order.notes && (
                     <div className="pt-2 border-t">
                       <p className="text-xs text-muted-foreground mb-1">ملاحظات</p>
-                      <p className="text-sm">{order.notes}</p>
+                      <p className="text-sm whitespace-pre-line">{order.notes}</p>
+                    </div>
+                  )}
+                  {['pending', 'in_progress', 'ready'].includes(order.status) && (
+                    <div className="pt-2 border-t">
+                      <VoiceNote order={order} onSaved={() => { queryClient.invalidateQueries({ queryKey: ['order', orderId] }); queryClient.invalidateQueries({ queryKey: ['orders'] }); }} />
                     </div>
                   )}
                 </CardContent>
