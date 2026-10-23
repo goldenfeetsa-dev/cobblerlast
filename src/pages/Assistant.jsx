@@ -189,7 +189,7 @@ export default function Assistant() {
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok && body.reply) return { reply: body.reply, action: body.action };
-      if (body.error === 'ai_not_configured') return { code: 'ai_not_configured', msg: 'للنقاش والاستشارة أحتاج «العقل الذكي» مفعّلاً: أضف GEMINI_API_KEY (أو GROQ_API_KEY المجاني) في إعدادات Vercel ثم Redeploy. الأوامر والأرقام تشتغل بدونه.' };
+      if (body.error === 'ai_not_configured') return { code: 'ai_not_configured', msg: 'للنقاش والاستشارة أحتاج «العقل الذكي» مفعّلاً: أضف AI_GATEWAY_API_KEY (أو GROQ_API_KEY المجاني) في إعدادات Vercel ثم Redeploy. الأوامر والأرقام تشتغل بدونه.' };
       if (res.status === 401) return { code: 'auth', msg: 'انتهت الجلسة — سجّل دخول من جديد.' };
       const d = String(body.detail || '');
       const hint = /AQ_key_unsupported/.test(d)
@@ -233,7 +233,7 @@ export default function Assistant() {
         const d = await res.json().catch(() => ({}));
         if (!res.ok) return say(`التشخيص: ${res.status === 401 ? 'انتهت الجلسة — سجّل دخول من جديد' : 'خطأ ' + res.status}`, { error: true });
         const yn = (b) => (b ? '✅ مفعّل' : '❌ غير موجود');
-        return say(`نسخة الموقع المنشورة: ${d.deploy} (${d.env})\nGemini: ${yn(d.providers.gemini)}\nGroq: ${yn(d.providers.groq)}\nClaude: ${yn(d.providers.anthropic)}\nدورك: ${d.role}`);
+        return say(`نسخة الموقع المنشورة: ${d.deploy} (${d.env})\nAI Gateway: ${yn(d.providers.gateway)}\nGemini: ${yn(d.providers.gemini)}\nGroq: ${yn(d.providers.groq)}\nClaude: ${yn(d.providers.anthropic)}\nدورك: ${d.role}`);
       } catch { return say('تعذّر الاتصال بالخادم.', { error: true }); }
     }
     const norm = normalize(text);

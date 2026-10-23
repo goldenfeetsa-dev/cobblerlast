@@ -182,7 +182,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         deploy: (process.env.VERCEL_GIT_COMMIT_SHA || 'unknown').slice(0, 7),
         env: process.env.VERCEL_ENV || 'unknown',
-        providers: { gemini: !!process.env.GEMINI_API_KEY, groq: !!process.env.GROQ_API_KEY, anthropic: !!process.env.ANTHROPIC_API_KEY },
+        providers: { gateway: !!process.env.AI_GATEWAY_API_KEY, gemini: !!process.env.GEMINI_API_KEY, groq: !!process.env.GROQ_API_KEY, anthropic: !!process.env.ANTHROPIC_API_KEY },
         role: sess.role,
       });
     }
@@ -323,10 +323,11 @@ export default async function handler(req, res) {
     }
     const geminiKey = process.env.GEMINI_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
-    if (!apiKey && !geminiKey && !groqKey) return res.status(503).json({ error: 'ai_not_configured' });
+    const gatewayKey = process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey && !geminiKey && !groqKey && !gatewayKey) return res.status(503).json({ error: 'ai_not_configured' });
 
     // ── العقل الذكي عبر Gemini (مجاني بمفتاح من Google AI Studio): مستشار نقاش بسياق بيانات المحل ──
-    if (geminiKey || groqKey) {
+    if (geminiKey || groqKey || gatewayKey) {
       try {
         const { text, history } = req.body || {};
         const said = String(text || '').trim().slice(0, 1200);
@@ -353,7 +354,44 @@ export default async function handler(req, res) {
         const errors = [];
         let reply = '';
         let action = null;
-        if (geminiKey) {
+        // ── المسار الأول: Vercel AI SDK عبر AI Gateway (مفتاح واحد لأي نموذج) ──
+        if (gatewayKey) {
+          try {
+            const { generateText, tool, stepCountIs } = await import('ai');
+            const { z } = await import('zod');
+            const tools = {
+              find_orders: tool({ description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو جواله أو الحالة', inputSchema: z.object({ query: z.string().optional(), status: z.enum(['pending', 'in_progress', 'ready', 'completed', 'cancelled']).optional(), limit: z.number().optional() }), execute: async (a) => runTool('find_orders', a) }),
+              deliveries: tool({ description: 'الطلبات غير المسلَّمة المتأخرة أو المستحقة اليوم أو خلال يومين', inputSchema: z.object({}), execute: async () => runTool('deliveries', {}) }),
+              counts_today: tool({ description: 'عدد الطلبات المسجلة اليوم حسب الحالة', inputSchema: z.object({}), execute: async () => runTool('counts_today', {}) }),
+              ...(canSeeMoney ? {
+                revenue: tool({ description: 'إجمالي الإيراد لفترة', inputSchema: z.object({ period: z.enum(['today', 'week', 'month']) }), execute: async (a) => runTool('revenue', a) }),
+                partners_due: tool({ description: 'مبالغ الشركات غير المسددة والمستحقة', inputSchema: z.object({}), execute: async () => runTool('partners_due', {}) }),
+              } : {}),
+              ...(sess.role !== 'accountant' ? {
+                change_order_status: tool({
+                  description: 'طلب تغيير حالة طلب إلى جاهز (ready) أو تم التسليم (completed). لا يُنفَّذ إلا بعد تأكيد المستخدم، فاسأله للتأكيد.',
+                  inputSchema: z.object({ order_number: z.string(), status: z.enum(['ready', 'completed']) }),
+                  execute: async (a) => {
+                    const num = String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                    action = { type: 'set_status', order_number: num, status: a.status, label: a.status === 'completed' ? 'تم التسليم' : 'جاهز' };
+                    return { pending_user_confirmation: true, note: 'لم يتغير شيء بعد؛ اسأل المستخدم يؤكد.' };
+                  },
+                }),
+              } : {}),
+            };
+            const out = await generateText({
+              model: process.env.AI_MODEL || 'google/gemini-2.5-flash',
+              system,
+              messages: [...hist, { role: 'user', content: said }],
+              tools,
+              stopWhen: stepCountIs(5),
+              maxOutputTokens: 1024,
+            });
+            reply = (out.text || '').trim();
+            if (!reply) throw new Error('gateway_empty');
+          } catch (e) { action = null; errors.push(`gateway:${String(e.message || e).slice(0, 80)}`); console.error('assistant gateway', e.message); }
+        }
+        if (!reply && geminiKey) {
           try {
             const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
             const callG = async (body) => {
