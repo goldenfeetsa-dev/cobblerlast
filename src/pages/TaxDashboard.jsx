@@ -74,7 +74,9 @@ export default function TaxDashboard() {
     const endDay = format(end, 'yyyy-MM-dd');
 
     const [{ data: o }, { data: s }, { data: p }, expensesRaw, { data: sup }, zs, { data: notes }] = await Promise.all([
-      supabase.from('orders').select('*').gte('created_at', startISO).lte('created_at', endISO),
+      // طلبات الشركات (partner_id) خارج هذا الحساب عمداً: إيرادها وضريبتها تُسجَّل مرة وحدة
+      // عبر فاتورة المبيعات المجمّعة عند السداد (sales_invoices) — إدخالها هنا يكرر الضريبة.
+      supabase.from('orders').select('*').is('partner_id', null).gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('sales_invoices').select('*').gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('purchase_invoices').select('*').gte('invoice_date', startDay).lte('invoice_date', endDay),
       secureExpenses.list({ orderBy: '-expense_date', limit: 2000, gteCol: 'expense_date', gteVal: startDay, lteCol: 'expense_date', lteVal: endDay }),

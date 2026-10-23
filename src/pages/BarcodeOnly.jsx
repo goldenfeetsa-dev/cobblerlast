@@ -25,17 +25,35 @@ export default function BarcodeOnly() {
   // بدل ملصق واحد للطلب كامل تضيع فيه بقية القطع
   const pieces = getOrderPieces(order);
 
+  // طباعة ملصقات عدة طلبات دفعة وحدة: /barcode/<أول-طلب>?ids=<id1>,<id2>,...
+  // (تُستخدم عند استلام شنط شركة: لكل شنطة طلب وملصق). بدون ids يبقى السلوك القديم كما هو.
+  const idsParam = new URLSearchParams(window.location.search).get('ids') || '';
+  const multiIds = idsParam.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 100);
+  const isMulti = multiIds.length > 1;
+  const { data: multiOrders } = useQuery({
+    queryKey: ['orders-multi-labels', idsParam],
+    queryFn: () => Promise.all(multiIds.map((id) => db.Order.get(id))),
+    enabled: isMulti,
+  });
+  const labels = isMulti
+    ? (multiOrders || []).flatMap((o) => {
+        const ps = getOrderPieces(o);
+        return ps.map((piece, i) => ({ order: o, piece, i, total: ps.length }));
+      })
+    : pieces.map((piece, i) => ({ order, piece, i, total: pieces.length }));
+  const ready = isMulti ? !!multiOrders : !!order;
+
   // طباعة تلقائية أول ما بيانات الطلب تجهز — مرة وحدة فقط.
   // (كان الكود السابق يلغي مؤقّته بنفسه: setAutoPrinted يعيد التصيير
   // فيشتغل cleanup الـeffect ويمسح الـsetTimeout قبل ما ينفّذ، فما كانت
   // الطباعة التلقائية تشتغل أبداً. الحين نستخدم ref بدون إلغاء.)
   const autoPrintedRef = useRef(false);
   useEffect(() => {
-    if (order && !autoPrintedRef.current) {
+    if (ready && !autoPrintedRef.current) {
       autoPrintedRef.current = true;
       setTimeout(() => window.print(), 600);
     }
-  }, [order]);
+  }, [ready]);
 
   const handleDownload = async () => {
     if (!containerRef.current) return;
@@ -46,7 +64,7 @@ export default function BarcodeOnly() {
     link.click();
   };
 
-  if (!order) {
+  if (!ready) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-muted-foreground mb-4">الطلب غير موجود</p>
@@ -86,23 +104,23 @@ export default function BarcodeOnly() {
         رجوع
       </Button>
 
-      {pieces.length > 1 && (
+      {labels.length > 1 && (
         <p className="text-sm font-bold text-muted-foreground -mb-4 bcd-no-print">
-          {pieces.length} قطع — كل وحدة بملصقها المستقل بورقة منفصلة
+          {labels.length} {isMulti ? 'ملصقات' : 'قطع'} — كل وحدة بملصقها المستقل بورقة منفصلة
         </p>
       )}
 
       <div id="bcd-preview-area" ref={containerRef} className="flex flex-wrap items-start justify-center gap-4">
-        {pieces.map((piece, i) => (
-          <BarcodeLabel key={i} order={order} piece={piece} pieceIndex={i} totalPieces={pieces.length} />
+        {labels.map((l) => (
+          <BarcodeLabel key={`${l.order.id}-${l.i}`} order={l.order} piece={l.piece} pieceIndex={l.i} totalPieces={l.total} />
         ))}
       </div>
 
       {/* نسخة الطباعة (مخفية بالشاشة) — ملصق لكل قطعة، كل واحد بصفحة مستقلة */}
       {createPortal(
         <div id="bcd-print-root">
-          {pieces.map((piece, i) => (
-            <BarcodeLabel key={i} order={order} piece={piece} pieceIndex={i} totalPieces={pieces.length} />
+          {labels.map((l) => (
+            <BarcodeLabel key={`${l.order.id}-${l.i}`} order={l.order} piece={l.piece} pieceIndex={l.i} totalPieces={l.total} />
           ))}
         </div>,
         document.body
@@ -111,7 +129,7 @@ export default function BarcodeOnly() {
       <div className="flex gap-3 bcd-no-print">
         <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90">
           <Printer className="w-4 h-4 ml-2" />
-          طباعة {pieces.length > 1 ? `(${pieces.length} ملصقات)` : ''}
+          طباعة {labels.length > 1 ? `(${labels.length} ملصقات)` : ''}
         </Button>
         <Button onClick={handleDownload} variant="outline">
           <Download className="w-4 h-4 ml-2" />

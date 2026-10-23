@@ -60,6 +60,7 @@ const Suppliers = lazy(() => import('./pages/Suppliers'));
 const Purchasing = lazy(() => import('./pages/Purchasing'));
 const PartnerPortal = lazy(() => import('./pages/PartnerPortal'));
 const PartnersAdmin = lazy(() => import('./pages/PartnersAdmin'));
+const PartnerAccount = lazy(() => import('./pages/PartnerAccount'));
 const Returns = lazy(() => import('./pages/Returns'));
 const ServicePage = lazy(() => import('./pages/ServicePage'));
 const AreaPage = lazy(() => import('./pages/AreaPage'));
@@ -184,6 +185,7 @@ const AuthenticatedApp = () => {
           <Route path="/purchasing" element={<Purchasing />} />
           <Route path="/returns" element={<Returns />} />
           <Route path="/admin/partners" element={<PartnersAdmin />} />
+          <Route path="/admin/partners/:id" element={<PartnerAccount />} />
           <Route path="/tax-dashboard" element={<TaxDashboard />} />
       </Route>
         <Route path="*" element={<PageNotFound />} />

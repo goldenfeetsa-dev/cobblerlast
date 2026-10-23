@@ -81,7 +81,8 @@ export default function FinancialReports() {
     const endDay = format(end, 'yyyy-MM-dd');
 
     const [{ data: o }, { data: s }, expensesData, { data: c }, { data: st }, { data: notes }, { data: unpaidOrders }, { data: unpaidSales }, { data: payables }] = await Promise.all([
-      supabase.from('orders').select('subtotal,total_price,zatca_status,created_at,order_number,customer_name,status').gte('created_at', startISO).lte('created_at', endISO),
+      // طلبات الشركات خارج الإيراد هنا: تُحتسب مرة وحدة من فاتورتها المجمّعة (sales_invoices).
+      supabase.from('orders').select('subtotal,total_price,zatca_status,created_at,order_number,customer_name,status').is('partner_id', null).gte('created_at', startISO).lte('created_at', endISO),
       supabase.from('sales_invoices').select('subtotal,zatca_status,created_at,invoice_number').gte('created_at', startISO).lte('created_at', endISO),
       secureExpenses.list({ orderBy: '-expense_date', limit: 2000, gteCol: 'expense_date', gteVal: startDay, lteCol: 'expense_date', lteVal: endDay }),
       supabase.from('workshop_custodies').select('total_cost,month_key').gte('created_at', startISO).lte('created_at', endISO),
