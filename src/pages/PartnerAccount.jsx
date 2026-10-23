@@ -82,7 +82,7 @@ export default function PartnerAccount() {
         <div>
           <h1 className="text-xl font-black">{p.name}</h1>
           <p className="text-xs text-gray-500">
-            رقم ضريبي: <span dir="ltr">{p.vat_number || 'غير مُدخل'}</span> · التسليم {p.turnaround_days} أيام · السداد بعد الاستلام بـ {p.payment_terms_days} يوم
+            رقم ضريبي: <span dir="ltr">{p.vat_number || 'غير مُدخل'}</span> · التسليم {p.turnaround_days} أيام · السداد بعد التسليم بـ {p.payment_terms_days} يوم
           </p>
         </div>
         <button onClick={() => setShowStatement(true)} className="px-3 py-2 rounded-xl border bg-white text-sm font-bold flex items-center gap-1 shrink-0"><FileText className="w-4 h-4" />كشف حساب</button>
@@ -92,7 +92,7 @@ export default function PartnerAccount() {
       <button
         onClick={() => { setTab('orders'); setFilter('unpaid'); setSel(new Set(dueOrders.map((o) => o.id))); }}
         className="w-full rounded-2xl border-2 border-red-300 bg-red-50 p-3 text-right flex items-center justify-between">
-        <span className="flex items-center gap-2 text-red-700 font-bold text-sm"><Wallet className="w-5 h-5" />مستحق السداد الآن ({dueOrders.length} شنطة مرّ عليها {p.payment_terms_days} يوم من الاستلام)</span>
+        <span className="flex items-center gap-2 text-red-700 font-bold text-sm"><Wallet className="w-5 h-5" />مستحق السداد الآن ({dueOrders.length} شنطة مرّ عليها {p.payment_terms_days} يوم من تسليمها للشركة)</span>
         <span className="text-lg font-black text-red-700">{money(dueTotal)} ر.س</span>
       </button>
 
@@ -141,9 +141,9 @@ export default function PartnerAccount() {
                   </div>
                   <div className="text-xs text-gray-600 truncate">{o.description}</div>
                   <div className="text-[11px] text-gray-500">
-                    استلام: {day(o.created_at)} · تسليم متوقع: {day(o.delivery_date)}
-                    {o.delivered_at && <> · سُلّم: {day(o.delivered_at)}</>}
-                    {o.payment_due_date && !isPaid(o) && <> · السداد: {day(o.payment_due_date)}</>}
+                    دخلت الورشة: {day(o.created_at)} · موعد التسليم للشركة: <b>{day(o.delivery_date)}</b>
+                    {o.delivered_at && <> · سُلّم فعلياً: {day(o.delivered_at)}</>}
+                    {o.payment_due_date && !isPaid(o) && <> · موعد السداد: <b>{day(o.payment_due_date)}</b></>}
                   </div>
                 </div>
                 <div className="text-left shrink-0 space-y-1">
@@ -321,7 +321,7 @@ function Info({ partner, canEdit, partnerId, onDone }) {
         {fld('vat_number', 'الرقم الضريبي', { dir: 'ltr', maxLength: 15 })}
         {fld('cr_number', 'السجل التجاري', { dir: 'ltr' })}
         {fld('phone', 'الجوال', { dir: 'ltr' })}
-        {fld('payment_terms_days', 'أيام السداد بعد الاستلام', { type: 'number', min: 0, max: 365 })}
+        {fld('payment_terms_days', 'أيام السداد بعد التسليم', { type: 'number', min: 0, max: 365 })}
         {fld('turnaround_days', 'أيام التسليم', { type: 'number', min: 0, max: 90 })}
       </div>
       {fld('address', 'العنوان')}
@@ -402,7 +402,7 @@ function StatementModal({ data, onClose }) {
         </div>
         <table className="w-full text-xs">
           <thead><tr className="border-b text-gray-500 text-right">
-            <th className="py-1">التاريخ</th><th>الطلب</th><th>البيان</th><th>الاستحقاق</th><th>الحالة</th><th>الفاتورة</th><th>المبلغ</th>
+            <th className="py-1">تاريخ الدخول</th><th>الطلب</th><th>البيان</th><th>موعد السداد</th><th>الحالة</th><th>الفاتورة</th><th>المبلغ</th>
           </tr></thead>
           <tbody>{rows.map((o) => {
             const ok = o.payment_status === 'paid';
