@@ -72,6 +72,11 @@ alter table public.orders add column if not exists payment_due_date    date;
 alter table public.orders add column if not exists partner_invoice_id  uuid;
 
 do $$ begin
+  -- قيد قديم كان يشير لجدول b2b_partners؛ نعيد توجيهه لـ partners (لا طلبات مرتبطة به).
+  if exists (select 1 from pg_constraint where conname = 'orders_partner_id_fkey'
+             and confrelid is distinct from 'public.partners'::regclass) then
+    alter table public.orders drop constraint orders_partner_id_fkey;
+  end if;
   if not exists (select 1 from pg_constraint where conname = 'orders_partner_id_fkey') then
     alter table public.orders add constraint orders_partner_id_fkey
       foreign key (partner_id) references public.partners(id);
