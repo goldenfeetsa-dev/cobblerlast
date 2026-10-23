@@ -110,6 +110,7 @@ export default function Assistant() {
   const [showVoice, setShowVoice] = useState(false);
   const [hamed, setHamed] = useState(() => { try { return localStorage.getItem('assistant_hamed') !== '0'; } catch { return true; } });
   useEffect(() => { try { localStorage.setItem('assistant_hamed', hamed ? '1' : '0'); } catch { /* ignore */ } }, [hamed]);
+  const [srvVoice, setSrvVoice] = useState(() => { try { return localStorage.getItem('assistant_srv_voice') || 'ar-SA-HamedNeural'; } catch { return 'ar-SA-HamedNeural'; } });
   const audioRef = useRef(null);
   const hamedFailed = useRef(false);
   const [useRecorder, setUseRecorder] = useState(() => { try { return localStorage.getItem('assistant_recorder') === '1'; } catch { return false; } });
@@ -131,7 +132,7 @@ export default function Assistant() {
     // الصوت العصبي السعودي (Hamed) من السيرفر؛ وإن تعذّر نرجع لصوت المتصفح
     if (speakOn && hamed && !hamedFailed.current && text) {
       try {
-        const res = await fetch('/api/secure/data?resource=assistant', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts: speakable(text), voice: 'ar-SA-HamedNeural' }) });
+        const res = await fetch('/api/secure/data?resource=assistant', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts: speakable(text), voice: srvVoice }) });
         const b = await res.json().catch(() => ({}));
         if (res.ok && b.audio) {
           try { audioRef.current?.pause(); window.speechSynthesis?.cancel(); } catch { /* ignore */ }
@@ -397,6 +398,17 @@ export default function Assistant() {
             <span className="shrink-0">السرعة</span>
             <input type="range" min="0.7" max="1.3" step="0.05" value={rate} onChange={(e) => { setRate(Number(e.target.value)); try { localStorage.setItem('assistant_rate', e.target.value); } catch { /* ignore */ } }} className="flex-1" />
             <button onClick={() => speak('هلا والله، هذا صوتي. طلب رقم ألف واثنين جاهز، والإيراد ألف ومئتين ريال.')} className="border rounded-lg px-3 py-1">تجربة</button>
+          </div>
+          <div className="flex gap-2 items-center">
+            <span className="shrink-0">صوت السيرفر</span>
+            <select value={srvVoice} onChange={(e) => { setSrvVoice(e.target.value); hamedFailed.current = false; try { localStorage.setItem('assistant_srv_voice', e.target.value); } catch { /* ignore */ } }} className="flex-1 border rounded-lg px-2 py-1 bg-background">
+              <option value="ar-SA-HamedNeural">حامد — سعودي (رجل)</option>
+              <option value="ar-SA-ZariyahNeural">زارية — سعودية (امرأة)</option>
+              <option value="ar-EG-ShakirNeural">شاكر — مصري (رجل)</option>
+              <option value="ar-EG-SalmaNeural">سلمى — مصرية (امرأة)</option>
+              <option value="ar-AE-HamdanNeural">حمدان — إماراتي (رجل)</option>
+              <option value="ar-KW-FahedNeural">فهد — كويتي (رجل)</option>
+            </select>
           </div>
           <label className="flex items-center gap-2"><input type="checkbox" checked={hamed} onChange={(e) => { hamedFailed.current = false; setHamed(e.target.checked); }} />صوت «حامد» السعودي الطبيعي (من السيرفر) — يرجع تلقائياً لصوت المتصفح إن تعذّر</label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={useRecorder} onChange={(e) => setUseRecorder(e.target.checked)} />استخدم التسجيل بالسيرفر (Whisper) بدل إملاء المتصفح — أدق باللهجات ويعمل في كل المتصفحات (يحتاج GROQ_API_KEY)</label>

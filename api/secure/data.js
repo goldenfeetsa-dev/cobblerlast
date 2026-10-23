@@ -459,7 +459,7 @@ export default async function handler(req, res) {
             reply = String(j.choices?.[0]?.message?.content || '').trim();
           } catch (e) { errors.push(e.message); console.error('assistant groq', e.message); }
         }
-        if (!reply) return res.status(502).json({ error: 'ai_failed', detail: errors.join(' | ') });
+        if (!reply) return res.status(502).json({ error: 'ai_failed', detail: errors.join(' | ') || `empty_reply(providers:${[gatewayKey && 'gateway', geminiKey && 'gemini', groqKey && 'groq'].filter(Boolean).join('+')})` });
         return res.status(200).json({ reply: reply.slice(0, 2000), ...(action ? { action } : {}) });
       } catch (err) {
         console.error('api/secure/data (assistant llm) error', err);
