@@ -202,7 +202,7 @@ export default function TaxDashboard() {
         ['ناقص: إجمالي المصروفات التشغيلية', `(${fmt(totalExpensesBeforeVat)})`],
         ['هامش الربح', `${profitMargin.toFixed(1)}%`],
       ],
-      total: [netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة', `$<SarAmount value={fmt(Math.abs(netProfit))} />`],
+      total: [netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة', `${fmt(Math.abs(netProfit))} ر.س`],
       totalColor: netProfit >= 0 ? '#15803d' : '#b91c1c',
       big: true,
     },
@@ -228,7 +228,7 @@ export default function TaxDashboard() {
         ['ضريبة القيمة المضافة على المشتريات (قابلة للخصم)', fmt(vatPaidDeductible)],
       ],
       total: ['إجمالي المشتريات شامل الضريبة', fmt(totalPurchasesBeforeVat + vatPaidDeductible)],
-      note: vatExpensesExcluded > 0 ? `⚠ $<SarAmount value={fmt(vatExpensesExcluded)} /> ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
+      note: vatExpensesExcluded > 0 ? `⚠ ${fmt(vatExpensesExcluded)} ر.س ضريبة مصروفات مستبعدة لعدم وجود فاتورة ضريبية رسمية من المورد` : null,
     },
   ];
 

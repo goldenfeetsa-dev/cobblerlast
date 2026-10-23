@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabaseClient';
 // عبر Supabase Realtime، ونحن نبطل كل الكاش النشط على الشاشة
 // فيعيد React Query جلبه من قاعدة البيانات مباشرة — بدون انتظار
 // انتهاء staleTime وبدون الحاجة لإعادة تحميل الصفحة يدوياً.
+// استُبعد 'site_visits' و'audit_logs': الأول يُكتب مع كل زيارة لأي زائر للموقع
+// والثاني مع كل عملية، فكانا يُبطلان كل الكاش ويعيدان جلب كل شاشة المدير باستمرار.
 const WATCHED_TABLES = [
   'orders', 'employees', 'branches',
   'inventory_items', 'suppliers', 'supplier_products', 'products',
@@ -15,12 +17,12 @@ const WATCHED_TABLES = [
   // اللحظية القديمة ما كانت ستوصل أي بيانات فعلياً بعد التشديد.
   // الصفحات المعنية تعيد الجلب بنفسها بعد كل عملية مباشرة بدل الاعتماد
   // على Realtime.
-  'sales_invoices', 'audit_logs', 'app_settings',
+  'sales_invoices', 'app_settings',
   'loyalty_cards', 'loyalty_stamps', 'loyalty_settings',
   'loyalty_members', 'loyalty_points_transactions',
   'loyalty_member_notifications', 'loyalty_membership_settings',
   'bookings', 'services', 'reviews', 'working_hours',
-  'brands', 'shop_settings', 'site_visits', 'stock_movements',
+  'brands', 'shop_settings', 'stock_movements',
   'workshop_custodies', 'workshop_settlements', 'operations_plans',
   'workflow_stages',
 ];

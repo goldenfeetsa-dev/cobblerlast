@@ -561,8 +561,8 @@ function CobblerTab({ session }) {
             {form.total_price > 0 && (
               <p className="text-sm font-bold" style={{ color: shopSettings.vat_enabled !== false ? '#059669' : '#6b7280' }}>
                 {shopSettings.vat_enabled !== false
-                  ? `قبل الضريبة: $<SarAmount value={(parseFloat(form.total_price) / 1.15).toFixed(2)} /> — الإجمالي (شامل 15%): $<SarAmount value={parseFloat(form.total_price).toFixed(2)} />`
-                  : `الإجمالي (الضريبة معطّلة): $<SarAmount value={parseFloat(form.total_price).toFixed(2)} />`}
+                  ? `قبل الضريبة: ${(parseFloat(form.total_price) / 1.15).toFixed(2)} ر.س — الإجمالي (شامل 15%): ${parseFloat(form.total_price).toFixed(2)} ر.س`
+                  : `الإجمالي (الضريبة معطّلة): ${parseFloat(form.total_price).toFixed(2)} ر.س`}
               </p>
             )}
           </div>

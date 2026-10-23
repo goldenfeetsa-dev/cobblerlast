@@ -110,7 +110,7 @@ export default function BookingAdmin() {
           { label: 'انتظار',    value: stats.pending,             color: 'text-yellow-600 dark:text-yellow-400' },
           { label: 'مؤكدة',    value: stats.confirmed,           color: 'text-blue-600 dark:text-blue-400' },
           { label: 'مكتملة',   value: stats.completed,           color: 'text-green-600 dark:text-green-400' },
-          { label: 'الإيرادات', value: `$<SarAmount value={stats.revenue.toFixed(0)} />`, color: 'text-amber-600 dark:text-amber-400' },
+          { label: 'الإيرادات', value: `${stats.revenue.toFixed(0)} ر.س`, color: 'text-amber-600 dark:text-amber-400' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-2xl border border-stone-200 p-4 text-center">
             <p className={cn("text-2xl font-black", s.color)}>{s.value}</p>

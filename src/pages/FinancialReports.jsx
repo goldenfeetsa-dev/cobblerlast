@@ -312,7 +312,7 @@ export default function FinancialReports() {
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="month" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip formatter={(v) => `$<SarAmount value={fmt(v)} />`} />
+                <Tooltip formatter={(v) => `${fmt(v)} ر.س`} />
                 <Legend />
                 <Bar dataKey="الإيراد" fill="#16a34a" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="المصاريف" fill="#dc2626" radius={[4, 4, 0, 0]} />
@@ -331,7 +331,7 @@ export default function FinancialReports() {
                   <Pie data={expenseByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => e.name}>
                     {expenseByCategory.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => `$<SarAmount value={fmt(v)} />`} />
+                  <Tooltip formatter={(v) => `${fmt(v)} ر.س`} />
                 </PieChart>
               </ResponsiveContainer>
             )}

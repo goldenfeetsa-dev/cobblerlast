@@ -57,7 +57,7 @@ export default function Dashboard() {
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
 
-  const { data: allOrders } = useQuery({
+  const { data: allOrders, isFetching: fOrders } = useQuery({
     queryKey: ['orders', 'dashboard'],
     queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at'),
     initialData: [],
@@ -65,7 +65,7 @@ export default function Dashboard() {
 
   // فواتير بيع المنتجات — كانت غائبة تماماً عن لوحة التحكم، فتُخفي جزءاً
   // كاملاً من الإيراد الفعلي لأي فرع يبيع منتجات وليس فقط يصلّح
-  const { data: allSalesInvoices } = useQuery({
+  const { data: allSalesInvoices, isFetching: fInv } = useQuery({
     queryKey: ['sales-invoices-dashboard'],
     queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at'),
     initialData: [],
@@ -121,7 +121,7 @@ export default function Dashboard() {
   const topBranch = branchSummary[0];
   const showBranches = ['admin','owner','manager'].includes(session?.role) && branchSummary.length > 1;
 
-  const { data: customers } = useQuery({
+  const { data: customers, isFetching: fCust } = useQuery({
     queryKey: ['customers'],
     queryFn: () => db.Customer.list(),
     initialData: [],
@@ -178,9 +178,12 @@ export default function Dashboard() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {(fOrders || fInv || fCust) && (
+          <div className="text-xs text-muted-foreground flex items-center gap-2 mb-2"><span className="inline-block w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />جاري تحميل البيانات… الأرقام قد تكتمل خلال لحظات</div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="إجمالي العمليات" value={transactions.length} subtitle={`${pendingOrders.length} إصلاح قيد الانتظار`} icon={ShoppingBag} accentClass="bg-primary" />
-        <StatCard title="الإيرادات" value={`$<SarAmount value={totalRevenue.toFixed(0)} />`} subtitle={`${paidOrders.length} عملية مدفوعة`} icon={Wallet} accentClass="bg-primary" />
+        <StatCard title="الإيرادات" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`${paidOrders.length} عملية مدفوعة`} icon={Wallet} accentClass="bg-primary" />
         <StatCard title="العملاء" value={customers.length} icon={Users} accentClass="bg-primary" />
         <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
       </div>
