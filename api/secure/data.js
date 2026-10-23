@@ -175,7 +175,6 @@ export default async function handler(req, res) {
     if (!sess) return res.status(401).json({ error: 'unauthenticated' });
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });
     const FINROLES = ['owner', 'admin', 'manager', 'accountant'];
     const canSeeMoney = FINROLES.includes(sess.role);
     const sb = getSupabaseAdmin();
@@ -248,6 +247,20 @@ export default async function handler(req, res) {
       }
       return { error: 'tool_not_available' };
     };
+
+    // وضع الأدوات المباشر (بدون ذكاء صناعي خارجي): المحرك المحلي في المتصفح يحدد النية ويستدعي الأداة هنا
+    if (req.body && typeof req.body.tool === 'string') {
+      const allowed = ['find_orders', 'deliveries', 'counts_today', 'revenue', 'partners_due'];
+      if (!allowed.includes(req.body.tool)) return res.status(400).json({ error: 'unknown_tool' });
+      try {
+        const data = await runTool(req.body.tool, req.body.input);
+        return res.status(200).json({ data });
+      } catch (err) {
+        console.error('api/secure/data (assistant tool) error', err);
+        return res.status(500).json({ error: 'tool_failed' });
+      }
+    }
+    if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });
 
     try {
       const { text, history } = req.body || {};
