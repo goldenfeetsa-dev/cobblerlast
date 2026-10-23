@@ -5,7 +5,7 @@ import {
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings, Moon, Sun,
   Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale, Briefcase, Undo2
-} from 'lucide-react';
+, Sparkles } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';
 
@@ -21,6 +21,7 @@ const navGroups = [
       { path: '/invoices', icon: Receipt, label: 'الفواتير', financeOnly: true },
       { path: '/calendar', icon: CalendarDays, label: 'الجدولة المرئية' },
       { path: '/scan', icon: ScanBarcode, label: 'مسح الباركود' },
+      { path: '/assistant', icon: Sparkles, label: 'المساعد الذكي' },
     ]
   },
   {

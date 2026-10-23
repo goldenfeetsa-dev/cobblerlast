@@ -35,6 +35,7 @@ const Customers = lazy(() => import('./pages/Customers'));
 const Employees = lazy(() => import('./pages/Employees'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Assistant = lazy(() => import('./pages/Assistant'));
 const BarcodeOnly = lazy(() => import('./pages/BarcodeOnly'));
 const BookingWizard = lazy(() => import('./pages/BookingWizard'));
 const MyBookings = lazy(() => import('./pages/MyBookings'));
@@ -160,6 +161,7 @@ const AuthenticatedApp = () => {
           <Route path="/employees" element={<Employees />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/assistant" element={<Assistant />} />
           <Route path="/social-settings" element={<SocialSettings />} />
           <Route path="/admin/bookings" element={<BookingAdmin />} />
           <Route path="/zatca" element={<ZATCASettings />} />

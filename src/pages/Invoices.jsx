@@ -36,7 +36,8 @@ export default function Invoices() {
   });
 
   const merged = useMemo(() => {
-    const repairRows = orders.map(o => ({
+    // طلب الشركة المسدّد تمثّله فاتورته المجمّعة (sales_invoices) — نخفي الطلب حتى لا يظهر مرتين بالفواتير
+    const repairRows = orders.filter(o => !o.partner_invoice_id).map(o => ({
       id: `order-${o.id}`,
       kind: 'repair',
       number: o.order_number,

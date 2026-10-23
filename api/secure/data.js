@@ -168,6 +168,125 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── المساعد الذكي العام: يفهم كل اللهجات العربية ويجيب من بيانات النظام (قراءة فقط) ──
+  // أدوات قراءة فقط، الأرقام المالية لا تُعرض إلا لأدوار المالية، وكل شي بعد التحقق من الجلسة.
+  if (resourceKey === 'assistant') {
+    const sess = getSessionFromRequest(req);
+    if (!sess) return res.status(401).json({ error: 'unauthenticated' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });
+    const FINROLES = ['owner', 'admin', 'manager', 'accountant'];
+    const canSeeMoney = FINROLES.includes(sess.role);
+    const sb = getSupabaseAdmin();
+    const todayRiyadh = () => new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+    const ORDER_COLS = 'order_number,customer_name,customer_phone,item_type,description,status,delivery_date,shelf_location,created_at,partner_id' + (canSeeMoney ? ',total_price,payment_status' : '');
+
+    const tools = [
+      { name: 'find_orders', description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو رقم جواله، أو حسب الحالة. للقراءة فقط.',
+        input_schema: { type: 'object', properties: {
+          query: { type: 'string', description: 'رقم طلب أو اسم أو جوال (اختياري)' },
+          status: { type: 'string', enum: ['pending', 'in_progress', 'ready', 'completed', 'cancelled'] },
+          limit: { type: 'integer', description: 'حتى 15' } } } },
+      { name: 'deliveries', description: 'الطلبات غير المسلَّمة التي موعد تسليمها اليوم أو متأخر أو خلال يومين.',
+        input_schema: { type: 'object', properties: {} } },
+      { name: 'counts_today', description: 'عدد الطلبات المسجلة اليوم وعدد الجاهزة وعدد المسلَّمة.',
+        input_schema: { type: 'object', properties: {} } },
+    ];
+    if (canSeeMoney) {
+      tools.push(
+        { name: 'revenue', description: 'إجمالي الإيراد (شامل الضريبة) لفترة. لا يُحسب الشيء مرتين.',
+          input_schema: { type: 'object', properties: { period: { type: 'string', enum: ['today', 'week', 'month'] } }, required: ['period'] } },
+        { name: 'partners_due', description: 'الشركات الشريكة: غير المسدد والمستحق الآن والقريب الاستحقاق.',
+          input_schema: { type: 'object', properties: {} } },
+      );
+    }
+
+    const runTool = async (name, input) => {
+      input = input || {};
+      if (name === 'find_orders') {
+        let q = sb.from('orders').select(ORDER_COLS).order('created_at', { ascending: false }).limit(Math.min(parseInt(input.limit, 10) || 8, 15));
+        if (input.status) q = q.eq('status', input.status);
+        const t = String(input.query || '').trim().replace(/[%,()]/g, '').slice(0, 40);
+        if (t) q = q.or(`order_number.ilike.%${t}%,customer_name.ilike.%${t}%,customer_phone.ilike.%${t}%`);
+        const { data, error } = await q; if (error) throw error;
+        return data || [];
+      }
+      if (name === 'deliveries') {
+        const t0 = todayRiyadh();
+        const t2 = new Date(Date.parse(t0) + 2 * 86400000).toISOString().slice(0, 10);
+        const { data, error } = await sb.from('orders').select(ORDER_COLS).not('status', 'in', '(completed,cancelled)').lte('delivery_date', t2).order('delivery_date').limit(40);
+        if (error) throw error;
+        return { today: t0, orders: (data || []).map((o) => ({ ...o, timing: o.delivery_date < t0 ? 'متأخر' : o.delivery_date === t0 ? 'اليوم' : 'خلال يومين' })) };
+      }
+      if (name === 'counts_today') {
+        const t0 = todayRiyadh();
+        const { data, error } = await sb.from('orders').select('status').gte('created_at', `${t0}T00:00:00+03:00`).limit(2000);
+        if (error) throw error;
+        const c = {}; (data || []).forEach((o) => { c[o.status] = (c[o.status] || 0) + 1; });
+        return { registered_today: (data || []).length, by_status: c };
+      }
+      if (name === 'revenue' && canSeeMoney) {
+        const t0 = todayRiyadh();
+        const days = { today: 0, week: 6, month: 29 }[input.period] ?? 0;
+        const from = `${new Date(Date.parse(t0) - days * 86400000).toISOString().slice(0, 10)}T00:00:00+03:00`;
+        const [o, i] = await Promise.all([
+          sb.from('orders').select('total_price,status').gte('created_at', from).neq('status', 'cancelled').limit(5000),
+          sb.from('sales_invoices').select('total,items').gte('created_at', from).limit(5000),
+        ]);
+        if (o.error) throw o.error; if (i.error) throw i.error;
+        const orders = o.data || [];
+        // فاتورة الشركة المجمّعة (بنودها تحمل order_id) تغطي طلبات محسوبة أصلاً
+        const inv = (i.data || []).filter((x) => !(Array.isArray(x.items) && x.items.some((it) => it && it.order_id)));
+        const ordersSum = orders.reduce((a, x) => a + Number(x.total_price || 0), 0);
+        const salesSum = inv.reduce((a, x) => a + Number(x.total || 0), 0);
+        return { period: input.period, repair_orders_total: +ordersSum.toFixed(2), product_sales_total: +salesSum.toFixed(2), grand_total: +(ordersSum + salesSum).toFixed(2), currency: 'SAR', note: 'شامل ضريبة 15%' };
+      }
+      if (name === 'partners_due' && canSeeMoney) {
+        const { data, error } = await sb.rpc('partner_admin_list'); if (error) throw error;
+        return (data || []).map((p) => ({ name: p.name, unpaid_total: p.unpaid_total, due_now_total: p.due_total, due_now_count: p.due_count, due_soon_total: p.soon_total || 0 }));
+      }
+      return { error: 'tool_not_available' };
+    };
+
+    try {
+      const { text, history } = req.body || {};
+      const said = String(text || '').trim().slice(0, 800);
+      if (!said) return res.status(400).json({ error: 'missing_text' });
+      const hist = (Array.isArray(history) ? history : []).slice(-8)
+        .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 800) }));
+      const system = `أنت "مساعد إبرة وخيط" — مساعد ذكي لورشة إصلاح أحذية وحقائب وجلديات في الرياض (إبرة وخيط الإسكافي). أنت تتكلم مع ${sess.name || 'الموظف'} (دوره: ${sess.role}).
+اللغة: افهم كل اللهجات العربية (سعودي، خليجي، مصري، شامي، سوداني، يمني، مغاربي، فصحى) حتى لو كُتب الكلام بالحروف اللاتينية أو بأخطاء إملائية أو نص مُملى صوتياً. ورد بنفس لهجة المتحدث بأسلوب ودود ومختصر مناسب للنطق الصوتي (جملة إلى ثلاث). الافتراضي لهجة سعودية بيضاء.
+القواعد: استعمل الأدوات للإجابة عن أي سؤال يخص الطلبات أو التسليم أو الإيراد أو الشركات ولا تخترع أرقاماً أبداً. أنت للقراءة فقط: إذا طلب تنفيذ تغيير (تغيير حالة طلب، حذف، تعديل سعر، إصدار فاتورة) فقل له بلطف إنك لا تنفذ التغييرات وأرشده للصفحة المناسبة في النظام. لا تكشف أرقاماً مالية لمن ليس لديه صلاحية. المبالغ بالريال السعودي. التاريخ اليوم: ${todayRiyadh()}.`;
+      let messages = [...hist, { role: 'user', content: said }];
+      let reply = '';
+      for (let round = 0; round < 4; round++) {
+        const r = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 600, system, tools, messages }),
+        });
+        if (!r.ok) throw new Error(`ai_http_${r.status}`);
+        const j = await r.json();
+        const uses = (j.content || []).filter((c) => c.type === 'tool_use');
+        if (j.stop_reason !== 'tool_use' || !uses.length) {
+          reply = (j.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('').trim();
+          break;
+        }
+        const results = [];
+        for (const u of uses) {
+          let out; try { out = await runTool(u.name, u.input); } catch (e) { console.error('assistant tool', u.name, e); out = { error: 'tool_failed' }; }
+          results.push({ type: 'tool_result', tool_use_id: u.id, content: JSON.stringify(out).slice(0, 12000) });
+        }
+        messages = [...messages, { role: 'assistant', content: j.content }, { role: 'user', content: results }];
+      }
+      return res.status(200).json({ reply: (reply || 'ما قدرت أجاوب الحين، جرّب مرة ثانية.').slice(0, 1200) });
+    } catch (err) {
+      console.error('api/secure/data (assistant) error', err);
+      return res.status(502).json({ error: 'ai_failed' });
+    }
+  }
+
   // ── مساعد الفني الذكي: يفهم الطلب ويرد، عبر Claude API (مفتاح على السيرفر فقط) ──
   if (resourceKey === 'tech-ai') {
     const sess = getSessionFromRequest(req);
