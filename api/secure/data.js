@@ -182,7 +182,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         deploy: (process.env.VERCEL_GIT_COMMIT_SHA || 'unknown').slice(0, 7),
         env: process.env.VERCEL_ENV || 'unknown',
-        providers: { gateway: !!process.env.AI_GATEWAY_API_KEY, gemini: !!process.env.GEMINI_API_KEY, groq: !!process.env.GROQ_API_KEY, anthropic: !!process.env.ANTHROPIC_API_KEY },
+        providers: { local: !!process.env.LOCAL_AGENT_URL, gateway: !!process.env.AI_GATEWAY_API_KEY, gemini: !!process.env.GEMINI_API_KEY, groq: !!process.env.GROQ_API_KEY, anthropic: !!process.env.ANTHROPIC_API_KEY },
         role: sess.role,
       });
     }
@@ -324,10 +324,11 @@ export default async function handler(req, res) {
     const geminiKey = process.env.GEMINI_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
     const gatewayKey = process.env.AI_GATEWAY_API_KEY;
-    if (!apiKey && !geminiKey && !groqKey && !gatewayKey) return res.status(503).json({ error: 'ai_not_configured' });
+    const localUrl = (process.env.LOCAL_AGENT_URL || '').replace(/\/+$/, '');
+    if (!apiKey && !geminiKey && !groqKey && !gatewayKey && !localUrl) return res.status(503).json({ error: 'ai_not_configured' });
 
     // ── العقل الذكي عبر Gemini (مجاني بمفتاح من Google AI Studio): مستشار نقاش بسياق بيانات المحل ──
-    if (geminiKey || groqKey || gatewayKey) {
+    if (geminiKey || groqKey || gatewayKey || localUrl) {
       try {
         const { text, history } = req.body || {};
         const said = String(text || '').trim().slice(0, 1200);
@@ -354,6 +355,20 @@ export default async function handler(req, res) {
         const errors = [];
         let reply = '';
         let action = null;
+        // ── الوكيل المحلي (Qwen2.5 على جهازك عبر نفق آمن): للمدراء فقط لأنه يملك صلاحية القراءة الكاملة ──
+        const localOk = !!localUrl && ['owner', 'admin', 'manager'].includes(sess.role);
+        const askLocal = async () => {
+          try {
+            const r = await fetch(`${localUrl}/chat`, {
+              method: 'POST', headers: { 'content-type': 'application/json', 'x-token': process.env.LOCAL_AGENT_TOKEN || '' },
+              body: JSON.stringify({ phone: `web-${sess.role}-${sess.name || ''}`.slice(0, 40), text: said }), signal: AbortSignal.timeout(25000),
+            });
+            if (!r.ok) throw new Error(`local_http_${r.status}`);
+            reply = String((await r.json()).reply || '').trim();
+            if (!reply) throw new Error('local_empty');
+          } catch (e) { errors.push(`local:${String(e.message || e).slice(0, 60)}`); }
+        };
+        if (localOk && process.env.LOCAL_AGENT_FIRST === '1') await askLocal();
         // ── المسار الأول: Vercel AI SDK عبر AI Gateway (مفتاح واحد لأي نموذج) ──
         if (gatewayKey) {
           try {
@@ -459,6 +474,7 @@ export default async function handler(req, res) {
             reply = String(j.choices?.[0]?.message?.content || '').trim();
           } catch (e) { errors.push(e.message); console.error('assistant groq', e.message); }
         }
+        if (!reply && localOk && process.env.LOCAL_AGENT_FIRST !== '1') await askLocal();
         if (!reply) return res.status(502).json({ error: 'ai_failed', detail: errors.join(' | ') || `empty_reply(providers:${[gatewayKey && 'gateway', geminiKey && 'gemini', groqKey && 'groq'].filter(Boolean).join('+')})` });
         return res.status(200).json({ reply: reply.slice(0, 2000), ...(action ? { action } : {}) });
       } catch (err) {

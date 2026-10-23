@@ -234,7 +234,7 @@ export default function Assistant() {
         const d = await res.json().catch(() => ({}));
         if (!res.ok) return say(`التشخيص: ${res.status === 401 ? 'انتهت الجلسة — سجّل دخول من جديد' : 'خطأ ' + res.status}`, { error: true });
         const yn = (b) => (b ? '✅ مفعّل' : '❌ غير موجود');
-        return say(`نسخة الموقع المنشورة: ${d.deploy} (${d.env})\nAI Gateway: ${yn(d.providers.gateway)}\nGemini: ${yn(d.providers.gemini)}\nGroq: ${yn(d.providers.groq)}\nClaude: ${yn(d.providers.anthropic)}\nدورك: ${d.role}`);
+        return say(`نسخة الموقع المنشورة: ${d.deploy} (${d.env})\nالوكيل المحلي: ${yn(d.providers.local)}\nAI Gateway: ${yn(d.providers.gateway)}\nGemini: ${yn(d.providers.gemini)}\nGroq: ${yn(d.providers.groq)}\nClaude: ${yn(d.providers.anthropic)}\nدورك: ${d.role}`);
       } catch { return say('تعذّر الاتصال بالخادم.', { error: true }); }
     }
     const norm = normalize(text);

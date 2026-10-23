@@ -1,0 +1,6 @@
+.env
+auth/
+interactions.db
+voices/
+__pycache__/
+node_modules/
