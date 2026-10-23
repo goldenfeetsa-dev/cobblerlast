@@ -2,7 +2,7 @@
 -- بدل تاريخ التسليم. آمن للتكرار، لا يحذف بيانات.
 
 create or replace function public.partner_order_delivery_stamp()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql security definer set search_path = public, extensions as $$
 declare v_terms integer;
 begin
   if NEW.partner_id is null then return NEW; end if;
@@ -21,6 +21,9 @@ begin
   end if;
   return NEW;
 end $$;
+
+-- SECURITY DEFINER لأن التريجر يُشغَّل بصلاحية المستخدم (anon/authenticated) وجدول partners مقفول عنهم
+revoke all on function public.partner_order_delivery_stamp() from public, anon, authenticated;
 
 -- تصحيح الطلبات الموجودة (إن وُجدت): الاستحقاق من تاريخ الاستلام
 update public.orders o

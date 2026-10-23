@@ -20,7 +20,7 @@ const STATUS_CONFIG = {
   pending: { label: 'قيد الانتظار', icon: Clock, class: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
   in_progress: { label: 'جارٍ التنفيذ', icon: Loader2, class: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
   ready: { label: 'جاهز', icon: Package, class: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' },
-  completed: { label: 'مكتمل', icon: CheckCircle2, class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+  completed: { label: 'تم التسليم', icon: CheckCircle2, class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
   cancelled: { label: 'ملغى', icon: XCircle, class: 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
   returned: { label: 'مُسترجع', icon: XCircle, class: 'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
   exchanged: { label: 'مُستبدَل', icon: CheckCircle2, class: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
@@ -135,7 +135,7 @@ export default function Orders() {
             <SelectItem value="pending">قيد الانتظار</SelectItem>
             <SelectItem value="in_progress">جارٍ التنفيذ</SelectItem>
             <SelectItem value="ready">جاهز</SelectItem>
-            <SelectItem value="completed">مكتمل</SelectItem>
+            <SelectItem value="completed">تم التسليم</SelectItem>
             <SelectItem value="cancelled">ملغى</SelectItem>
             <SelectItem value="returned">مُسترجع</SelectItem>
             <SelectItem value="exchanged">مُستبدَل</SelectItem>
@@ -270,7 +270,7 @@ export default function Orders() {
                         رف: {order.shelf_location}
                       </span>
                     )}
-                    {order.status === 'ready' && order.shelf_location && (
+                    {order.status === 'ready' && (
                       <Button
                         size="sm"
                         className="h-8 text-xs bg-emerald-600 dark:bg-emerald-900/70 hover:bg-emerald-700 text-white mr-auto"
