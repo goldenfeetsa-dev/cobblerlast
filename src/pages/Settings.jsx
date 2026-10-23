@@ -24,7 +24,8 @@ export default function Settings() {
     setSaving(true);
     try {
       if (settings.id) {
-        await supabase.from('app_settings').update(settings).eq('id', settings.id);
+        // الضريبة لا تُعطَّل: نثبّتها صراحةً مهما كانت القيمة المحمّلة
+        await supabase.from('app_settings').update({ ...settings, vat_enabled: true }).eq('id', settings.id);
       } else {
         const { data } = await supabase.from('app_settings').insert(settings).select(APP_SETTINGS_SAFE_COLUMNS).single();
         setSettings(data);
@@ -91,9 +92,12 @@ export default function Settings() {
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Receipt className="w-4 h-4" />الفواتير والضريبة</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label>تفعيل ضريبة القيمة المضافة (15%)</Label>
-            <Switch checked={settings.vat_enabled !== false} onCheckedChange={v => upd('vat_enabled', v)} />
+          <div className="flex items-center justify-between rounded-lg border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2">
+            <div>
+              <Label>ضريبة القيمة المضافة (15%)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">مفعّلة دائماً — إصدار الفواتير الضريبية إلزامي نظامياً ولا يمكن إيقافه من الإعدادات.</p>
+            </div>
+            <span className="text-xs font-bold text-emerald-700">إلزامي</span>
           </div>
           <div className="flex items-center justify-between">
             <div>

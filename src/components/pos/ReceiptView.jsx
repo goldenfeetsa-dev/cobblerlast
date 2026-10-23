@@ -49,7 +49,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
   const terms = settings.terms_conditions || '';
   const vatNumber = settings.vat_number || '314151483700003';
   const crNumber = settings.cr_number || '7051288830';
-  const vatEnabled = settings.vat_enabled !== false;
+  const vatEnabled = true; // الضريبة إلزامية — لا تُعطَّل من الإعدادات
   // رقم ضريبي سعودي صحيح: 15 رقم، يبدأ وينتهي بـ 3 — إذا فشل هذا الشرط
   // (فاضي أو خاطئ) فسيولّد الكود أدناه رقم "000000000000000" داخل QR،
   // وهذا بالضبط سبب رفض تطبيق زاتكا للفاتورة. نعرض تنبيهاً للموظف هنا

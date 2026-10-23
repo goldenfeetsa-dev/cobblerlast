@@ -254,7 +254,7 @@ function CobblerTab({ session }) {
     // مثال: يدخل الموظف 25 ← الإجمالي شامل الضريبة يفضل 25 ريال بالظبط
     // (قبل الضريبة ≈ 21.74، الضريبة ≈ 3.26).
     const enteredPrice = parseFloat(form.total_price) || 0;
-    const vatEnabled = shopSettings.vat_enabled !== false;
+    const vatEnabled = true; // الضريبة إلزامية نظامياً (هيئة الزكاة والضريبة) — لا يمكن تعطيلها
     const price = enteredPrice;
     const subtotal = vatEnabled ? parseFloat((price / 1.15).toFixed(2)) : price;
     const vatAmount = vatEnabled ? parseFloat((price - subtotal).toFixed(2)) : 0;
@@ -559,8 +559,8 @@ function CobblerTab({ session }) {
               onChange={e => update('total_price', e.target.value)} placeholder="0.00" required className="text-xl font-bold h-14" />
             {/* معاينة حية: توضّح للموظف السعر قبل الضريبة المُستخرَج من الإجمالي قبل ما يحفظ الطلب */}
             {form.total_price > 0 && (
-              <p className="text-sm font-bold" style={{ color: shopSettings.vat_enabled !== false ? '#059669' : '#6b7280' }}>
-                {shopSettings.vat_enabled !== false
+              <p className="text-sm font-bold" style={{ color: '#059669' }}>
+                {true
                   ? `قبل الضريبة: ${(parseFloat(form.total_price) / 1.15).toFixed(2)} ر.س — الإجمالي (شامل 15%): ${parseFloat(form.total_price).toFixed(2)} ر.س`
                   : `الإجمالي (الضريبة معطّلة): ${parseFloat(form.total_price).toFixed(2)} ر.س`}
               </p>
