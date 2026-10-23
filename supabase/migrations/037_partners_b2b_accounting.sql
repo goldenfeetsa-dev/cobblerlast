@@ -13,6 +13,12 @@
 --  • السداد = فاتورة ضريبية واحدة مجمّعة (sales_invoices) لعدة شنط؛
 --    طلبات الشركات نفسها لا تُبلَّغ فرادى لزاتكا (تفادياً لتكرار الضريبة).
 
+-- ─── 0) إزالة نسخ دوال قديمة بتواقيع مختلفة (وُجدت بالقاعدة الحية بدون جداولها) ──
+-- هذي دوال فقط (لا بيانات). بقاؤها بجانب النسخ الجديدة يسبب لبساً في PostgREST.
+drop function if exists public.partner_admin_create(text);
+drop function if exists public.partner_admin_set_active(uuid, boolean);
+drop function if exists public.partner_orders(text, date);
+
 -- ─── 1) الجداول ─────────────────────────────────────────────────────
 create table if not exists public.partners (
   id                 uuid primary key default gen_random_uuid(),
