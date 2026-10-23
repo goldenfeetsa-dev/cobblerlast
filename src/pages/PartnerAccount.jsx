@@ -3,11 +3,11 @@ import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { QRCodeCanvas } from 'qrcode.react';
-import { Loader2, ArrowRight, Printer, Plus, Trash2, Receipt, Barcode, Wallet, FileText } from 'lucide-react';
+import { Loader2, ArrowRight, Plus, Trash2, Receipt, Barcode, Wallet, FileText } from 'lucide-react';
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
 import { partnerApi } from './PartnersAdmin';
+import { PartnerInvoiceDoc, PartnerStatementDoc } from '@/components/partners/PartnerDocs';
 
 const money = (n) => `${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const day = (d) => (d ? String(d).slice(0, 10) : '—');
@@ -197,8 +197,8 @@ export default function PartnerAccount() {
       )}
       {tab === 'info' && <Info partner={p} canEdit={canEdit} partnerId={id} onDone={refresh} />}
 
-      {showStatement && <StatementModal data={data} onClose={() => setShowStatement(false)} />}
-      {invoiceView && <InvoiceModal inv={invoiceView} onClose={() => setInvoiceView(null)} />}
+      {showStatement && <PartnerStatementDoc data={data} onClose={() => setShowStatement(false)} />}
+      {invoiceView && <PartnerInvoiceDoc inv={invoiceView} onClose={() => setInvoiceView(null)} />}
     </div>
   );
 }
@@ -345,112 +345,6 @@ function Info({ partner, canEdit, partnerId, onDone }) {
       </div>
       {fld('address', 'العنوان')}
       {canEdit && <button disabled={m.isPending} onClick={() => m.mutate()} className="px-4 py-2 rounded-xl text-white text-sm font-bold" style={{ background: '#7c4a1e' }}>حفظ</button>}
-    </div>
-  );
-}
-
-function InvoiceModal({ inv, onClose }) {
-  const items = Array.isArray(inv.items) ? inv.items : [];
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 overflow-auto p-3 print:bg-white print:p-0" onClick={onClose}>
-      <style>{`@media print{body *{visibility:hidden}#partner-invoice,#partner-invoice *{visibility:visible}#partner-invoice{position:absolute;inset:0}}`}</style>
-      <div id="partner-invoice" dir="rtl" onClick={(e) => e.stopPropagation()} className="bg-white max-w-xl mx-auto rounded-2xl p-5 space-y-3 text-sm">
-        <div className="text-center">
-          <div className="font-black text-lg">فاتورة ضريبية</div>
-          <div className="text-xs text-gray-500" dir="ltr">{inv.invoice_number} · {day(inv.created_at)}</div>
-        </div>
-        <div className="rounded-xl bg-gray-50 p-2 text-xs space-y-0.5">
-          <div>العميل: <b>{inv.buyer_company_name}</b></div>
-          {inv.buyer_vat_number && <div>الرقم الضريبي: <span dir="ltr">{inv.buyer_vat_number}</span></div>}
-          {inv.buyer_cr_number && <div>السجل التجاري: <span dir="ltr">{inv.buyer_cr_number}</span></div>}
-          {inv.buyer_address && <div>العنوان: {inv.buyer_address}</div>}
-        </div>
-        <table className="w-full text-xs">
-          <thead><tr className="border-b text-gray-500"><th className="text-right py-1">البند</th><th>الكمية</th><th>السعر</th></tr></thead>
-          <tbody>{items.map((it, k) => (
-            <tr key={k} className="border-b"><td className="py-1">{it.item_name}</td><td className="text-center">{it.qty}</td><td className="text-center">{money(it.sell_price)}</td></tr>
-          ))}</tbody>
-        </table>
-        <div className="space-y-0.5 text-sm">
-          <div className="flex justify-between"><span>المجموع قبل الضريبة</span><b>{money(inv.subtotal)}</b></div>
-          <div className="flex justify-between"><span>ضريبة القيمة المضافة 15%</span><b>{money(inv.vat_amount)}</b></div>
-          <div className="flex justify-between text-base font-black border-t pt-1"><span>الإجمالي</span><span>{money(inv.total)} ر.س</span></div>
-        </div>
-        <div className="flex justify-center">
-          {inv.zatca_qr ? <QRCodeCanvas value={inv.zatca_qr} size={150} level="M" /> : <p className="text-xs text-amber-700">لم يصدر رمز زاتكا بعد (الإبلاغ قيد المعالجة).</p>}
-        </div>
-        <div className="flex gap-2 print:hidden">
-          <button onClick={() => window.print()} className="flex-1 py-2 rounded-xl text-white font-bold flex items-center justify-center gap-1" style={{ background: '#7c4a1e' }}><Printer className="w-4 h-4" />طباعة</button>
-          <button onClick={onClose} className="px-4 py-2 rounded-xl border font-bold">إغلاق</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatementModal({ data, onClose }) {
-  const p = data.partner;
-  const today = data.today;
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [mode, setMode] = useState('all'); // all | paid | unpaid
-  const invNo = Object.fromEntries((data.invoices || []).map((i) => [i.id, i.invoice_number]));
-  const rows = (data.orders || [])
-    .filter((o) => o.status !== 'cancelled' && Number(o.total_price) > 0)
-    .filter((o) => (!from || day(o.created_at) >= from) && (!to || day(o.created_at) <= to))
-    .filter((o) => mode === 'all' || (mode === 'paid') === (o.payment_status === 'paid'))
-    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
-  const sum = (f) => rows.filter(f).reduce((t, o) => t + Number(o.total_price || 0), 0);
-  const paid = sum((o) => o.payment_status === 'paid');
-  const unpaid = sum((o) => o.payment_status !== 'paid');
-  const overdue = sum((o) => o.payment_status !== 'paid' && o.status === 'completed' && o.payment_due_date && day(o.payment_due_date) <= today);
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 overflow-auto p-3 print:bg-white print:p-0" onClick={onClose}>
-      <style>{`@media print{body *{visibility:hidden}#partner-statement,#partner-statement *{visibility:visible}#partner-statement{position:absolute;inset:0}}`}</style>
-      <div id="partner-statement" dir="rtl" onClick={(e) => e.stopPropagation()} className="bg-white max-w-3xl mx-auto rounded-2xl p-5 space-y-3 text-sm">
-        <div className="text-center">
-          <div className="font-black text-lg">كشف حساب — {p.name}</div>
-          <div className="text-xs text-gray-500">بتاريخ {today}{p.vat_number ? ` · الرقم الضريبي ${p.vat_number}` : ''}</div>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center print:hidden text-xs">
-          <label>من <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border rounded px-1 py-1" /></label>
-          <label>إلى <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border rounded px-1 py-1" /></label>
-          {[['all', 'الكل'], ['paid', 'المسدد'], ['unpaid', 'غير المسدد']].map(([k, l]) => (
-            <button key={k} onClick={() => setMode(k)} className={`px-3 py-1 rounded-full border font-bold ${mode === k ? 'bg-amber-800 text-white' : ''}`}>{l}</button>
-          ))}
-        </div>
-        <table className="w-full text-xs">
-          <thead><tr className="border-b text-gray-500 text-right">
-            <th className="py-1">استلام الطلب</th><th>الطلب</th><th>البيان</th><th>موعد السداد</th><th>الحالة</th><th>الفاتورة</th><th>المبلغ</th>
-          </tr></thead>
-          <tbody>{rows.map((o) => {
-            const ok = o.payment_status === 'paid';
-            return (
-              <tr key={o.id} className="border-b align-top">
-                <td className="py-1">{day(o.created_at)}</td>
-                <td dir="ltr">{o.order_number}</td>
-                <td>{o.partner_ref ? `${o.partner_ref} — ` : ''}{o.description}</td>
-                <td>{ok ? '—' : day(o.payment_due_date)}</td>
-                <td className={ok ? 'text-green-700 font-bold' : 'text-red-700 font-bold'}>{ok ? 'مسدد' : 'غير مسدد'}</td>
-                <td dir="ltr">{invNo[o.partner_invoice_id] || '—'}</td>
-                <td className="font-bold">{money(o.total_price)}</td>
-              </tr>
-            );
-          })}</tbody>
-        </table>
-        {rows.length === 0 && <p className="text-center text-gray-500 py-4">لا توجد حركات</p>}
-        <div className="border-t pt-2 space-y-0.5">
-          <div className="flex justify-between"><span>إجمالي المسدد</span><b className="text-green-700">{money(paid)} ر.س</b></div>
-          <div className="flex justify-between"><span>إجمالي غير المسدد</span><b className="text-red-700">{money(unpaid)} ر.س</b></div>
-          <div className="flex justify-between"><span>منه مستحق السداد الآن</span><b>{money(overdue)} ر.س</b></div>
-          <div className="flex justify-between font-black text-base border-t pt-1"><span>إجمالي الحركات</span><span>{money(paid + unpaid)} ر.س</span></div>
-          <p className="text-[11px] text-gray-500">المبالغ شاملة ضريبة القيمة المضافة 15%.</p>
-        </div>
-        <div className="flex gap-2 print:hidden">
-          <button onClick={() => window.print()} className="flex-1 py-2 rounded-xl text-white font-bold flex items-center justify-center gap-1" style={{ background: '#7c4a1e' }}><Printer className="w-4 h-4" />طباعة / حفظ PDF</button>
-          <button onClick={onClose} className="px-4 py-2 rounded-xl border font-bold">إغلاق</button>
-        </div>
-      </div>
     </div>
   );
 }
