@@ -322,11 +322,12 @@ export default async function handler(req, res) {
             const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
               method: 'POST',
               headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
-              body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 900, temperature: 0.7 } }),
+              body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 2048, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } } }),
             });
             if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error(`gemini_http_${r.status}${/ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(t) ? '_AQ_key_unsupported' : ''}`); }
             const j = await r.json();
-            reply = (j.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join('').trim();
+            reply = (j.candidates?.[0]?.content?.parts || []).filter((x) => !x.thought).map((x) => x.text || '').join('').trim();
+            if (!reply) throw new Error(`gemini_empty_${j.candidates?.[0]?.finishReason || j.promptFeedback?.blockReason || 'unknown'}`);
           } catch (e) { errors.push(e.message); console.error('assistant gemini', e.message); }
         }
         if (!reply && groqKey) {
