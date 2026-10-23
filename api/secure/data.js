@@ -28,6 +28,9 @@ const RESOURCES = {
   },
 };
 
+// تطبيع عربي مبسّط للمطابقة (تشكيل/همزات/تاء مربوطة)
+const normalizeAr = (t = '') => String(t).replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase();
+
 export default async function handler(req, res) {
   const resourceKey = String(req.query.resource || '');
 
@@ -183,6 +186,31 @@ export default async function handler(req, res) {
         role: sess.role,
       });
     }
+    // ── نطق الرد بصوت عصبي طبيعي (Microsoft Edge neural — ar-SA-HamedNeural) ──
+    if (req.body && typeof req.body.tts === 'string') {
+      const VOICES = ['ar-SA-HamedNeural', 'ar-SA-ZariyahNeural', 'ar-EG-ShakirNeural', 'ar-EG-SalmaNeural', 'ar-AE-HamdanNeural', 'ar-KW-FahedNeural'];
+      const voice = VOICES.includes(req.body.voice) ? req.body.voice : 'ar-SA-HamedNeural';
+      const txt = req.body.tts.replace(/[<>&]/g, ' ').trim().slice(0, 700);
+      if (!txt) return res.status(400).json({ error: 'missing_text' });
+      try {
+        const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts');
+        const tts = new MsEdgeTTS({ connectionTimeoutMs: 8000, synthesisTimeoutMs: 20000 });
+        await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+        const { audioStream } = tts.toStream(txt);
+        const chunks = [];
+        await new Promise((resolve, reject) => {
+          audioStream.on('data', (d) => chunks.push(d));
+          audioStream.on('close', resolve);
+          audioStream.on('error', reject);
+        });
+        const buf = Buffer.concat(chunks);
+        if (buf.length < 500) throw new Error('empty_audio');
+        return res.status(200).json({ audio: buf.toString('base64'), mime: 'audio/mpeg' });
+      } catch (err) {
+        console.error('api/secure/data (tts) error', err);
+        return res.status(502).json({ error: 'tts_failed', detail: String(err.message || '').slice(0, 80) });
+      }
+    }
     // ── تحويل التسجيل الصوتي إلى نص (Whisper عبر Groq) — بديل لإملاء المتصفح عندما لا يعمل ──
     if (req.body && typeof req.body.stt === 'string') {
       const gk = process.env.GROQ_API_KEY;
@@ -319,24 +347,65 @@ export default async function handler(req, res) {
         const system = `أنت "مساعد إبرة وخيط" — مستشار أعمال ذكي ودود لورشة إصلاح أحذية وحقائب وجلديات في الرياض (إبرة وخيط الإسكافي). تتحدث مع ${sess.name || 'المدير'} (${sess.role}).
 اللهجة: افهم كل اللهجات العربية، وردّ بنفس لهجة المتحدث (الافتراضي سعودية بيضاء). الرد للنطق الصوتي: جمل قصيرة طبيعية، بدون جداول ولا رموز كثيرة.
 دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
-أنت للقراءة والنصح فقط ولا تنفّذ تغييرات؛ التغييرات تتم بأوامر مباشرة مثل «ORD-01002 جاهز». لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
+للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
 تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
         const hist = (Array.isArray(history) ? history : []).slice(-10).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 1200) }));
         const errors = [];
         let reply = '';
+        let action = null;
         if (geminiKey) {
           try {
-            const contents = [...hist.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })), { role: 'user', parts: [{ text: said }] }];
             const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-              method: 'POST',
-              headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
-              body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 2048, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } } }),
-            });
-            if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error(`gemini_http_${r.status}${/ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(t) ? '_AQ_key_unsupported' : ''}`); }
-            const j = await r.json();
-            reply = (j.candidates?.[0]?.content?.parts || []).filter((x) => !x.thought).map((x) => x.text || '').join('').trim();
-            if (!reply) throw new Error(`gemini_empty_${j.candidates?.[0]?.finishReason || j.promptFeedback?.blockReason || 'unknown'}`);
+            const callG = async (body) => {
+              const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+                method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey }, body: JSON.stringify(body),
+              });
+              if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error(`gemini_http_${r.status}${/ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(t) ? '_AQ_key_unsupported' : ''}`); }
+              return r.json();
+            };
+            const textOf = (j) => (j.candidates?.[0]?.content?.parts || []).filter((x) => !x.thought).map((x) => x.text || '').join('').trim();
+            const gen = { maxOutputTokens: 2048, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } };
+            const baseContents = [...hist.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })), { role: 'user', parts: [{ text: said }] }];
+            const wantsWeb = /(ابحث (في )?(الانترنت|النت|جوجل|قوقل|الويب)|دور (في )?(الانترنت|النت|جوجل)|search the web|اخر اخبار|سعر .*(الان|اليوم) في السوق|الطقس|احوال الطقس|منافسين|اسعار المنافسين)/.test(normalizeAr(said));
+            if (wantsWeb) {
+              // بحث جوجل الحقيقي (Grounding) — لا يُدمج مع الدوال بنفس الطلب
+              const j = await callG({ systemInstruction: { parts: [{ text: system }] }, contents: baseContents, tools: [{ google_search: {} }], generationConfig: gen });
+              reply = textOf(j);
+            } else {
+              const fdecl = [
+                { name: 'find_orders', description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو جواله أو الحالة', parameters: { type: 'OBJECT', properties: { query: { type: 'STRING' }, status: { type: 'STRING', enum: ['pending', 'in_progress', 'ready', 'completed', 'cancelled'] }, limit: { type: 'INTEGER' } } } },
+                { name: 'deliveries', description: 'الطلبات غير المسلَّمة المتأخرة أو المستحقة اليوم أو خلال يومين', parameters: { type: 'OBJECT', properties: {} } },
+                { name: 'counts_today', description: 'عدد الطلبات المسجلة اليوم حسب الحالة', parameters: { type: 'OBJECT', properties: {} } },
+                ...(canSeeMoney ? [
+                  { name: 'revenue', description: 'إجمالي الإيراد لفترة (today/week/month)', parameters: { type: 'OBJECT', properties: { period: { type: 'STRING', enum: ['today', 'week', 'month'] } }, required: ['period'] } },
+                  { name: 'partners_due', description: 'مبالغ الشركات غير المسددة والمستحقة', parameters: { type: 'OBJECT', properties: {} } },
+                ] : []),
+                ...(sess.role !== 'accountant' ? [
+                  { name: 'change_order_status', description: 'طلب تغيير حالة طلب إلى جاهز (ready) أو تم التسليم (completed). لا يُنفَّذ إلا بعد تأكيد المستخدم، فاسأله بعدها للتأكيد.', parameters: { type: 'OBJECT', properties: { order_number: { type: 'STRING' }, status: { type: 'STRING', enum: ['ready', 'completed'] } }, required: ['order_number', 'status'] } },
+                ] : []),
+              ];
+              let contents = baseContents;
+              for (let round = 0; round < 4; round++) {
+                const j = await callG({ systemInstruction: { parts: [{ text: system }] }, contents, tools: [{ functionDeclarations: fdecl }], generationConfig: gen });
+                const parts = j.candidates?.[0]?.content?.parts || [];
+                const calls = parts.filter((x) => x.functionCall);
+                if (!calls.length) { reply = textOf(j); if (!reply) throw new Error(`gemini_empty_${j.candidates?.[0]?.finishReason || j.promptFeedback?.blockReason || 'unknown'}`); break; }
+                const responses = [];
+                for (const c of calls) {
+                  const { name, args } = c.functionCall;
+                  let out;
+                  if (name === 'change_order_status') {
+                    const num = String(args?.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                    const st = args?.status === 'completed' ? 'completed' : 'ready';
+                    action = { type: 'set_status', order_number: num, status: st, label: st === 'completed' ? 'تم التسليم' : 'جاهز' };
+                    out = { pending_user_confirmation: true, note: 'لم يتغير شيء بعد؛ اسأل المستخدم يؤكد.' };
+                  } else { try { out = await runTool(name, args); } catch { out = { error: 'tool_failed' }; } }
+                  responses.push({ functionResponse: { name, response: { result: out } } });
+                }
+                contents = [...contents, { role: 'model', parts }, { role: 'user', parts: responses }];
+              }
+            }
+            if (!reply) throw new Error('gemini_empty_unknown');
           } catch (e) { errors.push(e.message); console.error('assistant gemini', e.message); }
         }
         if (!reply && groqKey) {
@@ -353,7 +422,7 @@ export default async function handler(req, res) {
           } catch (e) { errors.push(e.message); console.error('assistant groq', e.message); }
         }
         if (!reply) return res.status(502).json({ error: 'ai_failed', detail: errors.join(' | ') });
-        return res.status(200).json({ reply: reply.slice(0, 2000) });
+        return res.status(200).json({ reply: reply.slice(0, 2000), ...(action ? { action } : {}) });
       } catch (err) {
         console.error('api/secure/data (assistant llm) error', err);
         return res.status(502).json({ error: 'ai_failed', detail: String(err.message || '').slice(0, 120) });

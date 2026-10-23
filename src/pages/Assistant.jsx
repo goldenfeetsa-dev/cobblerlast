@@ -108,6 +108,10 @@ export default function Assistant() {
   const [rate, setRate] = useState(() => { try { return Number(localStorage.getItem('assistant_rate')) || 1; } catch { return 1; } });
   const [live, setLive] = useState(''); // نص الإملاء الحي يظهر بالمحادثة أثناء الكلام
   const [showVoice, setShowVoice] = useState(false);
+  const [hamed, setHamed] = useState(() => { try { return localStorage.getItem('assistant_hamed') !== '0'; } catch { return true; } });
+  useEffect(() => { try { localStorage.setItem('assistant_hamed', hamed ? '1' : '0'); } catch { /* ignore */ } }, [hamed]);
+  const audioRef = useRef(null);
+  const hamedFailed = useRef(false);
   const [useRecorder, setUseRecorder] = useState(() => { try { return localStorage.getItem('assistant_recorder') === '1'; } catch { return false; } });
   useEffect(() => { try { localStorage.setItem('assistant_recorder', useRecorder ? '1' : '0'); } catch { /* ignore */ } }, [useRecorder]);
 
@@ -123,7 +127,23 @@ export default function Assistant() {
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, busy]);
 
-  const speak = (text, onEnd) => {
+  const speak = async (text, onEnd) => {
+    // الصوت العصبي السعودي (Hamed) من السيرفر؛ وإن تعذّر نرجع لصوت المتصفح
+    if (speakOn && hamed && !hamedFailed.current && text) {
+      try {
+        const res = await fetch('/api/secure/data?resource=assistant', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts: speakable(text), voice: 'ar-SA-HamedNeural' }) });
+        const b = await res.json().catch(() => ({}));
+        if (res.ok && b.audio) {
+          try { audioRef.current?.pause(); window.speechSynthesis?.cancel(); } catch { /* ignore */ }
+          const a = new Audio(`data:${b.mime || 'audio/mpeg'};base64,${b.audio}`);
+          a.playbackRate = rate; audioRef.current = a;
+          if (onEnd) { a.onended = onEnd; a.onerror = onEnd; }
+          await a.play();
+          return;
+        }
+        hamedFailed.current = true; // لا نكرر المحاولة طوال الجلسة
+      } catch { hamedFailed.current = true; }
+    }
     try {
       if (!speakOn || !window.speechSynthesis || !text) { onEnd?.(); return; }
       const u = new SpeechSynthesisUtterance(speakable(text));
@@ -168,7 +188,7 @@ export default function Assistant() {
         body: JSON.stringify({ text, history: msgs.slice(1).slice(-10) }),
       });
       const body = await res.json().catch(() => ({}));
-      if (res.ok && body.reply) return { reply: body.reply };
+      if (res.ok && body.reply) return { reply: body.reply, action: body.action };
       if (body.error === 'ai_not_configured') return { code: 'ai_not_configured', msg: 'للنقاش والاستشارة أحتاج «العقل الذكي» مفعّلاً: أضف GEMINI_API_KEY (أو GROQ_API_KEY المجاني) في إعدادات Vercel ثم Redeploy. الأوامر والأرقام تشتغل بدونه.' };
       if (res.status === 401) return { code: 'auth', msg: 'انتهت الجلسة — سجّل دخول من جديد.' };
       const d = String(body.detail || '');
@@ -183,7 +203,21 @@ export default function Assistant() {
     }
   };
 
+  const sayAI = (r) => {
+    const a = r.action;
+    if (a?.type === 'set_status' && a.order_number) {
+      const cmd = { type: 'set_status', order_number: a.order_number, status: a.status, label: a.label };
+      setPending(cmd);
+      return say(`${r.reply}\nأغيّر حالة الطلب ${cmd.order_number} إلى «${cmd.label}»؟ قل «تمام» أو «لا».`, { confirm: cmd });
+    }
+    return say(r.reply);
+  };
+
   const handle = async (text) => {
+    if (/^(خروج|انهاء|إنهاء|مع السلامه|مع السلامة|سلام)$/.test(text.trim())) {
+      try { audioRef.current?.pause(); window.speechSynthesis?.cancel(); } catch { /* ignore */ }
+      return say('مع السلامة! 👋');
+    }
     // ردّ على سؤال تأكيد
     if (pending) {
       const t = normalize(text);
@@ -210,7 +244,7 @@ export default function Assistant() {
     const aiFirst = advisory || ((parsed.type === 'tool' || parsed.type === 'find_orders') && words > 6);
     if (aiFirst) {
       const r = await askAI(text);
-      if (r.reply) return say(r.reply);
+      if (r.reply) return sayAI(r);
       if (advisory || parsed.type === 'unknown') return say(r.msg, { error: true });
     }
     const cmd = parsed;
@@ -235,7 +269,7 @@ export default function Assistant() {
       }
       // ما فهمته محلياً: نجرّب الذكاء الصناعي إن كان مفعّلاً، وإلا نعرض المساعدة
       const r = await askAI(text);
-      if (r.reply) return say(r.reply);
+      if (r.reply) return sayAI(r);
       if (r.code !== 'ai_not_configured') return say(r.msg, { error: true });
       return say('ما فهمت قصدك 🙏 جرّب صيغة ثانية، أو اكتب «مساعدة» وأوريك الأوامر.\n\n' + HELP);
     } catch (e) {
@@ -364,6 +398,7 @@ export default function Assistant() {
             <input type="range" min="0.7" max="1.3" step="0.05" value={rate} onChange={(e) => { setRate(Number(e.target.value)); try { localStorage.setItem('assistant_rate', e.target.value); } catch { /* ignore */ } }} className="flex-1" />
             <button onClick={() => speak('هلا والله، هذا صوتي. طلب رقم ألف واثنين جاهز، والإيراد ألف ومئتين ريال.')} className="border rounded-lg px-3 py-1">تجربة</button>
           </div>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={hamed} onChange={(e) => { hamedFailed.current = false; setHamed(e.target.checked); }} />صوت «حامد» السعودي الطبيعي (من السيرفر) — يرجع تلقائياً لصوت المتصفح إن تعذّر</label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={useRecorder} onChange={(e) => setUseRecorder(e.target.checked)} />استخدم التسجيل بالسيرفر (Whisper) بدل إملاء المتصفح — أدق باللهجات ويعمل في كل المتصفحات (يحتاج GROQ_API_KEY)</label>
           <p className="text-muted-foreground">أفضل صوت مجاني: افتح الموقع من متصفح <b>Microsoft Edge</b> واختر صوت «Natural» (مثل Hamed/Zariyah). في Chrome اختر أصوات Google.</p>
         </div>
