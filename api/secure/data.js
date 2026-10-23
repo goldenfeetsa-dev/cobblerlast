@@ -346,6 +346,36 @@ export default async function handler(req, res) {
         if (error) throw error;
         return { count: (data || []).length, total: +(data || []).reduce((a, o) => a + Number(o.total_price || 0), 0).toFixed(2), orders: data || [] };
       }
+      if (name === 'bookings_upcoming') {
+        const t0 = todayRiyadh();
+        const to = new Date(Date.parse(t0) + (Math.min(parseInt(input.days, 10) || 2, 14)) * 86400000).toISOString().slice(0, 10);
+        const { data, error } = await sb.from('bookings').select('booking_number,customer_name,customer_phone,service_name,booking_date,booking_time,status,booking_type').gte('booking_date', t0).lte('booking_date', to).neq('status', 'cancelled').order('booking_date').order('booking_time').limit(30);
+        if (error) throw error;
+        return data || [];
+      }
+      if (name === 'low_stock') {
+        const { data, error } = await sb.from('inventory_items').select('name,sku,quantity,min_stock,low_stock_alert,unit,supplier_name').eq('is_active', true).limit(1000);
+        if (error) throw error;
+        return (data || []).filter((i) => Number(i.quantity || 0) <= Number(i.min_stock ?? i.low_stock_alert ?? 0)).slice(0, 25);
+      }
+      if (name === 'recent_reviews') {
+        const { data, error } = await sb.from('reviews').select('customer_name,rating,comment,text,service_type,order_number,created_at').order('created_at', { ascending: false }).limit(8);
+        if (error) throw error;
+        const rows = data || [];
+        return { avg_rating: rows.length ? +(rows.reduce((a, r) => a + Number(r.rating || 0), 0) / rows.length).toFixed(2) : null, reviews: rows.map((r) => ({ ...r, comment: String(r.comment || r.text || '').slice(0, 160), text: undefined })) };
+      }
+      if (name === 'zatca_issues' && canSeeMoney) {
+        const [o, i] = await Promise.all([
+          sb.from('orders').select('order_number,zatca_status,zatca_error_category,zatca_retry_count').or('zatca_needs_review.eq.true,zatca_status.eq.REJECTED,zatca_status.eq.FAILED').order('created_at', { ascending: false }).limit(10),
+          sb.from('sales_invoices').select('invoice_number,zatca_status,zatca_error_category,zatca_retry_count').or('zatca_needs_review.eq.true,zatca_status.eq.REJECTED,zatca_status.eq.FAILED').order('created_at', { ascending: false }).limit(10),
+        ]);
+        return { orders: o.data || [], invoices: i.data || [], note: 'تحتاج مراجعة من صفحة الضريبة' };
+      }
+      if (name === 'employee_performance' && canSeeMoney) {
+        const { data, error } = await sb.from('employees').select('name,role,total_orders,total_revenue').eq('is_active', true).order('total_revenue', { ascending: false }).limit(15);
+        if (error) throw error;
+        return data || [];
+      }
       return { error: 'tool_not_available' };
     };
 
@@ -420,7 +450,12 @@ export default async function handler(req, res) {
               counts_today: tool({ description: 'عدد الطلبات المسجلة اليوم حسب الحالة', inputSchema: z.object({}), execute: async () => runTool('counts_today', {}) }),
               order_details: tool({ description: 'تفاصيل طلب كاملة (وصف، ملاحظات، رف، حالة الدفع) برقم الطلب', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => runTool('order_details', a) }),
               customer_lookup: tool({ description: 'بحث عن عميل باسمه أو جواله (عدد طلباته ومستوى الولاء)', inputSchema: z.object({ query: z.string() }), execute: async (a) => runTool('customer_lookup', a) }),
+              bookings_upcoming: tool({ description: 'الحجوزات القادمة اليوم وخلال أيام', inputSchema: z.object({ days: z.number().optional() }), execute: async (a) => runTool('bookings_upcoming', a) }),
+              low_stock: tool({ description: 'أصناف المخزون المنخفضة أو الناقصة', inputSchema: z.object({}), execute: async () => runTool('low_stock', {}) }),
+              recent_reviews: tool({ description: 'آخر تقييمات العملاء ومتوسطها', inputSchema: z.object({}), execute: async () => runTool('recent_reviews', {}) }),
               ...(canSeeMoney ? {
+                zatca_issues: tool({ description: 'فواتير/طلبات زاتكا المرفوضة أو التي تحتاج مراجعة', inputSchema: z.object({}), execute: async () => runTool('zatca_issues', {}) }),
+                employee_performance: tool({ description: 'أداء الموظفين (عدد الطلبات والإيراد)', inputSchema: z.object({}), execute: async () => runTool('employee_performance', {}) }),
                 sales_by_service: tool({ description: 'المبيعات مقسمة حسب نوع القطعة/الخدمة لفترة', inputSchema: z.object({ period: z.enum(['today', 'week', 'month', 'quarter', 'year']) }), execute: async (a) => runTool('sales_by_service', a) }),
                 top_customers: tool({ description: 'أكثر العملاء إنفاقاً', inputSchema: z.object({ limit: z.number().optional() }), execute: async (a) => runTool('top_customers', a) }),
                 expenses_summary: tool({ description: 'ملخص المصروفات حسب التصنيف لفترة', inputSchema: z.object({ period: z.enum(['today', 'week', 'month', 'quarter', 'year']) }), execute: async (a) => runTool('expenses_summary', a) }),
