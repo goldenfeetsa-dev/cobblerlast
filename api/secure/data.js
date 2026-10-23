@@ -261,10 +261,11 @@ export default async function handler(req, res) {
       }
     }
     const geminiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey && !geminiKey) return res.status(503).json({ error: 'ai_not_configured' });
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!apiKey && !geminiKey && !groqKey) return res.status(503).json({ error: 'ai_not_configured' });
 
     // ── العقل الذكي عبر Gemini (مجاني بمفتاح من Google AI Studio): مستشار نقاش بسياق بيانات المحل ──
-    if (geminiKey) {
+    if (geminiKey || groqKey) {
       try {
         const { text, history } = req.body || {};
         const said = String(text || '').trim().slice(0, 1200);
@@ -287,23 +288,41 @@ export default async function handler(req, res) {
 دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
 أنت للقراءة والنصح فقط ولا تنفّذ تغييرات؛ التغييرات تتم بأوامر مباشرة مثل «ORD-01002 جاهز». لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
 تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
-        const contents = [
-          ...(Array.isArray(history) ? history : []).slice(-10).map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: String(m.content || '').slice(0, 1200) }] })),
-          { role: 'user', parts: [{ text: said }] },
-        ];
-        const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
-          body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 900, temperature: 0.7 } }),
-        });
-        if (!r.ok) throw new Error(`gemini_http_${r.status}`);
-        const j = await r.json();
-        const reply = (j.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join('').trim();
-        return res.status(200).json({ reply: (reply || 'ما قدرت أجاوب الحين، جرّب مرة ثانية.').slice(0, 2000) });
+        const hist = (Array.isArray(history) ? history : []).slice(-10).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 1200) }));
+        const errors = [];
+        let reply = '';
+        if (geminiKey) {
+          try {
+            const contents = [...hist.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })), { role: 'user', parts: [{ text: said }] }];
+            const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
+              body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 900, temperature: 0.7 } }),
+            });
+            if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error(`gemini_http_${r.status}${/ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(t) ? '_AQ_key_unsupported' : ''}`); }
+            const j = await r.json();
+            reply = (j.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join('').trim();
+          } catch (e) { errors.push(e.message); console.error('assistant gemini', e.message); }
+        }
+        if (!reply && groqKey) {
+          try {
+            const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json', authorization: `Bearer ${groqKey}` },
+              body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', temperature: 0.7, max_tokens: 900,
+                messages: [{ role: 'system', content: system }, ...hist, { role: 'user', content: said }] }),
+            });
+            if (!r.ok) throw new Error(`groq_http_${r.status}`);
+            const j = await r.json();
+            reply = String(j.choices?.[0]?.message?.content || '').trim();
+          } catch (e) { errors.push(e.message); console.error('assistant groq', e.message); }
+        }
+        if (!reply) return res.status(502).json({ error: 'ai_failed', detail: errors.join(' | ') });
+        return res.status(200).json({ reply: reply.slice(0, 2000) });
       } catch (err) {
-        console.error('api/secure/data (assistant gemini) error', err);
-        return res.status(502).json({ error: 'ai_failed' });
+        console.error('api/secure/data (assistant llm) error', err);
+        return res.status(502).json({ error: 'ai_failed', detail: String(err.message || '').slice(0, 120) });
       }
     }
     if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });

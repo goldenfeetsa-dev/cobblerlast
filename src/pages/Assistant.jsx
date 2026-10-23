@@ -24,7 +24,7 @@ const SUGGEST = ['افتح الشركات', 'وش التسليمات المتأ�
 
 const money = (n) => `${(Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} ر.س`;
 // أسئلة استشارية/نقاش: تذهب مباشرة للذكاء الصناعي (إن كان مفعّلاً) بدل المحرك المحلي
-const ADVISORY = /(اقترح|رايك|رايكم|نصيحه|انصحني|استشير|ناقش|نناقش|كيف ازيد|كيف اطور|كيف احسن|ليش|ليه|لماذا|افضل طريقه|ايش الحل|وش الحل|حل لمشكل|تتوقع|تحليل|حلل|قارن|خطه|فكره|افكار|ساعدني افكر)/;
+const ADVISORY = /(قترح|رايك|رايكم|نصيح|تنصح|انصح|استشير|ناقش|نناقش|كيف ازيد|كيف اطور|كيف احسن|كيف اقلل|كيف اتعامل|ليش|ليه|لماذا|افضل|ايش الحل|وش الحل|حل لمشكل|حلول|مشكله|تتوقع|تحليل|حلل|قارن|خطه|فكره|افكار|ساعدني افكر|وش اسوي|ايش اسوي|شو اعمل|اسوي ايش|ايش رايك|وش رايك|ممكن اسوي|تفكر)/;
 const HELP = `أقدر أسوي لك:
 • «افتح الشركات / الفواتير / الطلبات …» — أفتح الصفحة
 • «ORD-01002 جاهز» أو «سلمت طلب 1002» — أغيّر حالة الطلب (بعد تأكيدك)
@@ -158,6 +158,28 @@ export default function Assistant() {
     }
   };
 
+  const askAI = async (text) => {
+    try {
+      const res = await fetch('/api/secure/data?resource=assistant', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, history: msgs.slice(1).slice(-10) }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.reply) return { reply: body.reply };
+      if (body.error === 'ai_not_configured') return { code: 'ai_not_configured', msg: 'للنقاش والاستشارة أحتاج «العقل الذكي» مفعّلاً: أضف GEMINI_API_KEY (أو GROQ_API_KEY المجاني) في إعدادات Vercel ثم Redeploy. الأوامر والأرقام تشتغل بدونه.' };
+      if (res.status === 401) return { code: 'auth', msg: 'انتهت الجلسة — سجّل دخول من جديد.' };
+      const d = String(body.detail || '');
+      const hint = /AQ_key_unsupported/.test(d)
+        ? 'مفتاح Gemini من النوع الجديد «AQ.» لا تقبله واجهة REST. أنشئ مفتاحاً من Google Cloud Console (Credentials ← Create API key) أو استخدم GROQ_API_KEY المجاني من console.groq.com.'
+        : /_http_(401|403)/.test(d) ? 'المفتاح مرفوض (غير صالح أو غير مفعّل للخدمة). تأكد منه وأعد النشر.'
+        : /_http_429/.test(d) ? 'تجاوزت حد الاستخدام المجاني مؤقتاً — جرّب بعد دقيقة.'
+        : 'تعذّر الاتصال بالعقل الذكي الحين.';
+      return { code: 'ai_failed', msg: `${hint}${d ? `\n(تفصيل فني: ${d})` : ''}` };
+    } catch {
+      return { code: 'net', msg: 'خطأ في الاتصال — تأكد من الإنترنت.' };
+    }
+  };
+
   const handle = async (text) => {
     // ردّ على سؤال تأكيد
     if (pending) {
@@ -168,7 +190,18 @@ export default function Assistant() {
       if (no) { setPending(null); return say('تمام، لغيتها.'); }
       setPending(null);
     }
-    const cmd = ADVISORY.test(normalize(text)) ? { type: 'unknown' } : parseCommand(text);
+    const norm = normalize(text);
+    const words = norm.split(' ').length;
+    const advisory = ADVISORY.test(norm);
+    const parsed = parseCommand(text);
+    // نقاش/استشارة أو جملة طويلة حرّة ← الذكاء الصناعي أولاً؛ فإن لم يتوفر نرجع للمحرك المحلي
+    const aiFirst = advisory || ((parsed.type === 'tool' || parsed.type === 'find_orders') && words > 6);
+    if (aiFirst) {
+      const r = await askAI(text);
+      if (r.reply) return say(r.reply);
+      if (advisory || parsed.type === 'unknown') return say(r.msg, { error: true });
+    }
+    const cmd = parsed;
     try {
       if (cmd.type === 'greet') return say('هلا والله! وش تبي أسوي لك؟ اكتب «مساعدة» وأقولك وش أقدر.');
       if (cmd.type === 'help') return say(HELP);
@@ -189,14 +222,9 @@ export default function Assistant() {
         return say(formatTool(tool, data));
       }
       // ما فهمته محلياً: نجرّب الذكاء الصناعي إن كان مفعّلاً، وإلا نعرض المساعدة
-      const res = await fetch('/api/secure/data?resource=assistant', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, history: msgs.slice(1).slice(-8) }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (res.ok && body.reply) return say(body.reply);
-      if (body.error === 'ai_not_configured' && ADVISORY.test(normalize(text)))
-        return say('للنقاش والاستشارة أحتاج «العقل الذكي» مفعّلاً: أضف GEMINI_API_KEY (مجاني من Google AI Studio) في إعدادات Vercel ثم Redeploy. الأوامر والأرقام تشتغل بدونه.', { error: true });
+      const r = await askAI(text);
+      if (r.reply) return say(r.reply);
+      if (r.code !== 'ai_not_configured') return say(r.msg, { error: true });
       return say('ما فهمت قصدك 🙏 جرّب صيغة ثانية، أو اكتب «مساعدة» وأوريك الأوامر.\n\n' + HELP);
     } catch (e) {
       say(e.message || 'صار خطأ، جرّب مرة ثانية.', { error: true });
