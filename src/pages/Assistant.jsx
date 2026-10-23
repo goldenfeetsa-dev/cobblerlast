@@ -107,6 +107,8 @@ export default function Assistant() {
   const [rate, setRate] = useState(() => { try { return Number(localStorage.getItem('assistant_rate')) || 1; } catch { return 1; } });
   const [live, setLive] = useState(''); // نص الإملاء الحي يظهر بالمحادثة أثناء الكلام
   const [showVoice, setShowVoice] = useState(false);
+  const [useRecorder, setUseRecorder] = useState(() => { try { return localStorage.getItem('assistant_recorder') === '1'; } catch { return false; } });
+  useEffect(() => { try { localStorage.setItem('assistant_recorder', useRecorder ? '1' : '0'); } catch { /* ignore */ } }, [useRecorder]);
 
   useEffect(() => {
     const load = () => {
@@ -240,28 +242,81 @@ export default function Assistant() {
     try { await handle(text); } finally { setBusy(false); }
   };
 
+  // ─── تسجيل صوتي + تحويل لنص بالسيرفر (Whisper): يعمل حتى لو إملاء المتصفح لا يعمل ───
+  const mediaRef = useRef(null);
+  const [recording, setRecording] = useState(false);
+  const startRecording = async () => {
+    try {
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+        return say('جهازك/متصفحك لا يدعم التسجيل الصوتي. استخدم Chrome أو Edge، أو اكتب رسالتك.', { error: true });
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find((m) => MediaRecorder.isTypeSupported?.(m)) || '';
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data?.size) chunks.push(e.data); };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+        const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+        if (blob.size < 1500) return say('ما سمعت صوت واضح — قرّب من المايك وجرّب مرة ثانية.', { error: true });
+        setBusy(true);
+        try {
+          const b64 = await new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(String(fr.result).split(',')[1]); fr.onerror = reject; fr.readAsDataURL(blob); });
+          const res = await fetch('/api/secure/data?resource=assistant', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stt: b64, mime: (blob.type || 'audio/webm').split(';')[0] }),
+          });
+          const body = await res.json().catch(() => ({}));
+          if (res.ok && body.text) { setBusy(false); return send(body.text); }
+          if (body.error === 'stt_not_configured') say('تحويل الصوت لنص من السيرفر غير مفعّل: أضف GROQ_API_KEY (مجاني من console.groq.com) في Vercel ثم Redeploy.', { error: true });
+          else say(`تعذّر تحويل الصوت لنص${body.detail ? ` (${body.detail})` : ''}. جرّب مرة ثانية أو اكتب رسالتك.`, { error: true });
+        } catch { say('خطأ في الاتصال أثناء إرسال التسجيل.', { error: true }); }
+        finally { setBusy(false); }
+      };
+      mediaRef.current = rec;
+      rec.start();
+      setRecording(true);
+      setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 30000); // حد أقصى 30 ثانية
+    } catch (e) {
+      setRecording(false);
+      if (e?.name === 'NotAllowedError' || e?.name === 'SecurityError') say('المايك ممنوع. اضغط أيقونة القفل بجانب رابط الموقع ← المايك ← السماح، ثم أعد تحميل الصفحة.', { error: true });
+      else if (e?.name === 'NotFoundError') say('ما لقيت مايك في جهازك. وصّل سماعة/مايك أو تأكد من إعدادات الصوت.', { error: true });
+      else say(`تعذّر تشغيل المايك: ${e?.message || e?.name || ''}`, { error: true });
+    }
+  };
+
   const toggleMic = () => {
-    if (!SR) { toast.error('متصفحك لا يدعم الإملاء الصوتي — استخدم Chrome أو Edge أو اكتب رسالتك'); return; }
+    if (recording) { mediaRef.current?.stop(); return; }
     if (listening) { recRef.current?.stop(); return; }
+    if (!SR || useRecorder) { startRecording(); return; }
     try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
     const rec = new SR();
     rec.lang = lang; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 5;
-    let finalText = ''; let silence = null; let sent = false;
+    let finalText = ''; let silence = null; let sent = false; let failed = false;
     const finish = () => { if (sent) return; sent = true; clearTimeout(silence); try { rec.stop(); } catch { /* ignore */ } };
     rec.onresult = (e) => {
-      let t = ''; const alts = [];
-      for (let i = 0; i < e.results.length; i++) {
-        t += e.results[i][0].transcript + ' ';
-        if (e.results[i].isFinal) for (let k = 0; k < e.results[i].length; k++) alts.push(e.results[i][k].transcript);
-      }
+      let t = '';
+      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' ';
       setLive(t.trim());
-      finalText = (alts.length && !t.trim().length ? bestAlternative(alts) : t).trim();
+      finalText = t.trim();
       // مثل جيميني: يكتب أثناء كلامك، ويرسل تلقائياً بعد ~1.6 ثانية صمت
       clearTimeout(silence); silence = setTimeout(finish, 1600);
     };
-    rec.onerror = (e) => { setListening(false); setLive(''); if (e.error === 'not-allowed') toast.error('اسمح للمتصفح باستخدام المايك'); else if (e.error === 'no-speech') toast('ما سمعتك — جرّب مرة ثانية'); };
-    rec.onend = () => { clearTimeout(silence); setListening(false); setLive(''); sent = true; if (finalText.trim()) send(finalText.trim()); };
-    recRef.current = rec; setListening(true); setLive(''); rec.start();
+    rec.onerror = (e) => {
+      failed = true; setListening(false); setLive('');
+      const code = e.error;
+      if (code === 'no-speech') return toast('ما سمعتك — جرّب مرة ثانية');
+      if (code === 'aborted') return;
+      if (code === 'not-allowed') return say('المايك ممنوع. اضغط أيقونة القفل بجانب رابط الموقع ← المايك ← السماح، ثم أعد تحميل الصفحة.', { error: true });
+      if (code === 'audio-capture') return say('ما لقيت مايك في جهازك. تأكد أنه موصول ومفعّل.', { error: true });
+      // network / service-not-allowed / language-not-supported ← إملاء المتصفح لا يعمل هنا: نتحول للتسجيل بالسيرفر
+      setUseRecorder(true);
+      say(`إملاء المتصفح لا يعمل عندك (${code}). حوّلت للتسجيل: اضغط المايك مرة ثانية، تكلم، ثم اضغطه لإيقاف التسجيل.`, { error: true });
+    };
+    rec.onend = () => { clearTimeout(silence); setListening(false); setLive(''); sent = true; if (!failed && finalText.trim()) send(finalText.trim()); };
+    try { recRef.current = rec; setListening(true); setLive(''); rec.start(); }
+    catch (e) { setListening(false); setUseRecorder(true); startRecording(); }
   };
   micRef.current = toggleMic;
 
@@ -299,6 +354,7 @@ export default function Assistant() {
             <input type="range" min="0.7" max="1.3" step="0.05" value={rate} onChange={(e) => { setRate(Number(e.target.value)); try { localStorage.setItem('assistant_rate', e.target.value); } catch { /* ignore */ } }} className="flex-1" />
             <button onClick={() => speak('هلا والله، هذا صوتي. طلب رقم ألف واثنين جاهز، والإيراد ألف ومئتين ريال.')} className="border rounded-lg px-3 py-1">تجربة</button>
           </div>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={useRecorder} onChange={(e) => setUseRecorder(e.target.checked)} />استخدم التسجيل بالسيرفر (Whisper) بدل إملاء المتصفح — أدق باللهجات ويعمل في كل المتصفحات (يحتاج GROQ_API_KEY)</label>
           <p className="text-muted-foreground">أفضل صوت مجاني: افتح الموقع من متصفح <b>Microsoft Edge</b> واختر صوت «Natural» (مثل Hamed/Zariyah). في Chrome اختر أصوات Google.</p>
         </div>
       )}
@@ -337,10 +393,10 @@ export default function Assistant() {
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 mt-2">
-        <button type="button" onClick={toggleMic} className={`p-3 rounded-xl text-white ${listening ? 'bg-red-600 animate-pulse' : ''}`} style={listening ? undefined : { background: '#7c4a1e' }} title="تحدث">
-          {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+        <button type="button" onClick={toggleMic} className={`p-3 rounded-xl text-white ${(listening || recording) ? 'bg-red-600 animate-pulse' : ''}`} style={(listening || recording) ? undefined : { background: '#7c4a1e' }} title="تحدث">
+          {(listening || recording) ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
         </button>
-        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={listening ? 'أسمعك…' : 'اكتب أو اضغط المايك وتكلم'} className="flex-1 rounded-xl border px-3 py-2 text-sm bg-background" />
+        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={recording ? 'جاري التسجيل… اضغط المايك لإيقافه' : listening ? 'أسمعك…' : 'اكتب أو اضغط المايك وتكلم'} className="flex-1 rounded-xl border px-3 py-2 text-sm bg-background" />
         <button disabled={busy || !input.trim()} className="p-3 rounded-xl border disabled:opacity-40"><Send className="w-5 h-5" /></button>
       </form>
     </div>

@@ -174,6 +174,30 @@ export default async function handler(req, res) {
     const sess = getSessionFromRequest(req);
     if (!sess) return res.status(401).json({ error: 'unauthenticated' });
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+    // ── تحويل التسجيل الصوتي إلى نص (Whisper عبر Groq) — بديل لإملاء المتصفح عندما لا يعمل ──
+    if (req.body && typeof req.body.stt === 'string') {
+      const gk = process.env.GROQ_API_KEY;
+      if (!gk) return res.status(503).json({ error: 'stt_not_configured' });
+      try {
+        const b64 = req.body.stt;
+        if (b64.length > 4_000_000) return res.status(413).json({ error: 'audio_too_long' });
+        const mime = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/wav'].includes(req.body.mime) ? req.body.mime : 'audio/webm';
+        const ext = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'audio/wav': 'wav' }[mime];
+        const form = new FormData();
+        form.append('file', new Blob([Buffer.from(b64, 'base64')], { type: mime }), `speech.${ext}`);
+        form.append('model', process.env.GROQ_STT_MODEL || 'whisper-large-v3-turbo');
+        form.append('language', 'ar');
+        form.append('temperature', '0');
+        form.append('prompt', 'إبرة وخيط الإسكافي. طلب ORD، فاتورة، الشركات، جاهز، تسليم، باركود، الإيراد، العملاء.');
+        const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', { method: 'POST', headers: { authorization: `Bearer ${gk}` }, body: form });
+        if (!r.ok) throw new Error(`groq_stt_${r.status}`);
+        const j = await r.json();
+        return res.status(200).json({ text: String(j.text || '').trim().slice(0, 1000) });
+      } catch (err) {
+        console.error('api/secure/data (stt) error', err);
+        return res.status(502).json({ error: 'stt_failed', detail: String(err.message || '').slice(0, 80) });
+      }
+    }
     const apiKey = process.env.ANTHROPIC_API_KEY;
     const FINROLES = ['owner', 'admin', 'manager', 'accountant'];
     const canSeeMoney = FINROLES.includes(sess.role);
