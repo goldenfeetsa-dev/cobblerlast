@@ -268,7 +268,8 @@ export default function Assistant() {
     const advisory = ADVISORY.test(norm);
     const parsed = parseCommand(text);
     // نقاش/استشارة أو جملة طويلة حرّة ← الذكاء الصناعي أولاً؛ فإن لم يتوفر نرجع للمحرك المحلي
-    const aiFirst = advisory || ((parsed.type === 'tool' || parsed.type === 'find_orders') && words > 6);
+    // الفهم بالمعنى: كل ما ليس أمراً صريحاً (تغيير حالة/فتح صفحة/باركود/تحية) يذهب للذكاء أولاً؛ والمحرك المحلي احتياط
+    const aiFirst = advisory || parsed.type === 'unknown' || ((parsed.type === 'tool' || parsed.type === 'find_orders') && words > 3);
     if (aiFirst) {
       const r = await askAI(text);
       if (r.reply) return sayAI(r);
