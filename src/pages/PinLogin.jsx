@@ -56,7 +56,11 @@ export default function PinLogin() {
       // الـ PIN فعلياً) يُعرض دائماً كـ"PIN غير صحيح" — يضلّل المستخدم
       // ويخفي المشكلة الحقيقية. نميّز الحين بين خطأ PIN فعلي وأي خطأ آخر.
       if (res.status >= 500 || result.error === 'server_error') {
-        setError(`خطأ بالخادم — حاول مرة ثانية بعد شوي (${res.status})`);
+        setError(
+          result.error === 'config_missing'
+            ? `إعدادات الخادم ناقصة في Vercel: ${(result.missing || []).join('، ')} — أضفها في Environment Variables ثم أعد النشر`
+            : `خطأ بالخادم — حاول مرة ثانية بعد شوي (${res.status})`
+        );
         setPinKey(k => k + 1);
         return;
       }
