@@ -260,6 +260,52 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'tool_failed' });
       }
     }
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey && !geminiKey) return res.status(503).json({ error: 'ai_not_configured' });
+
+    // ── العقل الذكي عبر Gemini (مجاني بمفتاح من Google AI Studio): مستشار نقاش بسياق بيانات المحل ──
+    if (geminiKey) {
+      try {
+        const { text, history } = req.body || {};
+        const said = String(text || '').trim().slice(0, 1200);
+        if (!said) return res.status(400).json({ error: 'missing_text' });
+        // لقطة بيانات حيّة تُعطى للمستشار (المالية فقط لمن يملك الصلاحية)
+        const snap = {};
+        const safe = async (k, fn) => { try { snap[k] = await fn(); } catch { /* تجاهل */ } };
+        await Promise.all([
+          safe('registered_today', () => runTool('counts_today', {})),
+          safe('deliveries_due', async () => { const d = await runTool('deliveries', {}); return { today: d.today, count: d.orders.length, sample: d.orders.slice(0, 12).map((o) => `${o.order_number} ${o.timing}`) }; }),
+          ...(canSeeMoney ? [
+            safe('revenue_today', () => runTool('revenue', { period: 'today' })),
+            safe('revenue_week', () => runTool('revenue', { period: 'week' })),
+            safe('revenue_month', () => runTool('revenue', { period: 'month' })),
+            safe('partners', () => runTool('partners_due', {})),
+          ] : []),
+        ]);
+        const system = `أنت "مساعد إبرة وخيط" — مستشار أعمال ذكي ودود لورشة إصلاح أحذية وحقائب وجلديات في الرياض (إبرة وخيط الإسكافي). تتحدث مع ${sess.name || 'المدير'} (${sess.role}).
+اللهجة: افهم كل اللهجات العربية، وردّ بنفس لهجة المتحدث (الافتراضي سعودية بيضاء). الرد للنطق الصوتي: جمل قصيرة طبيعية، بدون جداول ولا رموز كثيرة.
+دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
+أنت للقراءة والنصح فقط ولا تنفّذ تغييرات؛ التغييرات تتم بأوامر مباشرة مثل «ORD-01002 جاهز». لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
+تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
+        const contents = [
+          ...(Array.isArray(history) ? history : []).slice(-10).map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: String(m.content || '').slice(0, 1200) }] })),
+          { role: 'user', parts: [{ text: said }] },
+        ];
+        const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
+          body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 900, temperature: 0.7 } }),
+        });
+        if (!r.ok) throw new Error(`gemini_http_${r.status}`);
+        const j = await r.json();
+        const reply = (j.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join('').trim();
+        return res.status(200).json({ reply: (reply || 'ما قدرت أجاوب الحين، جرّب مرة ثانية.').slice(0, 2000) });
+      } catch (err) {
+        console.error('api/secure/data (assistant gemini) error', err);
+        return res.status(502).json({ error: 'ai_failed' });
+      }
+    }
     if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });
 
     try {

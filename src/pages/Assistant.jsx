@@ -23,6 +23,8 @@ const DIALECTS = [
 const SUGGEST = ['افتح الشركات', 'وش التسليمات المتأخرة؟', 'كم إيراد اليوم؟', 'مين الشركات اللي عليها مبالغ؟', 'مساعدة'];
 
 const money = (n) => `${(Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} ر.س`;
+// أسئلة استشارية/نقاش: تذهب مباشرة للذكاء الصناعي (إن كان مفعّلاً) بدل المحرك المحلي
+const ADVISORY = /(اقترح|رايك|رايكم|نصيحه|انصحني|استشير|ناقش|نناقش|كيف ازيد|كيف اطور|كيف احسن|ليش|ليه|لماذا|افضل طريقه|ايش الحل|وش الحل|حل لمشكل|تتوقع|تحليل|حلل|قارن|خطه|فكره|افكار|ساعدني افكر)/;
 const HELP = `أقدر أسوي لك:
 • «افتح الشركات / الفواتير / الطلبات …» — أفتح الصفحة
 • «ORD-01002 جاهز» أو «سلمت طلب 1002» — أغيّر حالة الطلب (بعد تأكيدك)
@@ -64,6 +66,29 @@ function formatTool(tool, d) {
   return 'تم.';
 }
 
+// نص صالح للنطق: يقرأ «ORD-01002» كـ«طلب رقم 1002» والمبالغ كـ«ريال» ويتجاهل الرموز
+function speakable(t) {
+  return String(t)
+    .replace(/ORD-0*(\d+)/gi, 'طلب رقم $1')
+    .replace(/INV-0*(\d+)/gi, 'فاتورة رقم $1')
+    .replace(/(\d[\d,.]*)\s*ر\.س/g, '$1 ريال')
+    .replace(/[•*_#`✅👌🙏⏰⚠️]/g, ' ')
+    .replace(/\n+/g, '. ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+// ترتيب الأصوات العربية: الطبيعية/العصبية (Edge «Natural»، Google) أولاً
+function rankVoice(v) {
+  const n = `${v.name} ${v.voiceURI}`.toLowerCase();
+  let sc = 0;
+  if (/natural|neural|online/.test(n)) sc += 50;
+  if (/google/.test(n)) sc += 30;
+  if (/hamed|zariyah|naayf|salma|shakir|laila|maged|tarik|hoda/.test(n)) sc += 10;
+  if (v.lang?.toLowerCase().startsWith('ar-sa')) sc += 8;
+  if (!v.localService) sc += 5;
+  return sc;
+}
+
 export default function Assistant() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -77,14 +102,31 @@ export default function Assistant() {
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('assistant_lang') || 'ar-SA'; } catch { return 'ar-SA'; } });
   const recRef = useRef(null);
   const endRef = useRef(null);
+  const [voices, setVoices] = useState([]);
+  const [voiceURI, setVoiceURI] = useState(() => { try { return localStorage.getItem('assistant_voice') || ''; } catch { return ''; } });
+  const [rate, setRate] = useState(() => { try { return Number(localStorage.getItem('assistant_rate')) || 1; } catch { return 1; } });
+  const [live, setLive] = useState(''); // نص الإملاء الحي يظهر بالمحادثة أثناء الكلام
+  const [showVoice, setShowVoice] = useState(false);
+
+  useEffect(() => {
+    const load = () => {
+      const all = (window.speechSynthesis?.getVoices?.() || []).filter((v) => v.lang?.toLowerCase().startsWith('ar'));
+      setVoices(all.sort((a, b) => rankVoice(b) - rankVoice(a)));
+    };
+    load();
+    if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = load;
+    return () => { if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, busy]);
 
   const speak = (text, onEnd) => {
     try {
       if (!speakOn || !window.speechSynthesis || !text) { onEnd?.(); return; }
-      const u = new SpeechSynthesisUtterance(text.replace(/[*_#`•]/g, ''));
-      u.lang = lang;
+      const u = new SpeechSynthesisUtterance(speakable(text));
+      const v = voices.find((x) => x.voiceURI === voiceURI) || voices[0];
+      if (v) { u.voice = v; u.lang = v.lang; } else u.lang = lang;
+      u.rate = rate; u.pitch = 1;
       if (onEnd) { u.onend = onEnd; u.onerror = onEnd; }
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
@@ -126,7 +168,7 @@ export default function Assistant() {
       if (no) { setPending(null); return say('تمام، لغيتها.'); }
       setPending(null);
     }
-    const cmd = parseCommand(text);
+    const cmd = ADVISORY.test(normalize(text)) ? { type: 'unknown' } : parseCommand(text);
     try {
       if (cmd.type === 'greet') return say('هلا والله! وش تبي أسوي لك؟ اكتب «مساعدة» وأقولك وش أقدر.');
       if (cmd.type === 'help') return say(HELP);
@@ -153,6 +195,8 @@ export default function Assistant() {
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok && body.reply) return say(body.reply);
+      if (body.error === 'ai_not_configured' && ADVISORY.test(normalize(text)))
+        return say('للنقاش والاستشارة أحتاج «العقل الذكي» مفعّلاً: أضف GEMINI_API_KEY (مجاني من Google AI Studio) في إعدادات Vercel ثم Redeploy. الأوامر والأرقام تشتغل بدونه.', { error: true });
       return say('ما فهمت قصدك 🙏 جرّب صيغة ثانية، أو اكتب «مساعدة» وأوريك الأوامر.\n\n' + HELP);
     } catch (e) {
       say(e.message || 'صار خطأ، جرّب مرة ثانية.', { error: true });
@@ -169,24 +213,27 @@ export default function Assistant() {
   };
 
   const toggleMic = () => {
-    if (!SR) { toast.error('متصفحك لا يدعم الإملاء الصوتي — استخدم Chrome أو اكتب رسالتك'); return; }
+    if (!SR) { toast.error('متصفحك لا يدعم الإملاء الصوتي — استخدم Chrome أو Edge أو اكتب رسالتك'); return; }
     if (listening) { recRef.current?.stop(); return; }
     try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
     const rec = new SR();
-    rec.lang = lang; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 5;
-    let finalText = '';
+    rec.lang = lang; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 5;
+    let finalText = ''; let silence = null; let sent = false;
+    const finish = () => { if (sent) return; sent = true; clearTimeout(silence); try { rec.stop(); } catch { /* ignore */ } };
     rec.onresult = (e) => {
       let t = ''; const alts = [];
       for (let i = 0; i < e.results.length; i++) {
-        t += e.results[i][0].transcript;
+        t += e.results[i][0].transcript + ' ';
         if (e.results[i].isFinal) for (let k = 0; k < e.results[i].length; k++) alts.push(e.results[i][k].transcript);
       }
-      setInput(t);
-      finalText = alts.length ? bestAlternative(alts) : t;
+      setLive(t.trim());
+      finalText = (alts.length && !t.trim().length ? bestAlternative(alts) : t).trim();
+      // مثل جيميني: يكتب أثناء كلامك، ويرسل تلقائياً بعد ~1.6 ثانية صمت
+      clearTimeout(silence); silence = setTimeout(finish, 1600);
     };
-    rec.onerror = (e) => { setListening(false); if (e.error === 'not-allowed') toast.error('اسمح للمتصفح باستخدام المايك'); };
-    rec.onend = () => { setListening(false); if (finalText.trim()) send(finalText); };
-    recRef.current = rec; setListening(true); rec.start();
+    rec.onerror = (e) => { setListening(false); setLive(''); if (e.error === 'not-allowed') toast.error('اسمح للمتصفح باستخدام المايك'); else if (e.error === 'no-speech') toast('ما سمعتك — جرّب مرة ثانية'); };
+    rec.onend = () => { clearTimeout(silence); setListening(false); setLive(''); sent = true; if (finalText.trim()) send(finalText.trim()); };
+    recRef.current = rec; setListening(true); setLive(''); rec.start();
   };
   micRef.current = toggleMic;
 
@@ -203,11 +250,30 @@ export default function Assistant() {
             className="text-xs border rounded-lg px-2 py-1 bg-background" title="لهجة الإملاء الصوتي">
             {DIALECTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
+          <button onClick={() => setShowVoice(!showVoice)} className="text-xs border rounded-lg px-2 py-2" title="إعدادات الصوت">🎙 الصوت</button>
           <button onClick={() => { setSpeakOn(!speakOn); window.speechSynthesis?.cancel(); }} className="p-2 rounded-lg border" title="نطق الردود">
             {speakOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
         </div>
       </div>
+
+      {showVoice && (
+        <div className="rounded-xl border bg-card p-3 mb-2 space-y-2 text-xs">
+          <div className="flex gap-2 items-center">
+            <span className="shrink-0">الصوت</span>
+            <select value={voiceURI || voices[0]?.voiceURI || ''} onChange={(e) => { setVoiceURI(e.target.value); try { localStorage.setItem('assistant_voice', e.target.value); } catch { /* ignore */ } }} className="flex-1 border rounded-lg px-2 py-1 bg-background">
+              {voices.length === 0 && <option value="">لا توجد أصوات عربية على جهازك</option>}
+              {voices.map((v) => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang}){/natural|neural|online/i.test(v.name) ? ' ⭐' : ''}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2 items-center">
+            <span className="shrink-0">السرعة</span>
+            <input type="range" min="0.7" max="1.3" step="0.05" value={rate} onChange={(e) => { setRate(Number(e.target.value)); try { localStorage.setItem('assistant_rate', e.target.value); } catch { /* ignore */ } }} className="flex-1" />
+            <button onClick={() => speak('هلا والله، هذا صوتي. طلب رقم ألف واثنين جاهز، والإيراد ألف ومئتين ريال.')} className="border rounded-lg px-3 py-1">تجربة</button>
+          </div>
+          <p className="text-muted-foreground">أفضل صوت مجاني: افتح الموقع من متصفح <b>Microsoft Edge</b> واختر صوت «Natural» (مثل Hamed/Zariyah). في Chrome اختر أصوات Google.</p>
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto space-y-2 rounded-2xl border bg-card p-3">
         {msgs.map((m, i) => (
@@ -222,6 +288,9 @@ export default function Assistant() {
             </div>
           </div>
         ))}
+        {listening && (
+          <div className="flex justify-start"><div className="max-w-[85%] rounded-2xl px-3 py-2 text-sm bg-primary/70 text-primary-foreground">{live || 'أسمعك…'}<span className="inline-block w-1.5 h-4 mr-1 align-middle bg-current animate-pulse" /></div></div>
+        )}
         {busy && <div className="flex justify-end"><div className="bg-muted rounded-2xl px-3 py-2"><Loader2 className="w-4 h-4 animate-spin" /></div></div>}
         <div ref={endRef} />
       </div>
