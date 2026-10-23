@@ -49,12 +49,21 @@ export default function PartnersAdmin() {
     <div dir="rtl" className="max-w-3xl mx-auto p-4 space-y-5">
       <div>
         <h1 className="text-xl font-black">الشركات (حسابات الجملة)</h1>
-        <p className="text-sm text-gray-500">أسعار خاصة لكل شركة، فواتير ضريبية مجمّعة، وسداد بعد التسليم</p>
+        <p className="text-sm text-gray-500">أسعار خاصة لكل شركة، فواتير ضريبية مجمّعة، وسداد بعد استلام الطلب</p>
       </div>
+
+      {partners.some((p) => Number(p.soon_count) > 0) && (
+        <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-3 text-sm font-bold text-amber-800 space-y-1">
+          <div>⏰ تنبيه: مبالغ يحل سدادها خلال يومين</div>
+          {partners.filter((p) => Number(p.soon_count) > 0).map((p) => (
+            <div key={p.id} className="text-xs font-normal">{p.name}: {p.soon_count} شنطة — {money(p.soon_total)}</div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-3">
-          <div className="text-xs text-red-700 font-bold">مستحق السداد الآن (مرّ على تسليمها للشركة المدة المتفق عليها)</div>
+          <div className="text-xs text-red-700 font-bold">مستحق السداد الآن (مرّ على استلام الطلب المدة المتفق عليها)</div>
           <div className="text-lg font-black text-red-700">{money(totalDue)}</div>
         </div>
         <div className="rounded-2xl border bg-white p-3">
