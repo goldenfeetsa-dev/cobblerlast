@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { 
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings, Moon, Sun,
@@ -94,7 +93,12 @@ export default function Sidebar() {
   // للمستخدم وكأن الصفحة "علّقت" وما تستجيب.
   useEffect(() => {
     setMobileOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
+  useEffect(() => {
+    const close = () => setMobileOpen(false);
+    window.addEventListener('popstate', close);
+    return () => window.removeEventListener('popstate', close);
+  }, []);
 
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const toggleDark = () => {
@@ -224,32 +228,29 @@ export default function Sidebar() {
 
       {/* Mobile overlay — تنزلق القائمة من اليمين (مطابقة لاتجاه RTL)
           بدل اليسار، عشان تفتح من نفس جهة زر الهمبرغر ولا تربك المستخدم */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <div className="lg:hidden fixed inset-0 z-50">
-            <motion.div
-              className="absolute inset-0 bg-black/50"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.aside
-              className="absolute right-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 }}
-            >
-              <button onClick={() => setMobileOpen(false)} className="absolute top-4 left-4 p-1 text-sidebar-foreground/50">
-                <X className="w-5 h-5" />
-              </button>
-              {sidebarContent}
-            </motion.aside>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* القائمة تُزال فوراً عند الإغلاق (بدون AnimatePresence): كان انتظار انتهاء حركة الخروج
+          يعلّق القائمة والطبقة الخلفية مفتوحة على بعض الجوالات فتحجب كل شيء */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-[60]">
+          <style>{`@keyframes navIn{from{transform:translateX(100%)}to{transform:translateX(0)}}@keyframes navFade{from{opacity:0}to{opacity:1}}`}</style>
+          <div
+            className="absolute inset-0 bg-black/50"
+            style={{ animation: 'navFade .2s ease-out' }}
+            onClick={() => setMobileOpen(false)}
+            onTouchEnd={() => setMobileOpen(false)}
+          />
+          <aside
+            className="absolute right-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col"
+            style={{ animation: 'navIn .25s cubic-bezier(.32,.72,0,1)' }}
+            onClickCapture={(e) => { if (e.target.closest && e.target.closest('a')) setMobileOpen(false); }}
+          >
+            <button onClick={() => setMobileOpen(false)} className="absolute top-4 left-4 p-1 text-sidebar-foreground/50">
+              <X className="w-5 h-5" />
+            </button>
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex fixed right-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex-col z-50">
