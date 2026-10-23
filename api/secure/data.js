@@ -174,6 +174,15 @@ export default async function handler(req, res) {
     const sess = getSessionFromRequest(req);
     if (!sess) return res.status(401).json({ error: 'unauthenticated' });
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+    // ── تشخيص: أي مزوّدات مفعّلة على هذا النشر + رقم النسخة المنشورة (بدون كشف أي مفتاح) ──
+    if (req.body && req.body.diag === true) {
+      return res.status(200).json({
+        deploy: (process.env.VERCEL_GIT_COMMIT_SHA || 'unknown').slice(0, 7),
+        env: process.env.VERCEL_ENV || 'unknown',
+        providers: { gemini: !!process.env.GEMINI_API_KEY, groq: !!process.env.GROQ_API_KEY, anthropic: !!process.env.ANTHROPIC_API_KEY },
+        role: sess.role,
+      });
+    }
     // ── تحويل التسجيل الصوتي إلى نص (Whisper عبر Groq) — بديل لإملاء المتصفح عندما لا يعمل ──
     if (req.body && typeof req.body.stt === 'string') {
       const gk = process.env.GROQ_API_KEY;
@@ -386,7 +395,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ reply: (reply || 'ما قدرت أجاوب الحين، جرّب مرة ثانية.').slice(0, 1200) });
     } catch (err) {
       console.error('api/secure/data (assistant) error', err);
-      return res.status(502).json({ error: 'ai_failed' });
+      return res.status(502).json({ error: 'ai_failed', detail: `anthropic:${String(err.message || '').slice(0, 80)}` });
     }
   }
 
