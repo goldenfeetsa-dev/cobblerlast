@@ -18,8 +18,10 @@ export const APP_SETTINGS_SAFE_COLUMNS = 'id, shop_name, vat_number, cr_number, 
 function createEntity(tableName) {
   return {
     async list(orderBy = '-created_at', limit = 200, columns = '*') {
-      const col = orderBy.startsWith('-') ? orderBy.slice(1) : orderBy;
+      let col = orderBy.startsWith('-') ? orderBy.slice(1) : orderBy;
       const asc = !orderBy.startsWith('-');
+      // app_settings ما فيه عمود created_at (يسبب 400 من PostgREST) — نرتّب بـ updated_at
+      if (tableName === 'app_settings' && col === 'created_at') col = 'updated_at';
       const { data, error } = await supabase
         .from(tableName)
         .select(columns)
