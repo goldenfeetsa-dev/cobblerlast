@@ -9,6 +9,12 @@ import { logAudit } from '@/lib/auditLog';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
 import { parseCommand, normalize, STATUS_AR } from '@/lib/assistantNlu';
 
+// أفضل تفسير من بدائل التعرف الصوتي: أول بديل يفهمه المحرك، وإلا الأول
+function bestAlternative(alts) {
+  for (const a of alts) { const t = parseCommand(a).type; if (t !== 'unknown' && t !== 'empty') return a; }
+  return alts[0] || '';
+}
+
 const SR = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
 const DIALECTS = [
   ['ar-SA', 'سعودي'], ['ar-EG', 'مصري'], ['ar-AE', 'إماراتي/خليجي'], ['ar-JO', 'شامي'],
@@ -74,17 +80,23 @@ export default function Assistant() {
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, busy]);
 
-  const speak = (text) => {
+  const speak = (text, onEnd) => {
     try {
-      if (!speakOn || !window.speechSynthesis || !text) return;
-      const u = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g, ''));
+      if (!speakOn || !window.speechSynthesis || !text) { onEnd?.(); return; }
+      const u = new SpeechSynthesisUtterance(text.replace(/[*_#`•]/g, ''));
       u.lang = lang;
+      if (onEnd) { u.onend = onEnd; u.onerror = onEnd; }
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
     } catch { /* ignore */ }
   };
 
-  const say = (content, extra = {}) => { setMsgs((m0) => [...m0, { role: 'assistant', content, ...extra }]); speak(content); };
+  const micRef = useRef(null);
+  const say = (content, extra = {}) => {
+    setMsgs((m0) => [...m0, { role: 'assistant', content, ...extra }]);
+    // سؤال تأكيد: بعد ما ينطقه نفتح المايك تلقائياً عشان تجاوب «تمام/لا» بصوتك
+    speak(content, extra.confirm && SR ? () => setTimeout(() => micRef.current?.(), 300) : undefined);
+  };
 
   const confirmSetStatus = async (cmd) => {
     try {
@@ -161,17 +173,22 @@ export default function Assistant() {
     if (listening) { recRef.current?.stop(); return; }
     try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
     const rec = new SR();
-    rec.lang = lang; rec.interimResults = true; rec.continuous = false;
+    rec.lang = lang; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 5;
     let finalText = '';
     rec.onresult = (e) => {
-      let t = '';
-      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-      finalText = t; setInput(t);
+      let t = ''; const alts = [];
+      for (let i = 0; i < e.results.length; i++) {
+        t += e.results[i][0].transcript;
+        if (e.results[i].isFinal) for (let k = 0; k < e.results[i].length; k++) alts.push(e.results[i][k].transcript);
+      }
+      setInput(t);
+      finalText = alts.length ? bestAlternative(alts) : t;
     };
     rec.onerror = (e) => { setListening(false); if (e.error === 'not-allowed') toast.error('اسمح للمتصفح باستخدام المايك'); };
     rec.onend = () => { setListening(false); if (finalText.trim()) send(finalText); };
     recRef.current = rec; setListening(true); rec.start();
   };
+  micRef.current = toggleMic;
 
   const last = [...msgs].reverse().find((m) => m.role === 'assistant' && !m.error);
   const copy = () => { navigator.clipboard?.writeText(last?.content || ''); toast.success('تم النسخ'); };

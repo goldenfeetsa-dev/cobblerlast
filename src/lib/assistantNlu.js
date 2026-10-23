@@ -11,7 +11,68 @@ export function normalize(t = '') {
     .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
     .replace(/\s+/g, ' ').trim().toLowerCase();
 }
-const has = (t, words) => words.some((w) => t.includes(w));
+// مسافة التحرير (لتصحيح أخطاء التعرف الصوتي: «الفواتير» ← «الفواتر»)
+function lev(a, b) {
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (Math.abs(m - n) > 2) return 3;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+const has = (t, words) => {
+  const toks = t.split(' ');
+  return words.some((w) => {
+    if (t.includes(w)) return true;
+    if (w.includes(' ') || w.length < 4) return false;          // العبارات والكلمات القصيرة: تطابق حرفي فقط
+    const base = (x) => x.replace(/^(لل|ال|ل|ب|وال)/, '');
+    const bw = base(w);
+    if (bw.length < 4) return false;
+    const tol = bw.length >= 6 ? 2 : 1;
+    return toks.some((k) => { const bk = base(k); return bk.length >= 3 && lev(bk, bw) <= tol; });
+  });
+};
+
+// ─── معجم الأرقام المنطوقة (اللهجات): «ألف واثنين» ← 1002، «واحد صفر صفر اثنين» ← 1002 ───
+const UNITS = { صفر: 0, زيرو: 0, واحد: 1, واحده: 1, وحده: 1, اثنين: 2, اثنان: 2, اثنتين: 2, ثنتين: 2, اتنين: 2, ثلاثه: 3, تلاته: 3, ثلاث: 3, تلات: 3, اربعه: 4, اربع: 4, اربعا: 4, خمسه: 5, خمس: 5, خمسا: 5, سته: 6, ست: 6, سبعه: 7, سبع: 7, سبعا: 7, ثمانيه: 8, تمانيه: 8, ثماني: 8, ثمان: 8, تمان: 8, تسعه: 9, تسع: 9, تسعا: 9 };
+const TEENS = { عشره: 10, عشر: 10, احدعشر: 11, اثنعشر: 12, اطنعشر: 12, ثلاثهعشر: 13, اربعهعشر: 14, خمسهعشر: 15, سبعهعشر: 17, تسعهعشر: 19 };
+const TENS = { عشرين: 20, عشرون: 20, ثلاثين: 30, تلاتين: 30, اربعين: 40, خمسين: 50, ستين: 60, سبعين: 70, ثمانين: 80, تمانين: 80, تسعين: 90 };
+const HUND = { مئه: 100, ميه: 100, مايه: 100, مائه: 100, مئتين: 200, ميتين: 200, ثلاثمئه: 300, تلتمئه: 300, ثلثمئه: 300, اربعمئه: 400, ربعمئه: 400, خمسمئه: 500, خمسميه: 500, ستمئه: 600, سبعمئه: 700, ثمانمئه: 800, تسعمئه: 900 };
+const THOU = { الف: 1000, الفين: 2000, الاف: 1000 };
+const NUMW = new Set([...Object.keys(UNITS), ...Object.keys(TEENS), ...Object.keys(TENS), ...Object.keys(HUND), ...Object.keys(THOU)]);
+const stripAnd = (w) => (w.startsWith('و') && w.length > 3 && NUMW.has(w.slice(1)) ? w.slice(1) : w);
+const valOf = (w) => UNITS[w] ?? TEENS[w] ?? TENS[w] ?? HUND[w] ?? THOU[w];
+
+export function numberWordsToDigits(text) {
+  const toks = text.split(' ');
+  const out = [];
+  for (let i = 0; i < toks.length;) {
+    const w0 = stripAnd(toks[i]);
+    if (!NUMW.has(w0)) { out.push(toks[i]); i++; continue; }
+    // اجمع سلسلة كلمات رقمية
+    const run = [];
+    while (i < toks.length) {
+      const w = stripAnd(toks[i]);
+      if (toks[i] === 'و' && NUMW.has(stripAnd(toks[i + 1] || ''))) { i++; continue; }
+      if (!NUMW.has(w)) break;
+      run.push(w); i++;
+    }
+    const allUnits = run.every((w) => w in UNITS);
+    if (allUnits && run.length >= 2) { out.push(run.map((w) => UNITS[w]).join('')); continue; }   // أرقام متتابعة: واحد صفر صفر اثنين
+    let total = 0, cur = 0;
+    for (const w of run) {
+      if (w === 'الفين') { total += 2000; }
+      else if (w in THOU) { total += (cur || 1) * 1000; cur = 0; }
+      else cur += valOf(w);
+    }
+    out.push(String(total + cur));
+  }
+  return out.join(' ');
+}
 
 export const PAGES = [
   { path: '/pos', words: ['لوحه التحكم', 'الرئيسيه', 'الداشبورد', 'dashboard'], label: 'لوحة التحكم' },
@@ -31,11 +92,12 @@ export const PAGES = [
 
 /** رقم الطلب: ORD-01002 أو "طلب 1002" أو "رقم 1002" */
 export function extractOrderNumber(raw) {
-  const t = normalize(raw);
+  // «اوردر/اورد/ord» منطوقة ← ord ، ثم الأرقام المنطوقة ← أرقام
+  const t = numberWordsToDigits(normalize(raw).split(' ').map((k) => (['اوردر', 'اورد', 'اوردار', 'اودر', 'ordr', 'order'].includes(k) ? 'ord' : k)).join(' '));
   let m = t.match(/ord[\s-]?(\d{1,6})/);
   if (!m) m = t.match(/(?:طلب|رقم|الطلب|رقمه)\s*(?:رقم\s*)?(\d{1,6})\b/);
   if (!m) return null;
-  return `ORD-${String(m[1]).padStart(5, '0')}`;
+  return `ORD-${String(parseInt(m[1], 10)).padStart(5, '0')}`;
 }
 
 /** يرجع { type, ... } أو { type:'unknown' } */
