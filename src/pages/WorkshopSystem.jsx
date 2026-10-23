@@ -234,7 +234,7 @@ function SettlementTab({ items, session }) {
 
   const totalWorkshopCost = settleItems.reduce((s, si) => s + (si.total_cost || 0), 0);
 
-  const monthSales = salesInvoices.filter(inv => inv.month_key === selectedMonth);
+  const monthSales = salesInvoices.filter(inv => inv.month_key === selectedMonth && !(Array.isArray(inv.items) && inv.items.some(it => it && it.order_id))); // فواتير الشركات تغطي طلبات محسوبة أصلاً
   const totalProductRevenue = monthSales.reduce((s, inv) => s + (inv.subtotal || 0), 0);
   const totalProductCost = monthSales.reduce((s, inv) => s + (inv.cost_total || 0), 0);
 
@@ -243,7 +243,6 @@ function SettlementTab({ items, session }) {
   // فما ندخل تكلفة إضافية هنا حتى لا نطرحها مرتين.
   const monthRepairs = repairOrders.filter(o => {
     if (!o.created_at) return false;
-    if (o.partner_invoice_id) return false; // إيراد طلبات الشركات المسدّدة داخل فاتورتها (sales_invoices)
     return format(new Date(o.created_at), 'yyyy-MM') === selectedMonth;
   });
   const totalRepairRevenue = monthRepairs.reduce((s, o) => s + (o.subtotal ?? (o.total_price || 0) / 1.15), 0);

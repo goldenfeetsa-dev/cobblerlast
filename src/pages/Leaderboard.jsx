@@ -77,7 +77,7 @@ export default function Leaderboard() {
   // (مبيعاته)، مو على أساس طلبات إصلاح ما دخل فيها أصلاً
   const { data: salesInvoices = [] } = useQuery({
     queryKey: ['sales-invoices-leaderboard'],
-    queryFn: () => db.SalesInvoice.list('-created_at', 1000, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at'),
+    queryFn: () => db.SalesInvoice.list('-created_at', 1000, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at, items'),
     initialData: [],
   });
 

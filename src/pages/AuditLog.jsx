@@ -80,7 +80,7 @@ export default function AuditLog() {
   // إيراد فعلي للمتجر مثل طلبات الإصلاح تماماً
   const { data: salesInvoices = [], isLoading: salesLoading } = useQuery({
     queryKey: ['sales-invoices-audit'],
-    queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at'),
+    queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at, items'),
   });
 
   // سجل النشاط الحقيقي — كل حركة (إنشاء/تعديل/حذف) مسجّلة بمعرفة مين

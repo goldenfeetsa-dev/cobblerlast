@@ -36,8 +36,7 @@ export default function Invoices() {
   });
 
   const merged = useMemo(() => {
-    // طلبات الشركات المفوترة لها فاتورة مجمّعة ضمن salesInvoices — نخفي الطلب حتى لا يظهر فاتورتين
-    const repairRows = orders.filter(o => !o.partner_invoice_id).map(o => ({
+    const repairRows = orders.map(o => ({
       id: `order-${o.id}`,
       kind: 'repair',
       number: o.order_number,

@@ -18,11 +18,12 @@ const NON_REVENUE_STATUSES = new Set(['cancelled', 'returned']);
  * يحوّل طلبات الإصلاح (Order) وفواتير البيع (SalesInvoice) إلى قائمة
  * واحدة موحّدة من العمليات، كل عملية فيها: الفرع، الموظف، المبلغ، النوع.
  */
+export function isPartnerInvoice(inv) {
+  return Array.isArray(inv?.items) && inv.items.some(it => it && it.order_id);
+}
+
 export function unifyTransactions(orders = [], salesInvoices = []) {
-  // طلب شركة سُدّد بفاتورة مجمّعة (partner_invoice_id) إيراده محسوب في الفاتورة نفسها
-  // ضمن salesInvoices — نستبعده هنا وإلا يُحتسب مرتين (الطلب + الفاتورة).
   const fromOrders = (orders || [])
-    .filter(o => !o.partner_invoice_id)
     .filter(o => !NON_REVENUE_STATUSES.has(o.status))
     .map(o => ({
       id: `order-${o.id}`,
@@ -41,7 +42,9 @@ export function unifyTransactions(orders = [], salesInvoices = []) {
       raw: o,
     }));
 
-  const fromSales = (salesInvoices || []).map(inv => ({
+  // فاتورة الشركة المجمّعة تغطي طلبات موجودة أصلاً في قائمة الطلبات (كل بند فيها يحمل order_id).
+  // الطلبات تبقى ظاهرة وتُحسب، والفاتورة تبقى موجودة بصفحة الفواتير لكن لا تُحسب ثانيةً في الإيراد.
+  const fromSales = (salesInvoices || []).filter(inv => !isPartnerInvoice(inv)).map(inv => ({
     id: `sale-${inv.id}`,
     kind: 'sale', // بيع منتج
     number: inv.invoice_number,

@@ -71,7 +71,7 @@ function BranchCard({ branchName, orders }) {
   const inbound  = orders.filter(o => ['pending','in_progress'].includes(o.status)).length;
   const outbound = orders.filter(o => o.status === 'ready').length;
   const done     = orders.filter(o => o.status === 'completed').length;
-  const revenue  = orders.reduce((s, o) => s + (o.partner_invoice_id ? 0 : (o.total_price || 0)), 0); // طلب الشركة المسدّد يُحسب بفاتورته
+  const revenue  = orders.reduce((s, o) => s + (o.total_price || 0), 0);
   const productivity = orders.length ? Math.round((done / orders.length) * 100) : 0;
 
   return (

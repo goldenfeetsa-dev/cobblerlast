@@ -67,7 +67,7 @@ export default function Dashboard() {
   // كاملاً من الإيراد الفعلي لأي فرع يبيع منتجات وليس فقط يصلّح
   const { data: allSalesInvoices, isFetching: fInv } = useQuery({
     queryKey: ['sales-invoices-dashboard'],
-    queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at'),
+    queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at, items'),
     initialData: [],
   });
 
