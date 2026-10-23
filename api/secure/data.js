@@ -306,6 +306,46 @@ export default async function handler(req, res) {
         const { data, error } = await sb.rpc('partner_admin_list'); if (error) throw error;
         return (data || []).map((p) => ({ name: p.name, unpaid_total: p.unpaid_total, due_now_total: p.due_total, due_now_count: p.due_count, due_soon_total: p.soon_total || 0 }));
       }
+      const periodFrom = (period) => {
+        const t0 = todayRiyadh();
+        const days = { today: 0, week: 6, month: 29, quarter: 89, year: 364 }[period] ?? 29;
+        return `${new Date(Date.parse(t0) - days * 86400000).toISOString().slice(0, 10)}T00:00:00+03:00`;
+      };
+      if (name === 'order_details') {
+        const num = String(input.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+        const { data, error } = await sb.from('orders').select('order_number,customer_name,customer_phone,item_type,description,notes,status,payment_status,paid,shelf_location,delivery_date,created_at,delivered_at,quantity,employee_name' + (canSeeMoney ? ',total_price,payment_method' : '')).eq('order_number', num).limit(1);
+        if (error) throw error;
+        return data?.[0] || { found: false };
+      }
+      if (name === 'customer_lookup') {
+        const t = String(input.query || '').replace(/[%,()]/g, '').trim().slice(0, 40);
+        if (!t) return { error: 'empty_query' };
+        const { data, error } = await sb.from('customers').select('name,phone,city,total_orders,loyalty_tier,stamps' + (canSeeMoney ? ',total_spent' : '')).or(`name.ilike.%${t}%,phone.ilike.%${t}%`).limit(8);
+        if (error) throw error;
+        return data || [];
+      }
+      if (name === 'sales_by_service' && canSeeMoney) {
+        const { data, error } = await sb.from('orders').select('item_type,total_price').gte('created_at', periodFrom(input.period)).neq('status', 'cancelled').is('partner_id', null).limit(5000);
+        if (error) throw error;
+        const m = {}; (data || []).forEach((o) => { const k = o.item_type || 'غير محدد'; m[k] = m[k] || { count: 0, total: 0 }; m[k].count++; m[k].total += Number(o.total_price || 0); });
+        return { period: input.period || 'month', note: 'طلبات الأفراد فقط', by_item: Object.entries(m).map(([k, v]) => ({ item: k, count: v.count, total: +v.total.toFixed(2) })).sort((a, b) => b.total - a.total).slice(0, 12) };
+      }
+      if (name === 'top_customers' && canSeeMoney) {
+        const { data, error } = await sb.from('customers').select('name,phone,total_orders,total_spent').order('total_spent', { ascending: false }).limit(Math.min(parseInt(input.limit, 10) || 5, 10));
+        if (error) throw error;
+        return data || [];
+      }
+      if (name === 'expenses_summary' && canSeeMoney) {
+        const { data, error } = await sb.from('expenses').select('category,amount').gte('created_at', periodFrom(input.period)).limit(5000);
+        if (error) throw error;
+        const m = {}; let tot = 0; (data || []).forEach((e) => { const a = Number(e.amount || 0); tot += a; m[e.category || 'أخرى'] = (m[e.category || 'أخرى'] || 0) + a; });
+        return { period: input.period || 'month', total: +tot.toFixed(2), by_category: Object.entries(m).map(([k, v]) => ({ category: k, total: +v.toFixed(2) })).sort((a, b) => b.total - a.total) };
+      }
+      if (name === 'unpaid_orders' && canSeeMoney) {
+        const { data, error } = await sb.from('orders').select('order_number,customer_name,customer_phone,total_price,status,payment_status').is('partner_id', null).neq('status', 'cancelled').neq('payment_status', 'paid').order('created_at', { ascending: false }).limit(20);
+        if (error) throw error;
+        return { count: (data || []).length, total: +(data || []).reduce((a, o) => a + Number(o.total_price || 0), 0).toFixed(2), orders: data || [] };
+      }
       return { error: 'tool_not_available' };
     };
 
@@ -378,7 +418,13 @@ export default async function handler(req, res) {
               find_orders: tool({ description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو جواله أو الحالة', inputSchema: z.object({ query: z.string().optional(), status: z.enum(['pending', 'in_progress', 'ready', 'completed', 'cancelled']).optional(), limit: z.number().optional() }), execute: async (a) => runTool('find_orders', a) }),
               deliveries: tool({ description: 'الطلبات غير المسلَّمة المتأخرة أو المستحقة اليوم أو خلال يومين', inputSchema: z.object({}), execute: async () => runTool('deliveries', {}) }),
               counts_today: tool({ description: 'عدد الطلبات المسجلة اليوم حسب الحالة', inputSchema: z.object({}), execute: async () => runTool('counts_today', {}) }),
+              order_details: tool({ description: 'تفاصيل طلب كاملة (وصف، ملاحظات، رف، حالة الدفع) برقم الطلب', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => runTool('order_details', a) }),
+              customer_lookup: tool({ description: 'بحث عن عميل باسمه أو جواله (عدد طلباته ومستوى الولاء)', inputSchema: z.object({ query: z.string() }), execute: async (a) => runTool('customer_lookup', a) }),
               ...(canSeeMoney ? {
+                sales_by_service: tool({ description: 'المبيعات مقسمة حسب نوع القطعة/الخدمة لفترة', inputSchema: z.object({ period: z.enum(['today', 'week', 'month', 'quarter', 'year']) }), execute: async (a) => runTool('sales_by_service', a) }),
+                top_customers: tool({ description: 'أكثر العملاء إنفاقاً', inputSchema: z.object({ limit: z.number().optional() }), execute: async (a) => runTool('top_customers', a) }),
+                expenses_summary: tool({ description: 'ملخص المصروفات حسب التصنيف لفترة', inputSchema: z.object({ period: z.enum(['today', 'week', 'month', 'quarter', 'year']) }), execute: async (a) => runTool('expenses_summary', a) }),
+                unpaid_orders: tool({ description: 'طلبات الأفراد غير المدفوعة وإجماليها', inputSchema: z.object({}), execute: async () => runTool('unpaid_orders', {}) }),
                 revenue: tool({ description: 'إجمالي الإيراد لفترة', inputSchema: z.object({ period: z.enum(['today', 'week', 'month']) }), execute: async (a) => runTool('revenue', a) }),
                 partners_due: tool({ description: 'مبالغ الشركات غير المسددة والمستحقة', inputSchema: z.object({}), execute: async () => runTool('partners_due', {}) }),
               } : {}),
