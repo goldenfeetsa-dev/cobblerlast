@@ -73,7 +73,7 @@ export default function AuditLog() {
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders-audit'],
-    queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at'),
+    queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at, partner_invoice_id'),
   });
 
   // فواتير بيع المنتجات — كانت مفقودة بالكامل من هذي اللوحة سابقاً، مع أنها

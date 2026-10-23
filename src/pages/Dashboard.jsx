@@ -59,7 +59,7 @@ export default function Dashboard() {
 
   const { data: allOrders, isFetching: fOrders } = useQuery({
     queryKey: ['orders', 'dashboard'],
-    queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at'),
+    queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at, partner_invoice_id'),
     initialData: [],
   });
 

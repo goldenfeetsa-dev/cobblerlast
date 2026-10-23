@@ -69,7 +69,7 @@ export default function Leaderboard() {
 
   const { data: orders = [] } = useQuery({
     queryKey: ['orders-leaderboard'],
-    queryFn: () => db.Order.list('-created_at', 1000, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at'),
+    queryFn: () => db.Order.list('-created_at', 1000, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at, partner_invoice_id'),
     initialData: [],
   });
 

@@ -19,7 +19,10 @@ const NON_REVENUE_STATUSES = new Set(['cancelled', 'returned']);
  * واحدة موحّدة من العمليات، كل عملية فيها: الفرع، الموظف، المبلغ، النوع.
  */
 export function unifyTransactions(orders = [], salesInvoices = []) {
+  // طلب شركة سُدّد بفاتورة مجمّعة (partner_invoice_id) إيراده محسوب في الفاتورة نفسها
+  // ضمن salesInvoices — نستبعده هنا وإلا يُحتسب مرتين (الطلب + الفاتورة).
   const fromOrders = (orders || [])
+    .filter(o => !o.partner_invoice_id)
     .filter(o => !NON_REVENUE_STATUSES.has(o.status))
     .map(o => ({
       id: `order-${o.id}`,

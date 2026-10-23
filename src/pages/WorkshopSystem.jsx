@@ -243,6 +243,7 @@ function SettlementTab({ items, session }) {
   // فما ندخل تكلفة إضافية هنا حتى لا نطرحها مرتين.
   const monthRepairs = repairOrders.filter(o => {
     if (!o.created_at) return false;
+    if (o.partner_invoice_id) return false; // إيراد طلبات الشركات المسدّدة داخل فاتورتها (sales_invoices)
     return format(new Date(o.created_at), 'yyyy-MM') === selectedMonth;
   });
   const totalRepairRevenue = monthRepairs.reduce((s, o) => s + (o.subtotal ?? (o.total_price || 0) / 1.15), 0);
