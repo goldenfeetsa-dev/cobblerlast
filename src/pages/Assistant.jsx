@@ -182,6 +182,21 @@ export default function Assistant() {
     }
   };
 
+  const confirmUpdate = async (cmd) => {
+    try {
+      const found = await db.Order.filter({ order_number: cmd.order_number }, '-created_at', 1);
+      const order = found?.[0];
+      if (!order) return say(`ما لقيت الطلب ${cmd.order_number}.`, { error: true });
+      const changes = cmd.type === 'add_note'
+        ? { notes: [order.notes, `[المساعد] ${cmd.note}`].filter(Boolean).join('\n') }
+        : { delivery_date: cmd.delivery_date };
+      await db.Order.update(order.id, changes);
+      logAudit({ action: 'update', page: 'المساعد الذكي', entity: 'order', entity_id: order.id, details: { order_number: order.order_number, changes } });
+      qc.invalidateQueries({ queryKey: ['orders'] });
+      say(`تمام ✅ سجلتها على الطلب ${order.order_number}.`);
+    } catch (e) { say(`ما قدرت أنفّذ: ${e.message}`, { error: true }); }
+  };
+
   const askAI = async (text) => {
     try {
       const res = await fetch('/api/secure/data?resource=assistant', {
@@ -206,6 +221,17 @@ export default function Assistant() {
 
   const sayAI = (r) => {
     const a = r.action;
+    if (a?.type === 'new_order') {
+      try { sessionStorage.setItem('assistant_order_draft', JSON.stringify(a.draft)); } catch { /* ignore */ }
+      say(`${r.reply}\nأفتح لك نموذج الطلب معبّأً للمراجعة.`);
+      setTimeout(() => navigate('/new-order'), 900);
+      return;
+    }
+    if (a?.type === 'add_note' || a?.type === 'set_delivery') {
+      const label = a.type === 'add_note' ? `أضيف ملاحظة «${a.note}»` : `أغيّر موعد التسليم إلى ${a.delivery_date}`;
+      setPending(a);
+      return say(`${r.reply}\n${label} على الطلب ${a.order_number}؟ قل «تمام» أو «لا».`, { confirm: a });
+    }
     if (a?.type === 'set_status' && a.order_number) {
       const cmd = { type: 'set_status', order_number: a.order_number, status: a.status, label: a.label };
       setPending(cmd);
@@ -224,7 +250,7 @@ export default function Assistant() {
       const t = normalize(text);
       const yes = ['ايوه', 'ايوا', 'نعم', 'اكيد', 'تمام', 'ايه', 'اي', 'ماشي', 'اوكي', 'ok', 'yes', 'نفذ', 'اوافق', 'طيب', 'يلا', 'ايوة'].some((w) => t === w || t.startsWith(w + ' '));
       const no = ['لا', 'لأ', 'الغ', 'الغي', 'لا تنفذ', 'كنسل', 'cancel', 'no', 'مو'].some((w) => t === normalize(w) || t.startsWith(normalize(w) + ' '));
-      if (yes) { const c = pending; setPending(null); return confirmSetStatus(c); }
+      if (yes) { const c = pending; setPending(null); return c.type === 'set_status' ? confirmSetStatus(c) : confirmUpdate(c); }
       if (no) { setPending(null); return say('تمام، لغيتها.'); }
       setPending(null);
     }

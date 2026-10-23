@@ -429,6 +429,32 @@ export default async function handler(req, res) {
                 partners_due: tool({ description: 'مبالغ الشركات غير المسددة والمستحقة', inputSchema: z.object({}), execute: async () => runTool('partners_due', {}) }),
               } : {}),
               ...(sess.role !== 'accountant' ? {
+                prepare_new_order: tool({
+                  description: 'تجهيز طلب جديد: يفتح نموذج الطلب معبّأً للمراجعة والحفظ من المستخدم (لا يُحفظ تلقائياً). اطلب اسم العميل وجواله ونوع القطعة على الأقل.',
+                  inputSchema: z.object({ customer_name: z.string(), customer_phone: z.string().optional(), item_type: z.enum(['shoes', 'bag', 'dress', 'suit', 'jacket', 'pants', 'shirt', 'other']).optional(), description: z.string().optional(), total_price: z.number().optional(), delivery_date: z.string().optional().describe('YYYY-MM-DD'), notes: z.string().optional() }),
+                  execute: async (a) => {
+                    const d = { customer_name: String(a.customer_name || '').slice(0, 80), customer_phone: String(a.customer_phone || '').replace(/[^\d+]/g, '').slice(0, 15), item_type: a.item_type || 'shoes', description: String(a.description || '').slice(0, 300), total_price: a.total_price > 0 ? String(a.total_price) : '', delivery_date: /^\d{4}-\d{2}-\d{2}$/.test(a.delivery_date || '') ? a.delivery_date : '', notes: String(a.notes || '').slice(0, 300) };
+                    action = { type: 'new_order', draft: d };
+                    return { ok: true, note: 'سيُفتح نموذج الطلب للمراجعة؛ قل للمستخدم أن يراجع ويحفظ.' };
+                  },
+                }),
+                add_order_note: tool({
+                  description: 'إضافة ملاحظة لطلب موجود (تُنفَّذ بعد تأكيد المستخدم)',
+                  inputSchema: z.object({ order_number: z.string(), note: z.string() }),
+                  execute: async (a) => {
+                    action = { type: 'add_note', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), note: String(a.note || '').slice(0, 300) };
+                    return { pending_user_confirmation: true };
+                  },
+                }),
+                set_delivery_date: tool({
+                  description: 'تغيير موعد تسليم طلب (تُنفَّذ بعد تأكيد المستخدم)',
+                  inputSchema: z.object({ order_number: z.string(), delivery_date: z.string().describe('YYYY-MM-DD') }),
+                  execute: async (a) => {
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(a.delivery_date || '')) return { error: 'bad_date' };
+                    action = { type: 'set_delivery', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), delivery_date: a.delivery_date };
+                    return { pending_user_confirmation: true };
+                  },
+                }),
                 change_order_status: tool({
                   description: 'طلب تغيير حالة طلب إلى جاهز (ready) أو تم التسليم (completed). لا يُنفَّذ إلا بعد تأكيد المستخدم، فاسأله للتأكيد.',
                   inputSchema: z.object({ order_number: z.string(), status: z.enum(['ready', 'completed']) }),

@@ -85,6 +85,18 @@ function CobblerTab({ session }) {
     is_b2b: false, buyer_company_name: '', buyer_vat_number: '', buyer_cr_number: '', buyer_address: '',
   });
 
+  // مسودة جاهزة من المساعد الذكي: تعبئة النموذج للمراجعة فقط، والحفظ يتم من المستخدم
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('assistant_order_draft');
+      if (!raw) return;
+      sessionStorage.removeItem('assistant_order_draft');
+      const d = JSON.parse(raw);
+      setForm((f) => ({ ...f, customer_name: d.customer_name || '', customer_phone: d.customer_phone || '', delivery_date: d.delivery_date || '', total_price: d.total_price || '', notes: d.notes || '' }));
+      setPieces([{ ...newPiece(), item_type: d.item_type || 'shoes', description: d.description || '' }]);
+    } catch { /* تجاهل */ }
+  }, []);
+
   const { data: customers } = useQuery({
     queryKey: ['customers'], queryFn: () => db.Customer.list(), initialData: [],
   });
