@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseApi';
 import { logAudit } from '@/lib/auditLog';
+import { clearSession } from '@/lib/sessionStore';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
 import { parseCommand, normalize, STATUS_AR } from '@/lib/assistantNlu';
 
@@ -137,7 +138,7 @@ export default function Assistant() {
 
   const micRef = useRef(null);
   const say = (content, extra = {}) => {
-    setMsgs((m0) => [...m0, { role: 'assistant', content, ...extra }]);
+    setMsgs((m0) => [...m0, { role: 'assistant', content, ...(String(content).includes('انتهت الجلسة') ? { relogin: true } : {}), ...extra }]);
     // سؤال تأكيد: بعد ما ينطقه نفتح المايك تلقائياً عشان تجاوب «تمام/لا» بصوتك
     speak(content, extra.confirm && SR ? () => setTimeout(() => micRef.current?.(), 300) : undefined);
   };
@@ -363,6 +364,10 @@ export default function Assistant() {
         {msgs.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
             <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground' : m.error ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-muted'}`}>{m.content}
+              {m.relogin && (
+                <button onClick={() => { clearSession(); fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {}); navigate('/login', { replace: true }); }}
+                  className="block mt-2 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold">تسجيل دخول من جديد</button>
+              )}
               {m.confirm && pending && pending === m.confirm && (
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => send('تمام')} className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold">تأكيد</button>
