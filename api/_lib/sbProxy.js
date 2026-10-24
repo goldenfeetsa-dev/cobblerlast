@@ -128,8 +128,20 @@ export async function handleSbProxy(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
   const url = new URL(req.url, 'http://x');
-  const path = String(url.searchParams.get('p') || '').replace(/^\/+/, '');
-  const rawParts = (url.search || '').replace(/^\?/, '').split('&').filter((s) => s && !/^(resource|p)=/.test(s));
+  // Vercel قد يُلحق متغير المسار (:path*) كمعامل إضافي؛ نستنتج المسار من أي معامل قيمته تبدأ بـ rest/ storage/ functions/
+  const isPathVal = (v) => /^(rest|storage|functions)\/v1\//.test(v);
+  let path = String(url.searchParams.get('p') || '');
+  if (!isPathVal(path)) { for (const [, v] of url.searchParams) { if (isPathVal(v)) { path = v; break; } } }
+  path = path.replace(/^\/+/, '');
+  const rawParts = (url.search || '').replace(/^\?/, '').split('&').filter((s) => {
+    if (!s) return false;
+    const eq = s.indexOf('=');
+    const key = decodeURIComponent(s.slice(0, eq < 0 ? s.length : eq));
+    const val = eq < 0 ? '' : decodeURIComponent(s.slice(eq + 1).replace(/\+/g, ' '));
+    if (key === 'resource' || key === 'p') return false;
+    if (isPathVal(val)) return false; // معامل المسار المُلحق من Vercel
+    return true;
+  });
   const q = new URLSearchParams(rawParts.join('&'));
   const method = req.method;
   const ip = String(req.headers['x-forwarded-for'] || '').split(',').pop().trim() || 'ip';
