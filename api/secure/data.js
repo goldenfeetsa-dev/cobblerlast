@@ -32,6 +32,23 @@ const RESOURCES = {
 // تطبيع عربي مبسّط للمطابقة (تشكيل/همزات/تاء مربوطة)
 const normalizeAr = (t = '') => String(t).replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase();
 
+// اختيار نموذج Groq المتاح فعلاً لحسابك (النماذج تتغير): نقرأ القائمة ونختار الأفضل المدعوم بالأدوات
+let _groqModel = { v: '', t: 0 };
+const GROQ_PREF = ['openai/gpt-oss-120b', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'llama-3.3-70b-versatile', 'qwen/qwen3-32b', 'meta-llama/llama-4-scout-17b-16e-instruct', 'openai/gpt-oss-20b', 'llama-3.1-8b-instant'];
+async function groqModel() {
+  if (process.env.GROQ_MODEL) return process.env.GROQ_MODEL;
+  if (_groqModel.v && Date.now() - _groqModel.t < 600000) return _groqModel.v;
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/models', { headers: { authorization: `Bearer ${process.env.GROQ_API_KEY || ''}` }, signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const ids = ((await r.json()).data || []).filter((m) => m.active !== false).map((m) => m.id);
+      const pick = GROQ_PREF.find((m) => ids.includes(m)) || ids.find((i) => !/whisper|guard|tts|prompt-guard|safeguard|compound|distil/i.test(i));
+      if (pick) { _groqModel = { v: pick, t: Date.now() }; return pick; }
+    }
+  } catch { /* نرجع للافتراضي */ }
+  return GROQ_PREF[0];
+}
+
 // دليل اللهجات: الورشة فيها مصري (فنيون)، سعودي (إدارة)، ويمني (كاشير) — الرد دائماً بلهجة المتحدث
 const dialectGuide = (role) => `اللهجات في الورشة: الفنيون غالباً مصريون، والمدير سعودي، والكاشير يمني. افهم الثلاثة وغيرها، وردّ بنفس لهجة المتحدث وبكلمات بسيطة.${
   role === 'staff' ? ' المتحدث الآن غالباً فني مصري: ردّ بالمصرية البسيطة (مثل: تمام، دلوقتي، خلاص، ماشي، حاضر).'
@@ -54,7 +71,7 @@ async function llmChat({ system, messages, json = false, maxTokens = 400 }) {
   }
   if (process.env.GROQ_API_KEY) {
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', temperature: 0.4, max_tokens: maxTokens, ...(json ? { response_format: { type: 'json_object' } } : {}), messages: [{ role: 'system', content: system }, ...messages] }) });
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: await groqModel(), temperature: 0.4, max_tokens: maxTokens, ...(json ? { response_format: { type: 'json_object' } } : {}), messages: [{ role: 'system', content: system }, ...messages] }) });
       if (!r.ok) throw new Error(`groq_${r.status}`);
       const t = String((await r.json()).choices?.[0]?.message?.content || '').trim();
       if (t) return t;
@@ -337,7 +354,7 @@ export default async function handler(req, res) {
         reply = '';
         try {
           if (process.env.GROQ_API_KEY) {
-            const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', max_tokens: 200, temperature: 0.5, messages: [{ role: 'system', content: sys }, { role: 'user', content: raw }] }) });
+            const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: await groqModel(), max_tokens: 200, temperature: 0.5, messages: [{ role: 'system', content: sys }, { role: 'user', content: raw }] }) });
             if (r.ok) reply = String((await r.json()).choices?.[0]?.message?.content || '').trim();
           } else if (process.env.AI_GATEWAY_API_KEY) {
             const { generateText } = await import('ai');
@@ -371,6 +388,7 @@ export default async function handler(req, res) {
         await Promise.all([
           timed('groq', async () => (await fetch('https://api.groq.com/openai/v1/models', { headers: { authorization: `Bearer ${process.env.GROQ_API_KEY || ''}` }, signal: AbortSignal.timeout(8000) })).status),
           timed('gemini', async () => (await fetch('https://generativelanguage.googleapis.com/v1beta/models', { headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY || '' }, signal: AbortSignal.timeout(8000) })).status),
+          timed('groq_model', async () => groqModel()),
           timed('ai_sdk', async () => { await import('ai'); await import('@ai-sdk/groq'); return 'تحميل ناجح'; }),
         ]);
       }
@@ -799,7 +817,7 @@ ${dialectGuide(sess.role)}
               } : {}),
             };
             let model = process.env.AI_MODEL || 'google/gemini-2.5-flash';
-            if (!gatewayKey) { const { createGroq } = await import('@ai-sdk/groq'); model = createGroq({ apiKey: groqKey })(process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'); }
+            if (!gatewayKey) { const { createGroq } = await import('@ai-sdk/groq'); model = createGroq({ apiKey: groqKey })(await groqModel()); }
             const out = await generateText({
               model,
               system,
@@ -874,7 +892,7 @@ ${dialectGuide(sess.role)}
             const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
               method: 'POST',
               headers: { 'content-type': 'application/json', authorization: `Bearer ${groqKey}` },
-              body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', temperature: 0.7, max_tokens: 900,
+              body: JSON.stringify({ model: await groqModel(), temperature: 0.7, max_tokens: 900,
                 messages: [{ role: 'system', content: system }, ...hist, { role: 'user', content: said }] }),
             });
             if (!r.ok) throw new Error(`groq_http_${r.status}`);
