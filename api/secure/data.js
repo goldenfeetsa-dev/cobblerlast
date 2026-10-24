@@ -679,7 +679,37 @@ ${dialectGuide(sess.role)}
                 description: 'بحث جوجل الحقيقي عن معلومة خارجية حديثة (أسعار مواد وخامات، منافسون، طقس، اتجاهات، أو معنى كلمة غير مفهومة). لا تضع فيه أسماء عملاء ولا أرقام طلبات ولا مبالغ.',
                 inputSchema: z.object({ query: z.string().max(200) }),
                 execute: async ({ query }) => {
-                  if (!geminiKey) return { error: 'search_not_configured', note: 'يحتاج GEMINI_API_KEY عادي من Google AI Studio' };
+                  const q = String(query || '').slice(0, 200);
+                  // 1) Tavily (مجاني، مصمم للذكاء الاصطناعي)
+                  if (process.env.TAVILY_API_KEY) {
+                    try {
+                      const r = await fetch('https://api.tavily.com/search', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.TAVILY_API_KEY}` }, body: JSON.stringify({ query: q, max_results: 5, include_answer: true }), signal: AbortSignal.timeout(15000) });
+                      if (r.ok) { const j = await r.json(); return { answer: String(j.answer || '').slice(0, 900), results: (j.results || []).slice(0, 4).map((x) => ({ title: x.title, snippet: String(x.content || '').slice(0, 250), url: x.url })) }; }
+                    } catch { /* ننتقل للمزوّد التالي */ }
+                  }
+                  // 2) Brave Search API
+                  if (process.env.BRAVE_API_KEY) {
+                    try {
+                      const r = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(q)}&count=5`, { headers: { 'x-subscription-token': process.env.BRAVE_API_KEY, accept: 'application/json' }, signal: AbortSignal.timeout(15000) });
+                      if (r.ok) { const j = await r.json(); return { results: (j.web?.results || []).slice(0, 5).map((x) => ({ title: x.title, snippet: String(x.description || '').replace(/<[^>]+>/g, '').slice(0, 250), url: x.url })) }; }
+                    } catch { /* التالي */ }
+                  }
+                  // 3) DuckDuckGo بدون مفتاح (أفضل جهد؛ قد يحجبه الاستضافة أحياناً)
+                  if (!geminiKey) {
+                    try {
+                      const r = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; IbraBot/1.0)' }, signal: AbortSignal.timeout(12000) });
+                      if (r.ok) {
+                        const html = await r.text();
+                        const out = [];
+                        const re = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+                        let m; const strip = (t) => t.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#x27;|&quot;/g, "'").trim();
+                        while ((m = re.exec(html)) && out.length < 5) out.push({ title: strip(m[2]).slice(0, 100), snippet: strip(m[3]).slice(0, 250), url: m[1].slice(0, 200) });
+                        if (out.length) return { results: out, note: 'نتائج DuckDuckGo' };
+                      }
+                    } catch { /* لا شيء */ }
+                    return { error: 'search_unavailable', note: 'أضف TAVILY_API_KEY أو BRAVE_API_KEY في Vercel' };
+                  }
+                  // 4) جوجل عبر Gemini إن توفّر مفتاح عادي
                   try {
                     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(process.env.GEMINI_SEARCH_MODEL || 'gemini-2.5-flash')}:generateContent`, {
                       method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
