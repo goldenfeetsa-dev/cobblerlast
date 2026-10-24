@@ -182,6 +182,16 @@ export default function Assistant() {
     }
   };
 
+  const confirmBook = async (cmd) => {
+    try {
+      const res = await fetch('/api/secure/data?resource=assistant', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ book: cmd }) });
+      const b = await res.json().catch(() => ({}));
+      if (res.ok && b.ok) return say(`تمام ✅ تم الحجز (${b.booking_number}).${b.whatsapp_sent ? ' وأرسلت للعميل تأكيد واتساب.' : ' (ما انرسل واتساب — راجع إعدادات الواتساب).'}`);
+      if (b.error === 'slot_taken') return say(`الوقت هذا مو متاح. المتاح: ${(b.free_slots || []).join('، ') || 'ما فيه'}.`, { error: true });
+      return say(`ما قدرت أحجز: ${b.detail || b.error || res.status}`, { error: true });
+    } catch { say('خطأ في الاتصال أثناء الحجز.', { error: true }); }
+  };
+
   const confirmUpdate = async (cmd) => {
     try {
       const found = await db.Order.filter({ order_number: cmd.order_number }, '-created_at', 1);
@@ -227,6 +237,10 @@ export default function Assistant() {
       setTimeout(() => navigate('/new-order'), 900);
       return;
     }
+    if (a?.type === 'book') {
+      setPending(a);
+      return say(`${r.reply}\nأحجز لـ${a.customer_name} (${a.customer_phone}) يوم ${a.date} الساعة ${a.time}${a.service_name ? ` — ${a.service_name}` : ''} وأرسل له تأكيد واتساب؟ قل «تمام» أو «لا».`, { confirm: a });
+    }
     if (a?.type === 'add_note' || a?.type === 'set_delivery') {
       const label = a.type === 'add_note' ? `أضيف ملاحظة «${a.note}»` : `أغيّر موعد التسليم إلى ${a.delivery_date}`;
       setPending(a);
@@ -250,7 +264,7 @@ export default function Assistant() {
       const t = normalize(text);
       const yes = ['ايوه', 'ايوا', 'نعم', 'اكيد', 'تمام', 'ايه', 'اي', 'ماشي', 'اوكي', 'ok', 'yes', 'نفذ', 'اوافق', 'طيب', 'يلا', 'ايوة'].some((w) => t === w || t.startsWith(w + ' '));
       const no = ['لا', 'لأ', 'الغ', 'الغي', 'لا تنفذ', 'كنسل', 'cancel', 'no', 'مو'].some((w) => t === normalize(w) || t.startsWith(normalize(w) + ' '));
-      if (yes) { const c = pending; setPending(null); return c.type === 'set_status' ? confirmSetStatus(c) : confirmUpdate(c); }
+      if (yes) { const c = pending; setPending(null); return c.type === 'set_status' ? confirmSetStatus(c) : c.type === 'book' ? confirmBook(c) : confirmUpdate(c); }
       if (no) { setPending(null); return say('تمام، لغيتها.'); }
       setPending(null);
     }

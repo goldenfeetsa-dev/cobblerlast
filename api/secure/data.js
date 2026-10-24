@@ -31,6 +31,51 @@ const RESOURCES = {
 // تطبيع عربي مبسّط للمطابقة (تشكيل/همزات/تاء مربوطة)
 const normalizeAr = (t = '') => String(t).replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase();
 
+// ── واتساب Cloud API: إرسال رسالة (نص حر داخل نافذة 24 ساعة، أو قالب معتمد إن تم ضبطه) ──
+const waPhone = (p) => {
+  let d = String(p || '').replace(/[٠-٩]/g, (c) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith('05') && d.length === 10) d = `966${d.slice(1)}`;
+  else if (d.startsWith('5') && d.length === 9) d = `966${d}`;
+  return d.length >= 11 ? d : '';
+};
+async function waSend(phone, text, template) {
+  const tok = process.env.WHATSAPP_TOKEN, pid = process.env.WHATSAPP_PHONE_ID;
+  const to = waPhone(phone);
+  if (!tok || !pid || !to) return { sent: false, reason: !to ? 'bad_phone' : 'not_configured' };
+  const tplName = template?.name && process.env[template.name];
+  const body = tplName
+    ? { messaging_product: 'whatsapp', to, type: 'template', template: { name: tplName, language: { code: process.env.WHATSAPP_TEMPLATE_LANG || 'ar' }, components: [{ type: 'body', parameters: (template.params || []).map((t) => ({ type: 'text', text: String(t).slice(0, 100) })) }] } }
+    : { messaging_product: 'whatsapp', to, type: 'text', text: { body: String(text).slice(0, 1500) } };
+  try {
+    const r = await fetch(`https://graph.facebook.com/v21.0/${encodeURIComponent(pid)}/messages`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${tok}` }, body: JSON.stringify(body) });
+    if (!r.ok) { const t = await r.text().catch(() => ''); console.error('waSend', r.status, t.slice(0, 160)); return { sent: false, reason: `http_${r.status}` }; }
+    return { sent: true };
+  } catch (e) { return { sent: false, reason: String(e.message).slice(0, 60) }; }
+}
+const hmToMin = (t) => { const [h, m] = String(t || '0:0').split(':'); return (parseInt(h, 10) || 0) * 60 + (parseInt(m, 10) || 0); };
+const minToHm = (n) => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+// المواعيد الفارغة ليوم معيّن حسب ساعات العمل والحجوزات القائمة
+async function computeSlots(sb, dateStr, dur = 30) {
+  const dow = new Date(`${dateStr}T00:00:00Z`).getUTCDay();
+  const { data: wh } = await sb.from('working_hours').select('*').eq('day_of_week', dow).limit(5);
+  const w = (wh || []).find((x) => x.is_open !== false && !x.is_closed);
+  if (!w) return { closed: true, slots: [] };
+  const open = hmToMin(w.open_time || w.opens_at), close = hmToMin(w.close_time || w.closes_at), step = Number(w.slot_duration) || 30;
+  const { data: bk } = await sb.from('bookings').select('booking_time,end_time,duration_minutes').eq('booking_date', dateStr).neq('status', 'cancelled').limit(300);
+  const busy = (bk || []).map((b) => { const st = hmToMin(b.booking_time); return [st, b.end_time ? hmToMin(b.end_time) : st + (Number(b.duration_minutes) || 30)]; });
+  const now = new Date(Date.now() + 3 * 3600 * 1000);
+  const isToday = now.toISOString().slice(0, 10) === dateStr;
+  const nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const slots = [];
+  for (let t = open; t + dur <= close; t += step) {
+    if (isToday && t <= nowMin) continue;
+    if (busy.some(([a, b]) => t < b && t + dur > a)) continue;
+    slots.push(minToHm(t));
+  }
+  return { closed: false, hours: `${minToHm(open)}-${minToHm(close)}`, slots };
+}
+
 export default async function handler(req, res) {
   const resourceKey = String(req.query.resource || '');
 
@@ -173,6 +218,50 @@ export default async function handler(req, res) {
 
   // ── المساعد الذكي العام: يفهم كل اللهجات العربية ويجيب من بيانات النظام (قراءة فقط) ──
   // أدوات قراءة فقط، الأرقام المالية لا تُعرض إلا لأدوار المالية، وكل شي بعد التحقق من الجلسة.
+  // ── إشعار جاهزية الطلب للعميل على واتساب (يُستدعى من واجهة الموظفين، ويمنع التكرار) ──
+  if (resourceKey === 'wa-notify') {
+    if (req.method !== 'POST') return res.status(405).end();
+    const sess = getSessionFromRequest(req);
+    if (!sess) return res.status(401).json({ error: 'unauthenticated' });
+    try {
+      const id = String(req.body?.order_id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).json({ error: 'bad_id' });
+      const sb = getSupabaseAdmin();
+      const { data: o } = await sb.from('orders').select('id,order_number,customer_name,customer_phone,status,partner_id,ready_notified_at').eq('id', id).limit(1).maybeSingle();
+      if (!o || o.status !== 'ready' || o.partner_id || !o.customer_phone) return res.status(200).json({ sent: false, reason: 'skipped' });
+      if (o.ready_notified_at) return res.status(200).json({ sent: false, reason: 'already' });
+      const name = (o.customer_name || 'عميلنا العزيز').slice(0, 40);
+      const out = await waSend(o.customer_phone, `هلا ${name} 🌟 طلبك رقم ${o.order_number} صار جاهز للتسليم في إبرة وخيط الإسكافي. بانتظارك!`, { name: 'WHATSAPP_TEMPLATE_READY', params: [name, o.order_number] });
+      if (out.sent) await sb.from('orders').update({ ready_notified_at: new Date().toISOString() }).eq('id', id);
+      return res.status(200).json(out);
+    } catch (err) { console.error('wa-notify', err); return res.status(200).json({ sent: false }); }
+  }
+
+  // ── تذكير المواعيد (كرون يومي 9 صباحاً بتوقيت الرياض): موعد الغد + مواعيد اليوم غير المذكَّرة ──
+  if (resourceKey === 'booking-reminders') {
+    const cs = process.env.CRON_SECRET;
+    if (!cs || (req.headers.authorization || '') !== `Bearer ${cs}`) return res.status(401).json({ error: 'unauthorized' });
+    try {
+      const sb = getSupabaseAdmin();
+      const t0 = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+      const t1 = new Date(Date.parse(t0) + 86400000).toISOString().slice(0, 10);
+      let q = await sb.from('bookings').select('id,customer_name,customer_phone,booking_date,booking_time,service_name,status,reminder_sent_at').in('booking_date', [t0, t1]).in('status', ['pending', 'confirmed']).limit(200);
+      let dedupe = true;
+      if (q.error) { dedupe = false; q = await sb.from('bookings').select('id,customer_name,customer_phone,booking_date,booking_time,service_name,status').in('booking_date', [t1]).in('status', ['pending', 'confirmed']).limit(200); }
+      let sent = 0;
+      for (const b of q.data || []) {
+        if (dedupe && b.reminder_sent_at) continue;
+        if (!b.customer_phone) continue;
+        const when = b.booking_date === t0 ? 'اليوم' : 'بكرة';
+        const time = String(b.booking_time || '').slice(0, 5);
+        const name = (b.customer_name || 'عميلنا').slice(0, 40);
+        const out = await waSend(b.customer_phone, `هلا ${name} 🌟 تذكير بموعدك ${when} ${b.booking_date} الساعة ${time}${b.service_name ? ` (${b.service_name})` : ''} في إبرة وخيط الإسكافي. إذا تبي تغيّر الموعد تواصل معنا.`, { name: 'WHATSAPP_TEMPLATE_REMINDER', params: [name, `${when} ${b.booking_date}`, time] });
+        if (out.sent) { sent++; if (dedupe) await sb.from('bookings').update({ reminder_sent_at: new Date().toISOString() }).eq('id', b.id); }
+      }
+      return res.status(200).json({ ok: true, checked: (q.data || []).length, sent });
+    } catch (err) { console.error('booking-reminders', err); return res.status(500).json({ error: 'failed' }); }
+  }
+
   // ── واتساب (Meta Cloud API): ردّ آلي للعملاء بحالة طلباتهم ──────────────────
   // آمن بالتصميم: لا أرقام مالية ولا بيانات غيرهم؛ حالة الطلب لا تُعطى إلا لصاحب الجوال المسجّل على الطلب.
   if (resourceKey === 'whatsapp') {
@@ -320,6 +409,11 @@ export default async function handler(req, res) {
 
     const runTool = async (name, input) => {
       input = input || {};
+      if (name === 'check_availability') {
+        const d = /^\d{4}-\d{2}-\d{2}$/.test(input.date || '') ? input.date : todayRiyadh();
+        const r = await computeSlots(sb, d, Math.min(parseInt(input.duration_minutes, 10) || 30, 240));
+        return { date: d, closed: r.closed, working_hours: r.hours, free_slots: r.slots.slice(0, 14), total_free: r.slots.length };
+      }
       if (name === 'find_orders') {
         let q = sb.from('orders').select(ORDER_COLS).order('created_at', { ascending: false }).limit(Math.min(parseInt(input.limit, 10) || 8, 15));
         if (input.status) q = q.eq('status', input.status);
@@ -447,6 +541,41 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'tool_failed' });
       }
     }
+    // ── تنفيذ حجز موعد بعد تأكيد المستخدم (يعيد فحص التوفر ثم يحجز ويرسل تأكيداً للعميل) ──
+    if (req.body && req.body.book) {
+      if (sess.role === 'accountant') return res.status(403).json({ error: 'forbidden' });
+      try {
+        const b = req.body.book;
+        const date = String(b.date || ''), time = String(b.time || '').slice(0, 5);
+        const phone = waPhone(b.customer_phone);
+        const name = String(b.customer_name || '').trim().slice(0, 60);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time) || !name || !phone) return res.status(400).json({ error: 'bad_input', detail: 'الاسم والجوال والتاريخ والوقت مطلوبة' });
+        let svc = null;
+        if (b.service_name) {
+          const { data: sv } = await sb.from('services').select('id,name_ar,name,price,duration_minutes,is_active').eq('is_active', true).limit(100);
+          const key = normalizeAr(String(b.service_name));
+          svc = (sv || []).find((x) => normalizeAr(x.name_ar || x.name || '').includes(key) || key.includes(normalizeAr(x.name_ar || x.name || '')));
+        }
+        const dur = Number(svc?.duration_minutes) || 30;
+        const av = await computeSlots(sb, date, dur);
+        if (av.closed) return res.status(409).json({ error: 'closed', detail: 'المحل مغلق في هذا اليوم' });
+        if (!av.slots.includes(time)) return res.status(409).json({ error: 'slot_taken', detail: 'هذا الوقت غير متاح', free_slots: av.slots.slice(0, 8) });
+        const price = Number(svc?.price) || 0;
+        const rec = {
+          booking_number: `BK-${Date.now().toString().slice(-7)}`,
+          customer_name: name, customer_phone: phone, service_id: svc?.id || null, service_name: svc?.name_ar || svc?.name || String(b.service_name || 'موعد').slice(0, 60),
+          service_price: price, booking_date: date, booking_time: time, end_time: minToHm(hmToMin(time) + dur), duration_minutes: dur,
+          booking_type: 'in_store', delivery_fee: 0, total_price: +(price * 1.15).toFixed(2), status: 'confirmed', notes: 'حجز عبر المساعد الذكي',
+        };
+        const { data, error } = await sb.from('bookings').insert(rec).select('booking_number').single();
+        if (error) throw error;
+        const wa = await waSend(phone, `هلا ${name} 🌟 تم تأكيد موعدك يوم ${date} الساعة ${time} في إبرة وخيط الإسكافي. بانتظارك!`, { name: 'WHATSAPP_TEMPLATE_REMINDER', params: [name, date, time] });
+        return res.status(200).json({ ok: true, booking_number: data.booking_number, whatsapp_sent: !!wa.sent });
+      } catch (err) {
+        console.error('assistant book', err);
+        return res.status(500).json({ error: 'book_failed', detail: String(err.message || '').slice(0, 100) });
+      }
+    }
     const geminiKey = process.env.GEMINI_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
     const gatewayKey = process.env.AI_GATEWAY_API_KEY;
@@ -505,6 +634,7 @@ export default async function handler(req, res) {
               find_orders: tool({ description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو جواله أو الحالة', inputSchema: z.object({ query: z.string().optional(), status: z.enum(['pending', 'in_progress', 'ready', 'completed', 'cancelled']).optional(), limit: z.number().optional() }), execute: async (a) => runTool('find_orders', a) }),
               deliveries: tool({ description: 'الطلبات غير المسلَّمة المتأخرة أو المستحقة اليوم أو خلال يومين', inputSchema: z.object({}), execute: async () => runTool('deliveries', {}) }),
               counts_today: tool({ description: 'عدد الطلبات المسجلة اليوم حسب الحالة', inputSchema: z.object({}), execute: async () => runTool('counts_today', {}) }),
+              check_availability: tool({ description: 'المواعيد الفارغة ليوم معيّن للحجز (حسب ساعات العمل والحجوزات القائمة)', inputSchema: z.object({ date: z.string().describe('YYYY-MM-DD'), duration_minutes: z.number().optional() }), execute: async (a) => runTool('check_availability', a) }),
               order_details: tool({ description: 'تفاصيل طلب كاملة (وصف، ملاحظات، رف، حالة الدفع) برقم الطلب', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => runTool('order_details', a) }),
               customer_lookup: tool({ description: 'بحث عن عميل باسمه أو جواله (عدد طلباته ومستوى الولاء)', inputSchema: z.object({ query: z.string() }), execute: async (a) => runTool('customer_lookup', a) }),
               bookings_upcoming: tool({ description: 'الحجوزات القادمة اليوم وخلال أيام', inputSchema: z.object({ days: z.number().optional() }), execute: async (a) => runTool('bookings_upcoming', a) }),
@@ -544,6 +674,14 @@ export default async function handler(req, res) {
                   execute: async (a) => {
                     if (!/^\d{4}-\d{2}-\d{2}$/.test(a.delivery_date || '')) return { error: 'bad_date' };
                     action = { type: 'set_delivery', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), delivery_date: a.delivery_date };
+                    return { pending_user_confirmation: true };
+                  },
+                }),
+                book_appointment: tool({
+                  description: 'حجز موعد لعميل. تحقق أولاً بـ check_availability أن الوقت متاح. لا يُنفَّذ إلا بعد تأكيد المستخدم، ويُرسل للعميل تأكيد واتساب.',
+                  inputSchema: z.object({ customer_name: z.string(), customer_phone: z.string(), date: z.string().describe('YYYY-MM-DD'), time: z.string().describe('HH:MM بتوقيت 24 ساعة'), service_name: z.string().optional() }),
+                  execute: async (a) => {
+                    action = { type: 'book', customer_name: String(a.customer_name).slice(0, 60), customer_phone: String(a.customer_phone).slice(0, 20), date: a.date, time: a.time, service_name: a.service_name ? String(a.service_name).slice(0, 60) : '' };
                     return { pending_user_confirmation: true };
                   },
                 }),

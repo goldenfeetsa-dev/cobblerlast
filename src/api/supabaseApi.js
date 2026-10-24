@@ -3,6 +3,7 @@
  * طبقة الوصول الوحيدة للبيانات — كل العمليات تذهب مباشرة إلى Supabase
  */
 import { supabase } from '@/lib/supabaseClient';
+import { notifyOrderReady } from '@/lib/waNotify';
 import { secureExpenses } from '@/lib/secureApi';
 
 // ── Generic Entity Factory ──────────────────────────────────────
@@ -49,6 +50,7 @@ function createEntity(tableName) {
       const { data, error } = await supabase
         .from(tableName).update(record).eq('id', id).select(columns).single();
       if (error) throw new Error(error.message);
+      if (tableName === 'orders' && record?.status === 'ready') notifyOrderReady(id);
       return data;
     },
 

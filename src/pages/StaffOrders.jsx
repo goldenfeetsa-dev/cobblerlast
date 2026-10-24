@@ -10,6 +10,7 @@ import { getSession } from '@/lib/sessionStore';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import VoiceNote from '@/components/pos/VoiceNote';
+import { notifyOrderReady } from '@/lib/waNotify';
 import { Scissors, Package, CheckCircle, Clock, Search, Filter, CalendarDays } from 'lucide-react';
 
 const ITEM_LABELS = {
@@ -50,7 +51,7 @@ export default function StaffOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }) => supabase.from('orders').update({ status }).eq('id', id),
+    mutationFn: async ({ id, status }) => { const r = await supabase.from('orders').update({ status }).eq('id', id); if (!r.error && status === 'ready') notifyOrderReady(id); return r; },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-orders'] });
       toast.success('✅ تم تحديث حالة الطلب');
