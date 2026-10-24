@@ -270,11 +270,11 @@ export default function Assistant() {
     }
     if (/^(تشخيص|diag|فحص)$/i.test(text.trim())) {
       try {
-        const res = await fetch('/api/secure/data?resource=assistant', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diag: true }) });
+        const res = await fetch('/api/secure/data?resource=assistant', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diag: true, probe: true }) });
         const d = await res.json().catch(() => ({}));
         if (!res.ok) return say(`التشخيص: ${res.status === 401 ? 'انتهت الجلسة — سجّل دخول من جديد' : 'خطأ ' + res.status}`, { error: true });
         const yn = (b) => (b ? '✅ مفعّل' : '❌ غير موجود');
-        return say(`نسخة الموقع المنشورة: ${d.deploy} (${d.env})\nالوكيل المحلي: ${yn(d.providers.local)}\nAI Gateway: ${yn(d.providers.gateway)}\nGemini: ${yn(d.providers.gemini)}\nGroq: ${yn(d.providers.groq)}\nClaude: ${yn(d.providers.anthropic)}\nدورك: ${d.role}`);
+        return say(`نسخة الموقع المنشورة: ${d.deploy} (${d.env})\nالوكيل المحلي: ${yn(d.providers.local)}\nAI Gateway: ${yn(d.providers.gateway)}\nGemini: ${yn(d.providers.gemini)}\nGroq: ${yn(d.providers.groq)}\nClaude: ${yn(d.providers.anthropic)}\nدورك: ${d.role}\nفحص حي: Groq=${d.probe?.groq} | Gemini=${d.probe?.gemini} | مكتبة الذكاء=${d.probe?.ai_sdk}`);
       } catch { return say('تعذّر الاتصال بالخادم.', { error: true }); }
     }
     const norm = normalize(text);

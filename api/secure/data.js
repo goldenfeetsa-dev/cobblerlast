@@ -364,7 +364,18 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
     // ── تشخيص: أي مزوّدات مفعّلة على هذا النشر + رقم النسخة المنشورة (بدون كشف أي مفتاح) ──
     if (req.body && req.body.diag === true) {
+      // فحص حيّ من السيرفر لكل مزوّد: رمز الاستجابة والزمن (بدون كشف أي مفتاح)
+      const probe = {};
+      if (req.body.probe) {
+        const timed = async (k, fn) => { const t = Date.now(); try { probe[k] = `${await fn()} (${Date.now() - t}ms)`; } catch (e) { probe[k] = `خطأ: ${String(e.message || e).slice(0, 50)}`; } };
+        await Promise.all([
+          timed('groq', async () => (await fetch('https://api.groq.com/openai/v1/models', { headers: { authorization: `Bearer ${process.env.GROQ_API_KEY || ''}` }, signal: AbortSignal.timeout(8000) })).status),
+          timed('gemini', async () => (await fetch('https://generativelanguage.googleapis.com/v1beta/models', { headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY || '' }, signal: AbortSignal.timeout(8000) })).status),
+          timed('ai_sdk', async () => { await import('ai'); await import('@ai-sdk/groq'); return 'تحميل ناجح'; }),
+        ]);
+      }
       return res.status(200).json({
+        probe,
         deploy: (process.env.VERCEL_GIT_COMMIT_SHA || 'unknown').slice(0, 7),
         env: process.env.VERCEL_ENV || 'unknown',
         providers: { local: !!process.env.LOCAL_AGENT_URL, gateway: !!process.env.AI_GATEWAY_API_KEY, gemini: !!process.env.GEMINI_API_KEY, groq: !!process.env.GROQ_API_KEY, anthropic: !!process.env.ANTHROPIC_API_KEY },
@@ -794,6 +805,8 @@ ${dialectGuide(sess.role)}
               system,
               messages: [...hist, { role: 'user', content: said }],
               tools,
+              maxRetries: 0,
+              abortSignal: AbortSignal.timeout(20000),
               stopWhen: stepCountIs(5),
               maxOutputTokens: 1024,
             });
