@@ -11,11 +11,11 @@ function proxyFlag() {
   try {
     const q = new URLSearchParams(window.location.search).get('proxy');
     if (q === '1') localStorage.setItem('sb_proxy', '1');
-    if (q === '0') localStorage.removeItem('sb_proxy');
-    return localStorage.getItem('sb_proxy') === '1';
-  } catch { return false; }
+    if (q === '0') localStorage.setItem('sb_proxy', '0');
+    return localStorage.getItem('sb_proxy') !== '0';
+  } catch { return true; }
 }
-export const USE_PROXY = typeof window !== 'undefined' && (import.meta.env.VITE_USE_PROXY === '1' || proxyFlag());
+export const USE_PROXY = typeof window !== 'undefined' && (import.meta.env.VITE_USE_PROXY !== '0' && proxyFlag());
 
 export const supabase = createClient(
   USE_PROXY ? `${window.location.origin}/sb` : SUPABASE_PUBLIC_URL,
