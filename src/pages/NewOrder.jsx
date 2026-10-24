@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, EMPLOYEE_SAFE_COLUMNS, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { supabase } from '@/lib/supabaseClient';
@@ -85,6 +85,7 @@ function CobblerTab({ session }) {
     is_b2b: false, buyer_company_name: '', buyer_vat_number: '', buyer_cr_number: '', buyer_address: '',
   });
 
+  const formRef = useRef(null);
   // مسودة جاهزة من المساعد الذكي: تعبئة النموذج للمراجعة فقط، والحفظ يتم من المستخدم
   useEffect(() => {
     try {
@@ -94,6 +95,7 @@ function CobblerTab({ session }) {
       const d = JSON.parse(raw);
       setForm((f) => ({ ...f, customer_name: d.customer_name || '', customer_phone: d.customer_phone || '', delivery_date: d.delivery_date || '', total_price: d.total_price || '', notes: d.notes || '' }));
       setPieces([{ ...newPiece(), item_type: d.item_type || 'shoes', description: d.description || '' }]);
+      if (d.auto) setTimeout(() => formRef.current?.requestSubmit(), 900); // تأكيد المستخدم تم من المساعد: نمرّر على نفس مسار الحفظ (تحقق + زاتكا)
     } catch { /* تجاهل */ }
   }, []);
 
@@ -321,7 +323,7 @@ function CobblerTab({ session }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       {/* Customer Info */}
       <Card>
         <CardHeader className="pb-4"><CardTitle className="text-base">بيانات العميل</CardTitle></CardHeader>

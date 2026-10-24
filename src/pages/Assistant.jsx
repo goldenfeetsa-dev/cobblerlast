@@ -236,27 +236,47 @@ export default function Assistant() {
     }
   };
 
-  // تنفيذ الإجراءات القادمة من الذكاء: فورية (فتح/رف/ملاحظة) وبتأكيد (حالة/حجز/موعد)
+  // وصف الإجراء للمستخدم قبل التنفيذ
+  const describe = (a) => {
+    if (a.type === 'set_status') return `تغيير حالة الطلب ${a.order_number} إلى «${a.label}»`;
+    if (a.type === 'set_delivery') return `تغيير موعد تسليم الطلب ${a.order_number} إلى ${a.delivery_date}`;
+    if (a.type === 'add_note') return `إضافة ملاحظة على الطلب ${a.order_number}: «${a.note}»`;
+    if (a.type === 'set_shelf') return `وضع الطلب ${a.order_number} على الرف ${a.shelf}`;
+    if (a.type === 'book') return `حجز موعد لـ${a.customer_name} (${a.customer_phone}) يوم ${a.date} الساعة ${a.time}${a.service_name ? ` — ${a.service_name}` : ''} مع تأكيد واتساب`;
+    if (a.type === 'new_order') return `إنشاء طلب جديد للعميل ${a.draft?.customer_name || ''}${a.draft?.total_price ? ` بمبلغ ${a.draft.total_price} ر.س` : ''}`;
+    return 'تنفيذ الأمر';
+  };
+  const MUTATING = ['set_status', 'set_delivery', 'add_note', 'set_shelf', 'book', 'new_order'];
+
+  // تنفيذ قائمة إجراءات بعد ضغط «تأكيد»
+  const runPending = async (p) => {
+    for (const a of p.list) {
+      if (a.type === 'set_status') await confirmSetStatus(a);
+      else if (a.type === 'book') await confirmBook(a);
+      else if (a.type === 'new_order') {
+        try { sessionStorage.setItem('assistant_order_draft', JSON.stringify({ ...a.draft, auto: true })); } catch { /* ignore */ }
+        say('أنشئ الطلب الحين…'); setTimeout(() => navigate('/new-order'), 700); return;
+      } else await confirmUpdate(a);
+    }
+    if (p.after) setTimeout(() => navigate(p.after), 700);
+  };
+  const confirmPending = async () => { const p = pending; if (!p || busy) return; setPending(null); setBusy(true); try { await runPending(p); } finally { setBusy(false); } };
+  const cancelPending = () => { setPending(null); say('تمام، لغيتها.'); };
+
+  // الإجراءات القادمة من الذكاء: الفتح فوري، وكل ما يغيّر بيانات ينتظر زر «تأكيد» بالأسفل
   const sayAI = async (r) => {
     const list = r.actions?.length ? r.actions : (r.action ? [r.action] : []);
-    const conf = list.find((a) => ['set_status', 'book', 'set_delivery'].includes(a.type));
-    const draft = list.find((a) => a.type === 'new_order');
+    const mut = list.filter((a) => MUTATING.includes(a.type));
     const nav = [...list].reverse().find((a) => a.type === 'navigate');
-    const imm = list.filter((a) => a.type === 'add_note' || a.type === 'set_shelf');
-    let text = r.reply;
-    if (conf) {
-      setPending(conf);
-      const q = conf.type === 'book' ? `أحجز لـ${conf.customer_name} (${conf.customer_phone}) يوم ${conf.date} الساعة ${conf.time}${conf.service_name ? ` — ${conf.service_name}` : ''} وأرسل له تأكيد واتساب؟`
-        : conf.type === 'set_delivery' ? `أغيّر موعد تسليم الطلب ${conf.order_number} إلى ${conf.delivery_date}؟`
-          : `أغيّر حالة الطلب ${conf.order_number} إلى «${conf.label}»؟`;
-      text = `${text}\n${q} قل «تمام» أو «لا».`;
+    if (!mut.length) {
+      say(r.reply);
+      if (nav) setTimeout(() => navigate(nav.path), 900);
+      return;
     }
-    say(text, conf ? { confirm: conf } : {});
-    for (const a of imm) await confirmUpdate(a);
-    if (draft) {
-      try { sessionStorage.setItem('assistant_order_draft', JSON.stringify(draft.draft)); } catch { /* ignore */ }
-      setTimeout(() => navigate('/new-order'), 900);
-    } else if (nav && !conf) setTimeout(() => navigate(nav.path), 900);
+    const lines = mut.map((a, k) => `${k + 1}) ${describe(a)}`).join('\n');
+    const p = { list: mut, after: nav?.path };
+    setPending(p);
+    say(`${r.reply}\nبنفّذ:\n${lines}\nأأكّد؟ اضغط «تأكيد» أو «لا» (أو قل تمام / لا).`, { confirm: p });
   };
 
   const handle = async (text) => {
@@ -269,8 +289,8 @@ export default function Assistant() {
       const t = normalize(text);
       const yes = ['ايوه', 'ايوا', 'نعم', 'اكيد', 'تمام', 'ايه', 'اي', 'ماشي', 'اوكي', 'ok', 'yes', 'نفذ', 'اوافق', 'طيب', 'يلا', 'ايوة'].some((w) => t === w || t.startsWith(w + ' '));
       const no = ['لا', 'لأ', 'الغ', 'الغي', 'لا تنفذ', 'كنسل', 'cancel', 'no', 'مو'].some((w) => t === normalize(w) || t.startsWith(normalize(w) + ' '));
-      if (yes) { const c = pending; setPending(null); return c.type === 'set_status' ? confirmSetStatus(c) : c.type === 'book' ? confirmBook(c) : confirmUpdate(c); }
-      if (no) { setPending(null); return say('تمام، لغيتها.'); }
+      if (yes) { const c = pending; setPending(null); return runPending(c); }
+      if (no) { cancelPending(); return; }
       setPending(null);
     }
     if (/^(تشخيص|diag|فحص)$/i.test(text.trim())) {
@@ -305,7 +325,7 @@ export default function Assistant() {
         say(`أفتح باركود ${cmd.order_number}.`); setTimeout(() => navigate(`/barcode/${f[0].id}`), 600); return;
       }
       if (cmd.type === 'set_status') {
-        setPending(cmd);
+        { const p = { list: [cmd] }; setPending(p); return say(`أغيّر حالة الطلب ${cmd.order_number} إلى «${cmd.label}»؟ اضغط «تأكيد» أو «لا» (أو قل تمام / لا).`, { confirm: p }); }
         return say(`أغيّر حالة الطلب ${cmd.order_number} إلى «${cmd.label}»؟ قل «تمام» للتأكيد أو «لا» للإلغاء.`, { confirm: cmd });
       }
       if (cmd.type === 'tool' || cmd.type === 'find_orders') {
@@ -476,12 +496,6 @@ export default function Assistant() {
                 <button onClick={() => { clearSession(); fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {}); navigate('/login', { replace: true }); }}
                   className="block mt-2 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold">تسجيل دخول من جديد</button>
               )}
-              {m.confirm && pending && pending === m.confirm && (
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => send('تمام')} className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold">تأكيد</button>
-                  <button onClick={() => send('لا')} className="px-3 py-1 rounded-lg border text-xs font-bold">إلغاء</button>
-                </div>
-              )}
             </div>
           </div>
         ))}
@@ -502,6 +516,17 @@ export default function Assistant() {
         <div className="flex gap-2 mt-2">
           <button onClick={copy} className="text-xs border rounded-lg px-3 py-1 flex items-center gap-1"><Copy className="w-3 h-3" />نسخ الرد</button>
           <button onClick={wa} className="text-xs border rounded-lg px-3 py-1 flex items-center gap-1"><MessageCircle className="w-3 h-3" />إرسال الرد واتساب</button>
+        </div>
+      )}
+
+      {pending && (
+        <div className="mt-2 rounded-xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/30 p-3">
+          <div className="text-xs font-bold mb-2">بانتظار تأكيدك قبل التنفيذ:</div>
+          <ul className="text-xs mb-3 space-y-1 list-disc pr-4">{pending.list.map((a, k) => <li key={k}>{describe(a)}</li>)}</ul>
+          <div className="flex gap-2">
+            <button type="button" onClick={confirmPending} disabled={busy} className="flex-1 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-black disabled:opacity-50">✅ تأكيد التنفيذ</button>
+            <button type="button" onClick={cancelPending} disabled={busy} className="flex-1 py-2.5 rounded-lg border-2 border-red-400 text-red-600 text-sm font-black">✖ لا</button>
+          </div>
         </div>
       )}
 

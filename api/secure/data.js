@@ -35,18 +35,22 @@ const normalizeAr = (t = '') => String(t).replace(/[\u064B-\u0652\u0640]/g, '').
 // اختيار نموذج Groq المتاح فعلاً لحسابك (النماذج تتغير): نقرأ القائمة ونختار الأفضل المدعوم بالأدوات
 let _groqModel = { v: '', t: 0 };
 const GROQ_PREF = ['openai/gpt-oss-120b', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'llama-3.3-70b-versatile', 'qwen/qwen3-32b', 'meta-llama/llama-4-scout-17b-16e-instruct', 'openai/gpt-oss-20b', 'llama-3.1-8b-instant'];
+const _groqCool = new Map();
+const isGroqLimit = (m) => /rate.?limit|429|does not exist|decommission|not found|over capacity|too many/i.test(String(m));
+function coolGroq(model) { if (model) _groqCool.set(model, Date.now() + 5 * 60000); _groqModel = { v: '', t: 0 }; }
+const groqCooled = (m) => (_groqCool.get(m) || 0) > Date.now();
 async function groqModel() {
   if (process.env.GROQ_MODEL) return process.env.GROQ_MODEL;
-  if (_groqModel.v && Date.now() - _groqModel.t < 600000) return _groqModel.v;
+  if (_groqModel.v && !groqCooled(_groqModel.v) && Date.now() - _groqModel.t < 600000) return _groqModel.v;
   try {
     const r = await fetch('https://api.groq.com/openai/v1/models', { headers: { authorization: `Bearer ${process.env.GROQ_API_KEY || ''}` }, signal: AbortSignal.timeout(6000) });
     if (r.ok) {
-      const ids = ((await r.json()).data || []).filter((m) => m.active !== false).map((m) => m.id);
+      const ids = ((await r.json()).data || []).filter((m) => m.active !== false).map((m) => m.id).filter((m) => !groqCooled(m));
       const pick = GROQ_PREF.find((m) => ids.includes(m)) || ids.find((i) => !/whisper|guard|tts|prompt-guard|safeguard|compound|distil/i.test(i));
       if (pick) { _groqModel = { v: pick, t: Date.now() }; return pick; }
     }
   } catch { /* نرجع للافتراضي */ }
-  return GROQ_PREF[0];
+  return GROQ_PREF.find((m) => !groqCooled(m)) || GROQ_PREF[0];
 }
 
 // دليل اللهجات: الورشة فيها مصري (فنيون)، سعودي (إدارة)، ويمني (كاشير) — الرد دائماً بلهجة المتحدث
@@ -837,7 +841,7 @@ ${dialectGuide(sess.role)}
               } : {}),
               ...(sess.role !== 'accountant' ? {
                 prepare_new_order: tool({
-                  description: 'تجهيز طلب جديد: يفتح نموذج الطلب معبّأً للمراجعة والحفظ من المستخدم (لا يُحفظ تلقائياً). اطلب اسم العميل وجواله ونوع القطعة على الأقل.',
+                  description: 'إنشاء طلب جديد: يُنفَّذ بعد ضغط المستخدم زر التأكيد، ويمر على نموذج الطلب الأصلي (تحقق + فاتورة زاتكا). اطلب اسم العميل وجواله ونوع القطعة والوصف والسعر على الأقل.',
                   inputSchema: z.object({ customer_name: z.string(), customer_phone: z.string().optional(), item_type: z.enum(['shoes', 'bag', 'dress', 'suit', 'jacket', 'pants', 'shirt', 'other']).optional(), description: z.string().optional(), total_price: z.number().optional(), delivery_date: z.string().optional().describe('YYYY-MM-DD'), notes: z.string().optional() }),
                   execute: async (a) => {
                     const d = { customer_name: String(a.customer_name || '').slice(0, 80), customer_phone: String(a.customer_phone || '').replace(/[^\d+]/g, '').slice(0, 15), item_type: a.item_type || 'shoes', description: String(a.description || '').slice(0, 300), total_price: a.total_price > 0 ? String(a.total_price) : '', delivery_date: /^\d{4}-\d{2}-\d{2}$/.test(a.delivery_date || '') ? a.delivery_date : '', notes: String(a.notes || '').slice(0, 300) };
@@ -886,9 +890,7 @@ ${dialectGuide(sess.role)}
                 }),
               } : {}),
             };
-            let model = process.env.AI_MODEL || 'google/gemini-2.5-flash';
-            if (!gatewayKey) { const { createGroq } = await import('@ai-sdk/groq'); model = createGroq({ apiKey: groqKey })(await groqModel()); }
-            const out = await generateText({
+            const runModel = (model) => generateText({
               model,
               system,
               messages: [...hist, { role: 'user', content: said }],
@@ -898,6 +900,19 @@ ${dialectGuide(sess.role)}
               stopWhen: stepCountIs(5),
               maxOutputTokens: 1024,
             });
+            let out;
+            if (gatewayKey) out = await runModel(process.env.AI_MODEL || 'google/gemini-2.5-flash');
+            else {
+              // Groq: إذا انتهى حد نموذج (rate limit) ننتقل تلقائياً للنموذج التالي المتاح
+              const { createGroq } = await import('@ai-sdk/groq');
+              let lastErr;
+              for (let t = 0; t < 3 && !out; t++) {
+                const mid = await groqModel();
+                try { actions.length = 0; action = null; out = await runModel(createGroq({ apiKey: groqKey })(mid)); }
+                catch (e) { lastErr = e; if (!isGroqLimit(e.message || e)) throw e; coolGroq(mid); }
+              }
+              if (!out) throw lastErr;
+            }
             reply = (out.text || '').trim();
             if (!reply && actions.length) reply = 'تمام، نفّذت.';
             if (!reply) throw new Error('gateway_empty');
@@ -960,13 +975,14 @@ ${dialectGuide(sess.role)}
         }
         if (!reply && groqKey) {
           try {
+            const plainModel = await groqModel();
             const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
               method: 'POST',
               headers: { 'content-type': 'application/json', authorization: `Bearer ${groqKey}` },
-              body: JSON.stringify({ model: await groqModel(), temperature: 0.7, max_tokens: 900,
+              body: JSON.stringify({ model: plainModel, temperature: 0.7, max_tokens: 900,
                 messages: [{ role: 'system', content: system }, ...hist, { role: 'user', content: said }] }),
             });
-            if (!r.ok) throw new Error(`groq_http_${r.status}`);
+            if (!r.ok) { const t = await r.text().catch(() => ''); if (isGroqLimit(t) || r.status === 429) coolGroq(plainModel); throw new Error(`groq_http_${r.status} ${t.slice(0, 90)}`); }
             const j = await r.json();
             reply = String(j.choices?.[0]?.message?.content || '').trim();
           } catch (e) { errors.push(e.message); console.error('assistant groq', e.message); }
