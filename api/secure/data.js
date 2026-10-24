@@ -17,7 +17,10 @@ import { timingSafeEqual } from 'node:crypto';
 import { getSessionFromRequest } from '../_lib/session.js';
 import { getSupabaseAdmin } from '../_lib/loyalty/supabaseAdmin.js';
 import { lexiconText } from '../_lib/dialectLexicon.js';
+import { handleSbProxy } from '../_lib/sbProxy.js';
 
+// حذف حقول السعر/المبلغ من أي كائن (أسعار الشركاء داخل بنود الطلب)
+const stripPricey = (v) => Array.isArray(v) ? v.map(stripPricey) : (v && typeof v === 'object') ? Object.fromEntries(Object.entries(v).filter(([k]) => !/price|amount|total|vat|cost|tax|subtotal/i.test(k)).map(([k, x]) => [k, stripPricey(x)])) : v;
 const safeEq = (a, b) => { const x = Buffer.from(String(a ?? '')); const y = Buffer.from(String(b ?? '')); return x.length === y.length && timingSafeEqual(x, y); };
 
 // كل مورد مسموح: اسم الجدول الفعلي + الأدوار المسموحة لكل عملية.
@@ -147,6 +150,8 @@ export default async function handler(req, res) {
   // كل العمليات عبر دوال Postgres بمفتاح service_role، بعد التحقق من الجلسة
   // والدور هنا. السعر دائماً يُحسب داخل القاعدة من قائمة أسعار الشركة —
   // لا نقبل أي سعر قادم من المتصفح. تعديل الأسعار وإنشاء الشركات للإدارة فقط.
+  if (resourceKey === 'sb') return handleSbProxy(req, res);
+
   if (resourceKey === 'partners') {
     const sess = getSessionFromRequest(req);
     if (!sess) return res.status(401).json({ error: 'unauthenticated' });
@@ -294,9 +299,12 @@ export default async function handler(req, res) {
       const { data: o } = await sb.from('orders').select('id,order_number,customer_name,customer_phone,status,partner_id,ready_notified_at').eq('id', id).limit(1).maybeSingle();
       if (!o || o.status !== 'ready' || o.partner_id || !o.customer_phone) return res.status(200).json({ sent: false, reason: 'skipped' });
       if (o.ready_notified_at) return res.status(200).json({ sent: false, reason: 'already' });
+      // حجز ذرّي للإرسال: أول استدعاء فقط يكمل (يمنع الإرسال المزدوج عند الاستدعاءات المتوازية)
+      const claim = await sb.from('orders').update({ ready_notified_at: new Date().toISOString() }).eq('id', id).is('ready_notified_at', null).select('id');
+      if (claim.error || !claim.data?.length) return res.status(200).json({ sent: false, reason: 'already' });
       const name = (o.customer_name || 'عميلنا العزيز').slice(0, 40);
       const out = await waSend(o.customer_phone, `هلا ${name} 🌟 طلبك رقم ${o.order_number} صار جاهز للتسليم في إبرة وخيط الإسكافي. بانتظارك!`, { name: 'WHATSAPP_TEMPLATE_READY', params: [name, o.order_number] });
-      if (out.sent) await sb.from('orders').update({ ready_notified_at: new Date().toISOString() }).eq('id', id);
+      if (!out.sent) await sb.from('orders').update({ ready_notified_at: null }).eq('id', id);
       return res.status(200).json(out);
     } catch (err) { console.error('wa-notify', err); return res.status(200).json({ sent: false }); }
   }
@@ -596,7 +604,7 @@ export default async function handler(req, res) {
         const days = { today: 0, week: 6, month: 29 }[input.period] ?? 0;
         const from = `${new Date(Date.parse(t0) - days * 86400000).toISOString().slice(0, 10)}T00:00:00+03:00`;
         const [o, i] = await Promise.all([
-          sb.from('orders').select('total_price,status').gte('created_at', from).neq('status', 'cancelled').limit(5000),
+          sb.from('orders').select('total_price,status').gte('created_at', from).not('status', 'in', '(cancelled,returned)').limit(5000),
           sb.from('sales_invoices').select('total,items').gte('created_at', from).limit(5000),
         ]);
         if (o.error) throw o.error; if (i.error) throw i.error;
@@ -617,9 +625,12 @@ export default async function handler(req, res) {
         return `${new Date(Date.parse(t0) - days * 86400000).toISOString().slice(0, 10)}T00:00:00+03:00`;
       };
       if (name === 'order_details') {
+        // للفنّي: نحذف أي حقول سعر/مبلغ من بنود الطلب (أسعار الشركاء)
+
         const num = String(input.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
         const { data, error } = await sb.from('orders').select(isWorkerRole ? 'order_number,customer_name,item_type,description,notes,status,shelf_location,delivery_date,created_at,quantity,order_items' : ('order_number,customer_name,customer_phone,item_type,description,notes,status,payment_status,paid,shelf_location,delivery_date,created_at,delivered_at,quantity,employee_name' + (canSeeMoney ? ',total_price,payment_method' : ''))).eq('order_number', num).limit(1);
         if (error) throw error;
+        if (isWorkerRole) return data?.[0] ? { ...data[0], order_items: stripPricey(data[0].order_items) } : { found: false };
         return data?.[0] || { found: false };
       }
       if (name === 'customer_lookup') {
@@ -717,7 +728,7 @@ export default async function handler(req, res) {
         if (!av.slots.includes(time)) return res.status(409).json({ error: 'slot_taken', detail: 'هذا الوقت غير متاح', free_slots: av.slots.slice(0, 8) });
         const price = Number(svc?.price) || 0;
         const rec = {
-          booking_number: `BK-${Date.now().toString().slice(-7)}`,
+          booking_number: `BK-${Date.now().toString(36).toUpperCase().slice(-6)}${Math.floor(Math.random() * 36 ** 2).toString(36).toUpperCase().padStart(2, '0')}`,
           customer_name: name, customer_phone: phone, service_id: svc?.id || null, service_name: svc?.name_ar || svc?.name || String(b.service_name || 'موعد').slice(0, 60),
           service_price: price, booking_date: date, booking_time: time, end_time: minToHm(hmToMin(time) + dur), duration_minutes: dur,
           booking_type: 'in_store', delivery_fee: 0, total_price: +(price * 1.15).toFixed(2), status: 'confirmed', notes: 'حجز عبر المساعد الذكي',
@@ -1111,6 +1122,7 @@ ${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كل
       const { data: o, error } = await getSupabaseAdmin().from('orders')
         .select('order_number,item_type,description,notes,status,order_items,shelf_location,delivery_date').eq('id', order_id).single();
       if (error || !o) return res.status(404).json({ error: 'order_not_found' });
+      o.order_items = stripPricey(o.order_items);
       const hist = (Array.isArray(history) ? history : []).slice(-6)
         .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 600) }));
       const system = `أنت مساعد صوتي لفني ورشة إصلاح أحذية وحقائب وجلديات في الرياض. الفني يداه مشغولتان ويتكلم معك بلهجته (غالباً مصرية).

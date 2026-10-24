@@ -37,7 +37,7 @@ export default function Employees() {
   const { data: employees, isLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: () => db.Employee.list('-created_at', 200, EMPLOYEE_SAFE_COLUMNS),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: branches = [] } = useQuery({

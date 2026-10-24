@@ -8,8 +8,16 @@ create or replace function public.orders_work_timing() returns trigger
 language plpgsql as $$
 begin
   if tg_op = 'UPDATE' and new.status is distinct from old.status then
+    -- إعادة فتح طلب منجز: نصفّر وقت الإنجاز ليُحسب من جديد
+    if new.status in ('pending', 'in_progress') and old.status in ('ready', 'completed') then
+      new.work_done_at := null;
+    end if;
     if new.status = 'in_progress' and new.work_started_at is null then new.work_started_at := now(); end if;
-    if new.status = 'ready' and new.work_done_at is null then new.work_done_at := now(); end if;
+    if new.status = 'ready' and new.work_done_at is null then
+      new.work_done_at := now();
+      -- انتقال مباشر لجاهز بدون بدء: نعتبر البدء الآن كي لا يبقى المدّة فارغة
+      if new.work_started_at is null then new.work_started_at := now(); end if;
+    end if;
   end if;
   return new;
 end $$;

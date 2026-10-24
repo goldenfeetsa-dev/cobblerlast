@@ -89,7 +89,7 @@ export default function Orders() {
       session?.role === 'staff'
         ? 'id, order_number, customer_name, employee_name, item_type, quantity, shelf_location, status, photos, created_at, branch_id, delivery_method'
         : 'id, order_number, customer_name, customer_phone, employee_name, item_type, quantity, shelf_location, status, payment_status, payment_method, total_price, photos, created_at, branch_id, delivery_method'),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const filtered = orders.filter(o => {

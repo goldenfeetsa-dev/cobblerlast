@@ -25,9 +25,11 @@ export default function Settings() {
     try {
       if (settings.id) {
         // الضريبة لا تُعطَّل: نثبّتها صراحةً مهما كانت القيمة المحمّلة
-        await supabase.from('app_settings').update({ ...settings, vat_enabled: true }).eq('id', settings.id);
+        const { error } = await supabase.from('app_settings').update({ ...settings, vat_enabled: true }).eq('id', settings.id);
+        if (error) throw error;
       } else {
-        const { data } = await supabase.from('app_settings').insert(settings).select(APP_SETTINGS_SAFE_COLUMNS).single();
+        const { data, error } = await supabase.from('app_settings').insert(settings).select(APP_SETTINGS_SAFE_COLUMNS).single();
+        if (error) throw error;
         setSettings(data);
       }
       toast.success('✅ تم حفظ الإعدادات');

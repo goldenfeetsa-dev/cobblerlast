@@ -482,7 +482,7 @@ function InvoiceTab({ items, branches, session }) {
   const { data: invoices } = useQuery({
     queryKey: ['sales-invoices'],
     queryFn: () => db.SalesInvoice.list('-created_at', 20),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const salesBranches = branches.filter(b => b.is_active);
@@ -698,19 +698,19 @@ export default function SalesSystem() {
   const { data: items } = useQuery({
     queryKey: ['inventory-items'],
     queryFn: () => db.InventoryItem.list('-created_at', 500),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: branches } = useQuery({
     queryKey: ['branches'],
     queryFn: () => db.Branch.list(),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: movements } = useQuery({
     queryKey: ['stock-movements'],
     queryFn: () => db.StockMovement.list('-created_at', 300),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   if (!session) return <Navigate to="/login" replace />;

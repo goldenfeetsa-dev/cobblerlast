@@ -3,6 +3,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/sb/:path*", "destination": "/api/secure/data?resource=sb&p=:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

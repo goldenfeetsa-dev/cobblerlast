@@ -81,6 +81,15 @@ export async function signAndSubmitInvoice({ type, id, isRetry = false }) {
   if (sErr || !settings) throw new Error('لم يتم إعداد بيانات المنشأة بعد في zatca_settings');
   if (!settings.vat_number || !settings.cr_number) throw new Error('الرقم الضريبي أو السجل التجاري غير مكتملين');
 
+  // حراسة: الطلبات المرتبطة بفاتورة شريك مجمّعة تُصدر لها الإشعارات على الفاتورة المجمّعة (تفادي تكرار الضريبة)
+  if (originalRecordType === 'order' && (original.partner_id || original.partner_invoice_id)) {
+    throw new Error('طلب شريك: أصدر الإشعار على فاتورة الشريك المجمّعة وليس على الطلب');
+  }
+  const origTotal = Number(originalRecordType === 'order' ? original.total_price : original.total) || 0;
+  if (noteType === 'credit' && origTotal > 0 && Number(amount) > origTotal + 0.005) {
+    throw new Error('مبلغ الإشعار الدائن أكبر من قيمة الفاتورة الأصلية');
+  }
+
   const env = settings.environment || 'sandbox';
   const certificate = env === 'production' ? process.env.ZATCA_PRODUCTION_CERTIFICATE : process.env.ZATCA_CERTIFICATE;
   const apiSecret = env === 'production' ? process.env.ZATCA_PRODUCTION_API_SECRET : process.env.ZATCA_API_SECRET;

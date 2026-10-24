@@ -60,7 +60,7 @@ export default function Dashboard() {
   const { data: allOrders, isFetching: fOrders } = useQuery({
     queryKey: ['orders', 'dashboard'],
     queryFn: () => db.Order.list('-created_at', 500, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at, partner_invoice_id'),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   // فواتير بيع المنتجات — كانت غائبة تماماً عن لوحة التحكم، فتُخفي جزءاً
@@ -68,7 +68,7 @@ export default function Dashboard() {
   const { data: allSalesInvoices, isFetching: fInv } = useQuery({
     queryKey: ['sales-invoices-dashboard'],
     queryFn: () => db.SalesInvoice.list('-created_at', 500, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at, items'),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   // Branch filter + period filter
@@ -124,7 +124,7 @@ export default function Dashboard() {
   const { data: customers, isFetching: fCust } = useQuery({
     queryKey: ['customers'],
     queryFn: () => db.Customer.list(),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);

@@ -59,7 +59,9 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST' && resource === 'settings') {
-      const record = req.body || {};
+      const body = req.body || {};
+      const ALLOWED = ['seller_name', 'vat_number', 'cr_number', 'city', 'district', 'street', 'postal_code', 'building_number', 'environment', 'egs_uuid'];
+      const record = Object.fromEntries(Object.entries(body).filter(([k]) => ALLOWED.includes(k)));
       const { data, error } = await supabase
         .from('zatca_settings')
         .update({ ...record, updated_at: new Date().toISOString() })

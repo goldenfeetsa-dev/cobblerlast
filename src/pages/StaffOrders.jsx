@@ -52,7 +52,7 @@ export default function StaffOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, status }) => { const r = await supabase.from('orders').update({ status, ...workerPatch(session) }).eq('id', id); if (!r.error && status === 'ready') notifyOrderReady(id); return r; },
+    mutationFn: async ({ id, status }) => { const r = await supabase.from('orders').update({ status, ...workerPatch(session) }).eq('id', id); if (r.error) throw r.error; if (status === 'ready') notifyOrderReady(id); return r; },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-orders'] });
       toast.success('✅ تم تحديث حالة الطلب');

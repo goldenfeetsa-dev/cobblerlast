@@ -7,6 +7,7 @@ import {
 , Sparkles } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';
+import { queryClientInstance } from '@/lib/query-client';
 
 // ─── Groups: مرتبة حسب الاستخدام الأكثر، الإعدادات دائماً آخراً
 const navGroups = [
@@ -110,6 +111,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     clearSession();
+    try { queryClientInstance.clear(); } catch {}
     fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     // تنقّل ناعم عبر الراوتر بدل إعادة تحميل الصفحة بالكامل (أخف وأسرع على الجهاز)
     navigate('/login', { replace: true });

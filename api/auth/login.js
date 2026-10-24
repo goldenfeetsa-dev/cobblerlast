@@ -8,6 +8,7 @@
  * موقّعة والمتصفح ما يشوف أي توكن حساس إطلاقاً.
  */
 import { buildSetCookieHeader, createSessionToken } from '../_lib/session.js';
+import { getSupabaseAdmin } from '../_lib/loyalty/supabaseAdmin.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 
@@ -15,10 +16,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   // تشخيص صريح: نذكر اسم المتغير الناقص فقط (بدون أي قيمة)
-  const missing = [!process.env.SESSION_SECRET && 'SESSION_SECRET', !SUPABASE_URL && 'SUPABASE_URL'].filter(Boolean);
+  const missing = [!process.env.SESSION_SECRET && 'SESSION_SECRET', !SUPABASE_URL && 'SUPABASE_URL', !process.env.SUPABASE_SERVICE_ROLE_KEY && 'SUPABASE_SERVICE_ROLE_KEY'].filter(Boolean);
   if (missing.length) {
     console.error('api/auth/login: missing env', missing.join(','));
-    return res.status(500).json({ success: false, error: 'config_missing', missing });
+    return res.status(500).json({ success: false, error: 'config_missing' });
   }
 
   const { pin } = req.body || {};
@@ -27,26 +28,46 @@ export default async function handler(req, res) {
   }
 
   try {
-    // نمرّر IP المستخدم الحقيقي لدالة pos-login عشان تقييد المحاولات
-    // (rate limiting) يفضل يشتغل حسب جهاز الزائر الفعلي، مو سيرفرنا.
-    const forwardedFor = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+    const sb = getSupabaseAdmin();
+    const now = new Date();
+    const hdr = (k) => String(req.headers[k] || '').trim();
+    // IP موثوق: Cloudflare ثم x-real-ip ثم آخر عنصر في x-forwarded-for (الأول يقدر المهاجم يزوّره)
+    const ip = hdr('cf-connecting-ip') || hdr('x-real-ip') || hdr('x-forwarded-for').split(',').pop().trim() || 'unknown';
+    const keys = [`ip:${ip}`, 'global'];
+    const limits = { [`ip:${ip}`]: 5, global: 25 };
+    const WINDOW = 15 * 60 * 1000;
 
-    const upstream = await fetch(`${SUPABASE_URL}/functions/v1/pos-login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-forwarded-for': forwardedFor,
-      },
-      body: JSON.stringify({ pin }),
-    });
-    const result = await upstream.json();
+    const { data: rows } = await sb.from('login_attempts').select('*').in('ip', keys);
+    const rec = Object.fromEntries((rows || []).map((r) => [r.ip, r]));
+    for (const k of keys) {
+      const r = rec[k];
+      if (r?.locked_until && new Date(r.locked_until) > now) {
+        return res.status(429).json({ success: false, error: 'rate_limited', retry_after_seconds: Math.ceil((new Date(r.locked_until) - now) / 1000) });
+      }
+    }
 
-    if (upstream.status === 429) {
-      return res.status(429).json(result);
+    const { data: match } = await sb.from('employees')
+      .select('id, name, role, avatar_url, is_active, branch_id, branch_name')
+      .eq('pin', pin).eq('is_active', true).limit(1).maybeSingle();
+
+    if (!match) {
+      let locked = false;
+      for (const k of keys) {
+        const r = rec[k];
+        const fresh = !r?.window_start || now - new Date(r.window_start) > WINDOW;
+        const attempts = (fresh ? 0 : r.attempts || 0) + 1;
+        const lock = attempts >= limits[k];
+        if (lock) locked = true;
+        await sb.from('login_attempts').upsert({
+          ip: k, attempts: lock ? 0 : attempts, window_start: fresh ? now.toISOString() : r.window_start,
+          locked_until: lock ? new Date(now.getTime() + WINDOW).toISOString() : null, updated_at: now.toISOString(),
+        });
+      }
+      if (locked) return res.status(429).json({ success: false, error: 'rate_limited', retry_after_seconds: WINDOW / 1000 });
+      return res.status(401).json({ success: false, error: 'invalid_pin' });
     }
-    if (!upstream.ok || !result.success || !result.employee) {
-      return res.status(upstream.status || 401).json(result);
-    }
+    await sb.from('login_attempts').upsert({ ip: `ip:${ip}`, attempts: 0, window_start: now.toISOString(), locked_until: null, updated_at: now.toISOString() });
+    const result = { success: true, employee: match };
 
     const employee = result.employee;
     const token = createSessionToken({

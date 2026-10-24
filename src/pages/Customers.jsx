@@ -68,17 +68,17 @@ export default function Customers() {
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: () => db.Customer.list('-created_at', 200),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
     queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
   const { data: planList } = useQuery({
     queryKey: ['operations-plan'],
-    queryFn: () => db.OperationsPlan.list(), initialData: [],
+    queryFn: () => db.OperationsPlan.list(), initialData: [], initialDataUpdatedAt: 0,
   });
   // نفس المصدر المستخدم فعلياً عند إنشاء الطلب (NewOrder) — كانت الصفحتين
   // تقرآن من جدولين مختلفين فيطلع رقم مختلف بالبطاقة عن الرقم الحقيقي المُطبَّق

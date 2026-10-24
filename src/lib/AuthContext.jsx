@@ -1,3 +1,4 @@
+import { queryClientInstance } from '@/lib/query-client';
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { supabase } from '@/lib/supabaseClient';
@@ -20,6 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     clearSession();
+    try { queryClientInstance.clear(); } catch {}
     fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
       .catch(() => {})
       .finally(() => window.location.replace('/login'));

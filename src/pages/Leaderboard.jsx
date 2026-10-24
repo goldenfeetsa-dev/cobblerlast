@@ -65,13 +65,13 @@ export default function Leaderboard() {
   const { data: employees = [], isLoading: empLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: () => db.Employee.list('-created_at', 200, EMPLOYEE_SAFE_COLUMNS),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['orders-leaderboard'],
     queryFn: () => db.Order.list('-created_at', 1000, 'id, order_number, customer_name, customer_phone, branch_id, branch_name, employee_id, employee_name, total_price, payment_method, payment_status, status, created_at, partner_invoice_id'),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   // مبيعات المنتجات — لازمة عشان تقييم الكاشير يكون على أساس صحيح
@@ -79,7 +79,7 @@ export default function Leaderboard() {
   const { data: salesInvoices = [] } = useQuery({
     queryKey: ['sales-invoices-leaderboard'],
     queryFn: () => db.SalesInvoice.list('-created_at', 1000, 'id, invoice_number, branch_id, branch_name, employee_id, employee_name, total, payment_method, payment_status, created_at, items'),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const now = new Date();

@@ -38,7 +38,7 @@ function WithdrawalTab({ items, session }) {
   const { data: myWithdrawals } = useQuery({
     queryKey: ['workshop-custody', session?.name, monthKey],
     queryFn: () => db.WorkshopCustody.filter({ technician_name: session?.name, month_key: monthKey }),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const withdraw = useMutation({
@@ -182,26 +182,26 @@ function SettlementTab({ items, session }) {
   const { data: allCustody } = useQuery({
     queryKey: ['workshop-custody-all'],
     queryFn: () => db.WorkshopCustody.list('-created_at', 500),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: salesInvoices } = useQuery({
     queryKey: ['sales-invoices'],
     queryFn: () => db.SalesInvoice.list('-created_at', 500),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   // طلبات الإصلاح — كانت مفقودة تماماً من حساب صافي الربح سابقاً
   const { data: repairOrders } = useQuery({
     queryKey: ['orders-for-settlement'],
     queryFn: () => db.Order.list('-created_at', 1000),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: settlements } = useQuery({
     queryKey: ['workshop-settlements'],
     queryFn: () => db.WorkshopSettlement.list('-created_at', 24),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const workshopItems = items.filter(i => i.category === 'workshop' || i.category === 'both');
@@ -589,7 +589,7 @@ export default function WorkshopSystem() {
   const { data: items } = useQuery({
     queryKey: ['inventory-items'],
     queryFn: () => db.InventoryItem.list('-created_at', 500),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const isAdmin = isFullAdmin(session?.role);
@@ -597,7 +597,7 @@ export default function WorkshopSystem() {
   const { data: allCustodyStats } = useQuery({
     queryKey: ['workshop-custody-all'],
     queryFn: () => db.WorkshopCustody.list('-created_at', 500),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const workshopItems = items.filter(i => i.category === 'workshop' || i.category === 'both');

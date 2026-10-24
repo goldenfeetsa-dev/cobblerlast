@@ -39,7 +39,7 @@ export default function ReceiptView({ order, autoPrint = false }) {
   const { data: settingsList, isFetched: settingsFetched } = useQuery({
     queryKey: ['app-settings'],
     queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
   const settings = settingsList[0] || {};
   const shopName = settings.shop_name || 'مؤسسة إبرة وخيط الإسكافي للتجارة';

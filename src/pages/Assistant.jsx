@@ -10,6 +10,7 @@ import { clearSession, getSession } from '@/lib/sessionStore';
 import { workerPatch } from '@/lib/workerTiming';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
 import { parseCommand, normalize, STATUS_AR } from '@/lib/assistantNlu';
+import { queryClientInstance } from '@/lib/query-client';
 
 // أفضل تفسير من بدائل التعرف الصوتي: أول بديل يفهمه المحرك، وإلا الأول
 function bestAlternative(alts) {
@@ -495,7 +496,7 @@ export default function Assistant() {
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
             <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground' : m.error ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-muted'}`}>{m.content}
               {m.relogin && (
-                <button onClick={() => { clearSession(); fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {}); navigate('/login', { replace: true }); }}
+                <button onClick={() => { clearSession(); try { queryClientInstance.clear(); } catch {} fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {}); navigate('/login', { replace: true }); }}
                   className="block mt-2 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold">تسجيل دخول من جديد</button>
               )}
             </div>

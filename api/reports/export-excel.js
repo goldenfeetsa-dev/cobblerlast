@@ -52,8 +52,12 @@ export default async function handler(req, res) {
     supabase.from('zatca_settings').select('seller_name, vat_number, cr_number').eq('id', 1).single(),
   ]);
 
-  const repairRevenue = (orders || []).reduce((s, o) => s + (o.subtotal ?? (o.total_price || 0) / 1.15), 0);
-  const productRevenue = (sales || []).reduce((s, inv) => s + (inv.subtotal || 0), 0);
+  // لا نحسب الملغى/المرتجع، ولا فاتورة الشريك المجمّعة (طلباتها محسوبة أصلاً كطلبات)
+  const isPartnerInv = (inv) => Array.isArray(inv.items) && inv.items.some((it) => it && it.order_id);
+  const liveOrders = (orders || []).filter((o) => !['cancelled', 'returned'].includes(o.status));
+  const revSales = (sales || []).filter((inv) => !isPartnerInv(inv));
+  const repairRevenue = liveOrders.reduce((s, o) => s + (o.subtotal ?? (o.total_price || 0) / 1.15), 0);
+  const productRevenue = revSales.reduce((s, inv) => s + (inv.subtotal || 0), 0);
   const totalRevenue = repairRevenue + productRevenue;
   const totalExpenses = (expenses || []).reduce((s, e) => s + (e.amount || 0), 0);
   const netProfit = totalRevenue - totalExpenses;

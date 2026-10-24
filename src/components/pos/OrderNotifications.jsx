@@ -48,39 +48,34 @@ export default function OrderNotifications() {
   }, []);
 
   useEffect(() => {
-    // Load initial statuses
-    supabase.from('orders').select('id, status, order_number, customer_name')
-      .order('created_at', { ascending: false }).limit(200)
-      .then(({ data }) => {
-        data?.forEach(o => { prevStatuses.current[o.id] = o.status; });
-        initialized.current = true;
-      });
-
-    // Supabase Realtime
-    const channel = supabase
-      .channel('order_notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-        if (!initialized.current) return;
-        const o = payload.new;
-        toast.info(`طلب جديد: ${o.order_number} — ${o.customer_name}`, { duration: 5000 });
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
-        if (!initialized.current) return;
-        const o = payload.new;
-        const prev = prevStatuses.current[o.id];
-        if (prev && prev !== o.status) {
-          const label = STATUS_LABELS[o.status] || o.status;
-          const msg   = `الطلب ${o.order_number}: ${label}`;
-          const type  = STATUS_COLORS[o.status];
-          if (type === 'success') toast.success(msg, { duration: 5000 });
-          else if (type === 'error') toast.error(msg, { duration: 5000 });
-          else toast.info(msg, { duration: 5000 });
+    // مقارنة دورية (كل 20 ثانية) بدل Realtime: ننبّه بالطلبات الجديدة وتغيّر الحالات
+    let stop = false;
+    const poll = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const { data } = await supabase.from('orders').select('id, status, order_number, customer_name')
+        .order('created_at', { ascending: false }).limit(100);
+      if (stop || !data) return;
+      if (initialized.current) {
+        for (const o of data) {
+          const prev = prevStatuses.current[o.id];
+          if (prev === undefined) {
+            toast.info(`طلب جديد: ${o.order_number} — ${o.customer_name}`, { duration: 5000 });
+          } else if (prev !== o.status) {
+            const label = STATUS_LABELS[o.status] || o.status;
+            const msg = `الطلب ${o.order_number}: ${label}`;
+            const type = STATUS_COLORS[o.status];
+            if (type === 'success') toast.success(msg, { duration: 5000 });
+            else if (type === 'error') toast.error(msg, { duration: 5000 });
+            else toast.info(msg, { duration: 5000 });
+          }
         }
-        prevStatuses.current[o.id] = o.status;
-      })
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
+      }
+      data.forEach((o) => { prevStatuses.current[o.id] = o.status; });
+      initialized.current = true;
+    };
+    poll();
+    const id = setInterval(poll, 20000);
+    return () => { stop = true; clearInterval(id); };
   }, []);
 
   return null;

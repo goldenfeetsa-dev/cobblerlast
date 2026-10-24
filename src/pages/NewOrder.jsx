@@ -95,22 +95,22 @@ function CobblerTab({ session }) {
       const d = JSON.parse(raw);
       setForm((f) => ({ ...f, customer_name: d.customer_name || '', customer_phone: d.customer_phone || '', delivery_date: d.delivery_date || '', total_price: d.total_price || '', notes: d.notes || '' }));
       setPieces([{ ...newPiece(), item_type: d.item_type || 'shoes', description: d.description || '' }]);
-      if (d.auto) setTimeout(() => formRef.current?.requestSubmit(), 900); // تأكيد المستخدم تم من المساعد: نمرّر على نفس مسار الحفظ (تحقق + زاتكا)
+      if (d.auto) setTimeout(() => formRef.current?.requestSubmit(), 3000); // تأكيد المستخدم تم من المساعد: نمرّر على نفس مسار الحفظ (تحقق + زاتكا)
     } catch { /* تجاهل */ }
   }, []);
 
   const { data: customers } = useQuery({
-    queryKey: ['customers'], queryFn: () => db.Customer.list(), initialData: [],
+    queryKey: ['customers'], queryFn: () => db.Customer.list(), initialData: [], initialDataUpdatedAt: 0,
   });
   const { data: settingsList = [] } = useQuery({
     queryKey: ['app-settings'], queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
   });
   const { data: planList2 } = useQuery({
-    queryKey: ['operations-plan'], queryFn: () => db.OperationsPlan.list(), initialData: [],
+    queryKey: ['operations-plan'], queryFn: () => db.OperationsPlan.list(), initialData: [], initialDataUpdatedAt: 0,
   });
   // قائمة الفنيين لتخصيص كل قطعة لفني مسؤول عنها
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'], queryFn: () => db.Employee.list('-created_at', 200, EMPLOYEE_SAFE_COLUMNS), initialData: [],
+    queryKey: ['employees'], queryFn: () => db.Employee.list('-created_at', 200, EMPLOYEE_SAFE_COLUMNS), initialData: [], initialDataUpdatedAt: 0,
   });
   const technicians = employees.filter(e => e.is_active !== false);
 
@@ -628,13 +628,13 @@ function ProductsTab({ session }) {
   const [printInvoice, setPrintInvoice] = useState(null);
 
   const { data: items } = useQuery({
-    queryKey: ['inventory-items'], queryFn: () => db.InventoryItem.list('-created_at', 500), initialData: [],
+    queryKey: ['inventory-items'], queryFn: () => db.InventoryItem.list('-created_at', 500), initialData: [], initialDataUpdatedAt: 0,
   });
   const { data: branches } = useQuery({
-    queryKey: ['branches'], queryFn: () => db.Branch.list(), initialData: [],
+    queryKey: ['branches'], queryFn: () => db.Branch.list(), initialData: [], initialDataUpdatedAt: 0,
   });
   const { data: planList } = useQuery({
-    queryKey: ['operations-plan'], queryFn: () => db.OperationsPlan.list(), initialData: [],
+    queryKey: ['operations-plan'], queryFn: () => db.OperationsPlan.list(), initialData: [], initialDataUpdatedAt: 0,
   });
   const freeAfter = planList[0]?.loyalty_free_after || 4;
 

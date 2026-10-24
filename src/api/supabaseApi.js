@@ -2,7 +2,7 @@
  * supabaseApi.js
  * طبقة الوصول الوحيدة للبيانات — كل العمليات تذهب مباشرة إلى Supabase
  */
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, SUPABASE_PUBLIC_URL } from '@/lib/supabaseClient';
 import { notifyOrderReady } from '@/lib/waNotify';
 import { secureExpenses } from '@/lib/secureApi';
 
@@ -75,15 +75,8 @@ function createEntity(tableName) {
       return data || [];
     },
 
-    // Real-time subscription
-    subscribe(callback) {
-      const channel = supabase
-        .channel(`${tableName}_changes`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: tableName },
-          (payload) => callback(payload))
-        .subscribe();
-      return () => supabase.removeChannel(channel);
-    },
+    // لا بث لحظي: القاعدة مقفولة عن المتصفح — راجع RealtimeSync.jsx (تحديث دوري)
+    subscribe() { return () => {}; },
   };
 }
 
@@ -140,8 +133,7 @@ async function uploadFile({ file, bucket = 'order-photos' }) {
     upsert: false,
   });
   if (error) throw new Error(error.message);
-  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
-  return { file_url: publicUrl };
+  return { file_url: `${SUPABASE_PUBLIC_URL}/storage/v1/object/public/${bucket}/${path}` };
 }
 
 // يحذف ملفاً من التخزين اعتماداً على رابطه العام الكامل

@@ -219,34 +219,34 @@ export default function OperationsDashboard() {
   const { data: planList } = useQuery({
     queryKey: ['operations-plan'],
     queryFn: () => db.OperationsPlan.list(),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
   const plan = planList[0] || null;
 
   const { data: workflows, isLoading: wfLoading } = useQuery({
     queryKey: ['workflow-stages'],
     queryFn: () => db.WorkflowStage.list('-created_at', 100),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
     refetchInterval: 15000,
   });
 
   const { data: allOrders } = useQuery({
     queryKey: ['orders', 'operations'],
     queryFn: () => db.Order.list('-created_at', 300),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
     refetchInterval: 20000,
   });
 
   const { data: customers } = useQuery({
     queryKey: ['customers'],
     queryFn: () => db.Customer.list(),
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
 
   const { data: settingsList } = useQuery({
     queryKey: ['app-settings'],
     queryFn: () => db.AppSettings.list('-created_at', 200, APP_SETTINGS_SAFE_COLUMNS), staleTime: 0,
-    initialData: [],
+    initialData: [], initialDataUpdatedAt: 0,
   });
   const freeAfter = plan?.loyalty_free_after || settingsList[0]?.stamps_required || 4;
 

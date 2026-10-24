@@ -1,64 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabaseClient';
 
-// كل الجداول اللي البرنامج يعرض بياناتها بصفحاته. أي تغيير عليها
-// (INSERT / UPDATE / DELETE) من أي جهاز أو تبويب، يوصل هنا فوراً
-// عبر Supabase Realtime، ونحن نبطل كل الكاش النشط على الشاشة
-// فيعيد React Query جلبه من قاعدة البيانات مباشرة — بدون انتظار
-// انتهاء staleTime وبدون الحاجة لإعادة تحميل الصفحة يدوياً.
-// استُبعد 'site_visits' و'audit_logs': الأول يُكتب مع كل زيارة لأي زائر للموقع
-// والثاني مع كل عملية، فكانا يُبطلان كل الكاش ويعيدان جلب كل شاشة المدير باستمرار.
-const WATCHED_TABLES = [
-  'orders', 'employees', 'branches',
-  'inventory_items', 'suppliers', 'supplier_products', 'products',
-  // ملاحظة: 'expenses' و'customers' اتشالوا من هنا — الجدولين أصبحوا
-  // مقفولين بالكامل عن anon (BFF فقط عبر /api/secure/*)، فالمزامنة
-  // اللحظية القديمة ما كانت ستوصل أي بيانات فعلياً بعد التشديد.
-  // الصفحات المعنية تعيد الجلب بنفسها بعد كل عملية مباشرة بدل الاعتماد
-  // على Realtime.
-  'sales_invoices', 'app_settings',
-  'loyalty_cards', 'loyalty_stamps', 'loyalty_settings',
-  'loyalty_members', 'loyalty_points_transactions',
-  'loyalty_member_notifications', 'loyalty_membership_settings',
-  'bookings', 'services', 'reviews', 'working_hours',
-  'brands', 'shop_settings', 'stock_movements',
-  'workshop_custodies', 'workshop_settlements', 'operations_plans',
-  'workflow_stages',
-];
+// المزامنة اللحظية عبر Supabase Realtime أُوقفت لأن قاعدة البيانات صارت مقفولة عن
+// المتصفح (كل شيء عبر بوابة الخادم). بدلها: تحديث دوري خفيف للاستعلامات المعروضة
+// فقط، وعند عودة المستخدم للتبويب.
+const EVERY_MS = 20000;
 
 export default function RealtimeSync() {
   const queryClient = useQueryClient();
-  const pendingRef = useRef(false);
-
   useEffect(() => {
-    // نجمّع كل الأحداث اللي توصل خلال نصف ثانية باستدعاء واحد فقط
-    // (بدل ما نسوي عشرات invalidateQueries متتالية لو وصلت دفعة تغييرات
-    // مرة وحدة، مثل تحديث المخزون لسطور فاتورة فيها منتجات كثيرة).
-    const scheduleInvalidate = () => {
-      if (pendingRef.current) return;
-      pendingRef.current = true;
-      setTimeout(() => {
-        pendingRef.current = false;
-        // بدون تحديد queryKey → يشمل كل مفاتيح الكاش، لكنه فعلياً
-        // يعيد الجلب فقط للاستعلامات "النشطة" المعروضة حالياً بالشاشة
-        // (سلوك invalidateQueries الافتراضي: refetchType: 'active').
-        queryClient.invalidateQueries();
-      }, 500);
-    };
-
-    const channel = supabase.channel('global_realtime_sync');
-    WATCHED_TABLES.forEach((table) => {
-      channel.on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table },
-        scheduleInvalidate
-      );
-    });
-    channel.subscribe();
-
-    return () => supabase.removeChannel(channel);
+    const tick = () => { if (document.visibilityState === 'visible') queryClient.invalidateQueries(); };
+    const id = setInterval(tick, EVERY_MS);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
   }, [queryClient]);
-
   return null;
 }
