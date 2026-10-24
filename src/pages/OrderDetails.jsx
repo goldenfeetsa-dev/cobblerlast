@@ -374,7 +374,7 @@ export default function OrderDetails() {
         </div>
       </div>
 
-      <Tabs defaultValue={justCreated ? 'receipt' : 'details'} className="space-y-6">
+      <Tabs defaultValue={justCreated || new URLSearchParams(location.search).get('tab') === 'receipt' ? 'receipt' : 'details'} className="space-y-6">
         <TabsList>
           <TabsTrigger value="details">التفاصيل</TabsTrigger>
           <TabsTrigger value="receipt">الفاتورة والباركود</TabsTrigger>

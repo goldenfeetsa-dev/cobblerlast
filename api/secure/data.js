@@ -720,12 +720,14 @@ export default async function handler(req, res) {
 ${dialectGuide(sess.role)}
 الرد يُنطق بصوت عالٍ: اكتب جملاً متصلة كاملة بعلامات ترقيم طبيعية كأنك تتحدث مع شخص، بدون قوائم ولا عناوين ولا نجوم ولا رموز ولا اختصارات، وأرقام بسيطة. اجعل الرد أقل من 350 حرفاً ما لم يطلب التفصيل.
 دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
-للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
+أنت وكيل تنفيذي: عندما يطلب المستخدم فعلاً (فتح صفحة أو فاتورة، تغيير حالة، رف، ملاحظة أو «الناقص»، حجز، طلب جديد، تغيير موعد) استدعِ الأداة المناسبة فوراً ولا تكتفِ بالكلام، ولا تقل «تم» إلا بعد استدعاء الأداة. يمكنك استدعاء أكثر من أداة في نفس الرد. للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
 تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
         const hist = (Array.isArray(history) ? history : []).slice(-10).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 1200) }));
         const errors = [];
         let reply = '';
         let action = null;
+        const actions = [];
+        const setAction = (a) => { action = a; actions.push(a); };
         // ── الوكيل المحلي (Qwen2.5 على جهازك عبر نفق آمن): للمدراء فقط لأنه يملك صلاحية القراءة الكاملة ──
         const localOk = !!localUrl && ['owner', 'admin', 'manager'].includes(sess.role);
         const askLocal = async () => {
@@ -799,6 +801,24 @@ ${dialectGuide(sess.role)}
                   } catch (e) { return { error: 'search_failed' }; }
                 },
               }),
+              open_page: tool({
+                description: 'فتح صفحة في النظام مباشرة للمستخدم (تنفيذ فوري)',
+                inputSchema: z.object({ path: z.enum(['/pos', '/new-order', '/orders', '/invoices', '/admin/partners', '/customers', '/calendar', '/scan', '/sales', '/returns', '/financial-reports', '/employees', '/settings', '/staff', '/admin/bookings', '/audit', '/leaderboard', '/zatca']), label: z.string().describe('اسم الصفحة بالعربي') }),
+                execute: async (a) => { setAction({ type: 'navigate', path: a.path, label: String(a.label || '').slice(0, 40) }); return { opened: true }; },
+              }),
+              open_order: tool({
+                description: 'فتح طلب معيّن مباشرة: view=details لتفاصيل الطلب، invoice لفتح الفاتورة، barcode لطباعة الباركود (تنفيذ فوري)',
+                inputSchema: z.object({ order_number: z.string(), view: z.enum(['details', 'invoice', 'barcode']) }),
+                execute: async (a) => {
+                  const num = String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+                  const { data } = await sb.from('orders').select('id,order_number').eq('order_number', num).limit(1);
+                  const o = data?.[0];
+                  if (!o) return { found: false };
+                  const path = a.view === 'barcode' ? `/barcode/${o.id}` : a.view === 'invoice' ? `/orders/${o.id}?tab=receipt` : `/orders/${o.id}`;
+                  setAction({ type: 'navigate', path, label: a.view === 'invoice' ? `فاتورة ${o.order_number}` : a.view === 'barcode' ? `باركود ${o.order_number}` : `الطلب ${o.order_number}` });
+                  return { opened: true };
+                },
+              }),
               check_availability: tool({ description: 'المواعيد الفارغة ليوم معيّن للحجز (حسب ساعات العمل والحجوزات القائمة)', inputSchema: z.object({ date: z.string().describe('YYYY-MM-DD'), duration_minutes: z.number().optional() }), execute: async (a) => runTool('check_availability', a) }),
               order_details: tool({ description: 'تفاصيل طلب كاملة (وصف، ملاحظات، رف، حالة الدفع) برقم الطلب', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => runTool('order_details', a) }),
               customer_lookup: tool({ description: 'بحث عن عميل باسمه أو جواله (عدد طلباته ومستوى الولاء)', inputSchema: z.object({ query: z.string() }), execute: async (a) => runTool('customer_lookup', a) }),
@@ -821,15 +841,20 @@ ${dialectGuide(sess.role)}
                   inputSchema: z.object({ customer_name: z.string(), customer_phone: z.string().optional(), item_type: z.enum(['shoes', 'bag', 'dress', 'suit', 'jacket', 'pants', 'shirt', 'other']).optional(), description: z.string().optional(), total_price: z.number().optional(), delivery_date: z.string().optional().describe('YYYY-MM-DD'), notes: z.string().optional() }),
                   execute: async (a) => {
                     const d = { customer_name: String(a.customer_name || '').slice(0, 80), customer_phone: String(a.customer_phone || '').replace(/[^\d+]/g, '').slice(0, 15), item_type: a.item_type || 'shoes', description: String(a.description || '').slice(0, 300), total_price: a.total_price > 0 ? String(a.total_price) : '', delivery_date: /^\d{4}-\d{2}-\d{2}$/.test(a.delivery_date || '') ? a.delivery_date : '', notes: String(a.notes || '').slice(0, 300) };
-                    action = { type: 'new_order', draft: d };
+                    setAction({ type: 'new_order', draft: d });
                     return { ok: true, note: 'سيُفتح نموذج الطلب للمراجعة؛ قل للمستخدم أن يراجع ويحفظ.' };
                   },
                 }),
+                set_shelf: tool({
+                  description: 'تحديد رف/مكان حفظ الطلب (يُنفَّذ فوراً)',
+                  inputSchema: z.object({ order_number: z.string(), shelf: z.string().describe('اسم أو رقم الرف مثل A3') }),
+                  execute: async (a) => { setAction({ type: 'set_shelf', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), shelf: String(a.shelf || '').slice(0, 30) }); return { done: true }; },
+                }),
                 add_order_note: tool({
-                  description: 'إضافة ملاحظة لطلب موجود (تُنفَّذ بعد تأكيد المستخدم)',
+                  description: 'إضافة ملاحظة لطلب موجود، ومنها «الناقص/المطلوب» أو أي تعليمات (يُنفَّذ فوراً)',
                   inputSchema: z.object({ order_number: z.string(), note: z.string() }),
                   execute: async (a) => {
-                    action = { type: 'add_note', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), note: String(a.note || '').slice(0, 300) };
+                    setAction({ type: 'add_note', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), note: String(a.note || '').slice(0, 300) });
                     return { pending_user_confirmation: true };
                   },
                 }),
@@ -838,7 +863,7 @@ ${dialectGuide(sess.role)}
                   inputSchema: z.object({ order_number: z.string(), delivery_date: z.string().describe('YYYY-MM-DD') }),
                   execute: async (a) => {
                     if (!/^\d{4}-\d{2}-\d{2}$/.test(a.delivery_date || '')) return { error: 'bad_date' };
-                    action = { type: 'set_delivery', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), delivery_date: a.delivery_date };
+                    setAction({ type: 'set_delivery', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), delivery_date: a.delivery_date });
                     return { pending_user_confirmation: true };
                   },
                 }),
@@ -846,7 +871,7 @@ ${dialectGuide(sess.role)}
                   description: 'حجز موعد لعميل. تحقق أولاً بـ check_availability أن الوقت متاح. لا يُنفَّذ إلا بعد تأكيد المستخدم، ويُرسل للعميل تأكيد واتساب.',
                   inputSchema: z.object({ customer_name: z.string(), customer_phone: z.string(), date: z.string().describe('YYYY-MM-DD'), time: z.string().describe('HH:MM بتوقيت 24 ساعة'), service_name: z.string().optional() }),
                   execute: async (a) => {
-                    action = { type: 'book', customer_name: String(a.customer_name).slice(0, 60), customer_phone: String(a.customer_phone).slice(0, 20), date: a.date, time: a.time, service_name: a.service_name ? String(a.service_name).slice(0, 60) : '' };
+                    setAction({ type: 'book', customer_name: String(a.customer_name).slice(0, 60), customer_phone: String(a.customer_phone).slice(0, 20), date: a.date, time: a.time, service_name: a.service_name ? String(a.service_name).slice(0, 60) : '' });
                     return { pending_user_confirmation: true };
                   },
                 }),
@@ -855,7 +880,7 @@ ${dialectGuide(sess.role)}
                   inputSchema: z.object({ order_number: z.string(), status: z.enum(['ready', 'completed']) }),
                   execute: async (a) => {
                     const num = String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-                    action = { type: 'set_status', order_number: num, status: a.status, label: a.status === 'completed' ? 'تم التسليم' : 'جاهز' };
+                    setAction({ type: 'set_status', order_number: num, status: a.status, label: a.status === 'completed' ? 'تم التسليم' : 'جاهز' });
                     return { pending_user_confirmation: true, note: 'لم يتغير شيء بعد؛ اسأل المستخدم يؤكد.' };
                   },
                 }),
@@ -874,8 +899,9 @@ ${dialectGuide(sess.role)}
               maxOutputTokens: 1024,
             });
             reply = (out.text || '').trim();
+            if (!reply && actions.length) reply = 'تمام، نفّذت.';
             if (!reply) throw new Error('gateway_empty');
-          } catch (e) { action = null; errors.push(`${gatewayKey ? 'gateway' : 'groq-tools'}:${String(e.message || e).slice(0, 80)}`); console.error('assistant gateway', e.message); }
+          } catch (e) { action = null; actions.length = 0; errors.push(`${gatewayKey ? 'gateway' : 'groq-tools'}:${String(e.message || e).slice(0, 80)}`); console.error('assistant gateway', e.message); }
         }
         if (!reply && geminiKey) {
           try {
@@ -921,7 +947,7 @@ ${dialectGuide(sess.role)}
                   if (name === 'change_order_status') {
                     const num = String(args?.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
                     const st = args?.status === 'completed' ? 'completed' : 'ready';
-                    action = { type: 'set_status', order_number: num, status: st, label: st === 'completed' ? 'تم التسليم' : 'جاهز' };
+                    setAction({ type: 'set_status', order_number: num, status: st, label: st === 'completed' ? 'تم التسليم' : 'جاهز' });
                     out = { pending_user_confirmation: true, note: 'لم يتغير شيء بعد؛ اسأل المستخدم يؤكد.' };
                   } else { try { out = await runTool(name, args); } catch { out = { error: 'tool_failed' }; } }
                   responses.push({ functionResponse: { name, response: { result: out } } });
@@ -947,7 +973,7 @@ ${dialectGuide(sess.role)}
         }
         if (!reply && localOk && process.env.LOCAL_AGENT_FIRST !== '1') await askLocal();
         if (!reply) return res.status(200).json({ error: 'ai_failed', detail: errors.join(' | ') || `empty_reply(providers:${[gatewayKey && 'gateway', geminiKey && 'gemini', groqKey && 'groq'].filter(Boolean).join('+')})` });
-        return res.status(200).json({ reply: reply.slice(0, 2000), ...(action ? { action } : {}) });
+        return res.status(200).json({ reply: reply.slice(0, 2000), ...(action ? { action, actions } : {}) });
       } catch (err) {
         console.error('api/secure/data (assistant llm) error', err);
         return res.status(200).json({ error: 'ai_failed', detail: String(err.message || '').slice(0, 120) });

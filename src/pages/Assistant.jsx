@@ -205,11 +205,12 @@ export default function Assistant() {
       if (!order) return say(`ما لقيت الطلب ${cmd.order_number}.`, { error: true });
       const changes = cmd.type === 'add_note'
         ? { notes: [order.notes, `[المساعد] ${cmd.note}`].filter(Boolean).join('\n') }
-        : { delivery_date: cmd.delivery_date };
+        : cmd.type === 'set_shelf' ? { shelf_location: cmd.shelf }
+          : { delivery_date: cmd.delivery_date };
       await db.Order.update(order.id, changes);
       logAudit({ action: 'update', page: 'المساعد الذكي', entity: 'order', entity_id: order.id, details: { order_number: order.order_number, changes } });
       qc.invalidateQueries({ queryKey: ['orders'] });
-      say(`تمام ✅ سجلتها على الطلب ${order.order_number}.`);
+      say(cmd.type === 'set_shelf' ? `تمام ✅ حطيت الطلب ${order.order_number} على الرف ${cmd.shelf}.` : cmd.type === 'add_note' ? `تمام ✅ سجلت الملاحظة على الطلب ${order.order_number}.` : `تمام ✅ غيّرت موعد التسليم للطلب ${order.order_number}.`);
     } catch (e) { say(`ما قدرت أنفّذ: ${e.message}`, { error: true }); }
   };
 
@@ -235,29 +236,27 @@ export default function Assistant() {
     }
   };
 
-  const sayAI = (r) => {
-    const a = r.action;
-    if (a?.type === 'new_order') {
-      try { sessionStorage.setItem('assistant_order_draft', JSON.stringify(a.draft)); } catch { /* ignore */ }
-      say(`${r.reply}\nأفتح لك نموذج الطلب معبّأً للمراجعة.`);
+  // تنفيذ الإجراءات القادمة من الذكاء: فورية (فتح/رف/ملاحظة) وبتأكيد (حالة/حجز/موعد)
+  const sayAI = async (r) => {
+    const list = r.actions?.length ? r.actions : (r.action ? [r.action] : []);
+    const conf = list.find((a) => ['set_status', 'book', 'set_delivery'].includes(a.type));
+    const draft = list.find((a) => a.type === 'new_order');
+    const nav = [...list].reverse().find((a) => a.type === 'navigate');
+    const imm = list.filter((a) => a.type === 'add_note' || a.type === 'set_shelf');
+    let text = r.reply;
+    if (conf) {
+      setPending(conf);
+      const q = conf.type === 'book' ? `أحجز لـ${conf.customer_name} (${conf.customer_phone}) يوم ${conf.date} الساعة ${conf.time}${conf.service_name ? ` — ${conf.service_name}` : ''} وأرسل له تأكيد واتساب؟`
+        : conf.type === 'set_delivery' ? `أغيّر موعد تسليم الطلب ${conf.order_number} إلى ${conf.delivery_date}؟`
+          : `أغيّر حالة الطلب ${conf.order_number} إلى «${conf.label}»؟`;
+      text = `${text}\n${q} قل «تمام» أو «لا».`;
+    }
+    say(text, conf ? { confirm: conf } : {});
+    for (const a of imm) await confirmUpdate(a);
+    if (draft) {
+      try { sessionStorage.setItem('assistant_order_draft', JSON.stringify(draft.draft)); } catch { /* ignore */ }
       setTimeout(() => navigate('/new-order'), 900);
-      return;
-    }
-    if (a?.type === 'book') {
-      setPending(a);
-      return say(`${r.reply}\nأحجز لـ${a.customer_name} (${a.customer_phone}) يوم ${a.date} الساعة ${a.time}${a.service_name ? ` — ${a.service_name}` : ''} وأرسل له تأكيد واتساب؟ قل «تمام» أو «لا».`, { confirm: a });
-    }
-    if (a?.type === 'add_note' || a?.type === 'set_delivery') {
-      const label = a.type === 'add_note' ? `أضيف ملاحظة «${a.note}»` : `أغيّر موعد التسليم إلى ${a.delivery_date}`;
-      setPending(a);
-      return say(`${r.reply}\n${label} على الطلب ${a.order_number}؟ قل «تمام» أو «لا».`, { confirm: a });
-    }
-    if (a?.type === 'set_status' && a.order_number) {
-      const cmd = { type: 'set_status', order_number: a.order_number, status: a.status, label: a.label };
-      setPending(cmd);
-      return say(`${r.reply}\nأغيّر حالة الطلب ${cmd.order_number} إلى «${cmd.label}»؟ قل «تمام» أو «لا».`, { confirm: cmd });
-    }
-    return say(r.reply);
+    } else if (nav && !conf) setTimeout(() => navigate(nav.path), 900);
   };
 
   const handle = async (text) => {
