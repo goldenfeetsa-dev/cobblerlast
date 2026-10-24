@@ -27,7 +27,7 @@ export default function VoiceNote({ order, onSaved }) {
     try {
       if (!msg || !window.speechSynthesis) return resolve();
       const u = new SpeechSynthesisUtterance(msg);
-      u.lang = 'ar-SA';
+      u.lang = 'ar-EG';
       u.onend = resolve; u.onerror = resolve;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
@@ -98,7 +98,8 @@ export default function VoiceNote({ order, onSaved }) {
   const STOP_WORDS = /^(وقف|وقّف|خلاص|ايقاف|إيقاف|كفايه|كفاية|stop)$/;
   const startRec = () => {
     const rec = new SR();
-    rec.lang = 'ar-SA';
+    let L = 'ar-EG'; try { L = localStorage.getItem('assistant_lang') || 'ar-EG'; } catch { /* ignore */ }
+    rec.lang = L;
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     let heard = '';

@@ -31,6 +31,42 @@ const RESOURCES = {
 // تطبيع عربي مبسّط للمطابقة (تشكيل/همزات/تاء مربوطة)
 const normalizeAr = (t = '') => String(t).replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase();
 
+// دليل اللهجات: الورشة فيها مصري (فنيون)، سعودي (إدارة)، ويمني (كاشير) — الرد دائماً بلهجة المتحدث
+const dialectGuide = (role) => `اللهجات في الورشة: الفنيون غالباً مصريون، والمدير سعودي، والكاشير يمني. افهم الثلاثة وغيرها، وردّ بنفس لهجة المتحدث وبكلمات بسيطة.${
+  role === 'staff' ? ' المتحدث الآن غالباً فني مصري: ردّ بالمصرية البسيطة (مثل: تمام، دلوقتي، خلاص، ماشي، حاضر).'
+  : role === 'cashier' ? ' المتحدث الآن غالباً كاشير يمني: افهم اليمنية وردّ بعربية بسيطة واضحة بنبرة قريبة منه.'
+  : ' المتحدث الآن غالباً سعودي: ردّ بسعودية بيضاء مختصرة.'}
+مرادفات تعين على الفهم (أمثلة وليست حصراً): مصري: جزمة=حذاء، شنطة=حقيبة، سوستة=سحاب، كعب، نعل، لزق/غِرا=لاصق، دلوقتي=الآن، النهارده=اليوم، بكره=غداً، لسه=ما زال، خلصت/خلصان/خلاص=أنجزت، اتصبغت=تمت صباغتها، اتخيطت=تمت خياطتها، مفيش=لا يوجد، كام=كم، فين=أين، ازاي=كيف، عايز/عاوز=أريد، حاضر=حسناً. يمني: ايش=ماذا، الحين/دحين/ذحين=الآن، بغيت/ابغى=أريد، حق=تعود لـ، قد=تم بالفعل (قد خلص)، كذا=هكذا، يا شيخ/يا سيدي=نداء، شيء=شي. سعودي: ابي/ابغى=أريد، وش=ماذا، الحين=الآن، يبيله=يحتاج، خلص=انتهى. الأرقام قد تُنطق باللهجة (تلتميه=300، خمستاشر=15، ألف وخمسميه=1500). إذا لم تتأكد من كلمة اسأل سؤالاً قصيراً بدل التخمين.`;
+
+// مزوّد نموذج لغوي عام (Gateway ثم Groq ثم Claude) لمهام الرد بـ JSON أو نص قصير
+async function llmChat({ system, messages, json = false, maxTokens = 400 }) {
+  const errs = [];
+  if (process.env.AI_GATEWAY_API_KEY) {
+    try {
+      const { generateText } = await import('ai');
+      const out = await generateText({ model: process.env.AI_MODEL || 'google/gemini-2.5-flash', system, messages, maxOutputTokens: maxTokens });
+      if (out.text?.trim()) return out.text.trim();
+    } catch (e) { errs.push(`gateway:${String(e.message).slice(0, 60)}`); }
+  }
+  if (process.env.GROQ_API_KEY) {
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', temperature: 0.4, max_tokens: maxTokens, ...(json ? { response_format: { type: 'json_object' } } : {}), messages: [{ role: 'system', content: system }, ...messages] }) });
+      if (!r.ok) throw new Error(`groq_${r.status}`);
+      const t = String((await r.json()).choices?.[0]?.message?.content || '').trim();
+      if (t) return t;
+    } catch (e) { errs.push(String(e.message).slice(0, 60)); }
+  }
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: maxTokens, system, messages }) });
+      if (!r.ok) throw new Error(`anthropic_${r.status}`);
+      const t = ((await r.json()).content || []).map((c) => c.text || '').join('').trim();
+      if (t) return t;
+    } catch (e) { errs.push(String(e.message).slice(0, 60)); }
+  }
+  const err = new Error(errs.join(' | ') || 'no_provider'); err.providers = errs; throw err;
+}
+
 // ── واتساب Cloud API: إرسال رسالة (نص حر داخل نافذة 24 ساعة، أو قالب معتمد إن تم ضبطه) ──
 const waPhone = (p) => {
   let d = String(p || '').replace(/[٠-٩]/g, (c) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/\D/g, '');
@@ -370,7 +406,7 @@ export default async function handler(req, res) {
         form.append('model', process.env.GROQ_STT_MODEL || 'whisper-large-v3-turbo');
         form.append('language', 'ar');
         form.append('temperature', '0');
-        form.append('prompt', 'إبرة وخيط الإسكافي. طلب ORD، فاتورة، الشركات، جاهز، تسليم، باركود، الإيراد، العملاء.');
+        form.append('prompt', 'إبرة وخيط الإسكافي. طلب ORD، فاتورة، الشركات، جاهز، تسليم، باركود، الإيراد، العملاء. جزمة، شنطة، سوستة، كعب، نعل، صبغ، خياطة، خلصت، دلوقتي، النهارده، بكره، الحين، بغيت، ايش.');
         const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', { method: 'POST', headers: { authorization: `Bearer ${gk}` }, body: form });
         if (!r.ok) throw new Error(`groq_stt_${r.status}`);
         const j = await r.json();
@@ -603,7 +639,8 @@ export default async function handler(req, res) {
         ]);
         const system = `أنت "مساعد إبرة وخيط" — مستشار أعمال ذكي ودود لورشة إصلاح أحذية وحقائب وجلديات في الرياض (إبرة وخيط الإسكافي). تتحدث مع ${sess.name || 'المدير'} (${sess.role}).
 افهم المعنى لا الكلمات الحرفية: قد يستعمل المستخدم مرادفات أو لهجة أو أخطاء إملائية أو أرقاماً منطوقة («ألف واثنين» = 1002)، فاستنتج القصد واستعمل الدوال المناسبة، وإن كان الطلب ناقصاً اسأل سؤالاً واحداً قصيراً.
-اللهجة: افهم كل اللهجات العربية، وردّ بنفس لهجة المتحدث (الافتراضي سعودية بيضاء). الرد للنطق الصوتي: جمل قصيرة طبيعية، بدون جداول ولا رموز كثيرة.
+${dialectGuide(sess.role)}
+الرد للنطق الصوتي: جمل قصيرة طبيعية، بدون جداول ولا رموز كثيرة.
 دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
 للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
 تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
@@ -829,8 +866,7 @@ export default async function handler(req, res) {
     const sess = getSessionFromRequest(req);
     if (!sess) return res.status(401).json({ error: 'unauthenticated' });
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });
+    if (!process.env.AI_GATEWAY_API_KEY && !process.env.GROQ_API_KEY && !process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ai_not_configured' });
     try {
       const { order_id, text, history } = req.body || {};
       const said = String(text || '').slice(0, 600);
@@ -840,21 +876,15 @@ export default async function handler(req, res) {
       if (error || !o) return res.status(404).json({ error: 'order_not_found' });
       const hist = (Array.isArray(history) ? history : []).slice(-6)
         .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 600) }));
-      const system = `أنت مساعد صوتي لفني ورشة إصلاح أحذية وحقائب وجلديات في الرياض. الفني يداه مشغولتان ويتكلم معك بالعامية السعودية.
+      const system = `أنت مساعد صوتي لفني ورشة إصلاح أحذية وحقائب وجلديات في الرياض. الفني يداه مشغولتان ويتكلم معك بلهجته (غالباً مصرية).
+${dialectGuide('staff')}
 مهمتك: تفهم كلامه بالنسبة للطلب أدناه، تجيب بجملة أو جملتين قصيرتين بالعربية، وتستخرج ملاحظة العمل إن ذكر عملاً أنجزه أو قياساً أو ملاحظة.
 أجب بـ JSON فقط بدون أي نص آخر: {"reply":"ردك المنطوق","note":"ملاحظة نصية موحّدة مختصرة أو سلسلة فارغة","mark_ready":true|false}
 - mark_ready=true فقط إذا قال بوضوح إنه خلّص/أنجز القطعة.
 - لا تخترع معلومات غير موجودة بالطلب. لو سأل عن شيء لا تعرفه قل ذلك.
 - لا تذكر أسعاراً ولا بيانات عميل.
 الطلب: ${JSON.stringify(o)}`;
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 300, system, messages: [...hist, { role: 'user', content: said }] }),
-      });
-      if (!r.ok) throw new Error(`ai_http_${r.status}`);
-      const j = await r.json();
-      const raw = (j.content || []).map((c) => c.text || '').join('');
+      const raw = await llmChat({ system, messages: [...hist, { role: 'user', content: said }], json: true, maxTokens: 300 });
       let out;
       try { out = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)); } catch { out = { reply: raw.slice(0, 300), note: '', mark_ready: false }; }
       return res.status(200).json({
