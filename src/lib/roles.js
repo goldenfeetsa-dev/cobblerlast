@@ -51,7 +51,8 @@ export function getHomePath(role) {
 }
 
 // الصفحات المسموح للعامل (staff) الدخول عليها فقط — شغله اليومي بدون بيانات إدارية
-export const WORKER_ALLOWED_PREFIXES = ['/staff', '/scan', '/orders', '/calendar', '/assistant'];
+// ملاحظة أمنية: '/orders' مستبعدة عمداً — صفحات الطلبات العامة تعرض الأسعار وجوال العميل. العامل له /staff و /staff/:id.
+export const WORKER_ALLOWED_PREFIXES = ['/staff', '/scan', '/calendar', '/assistant'];
 
 // الصفحات الممنوعة عن الكاشير (إدارة/تقارير/إعدادات) — كل الباقي مسموح له
 export const CASHIER_DENIED_PREFIXES = [

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScanBarcode as ScanIcon, Search, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { getSession } from '@/lib/sessionStore';
 
 export default function ScanBarcode() {
   const [code, setCode] = useState('');
@@ -21,7 +22,7 @@ export default function ScanBarcode() {
     try {
       const matches = await db.Order.filter({ order_number: trimmed }, '-created_at', 1);
       if (matches?.[0]) {
-        navigate(`/orders/${matches[0].id}`);
+        navigate(getSession()?.role === 'staff' ? `/staff/${matches[0].id}` : `/orders/${matches[0].id}`);
       } else {
         toast.error('لم يتم العثور على طلب بهذا الباركود');
       }

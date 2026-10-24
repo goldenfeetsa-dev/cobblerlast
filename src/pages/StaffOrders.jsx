@@ -39,7 +39,7 @@ export default function StaffOrders() {
     queryFn: async () => {
       let q = supabase
         .from('orders')
-        .select('id, order_number, item_type, description, notes, status, created_at, shelf_location, photos, order_items')
+        .select('id, order_number, customer_name, item_type, description, notes, status, created_at, shelf_location, photos, order_items')
         .order('created_at', { ascending: true });
 
       if (session?.branch_id) q = q.eq('branch_id', session.branch_id);
@@ -63,6 +63,7 @@ export default function StaffOrders() {
   const filtered = orders.filter(o =>
     !search ||
     o.order_number?.includes(search) ||
+    o.customer_name?.includes(search) ||
     o.description?.includes(search) ||
     o.shelf_location?.includes(search)
   );
@@ -163,6 +164,11 @@ export default function StaffOrders() {
 
                   {/* Body */}
                   <div className="px-4 py-3 space-y-2">
+                    {/* اسم العميل + فتح تفاصيل الطلب */}
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-base text-gray-900">👤 {order.customer_name || 'بدون اسم'}</span>
+                      <Link to={`/staff/${order.id}`} className="text-xs font-bold px-3 py-1.5 rounded-full bg-amber-100 text-amber-800">التفاصيل والناقص ←</Link>
+                    </div>
                     {/* Item type */}
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{ITEM_LABELS[order.item_type]?.split(' ')[1] || '📦'}</span>

@@ -15,6 +15,7 @@ import { runPhotoCleanup } from '@/lib/photoCleanup';
 
 // ── Lazy loaded pages (code splitting) ──────────────
 const StaffOrders = lazy(() => import('./pages/StaffOrders'));
+const StaffOrderDetail = lazy(() => import('./pages/StaffOrderDetail'));
 const CalendarView = lazy(() => import('./pages/CalendarView'));
 const ZATCASettings = lazy(() => import('./pages/ZATCASettings'));
 const FinancialReports = lazy(() => import('./pages/FinancialReports'));
@@ -170,6 +171,7 @@ const AuthenticatedApp = () => {
           <Route path="/loyalty-members" element={<LoyaltyMembersAdmin />} />
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/staff" element={<StaffOrders />} />
+          <Route path="/staff/:id" element={<StaffOrderDetail />} />
           <Route path="/admin/services" element={<ServicesAdmin />} />
           <Route path="/admin/working-hours" element={<WorkingHoursAdmin />} />
           <Route path="/admin/branches" element={<BranchesAdmin />} />

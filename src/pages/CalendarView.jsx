@@ -7,6 +7,12 @@ import { ChevronRight, ChevronLeft, AlertTriangle, CheckCircle, Clock, Package, 
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { SarAmount } from '@/components/shared/SarCurrency';
+import { getSession } from '@/lib/sessionStore';
+// الفني لا يرى الأسعار ولا جوال العميل: نستثني الأعمدة من الاستعلام نفسه
+const isWorkerUser = () => getSession()?.role === 'staff';
+const moneyCols = () => (isWorkerUser() ? '' : ', total_price');
+const phoneCols = () => (isWorkerUser() ? '' : ', customer_phone');
+const orderLink = (id) => (isWorkerUser() ? `/staff/${id}` : `/orders/${id}`);
 
 const CAPACITY = 8; // أقصى طاقة استيعابية يومياً
 
@@ -119,7 +125,7 @@ export function TodayDeliveriesBanner() {
     queryFn: async () => {
       const { data } = await supabase
         .from('orders')
-        .select('id, order_number, customer_name, customer_phone, item_type, status, delivery_date, shelf_location, total_price')
+        .select('id, order_number, customer_name' + phoneCols() + ', item_type, status, delivery_date, shelf_location' + moneyCols())
         .eq('status', 'ready')
         .order('delivery_date', { ascending: true, nullsFirst: false });
       return data || [];
@@ -143,7 +149,7 @@ export function TodayDeliveriesBanner() {
         {orders.map((order) => {
           const isOverdue = order.delivery_date && order.delivery_date < today;
           return (
-            <Link key={order.id} to={`/orders/${order.id}`}
+            <Link key={order.id} to={orderLink(order.id)}
               className="flex items-center gap-4 px-5 py-3 hover:bg-blue-50/50 transition-colors" style={{ background: 'rgba(59,130,246,0.04)' }}>
               <div className="w-2 h-8 rounded-full shrink-0" style={{ background: '#3b82f6' }} />
               <div className="flex-1 min-w-0">
@@ -176,7 +182,7 @@ export function PendingCompletionList() {
     queryFn: async () => {
       const { data } = await supabase
         .from('orders')
-        .select('id, order_number, customer_name, customer_phone, item_type, status, delivery_date, created_at, total_price')
+        .select('id, order_number, customer_name' + phoneCols() + ', item_type, status, delivery_date, created_at' + moneyCols())
         .not('status', 'in', '(completed,cancelled)')
         .order('delivery_date', { ascending: true, nullsFirst: false });
       return data || [];
@@ -213,7 +219,7 @@ export function PendingCompletionList() {
       gray:   { bar: '#9ca3af', bg: 'transparent',            badge: 'bg-gray-100 text-gray-600',     label: null },
     }[tone];
     return (
-      <Link to={`/orders/${order.id}`} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors" style={{ background: toneStyles.bg }}>
+      <Link to={orderLink(order.id)} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors" style={{ background: toneStyles.bg }}>
         <div className="w-2 h-8 rounded-full shrink-0" style={{ background: toneStyles.bar }} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -263,7 +269,7 @@ export default function CalendarView() {
       const end   = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
       const { data } = await supabase
         .from('orders')
-        .select('id, order_number, customer_name, status, created_at, delivery_date, item_type, total_price')
+        .select('id, order_number, customer_name, status, created_at, delivery_date, item_type' + moneyCols())
         .gte('delivery_date', start)
         .lte('delivery_date', end)
         .order('delivery_date');
