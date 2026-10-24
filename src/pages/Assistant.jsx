@@ -217,7 +217,7 @@ export default function Assistant() {
       if (res.ok && body.reply) return { reply: body.reply, action: body.action };
       if (body.error === 'ai_not_configured') return { code: 'ai_not_configured', msg: 'للنقاش والاستشارة أحتاج «العقل الذكي» مفعّلاً: أضف AI_GATEWAY_API_KEY (أو GROQ_API_KEY المجاني) في إعدادات Vercel ثم Redeploy. الأوامر والأرقام تشتغل بدونه.' };
       if (res.status === 401) return { code: 'auth', msg: 'انتهت الجلسة — سجّل دخول من جديد.' };
-      const d = String(body.detail || '');
+      const d = String(body.detail || '') || `HTTP ${res.status}${body.error ? ' ' + body.error : ''}`;
       const hint = /AQ_key_unsupported/.test(d)
         ? 'مفتاح Gemini من النوع الجديد «AQ.» لا تقبله واجهة REST. أنشئ مفتاحاً من Google Cloud Console (Credentials ← Create API key) أو استخدم GROQ_API_KEY المجاني من console.groq.com.'
         : /_http_(401|403)/.test(d) ? 'المفتاح مرفوض (غير صالح أو غير مفعّل للخدمة). تأكد منه وأعد النشر.'

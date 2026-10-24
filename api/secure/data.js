@@ -393,7 +393,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ audio: buf.toString('base64'), mime: 'audio/mpeg' });
       } catch (err) {
         console.error('api/secure/data (tts) error', err);
-        return res.status(502).json({ error: 'tts_failed', detail: String(err.message || '').slice(0, 80) });
+        return res.status(200).json({ error: 'tts_failed', detail: String(err.message || '').slice(0, 80) });
       }
     }
     // ── تحويل التسجيل الصوتي إلى نص (Whisper عبر Groq) — بديل لإملاء المتصفح عندما لا يعمل ──

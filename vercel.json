@@ -22,6 +22,7 @@
   "env": {
     "VITE_SUPABASE_URL": "https://bwuvldnlfgobqpdfhyql.supabase.co"
   },
+  "functions": { "api/secure/data.js": { "maxDuration": 30 } },
   "crons": [
     { "path": "/api/zatca/retry-worker", "schedule": "0 3 * * *" },
     { "path": "/api/secure/data?resource=booking-reminders", "schedule": "0 6 * * *" }
