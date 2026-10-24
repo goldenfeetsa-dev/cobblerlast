@@ -667,7 +667,7 @@ ${dialectGuide(sess.role)}
         };
         if (localOk && process.env.LOCAL_AGENT_FIRST === '1') await askLocal();
         // ── المسار الأول: Vercel AI SDK عبر AI Gateway (مفتاح واحد لأي نموذج) ──
-        if (gatewayKey) {
+        if (gatewayKey || groqKey) {
           try {
             const { generateText, tool, stepCountIs } = await import('ai');
             const { z } = await import('zod');
@@ -787,8 +787,10 @@ ${dialectGuide(sess.role)}
                 }),
               } : {}),
             };
+            let model = process.env.AI_MODEL || 'google/gemini-2.5-flash';
+            if (!gatewayKey) { const { createGroq } = await import('@ai-sdk/groq'); model = createGroq({ apiKey: groqKey })(process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'); }
             const out = await generateText({
-              model: process.env.AI_MODEL || 'google/gemini-2.5-flash',
+              model,
               system,
               messages: [...hist, { role: 'user', content: said }],
               tools,
@@ -797,7 +799,7 @@ ${dialectGuide(sess.role)}
             });
             reply = (out.text || '').trim();
             if (!reply) throw new Error('gateway_empty');
-          } catch (e) { action = null; errors.push(`gateway:${String(e.message || e).slice(0, 80)}`); console.error('assistant gateway', e.message); }
+          } catch (e) { action = null; errors.push(`${gatewayKey ? 'gateway' : 'groq-tools'}:${String(e.message || e).slice(0, 80)}`); console.error('assistant gateway', e.message); }
         }
         if (!reply && geminiKey) {
           try {
