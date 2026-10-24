@@ -13,9 +13,12 @@
  * ثم تنفّذ بمفتاح service_role (يتجاوز RLS كمصدر موثوق على مستوى
  * السيرفر فقط، بعد التحقق أعلاه).
  */
+import { timingSafeEqual } from 'node:crypto';
 import { getSessionFromRequest } from '../_lib/session.js';
 import { getSupabaseAdmin } from '../_lib/loyalty/supabaseAdmin.js';
 import { lexiconText } from '../_lib/dialectLexicon.js';
+
+const safeEq = (a, b) => { const x = Buffer.from(String(a ?? '')); const y = Buffer.from(String(b ?? '')); return x.length === y.length && timingSafeEqual(x, y); };
 
 // كل مورد مسموح: اسم الجدول الفعلي + الأدوار المسموحة لكل عملية.
 // أي جدول مو موجود بهالقائمة يُرفض تلقائياً (allow-list صريحة، مو
@@ -23,8 +26,8 @@ import { lexiconText } from '../_lib/dialectLexicon.js';
 const RESOURCES = {
   customers: {
     table: 'customers',
-    read: ['owner', 'admin', 'manager', 'cashier', 'staff', 'accountant'],
-    write: ['owner', 'admin', 'manager', 'cashier', 'staff'],
+    read: ['owner', 'admin', 'manager', 'cashier', 'accountant'],
+    write: ['owner', 'admin', 'manager', 'cashier'],
     del: ['owner', 'admin', 'manager'],
   },
 };
@@ -301,7 +304,7 @@ export default async function handler(req, res) {
   // ── تذكير المواعيد (كرون يومي 9 صباحاً بتوقيت الرياض): موعد الغد + مواعيد اليوم غير المذكَّرة ──
   if (resourceKey === 'booking-reminders') {
     const cs = process.env.CRON_SECRET;
-    if (!cs || (req.headers.authorization || '') !== `Bearer ${cs}`) return res.status(401).json({ error: 'unauthorized' });
+    if (!cs || !safeEq(req.headers.authorization || '', `Bearer ${cs}`)) return res.status(401).json({ error: 'unauthorized' });
     try {
       const sb = getSupabaseAdmin();
       const t0 = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
@@ -332,7 +335,7 @@ export default async function handler(req, res) {
     }
     if (req.method !== 'POST') return res.status(405).end();
     const secret = process.env.WHATSAPP_WEBHOOK_SECRET;
-    if (!secret || req.query.k !== secret) return res.status(403).end();
+    if (!secret || !safeEq(req.query.k, secret)) return res.status(403).end();
     try {
       const msg = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
       if (!msg || msg.type !== 'text' || !msg.text?.body) return res.status(200).json({ ok: true });

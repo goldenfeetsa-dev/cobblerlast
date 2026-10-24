@@ -54,6 +54,7 @@ async function handleSubmit(req, res) {
 
   const session = getSessionFromRequest(req);
   if (!session) return res.status(401).json({ error: 'unauthenticated' });
+  if (session.role === 'staff') return res.status(403).json({ error: 'forbidden' });
 
   const { type, id } = req.body || {};
   if (!type || !id || !['order', 'sale'].includes(type)) {

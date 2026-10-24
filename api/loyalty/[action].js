@@ -30,7 +30,8 @@ async function handleAdjustPoints(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const session = getSessionFromRequest(req);
   if (!session) return res.status(401).json({ error: 'unauthenticated' });
-  const { member_number, change_amount, reason, performed_by, performed_by_id } = req.body || {};
+  if (!['owner', 'admin', 'manager'].includes(session.role)) return res.status(403).json({ error: 'forbidden' });
+  const { member_number, change_amount, reason } = req.body || {};
   if (!member_number || change_amount === undefined || change_amount === null) {
     return res.status(400).json({ error: 'الحقول المطلوبة: member_number و change_amount' });
   }
@@ -42,8 +43,8 @@ async function handleAdjustPoints(req, res) {
       memberNumber: member_number,
       changeAmount: Number(change_amount),
       reason,
-      performedBy: performed_by,
-      performedById: performed_by_id,
+      performedBy: session.name,
+      performedById: session.employee_id,
     });
     return res.status(200).json(result);
   } catch (err) {

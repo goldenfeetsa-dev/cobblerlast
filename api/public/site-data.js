@@ -22,18 +22,26 @@ async function handleTrackOrder(req, res, supabase) {
     return res.status(400).json({ error: 'invalid_code' });
   }
 
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('order_number,customer_name,status,item_type,created_at')
-      .or(`order_number.eq.${code},customer_phone.eq.${code}`)
-      .order('created_at', { ascending: false })
-      .limit(20);
+  // حقن PostgREST: نسمح بحروف/أرقام/+/- فقط، ونستعلم بـ eq منفصل (بدون .or نصّي)
+  if (!/^[A-Za-z0-9+\-]{3,30}$/.test(code)) {
+    return res.status(400).json({ error: 'invalid_code' });
+  }
 
-    if (error) throw error;
+  try {
+    const cols = 'order_number,customer_name,status,item_type,created_at';
+    const [a, b] = await Promise.all([
+      supabase.from('orders').select(cols).eq('order_number', code).limit(5),
+      supabase.from('orders').select(cols).eq('customer_phone', code).order('created_at', { ascending: false }).limit(20),
+    ]);
+    if (a.error) throw a.error;
+    if (b.error) throw b.error;
+    const seen = new Set();
+    const data = [...(a.data || []), ...(b.data || [])].filter((o) => !seen.has(o.order_number) && seen.add(o.order_number));
 
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({ results: data || [] });
+    // نخفي الاسم جزئياً (الاسم الأول + أول حرف من الباقي) كي لا يُسرَّب كاملاً لمن يخمّن رقماً
+    const mask = (n) => { const w = String(n || '').trim().split(/\s+/).filter(Boolean); return w.length ? (w[0] + (w[1] ? ' ' + w[1][0] + '.' : '')) : ''; };
+    return res.status(200).json({ results: (data || []).map((o) => ({ ...o, customer_name: mask(o.customer_name) })) });
   } catch (err) {
     console.error('api/public/site-data (track-order) error', err);
     return res.status(500).json({ error: 'server_error' });
