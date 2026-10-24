@@ -173,6 +173,62 @@ export default async function handler(req, res) {
 
   // ── المساعد الذكي العام: يفهم كل اللهجات العربية ويجيب من بيانات النظام (قراءة فقط) ──
   // أدوات قراءة فقط، الأرقام المالية لا تُعرض إلا لأدوار المالية، وكل شي بعد التحقق من الجلسة.
+  // ── واتساب (Meta Cloud API): ردّ آلي للعملاء بحالة طلباتهم ──────────────────
+  // آمن بالتصميم: لا أرقام مالية ولا بيانات غيرهم؛ حالة الطلب لا تُعطى إلا لصاحب الجوال المسجّل على الطلب.
+  if (resourceKey === 'whatsapp') {
+    if (req.method === 'GET') {
+      const ok = req.query['hub.mode'] === 'subscribe' && process.env.WHATSAPP_VERIFY_TOKEN && req.query['hub.verify_token'] === process.env.WHATSAPP_VERIFY_TOKEN;
+      return ok ? res.status(200).send(String(req.query['hub.challenge'] || '')) : res.status(403).end();
+    }
+    if (req.method !== 'POST') return res.status(405).end();
+    const secret = process.env.WHATSAPP_WEBHOOK_SECRET;
+    if (!secret || req.query.k !== secret) return res.status(403).end();
+    try {
+      const msg = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      if (!msg || msg.type !== 'text' || !msg.text?.body) return res.status(200).json({ ok: true });
+      const from = String(msg.from || '').replace(/\D/g, '');
+      const raw = String(msg.text.body).slice(0, 500);
+      const txt = raw.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+      const tail = (p) => String(p || '').replace(/\D/g, '').slice(-9);
+      const SHOP = 'إبرة وخيط الإسكافي';
+      const STAT = { pending: 'مستلم وبانتظار البدء', in_progress: 'قيد التنفيذ', ready: 'جاهز للتسليم 🎉', completed: 'تم تسليمه', cancelled: 'ملغي' };
+      let reply;
+      const m = txt.match(/ORD[\s-]?(\d{1,6})/i) || txt.match(/(?:طلب|رقم|الطلب)\s*(?:رقم\s*)?(\d{1,6})/);
+      if (m) {
+        const num = `ORD-${String(parseInt(m[1], 10)).padStart(5, '0')}`;
+        const { data } = await getSupabaseAdmin().from('orders').select('order_number,status,customer_phone,delivery_date,shelf_location').eq('order_number', num).limit(1);
+        const o = data?.[0];
+        if (!o || tail(o.customer_phone) !== tail(from)) {
+          reply = `ما لقيت طلب ${num} مسجّل على هذا الرقم. تأكد من الرقم، أو تواصل معنا مباشرة وبنساعدك 🙏`;
+        } else {
+          reply = `هلا فيك 🌟 طلبك ${o.order_number}: ${STAT[o.status] || o.status}.` + (o.status !== 'completed' && o.status !== 'cancelled' && o.delivery_date ? `\nموعد التسليم المتوقع: ${o.delivery_date}` : '');
+        }
+      } else {
+        const sys = `أنت مساعد واتساب لورشة "${SHOP}" في الرياض لإصلاح الأحذية والشنط والجلديات. ردّ بلهجة سعودية مهذبة في جملتين. لا تذكر أسعاراً محددة ولا تخترع معلومات. إذا سأل عن طلبه اطلب منه رقم الطلب (مثل ORD-01002). للتفاصيل الأخرى اطلب منه الانتظار وسيتواصل معه فريقنا.`;
+        reply = '';
+        try {
+          if (process.env.GROQ_API_KEY) {
+            const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', max_tokens: 200, temperature: 0.5, messages: [{ role: 'system', content: sys }, { role: 'user', content: raw }] }) });
+            if (r.ok) reply = String((await r.json()).choices?.[0]?.message?.content || '').trim();
+          } else if (process.env.AI_GATEWAY_API_KEY) {
+            const { generateText } = await import('ai');
+            reply = (await generateText({ model: process.env.AI_MODEL || 'google/gemini-2.5-flash', system: sys, prompt: raw, maxOutputTokens: 200 })).text.trim();
+          }
+        } catch (e) { console.error('whatsapp llm', e.message); }
+        if (!reply) reply = `أهلاً فيك في ${SHOP} 🌟 أرسل رقم طلبك (مثل ORD-01002) وأعطيك حالته، أو اكتب استفسارك وفريقنا يرد عليك قريباً.`;
+      }
+      const tok = process.env.WHATSAPP_TOKEN, pid = process.env.WHATSAPP_PHONE_ID;
+      if (tok && pid) {
+        const r = await fetch(`https://graph.facebook.com/v21.0/${encodeURIComponent(pid)}/messages`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${tok}` }, body: JSON.stringify({ messaging_product: 'whatsapp', to: from, type: 'text', text: { body: reply.slice(0, 1500) } }) });
+        if (!r.ok) console.error('whatsapp send', r.status, (await r.text().catch(() => '')).slice(0, 120));
+      }
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      console.error('api/secure/data (whatsapp) error', err);
+      return res.status(200).json({ ok: false }); // لا نُرجع خطأ حتى لا تعيد Meta الإرسال
+    }
+  }
+
   if (resourceKey === 'assistant') {
     const sess = getSessionFromRequest(req);
     if (!sess) return res.status(401).json({ error: 'unauthenticated' });
