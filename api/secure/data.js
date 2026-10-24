@@ -406,6 +406,25 @@ export default async function handler(req, res) {
       const voice = VOICES.includes(req.body.voice) ? req.body.voice : 'ar-SA-HamedNeural';
       const txt = req.body.tts.replace(/[<>&]/g, ' ').trim().slice(0, 700);
       if (!txt) return res.status(400).json({ error: 'missing_text' });
+      // ── الصوت الأساسي: Groq Orpheus (سعودي عصبي) — نفس مفتاح Groq، حد 200 حرف للمقطع فنقسّم النص ──
+      const GV = ['abdullah', 'fahad', 'sultan', 'lulwa', 'noura', 'aisha'];
+      const reqVoice = String(req.body.voice || '');
+      const gv = reqVoice.startsWith('groq:') && GV.includes(reqVoice.slice(5)) ? reqVoice.slice(5) : (!VOICES.includes(reqVoice) ? 'fahad' : null);
+      if (gv && process.env.GROQ_API_KEY) {
+        try {
+          const parts = []; let cur = '';
+          for (const w of txt.split(/(?<=[.!؟?،,\n])\s+|\s+/)) {
+            if ((cur + ' ' + w).trim().length > 190) { if (cur) parts.push(cur.trim()); cur = w.slice(0, 190); } else cur = `${cur} ${w}`;
+          }
+          if (cur.trim()) parts.push(cur.trim());
+          const clips = await Promise.all(parts.slice(0, 4).map(async (p) => {
+            const r = await fetch('https://api.groq.com/openai/v1/audio/speech', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_TTS_MODEL || 'canopylabs/orpheus-arabic-saudi', input: p, voice: gv, response_format: 'wav' }), signal: AbortSignal.timeout(15000) });
+            if (!r.ok) throw new Error(`groq_tts_${r.status} ${(await r.text().catch(() => '')).slice(0, 80)}`);
+            return Buffer.from(await r.arrayBuffer()).toString('base64');
+          }));
+          return res.status(200).json({ audios: clips, mime: 'audio/wav', voice: `groq:${gv}` });
+        } catch (err) { console.error('groq tts', err.message); /* نكمل لصوت Edge كاحتياط */ }
+      }
       try {
         const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts');
         const tts = new MsEdgeTTS({ connectionTimeoutMs: 8000, synthesisTimeoutMs: 20000 });

@@ -110,7 +110,7 @@ export default function Assistant() {
   const [showVoice, setShowVoice] = useState(false);
   const [hamed, setHamed] = useState(() => { try { return localStorage.getItem('assistant_hamed') !== '0'; } catch { return true; } });
   useEffect(() => { try { localStorage.setItem('assistant_hamed', hamed ? '1' : '0'); } catch { /* ignore */ } }, [hamed]);
-  const [srvVoice, setSrvVoice] = useState(() => { try { return localStorage.getItem('assistant_srv_voice') || 'ar-SA-HamedNeural'; } catch { return 'ar-SA-HamedNeural'; } });
+  const [srvVoice, setSrvVoice] = useState(() => { try { return localStorage.getItem('assistant_srv_voice') || 'groq:fahad'; } catch { return 'groq:fahad'; } });
   const audioRef = useRef(null);
   const hamedFailed = useRef(false);
   const [useRecorder, setUseRecorder] = useState(() => { try { return localStorage.getItem('assistant_recorder') === '1'; } catch { return false; } });
@@ -134,12 +134,18 @@ export default function Assistant() {
       try {
         const res = await fetch('/api/secure/data?resource=assistant', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts: speakable(text), voice: srvVoice }) });
         const b = await res.json().catch(() => ({}));
-        if (res.ok && b.audio) {
+        const clips = b.audios || (b.audio ? [b.audio] : []);
+        if (res.ok && clips.length) {
           try { audioRef.current?.pause(); window.speechSynthesis?.cancel(); } catch { /* ignore */ }
-          const a = new Audio(`data:${b.mime || 'audio/mpeg'};base64,${b.audio}`);
-          a.playbackRate = rate; audioRef.current = a;
-          if (onEnd) { a.onended = onEnd; a.onerror = onEnd; }
-          await a.play();
+          let i = 0;
+          const playNext = () => {
+            if (i >= clips.length) { onEnd?.(); return; }
+            const a = new Audio(`data:${b.mime || 'audio/mpeg'};base64,${clips[i++]}`);
+            a.playbackRate = rate; audioRef.current = a;
+            a.onended = playNext; a.onerror = playNext;
+            a.play().catch(playNext);
+          };
+          playNext();
           return;
         }
         hamedFailed.current = true; // لا نكرر المحاولة طوال الجلسة
@@ -443,7 +449,13 @@ export default function Assistant() {
           <div className="flex gap-2 items-center">
             <span className="shrink-0">صوت السيرفر</span>
             <select value={srvVoice} onChange={(e) => { setSrvVoice(e.target.value); hamedFailed.current = false; try { localStorage.setItem('assistant_srv_voice', e.target.value); } catch { /* ignore */ } }} className="flex-1 border rounded-lg px-2 py-1 bg-background">
-              <option value="ar-SA-HamedNeural">حامد — سعودي (رجل)</option>
+              <option value="groq:fahad">فهد — سعودي (Groq) ⭐</option>
+              <option value="groq:abdullah">عبدالله — سعودي (Groq)</option>
+              <option value="groq:sultan">سلطان — سعودي (Groq)</option>
+              <option value="groq:lulwa">لولوة — سعودية (Groq)</option>
+              <option value="groq:noura">نورة — سعودية (Groq)</option>
+              <option value="groq:aisha">عائشة — سعودية (Groq)</option>
+              <option value="ar-SA-HamedNeural">حامد — سعودي (Edge)</option>
               <option value="ar-SA-ZariyahNeural">زارية — سعودية (امرأة)</option>
               <option value="ar-EG-ShakirNeural">شاكر — مصري (رجل)</option>
               <option value="ar-EG-SalmaNeural">سلمى — مصرية (امرأة)</option>
