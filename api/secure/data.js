@@ -883,11 +883,11 @@ ${dialectGuide(sess.role)}
           } catch (e) { errors.push(e.message); console.error('assistant groq', e.message); }
         }
         if (!reply && localOk && process.env.LOCAL_AGENT_FIRST !== '1') await askLocal();
-        if (!reply) return res.status(502).json({ error: 'ai_failed', detail: errors.join(' | ') || `empty_reply(providers:${[gatewayKey && 'gateway', geminiKey && 'gemini', groqKey && 'groq'].filter(Boolean).join('+')})` });
+        if (!reply) return res.status(200).json({ error: 'ai_failed', detail: errors.join(' | ') || `empty_reply(providers:${[gatewayKey && 'gateway', geminiKey && 'gemini', groqKey && 'groq'].filter(Boolean).join('+')})` });
         return res.status(200).json({ reply: reply.slice(0, 2000), ...(action ? { action } : {}) });
       } catch (err) {
         console.error('api/secure/data (assistant llm) error', err);
-        return res.status(502).json({ error: 'ai_failed', detail: String(err.message || '').slice(0, 120) });
+        return res.status(200).json({ error: 'ai_failed', detail: String(err.message || '').slice(0, 120) });
       }
     }
     if (!apiKey) return res.status(503).json({ error: 'ai_not_configured' });
@@ -926,7 +926,7 @@ ${dialectGuide(sess.role)}
       return res.status(200).json({ reply: (reply || 'ما قدرت أجاوب الحين، جرّب مرة ثانية.').slice(0, 1200) });
     } catch (err) {
       console.error('api/secure/data (assistant) error', err);
-      return res.status(502).json({ error: 'ai_failed', detail: `anthropic:${String(err.message || '').slice(0, 80)}` });
+      return res.status(200).json({ error: 'ai_failed', detail: `anthropic:${String(err.message || '').slice(0, 80)}` });
     }
   }
 
