@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { db, functions } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,7 +81,14 @@ async function sendEmailNotification(order, newStatus) {
   });
 }
 
+// العامل لا يرى الفاتورة ولا الضريبة ولا السعر ولا جوال العميل: نحوّله لصفحته الخاصة
 export default function OrderDetails() {
+  const s = getSession();
+  if (s?.role === 'staff') return <Navigate to={`/staff/${window.location.pathname.split('/').pop()}`} replace />;
+  return <OrderDetailsFull />;
+}
+
+function OrderDetailsFull() {
   const pathParts = window.location.pathname.split('/');
   const orderId = pathParts[pathParts.length - 1];
   

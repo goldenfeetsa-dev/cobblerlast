@@ -51,8 +51,9 @@ export function getHomePath(role) {
 }
 
 // الصفحات المسموح للعامل (staff) الدخول عليها فقط — شغله اليومي بدون بيانات إدارية
-// ملاحظة أمنية: '/orders' مستبعدة عمداً — صفحات الطلبات العامة تعرض الأسعار وجوال العميل. العامل له /staff و /staff/:id.
-export const WORKER_ALLOWED_PREFIXES = ['/staff', '/scan', '/calendar', '/assistant'];
+// لوحة الطلبات متاحة للعامل لكن بدون جوال العميل ولا السعر ولا الدفع (انظر Orders.jsx)،
+// وتفاصيل الطلب تُحوَّل لصفحة الفني /staff/:id (بدون فاتورة أو ضريبة).
+export const WORKER_ALLOWED_PREFIXES = ['/staff', '/scan', '/orders', '/calendar', '/assistant'];
 
 // الصفحات الممنوعة عن الكاشير (إدارة/تقارير/إعدادات) — كل الباقي مسموح له
 export const CASHIER_DENIED_PREFIXES = [

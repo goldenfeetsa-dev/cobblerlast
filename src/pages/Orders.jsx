@@ -86,7 +86,9 @@ export default function Orders() {
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders', 'list'],
     queryFn: () => db.Order.list('-created_at', 200,
-      'id, order_number, customer_name, customer_phone, employee_name, item_type, quantity, shelf_location, status, payment_status, payment_method, total_price, photos, created_at, branch_id, delivery_method'),
+      session?.role === 'staff'
+        ? 'id, order_number, customer_name, employee_name, item_type, quantity, shelf_location, status, photos, created_at, branch_id, delivery_method'
+        : 'id, order_number, customer_name, customer_phone, employee_name, item_type, quantity, shelf_location, status, payment_status, payment_method, total_price, photos, created_at, branch_id, delivery_method'),
     initialData: [],
   });
 
@@ -187,11 +189,15 @@ export default function Orders() {
                     </div>
                   </Link>
                   <div className="text-left flex flex-col items-end gap-1 shrink-0 mr-2">
-                    <p className="font-bold text-lg">{order.total_price?.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">ر.س</p>
-                    <Badge variant="outline" className={`text-[10px] ${order.payment_status === 'paid' ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300'}`}>
-                      {order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
-                    </Badge>
+                    {session?.role !== 'staff' && (
+                      <>
+                        <p className="font-bold text-lg">{order.total_price?.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">ر.س</p>
+                        <Badge variant="outline" className={`text-[10px] ${order.payment_status === 'paid' ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300'}`}>
+                          {order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
+                        </Badge>
+                      </>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
