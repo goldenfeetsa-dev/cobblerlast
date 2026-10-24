@@ -412,17 +412,43 @@ export default async function handler(req, res) {
       const gv = reqVoice.startsWith('groq:') && GV.includes(reqVoice.slice(5)) ? reqVoice.slice(5) : (!VOICES.includes(reqVoice) ? 'fahad' : null);
       if (gv && process.env.GROQ_API_KEY) {
         try {
+          // نقسّم عند نهايات الجمل فقط (لا في منتصف جملة) ثم ندمج الجمل المتجاورة حتى 190 حرفاً
+          const sentences = txt.split(/(?<=[.!؟?\n])\s+/).map((x) => x.trim()).filter(Boolean);
           const parts = []; let cur = '';
-          for (const w of txt.split(/(?<=[.!؟?،,\n])\s+|\s+/)) {
-            if ((cur + ' ' + w).trim().length > 190) { if (cur) parts.push(cur.trim()); cur = w.slice(0, 190); } else cur = `${cur} ${w}`;
+          const push = () => { if (cur.trim()) parts.push(cur.trim()); cur = ''; };
+          for (const sn of sentences) {
+            if (sn.length > 190) { // جملة طويلة: نكسرها عند الفاصلة أو أقرب مسافة
+              push();
+              let rest = sn;
+              while (rest.length > 190) {
+                let cut = Math.max(rest.lastIndexOf('،', 190), rest.lastIndexOf(',', 190), rest.lastIndexOf(' ', 190));
+                if (cut < 60) cut = 190;
+                parts.push(rest.slice(0, cut + 1).trim()); rest = rest.slice(cut + 1);
+              }
+              cur = rest;
+            } else if ((cur + ' ' + sn).trim().length > 190) { push(); cur = sn; } else cur = `${cur} ${sn}`;
           }
-          if (cur.trim()) parts.push(cur.trim());
+          push();
           const clips = await Promise.all(parts.slice(0, 4).map(async (p) => {
             const r = await fetch('https://api.groq.com/openai/v1/audio/speech', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_TTS_MODEL || 'canopylabs/orpheus-arabic-saudi', input: p, voice: gv, response_format: 'wav' }), signal: AbortSignal.timeout(15000) });
             if (!r.ok) throw new Error(`groq_tts_${r.status} ${(await r.text().catch(() => '')).slice(0, 80)}`);
             return Buffer.from(await r.arrayBuffer()).toString('base64');
           }));
-          return res.status(200).json({ audios: clips, mime: 'audio/wav', voice: `groq:${gv}` });
+          // دمج المقاطع في ملف WAV واحد لتشغيل متصل بدون فراغات بين المقاطع
+          const bufs = clips.map((c) => Buffer.from(c, 'base64'));
+          const dataOf = (b) => { let o = 12; while (o + 8 <= b.length) { const id = b.toString('ascii', o, o + 4); const sz = b.readUInt32LE(o + 4); if (id === 'data') return { start: o + 8, end: Math.min(b.length, o + 8 + sz), hdrEnd: o }; o += 8 + sz + (sz % 2); } return null; };
+          let merged = null;
+          try {
+            const infos = bufs.map(dataOf);
+            if (infos.every(Boolean) && bufs.every((b) => b.toString('ascii', 0, 4) === 'RIFF')) {
+              const pcm = Buffer.concat(bufs.map((b, i) => b.subarray(infos[i].start, infos[i].end)));
+              const head = Buffer.from(bufs[0].subarray(0, infos[0].hdrEnd + 8));
+              head.writeUInt32LE(head.length - 8 + pcm.length, 4);
+              head.writeUInt32LE(pcm.length, head.length - 4);
+              merged = Buffer.concat([head, pcm]);
+            }
+          } catch { merged = null; }
+          return res.status(200).json({ audios: merged ? [merged.toString('base64')] : clips, mime: 'audio/wav', voice: `groq:${gv}` });
         } catch (err) { console.error('groq tts', err.message); /* نكمل لصوت Edge كاحتياط */ }
       }
       try {
@@ -692,7 +718,7 @@ export default async function handler(req, res) {
         const system = `أنت "مساعد إبرة وخيط" — مستشار أعمال ذكي ودود لورشة إصلاح أحذية وحقائب وجلديات في الرياض (إبرة وخيط الإسكافي). تتحدث مع ${sess.name || 'المدير'} (${sess.role}).
 افهم المعنى لا الكلمات الحرفية: قد يستعمل المستخدم مرادفات أو لهجة أو أخطاء إملائية أو أرقاماً منطوقة («ألف واثنين» = 1002)، فاستنتج القصد واستعمل الدوال المناسبة، وإن كان الطلب ناقصاً اسأل سؤالاً واحداً قصيراً.
 ${dialectGuide(sess.role)}
-الرد للنطق الصوتي: جمل قصيرة طبيعية، بدون جداول ولا رموز كثيرة.
+الرد يُنطق بصوت عالٍ: اكتب جملاً متصلة كاملة بعلامات ترقيم طبيعية كأنك تتحدث مع شخص، بدون قوائم ولا عناوين ولا نجوم ولا رموز ولا اختصارات، وأرقام بسيطة. اجعل الرد أقل من 350 حرفاً ما لم يطلب التفصيل.
 دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
 للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
 تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
