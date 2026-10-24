@@ -15,6 +15,7 @@
  */
 import { getSessionFromRequest } from '../_lib/session.js';
 import { getSupabaseAdmin } from '../_lib/loyalty/supabaseAdmin.js';
+import { lexiconText } from '../_lib/dialectLexicon.js';
 
 // كل مورد مسموح: اسم الجدول الفعلي + الأدوار المسموحة لكل عملية.
 // أي جدول مو موجود بهالقائمة يُرفض تلقائياً (allow-list صريحة، مو
@@ -36,7 +37,10 @@ const dialectGuide = (role) => `اللهجات في الورشة: الفنيون
   role === 'staff' ? ' المتحدث الآن غالباً فني مصري: ردّ بالمصرية البسيطة (مثل: تمام، دلوقتي، خلاص، ماشي، حاضر).'
   : role === 'cashier' ? ' المتحدث الآن غالباً كاشير يمني: افهم اليمنية وردّ بعربية بسيطة واضحة بنبرة قريبة منه.'
   : ' المتحدث الآن غالباً سعودي: ردّ بسعودية بيضاء مختصرة.'}
-مرادفات تعين على الفهم (أمثلة وليست حصراً): مصري: جزمة=حذاء، شنطة=حقيبة، سوستة=سحاب، كعب، نعل، لزق/غِرا=لاصق، دلوقتي=الآن، النهارده=اليوم، بكره=غداً، لسه=ما زال، خلصت/خلصان/خلاص=أنجزت، اتصبغت=تمت صباغتها، اتخيطت=تمت خياطتها، مفيش=لا يوجد، كام=كم، فين=أين، ازاي=كيف، عايز/عاوز=أريد، حاضر=حسناً. يمني: ايش=ماذا، الحين/دحين/ذحين=الآن، بغيت/ابغى=أريد، حق=تعود لـ، قد=تم بالفعل (قد خلص)، كذا=هكذا، يا شيخ/يا سيدي=نداء، شيء=شي. سعودي: ابي/ابغى=أريد، وش=ماذا، الحين=الآن، يبيله=يحتاج، خلص=انتهى. الأرقام قد تُنطق باللهجة (تلتميه=300، خمستاشر=15، ألف وخمسميه=1500). إذا لم تتأكد من كلمة اسأل سؤالاً قصيراً بدل التخمين.`;
+قواعد الفهم: (1) حدّد لهجة المتحدث من كلماته ولو اختلطت. (2) طبّق المعجم التالي على المعنى لا الحرف. (3) الأرقام تُنطق بلهجته (تلتميه=300، خمستاشر=15، ألف وخمسميه=1500، اتنين=2) فحوّلها لأرقام. (4) أخطاء التعرف الصوتي واردة (حروف متشابهة، كلمات ناقصة): استنتج المقصود من السياق ورقم الطلب. (5) إن بقيت كلمة غير مفهومة وتتعلق بتنفيذ أمر، اسأل سؤالاً واحداً قصيراً؛ وإن كانت كلمة عامة وتتوفر أداة web_search فابحث عن معناها.
+المعجم:
+${lexiconText()}
+إذا لم تتأكد من كلمة اسأل سؤالاً قصيراً بدل التخمين.`;
 
 // مزوّد نموذج لغوي عام (Gateway ثم Groq ثم Claude) لمهام الرد بـ JSON أو نص قصير
 async function llmChat({ system, messages, json = false, maxTokens = 400 }) {
@@ -671,6 +675,26 @@ ${dialectGuide(sess.role)}
               find_orders: tool({ description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو جواله أو الحالة', inputSchema: z.object({ query: z.string().optional(), status: z.enum(['pending', 'in_progress', 'ready', 'completed', 'cancelled']).optional(), limit: z.number().optional() }), execute: async (a) => runTool('find_orders', a) }),
               deliveries: tool({ description: 'الطلبات غير المسلَّمة المتأخرة أو المستحقة اليوم أو خلال يومين', inputSchema: z.object({}), execute: async () => runTool('deliveries', {}) }),
               counts_today: tool({ description: 'عدد الطلبات المسجلة اليوم حسب الحالة', inputSchema: z.object({}), execute: async () => runTool('counts_today', {}) }),
+              web_search: tool({
+                description: 'بحث جوجل الحقيقي عن معلومة خارجية حديثة (أسعار مواد وخامات، منافسون، طقس، اتجاهات، أو معنى كلمة غير مفهومة). لا تضع فيه أسماء عملاء ولا أرقام طلبات ولا مبالغ.',
+                inputSchema: z.object({ query: z.string().max(200) }),
+                execute: async ({ query }) => {
+                  if (!geminiKey) return { error: 'search_not_configured', note: 'يحتاج GEMINI_API_KEY عادي من Google AI Studio' };
+                  try {
+                    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(process.env.GEMINI_SEARCH_MODEL || 'gemini-2.5-flash')}:generateContent`, {
+                      method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
+                      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: `${query}\nأجب باختصار بالعربية مع ذكر المصدر.` }] }], tools: [{ google_search: {} }], generationConfig: { maxOutputTokens: 700, thinkingConfig: { thinkingBudget: 0 } } }),
+                      signal: AbortSignal.timeout(15000),
+                    });
+                    if (!r.ok) return { error: `search_http_${r.status}` };
+                    const j = await r.json();
+                    const c = j.candidates?.[0];
+                    const answer = (c?.content?.parts || []).map((x) => x.text || '').join('').trim();
+                    const sources = (c?.groundingMetadata?.groundingChunks || []).map((g) => g.web?.title || g.web?.uri).filter(Boolean).slice(0, 4);
+                    return { answer: answer.slice(0, 1200), sources };
+                  } catch (e) { return { error: 'search_failed' }; }
+                },
+              }),
               check_availability: tool({ description: 'المواعيد الفارغة ليوم معيّن للحجز (حسب ساعات العمل والحجوزات القائمة)', inputSchema: z.object({ date: z.string().describe('YYYY-MM-DD'), duration_minutes: z.number().optional() }), execute: async (a) => runTool('check_availability', a) }),
               order_details: tool({ description: 'تفاصيل طلب كاملة (وصف، ملاحظات، رف، حالة الدفع) برقم الطلب', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => runTool('order_details', a) }),
               customer_lookup: tool({ description: 'بحث عن عميل باسمه أو جواله (عدد طلباته ومستوى الولاء)', inputSchema: z.object({ query: z.string() }), execute: async (a) => runTool('customer_lookup', a) }),
