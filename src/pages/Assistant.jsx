@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseApi';
 import { logAudit } from '@/lib/auditLog';
-import { clearSession } from '@/lib/sessionStore';
+import { clearSession, getSession } from '@/lib/sessionStore';
+import { workerPatch } from '@/lib/workerTiming';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
 import { parseCommand, normalize, STATUS_AR } from '@/lib/assistantNlu';
 
@@ -176,7 +177,7 @@ export default function Assistant() {
       const order = found?.[0];
       if (!order) return say(`ما لقيت الطلب ${cmd.order_number}.`, { error: true });
       if (['completed', 'cancelled'].includes(order.status)) return say(`الطلب ${order.order_number} حالته الحالية «${STATUS_AR[order.status]}» ولا يتغيّر.`);
-      await db.Order.update(order.id, { status: cmd.status });
+      await db.Order.update(order.id, { status: cmd.status, ...workerPatch(getSession()) });
       logAudit({ action: 'update', page: 'المساعد الذكي', entity: 'order', entity_id: order.id, details: { order_number: order.order_number, changes: { status: cmd.status } } });
       if (cmd.status === 'completed' && order.customer_phone) {
         try { await addStamp({ phone: order.customer_phone, name: order.customer_name || 'عميل', orderId: order.id, orderNumber: order.order_number, serviceType: order.item_type, amount: order.total_price || 0 }); } catch { /* اختياري */ }

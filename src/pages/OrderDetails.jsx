@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import VoiceNote from '@/components/pos/VoiceNote';
+import { minutesBetween, formatDuration } from '@/lib/workerTiming';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -381,6 +382,16 @@ export default function OrderDetails() {
         </TabsList>
 
         <TabsContent value="details" className="space-y-6">
+          {(order.work_started_at || order.work_done_at) && (
+            <Card>
+              <CardContent className="p-4 text-sm flex flex-wrap gap-x-6 gap-y-1">
+                <span>👷 الفني: <b>{order.worker_name || '—'}</b></span>
+                <span>بدأ: <b>{order.work_started_at ? new Date(order.work_started_at).toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'short', timeStyle: 'short' }) : '—'}</b></span>
+                <span>أنجز: <b>{order.work_done_at ? new Date(order.work_done_at).toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'short', timeStyle: 'short' }) : 'جارٍ…'}</b></span>
+                <span>⏱ المدة: <b>{formatDuration(minutesBetween(order.work_started_at, order.work_done_at || new Date().toISOString()))}</b></span>
+              </CardContent>
+            </Card>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Photos */}
             <Card>

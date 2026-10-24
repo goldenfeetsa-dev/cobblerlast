@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import VoiceNote from '@/components/pos/VoiceNote';
 import { notifyOrderReady } from '@/lib/waNotify';
+import { workerPatch } from '@/lib/workerTiming';
 import { Scissors, Package, CheckCircle, Clock, Search, Filter, CalendarDays } from 'lucide-react';
 
 const ITEM_LABELS = {
@@ -51,7 +52,7 @@ export default function StaffOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, status }) => { const r = await supabase.from('orders').update({ status }).eq('id', id); if (!r.error && status === 'ready') notifyOrderReady(id); return r; },
+    mutationFn: async ({ id, status }) => { const r = await supabase.from('orders').update({ status, ...workerPatch(session) }).eq('id', id); if (!r.error && status === 'ready') notifyOrderReady(id); return r; },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-orders'] });
       toast.success('✅ تم تحديث حالة الطلب');
@@ -74,6 +75,7 @@ export default function StaffOrders() {
     <div className="space-y-5 max-w-2xl mx-auto" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
+        <Link to="/assistant" className="fixed bottom-4 left-4 z-40 px-4 py-3 rounded-full bg-amber-700 text-white font-black text-sm shadow-lg">🎙️ المساعد</Link>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
             <Scissors className="w-5 h-5 text-blue-600 dark:text-blue-400" />

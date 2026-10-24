@@ -5,6 +5,8 @@
 import React, { useRef, useState } from 'react';
 import { Mic, MicOff, Loader2, Hand } from 'lucide-react';
 import { notifyOrderReady } from '@/lib/waNotify';
+import { workerPatch } from '@/lib/workerTiming';
+import { getSession } from '@/lib/sessionStore';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { parseDictation } from '@/lib/voiceParse';
@@ -51,7 +53,7 @@ export default function VoiceNote({ order, onSaved }) {
       if (r.note || r.mark_ready) {
         const stamp = new Date().toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'short', timeStyle: 'short' });
         const patch = { notes: [order.notes, r.note && `[ورشة ${stamp}] ${r.note}`].filter(Boolean).join('\n').slice(0, 2000) };
-        if (r.mark_ready && ['pending', 'in_progress'].includes(order.status)) patch.status = 'ready';
+        if (r.mark_ready && ['pending', 'in_progress'].includes(order.status)) { patch.status = 'ready'; Object.assign(patch, workerPatch(getSession())); }
         const { error } = await supabase.from('orders').update(patch).eq('id', order.id);
         if (error) toast.error('تعذّر الحفظ'); else { onSaved?.(); if (patch.status === 'ready') notifyOrderReady(order.id); }
       }
@@ -72,7 +74,7 @@ export default function VoiceNote({ order, onSaved }) {
     const line = text ? `[ورشة ${stamp}] ${text}` : '';
     const notes = [order.notes, line].filter(Boolean).join('\n').slice(0, 2000);
     const patch = { notes };
-    if (done && ['pending', 'in_progress'].includes(order.status)) patch.status = 'ready';
+    if (done && ['pending', 'in_progress'].includes(order.status)) { patch.status = 'ready'; Object.assign(patch, workerPatch(getSession())); }
     const { error } = await supabase.from('orders').update(patch).eq('id', order.id);
     setSaving(false);
     if (error) return toast.error('تعذّر الحفظ');

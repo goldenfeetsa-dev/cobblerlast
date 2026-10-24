@@ -51,7 +51,7 @@ export function getHomePath(role) {
 }
 
 // الصفحات المسموح للعامل (staff) الدخول عليها فقط — شغله اليومي بدون بيانات إدارية
-export const WORKER_ALLOWED_PREFIXES = ['/staff', '/scan', '/orders', '/calendar'];
+export const WORKER_ALLOWED_PREFIXES = ['/staff', '/scan', '/orders', '/calendar', '/assistant'];
 
 // الصفحات الممنوعة عن الكاشير (إدارة/تقارير/إعدادات) — كل الباقي مسموح له
 export const CASHIER_DENIED_PREFIXES = [

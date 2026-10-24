@@ -10,6 +10,7 @@ import {
 import { format, startOfDay, startOfMonth, startOfYear } from 'date-fns';
 import { unifyTransactions, summarizeEmployeePerformance, summarizeByBranch } from '@/lib/analytics';
 import { SarAmount } from '@/components/shared/SarCurrency';
+import WorkerRace from '@/components/pos/WorkerRace';
 
 const PERIODS = [
   { key: 'daily',   label: 'اليوم' },
@@ -171,6 +172,8 @@ export default function Leaderboard() {
               {period === 'all'     && 'جميع الأوقات'}
             </span>
           </div>
+
+          <WorkerRace cutoff={cutoff} />
 
           {/* أفضل فرع */}
           {branchSummary.length > 1 && (

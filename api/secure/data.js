@@ -501,9 +501,10 @@ export default async function handler(req, res) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     const FINROLES = ['owner', 'admin', 'manager', 'accountant'];
     const canSeeMoney = FINROLES.includes(sess.role);
+    const isWorkerRole = sess.role === 'staff'; // الفني: طلباته فقط وبدون بيانات عملاء أو مال
     const sb = getSupabaseAdmin();
     const todayRiyadh = () => new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
-    const ORDER_COLS = 'order_number,customer_name,customer_phone,item_type,description,status,delivery_date,shelf_location,created_at,partner_id' + (canSeeMoney ? ',total_price,payment_status' : '');
+    const ORDER_COLS = isWorkerRole ? 'order_number,item_type,description,status,delivery_date,shelf_location,created_at' : ('order_number,customer_name,customer_phone,item_type,description,status,delivery_date,shelf_location,created_at,partner_id' + (canSeeMoney ? ',total_price,payment_status' : ''));
 
     const tools = [
       { name: 'find_orders', description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو رقم جواله، أو حسب الحالة. للقراءة فقط.',
@@ -527,6 +528,14 @@ export default async function handler(req, res) {
 
     const runTool = async (name, input) => {
       input = input || {};
+      if (isWorkerRole && !['find_orders', 'deliveries', 'counts_today', 'order_details', 'my_stats'].includes(name)) return { error: 'not_allowed' };
+      if (name === 'my_stats') {
+        const t0 = todayRiyadh();
+        const { data, error } = await sb.from('orders').select('order_number,work_started_at,work_done_at').eq('worker_id', sess.employee_id).gte('work_done_at', `${t0}T00:00:00+03:00`).limit(200);
+        if (error) return { error: 'timing_not_ready' };
+        const durs = (data || []).filter((o) => o.work_started_at && o.work_done_at).map((o) => (Date.parse(o.work_done_at) - Date.parse(o.work_started_at)) / 60000);
+        return { finished_today: (data || []).length, avg_minutes: durs.length ? +(durs.reduce((a, b) => a + b, 0) / durs.length).toFixed(1) : null };
+      }
       if (name === 'check_availability') {
         const d = /^\d{4}-\d{2}-\d{2}$/.test(input.date || '') ? input.date : todayRiyadh();
         const r = await computeSlots(sb, d, Math.min(parseInt(input.duration_minutes, 10) || 30, 240));
@@ -536,7 +545,8 @@ export default async function handler(req, res) {
         let q = sb.from('orders').select(ORDER_COLS).order('created_at', { ascending: false }).limit(Math.min(parseInt(input.limit, 10) || 8, 15));
         if (input.status) q = q.eq('status', input.status);
         const t = String(input.query || '').trim().replace(/[%,()]/g, '').slice(0, 40);
-        if (t) q = q.or(`order_number.ilike.%${t}%,customer_name.ilike.%${t}%,customer_phone.ilike.%${t}%`);
+        if (isWorkerRole) { q = q.in('status', ['pending', 'in_progress', 'ready']); if (t) q = q.ilike('order_number', `%${t}%`); }
+        else if (t) q = q.or(`order_number.ilike.%${t}%,customer_name.ilike.%${t}%,customer_phone.ilike.%${t}%`);
         const { data, error } = await q; if (error) throw error;
         return data || [];
       }
@@ -581,7 +591,7 @@ export default async function handler(req, res) {
       };
       if (name === 'order_details') {
         const num = String(input.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-        const { data, error } = await sb.from('orders').select('order_number,customer_name,customer_phone,item_type,description,notes,status,payment_status,paid,shelf_location,delivery_date,created_at,delivered_at,quantity,employee_name' + (canSeeMoney ? ',total_price,payment_method' : '')).eq('order_number', num).limit(1);
+        const { data, error } = await sb.from('orders').select(isWorkerRole ? 'order_number,item_type,description,notes,status,shelf_location,delivery_date,created_at,quantity,order_items' : ('order_number,customer_name,customer_phone,item_type,description,notes,status,payment_status,paid,shelf_location,delivery_date,created_at,delivered_at,quantity,employee_name' + (canSeeMoney ? ',total_price,payment_method' : ''))).eq('order_number', num).limit(1);
         if (error) throw error;
         return data?.[0] || { found: false };
       }
@@ -661,7 +671,7 @@ export default async function handler(req, res) {
     }
     // ── تنفيذ حجز موعد بعد تأكيد المستخدم (يعيد فحص التوفر ثم يحجز ويرسل تأكيداً للعميل) ──
     if (req.body && req.body.book) {
-      if (sess.role === 'accountant') return res.status(403).json({ error: 'forbidden' });
+      if (sess.role === 'accountant' || sess.role === 'staff') return res.status(403).json({ error: 'forbidden' });
       try {
         const b = req.body.book;
         const date = String(b.date || ''), time = String(b.time || '').slice(0, 5);
@@ -724,7 +734,7 @@ export default async function handler(req, res) {
 ${dialectGuide(sess.role)}
 الرد يُنطق بصوت عالٍ: اكتب جملاً متصلة كاملة بعلامات ترقيم طبيعية كأنك تتحدث مع شخص، بدون قوائم ولا عناوين ولا نجوم ولا رموز ولا اختصارات، وأرقام بسيطة. اجعل الرد أقل من 350 حرفاً ما لم يطلب التفصيل.
 دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
-أنت وكيل تنفيذي: عندما يطلب المستخدم فعلاً (فتح صفحة أو فاتورة، تغيير حالة، رف، ملاحظة أو «الناقص»، حجز، طلب جديد، تغيير موعد) استدعِ الأداة المناسبة فوراً ولا تكتفِ بالكلام، ولا تقل «تم» إلا بعد استدعاء الأداة. يمكنك استدعاء أكثر من أداة في نفس الرد. للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
+${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كلمه بجمل قصيرة جداً، ولا تذكر أسعاراً ولا بيانات عملاء ولا أرقاماً مالية إطلاقاً، ويرى طلباته وتفاصيل الشغل فقط (الوصف، الملاحظات، الرف، الموعد). ساعده يبدأ العمل أو ينهيه ويسجّل الناقص والرف.' : ''}\nأنت وكيل تنفيذي: عندما يطلب المستخدم فعلاً (فتح صفحة أو فاتورة، تغيير حالة، رف، ملاحظة أو «الناقص»، حجز، طلب جديد، تغيير موعد) استدعِ الأداة المناسبة فوراً ولا تكتفِ بالكلام، ولا تقل «تم» إلا بعد استدعاء الأداة. يمكنك استدعاء أكثر من أداة في نفس الرد. للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
 تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
         const hist = (Array.isArray(history) ? history : []).slice(-10).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 1200) }));
         const errors = [];
@@ -751,7 +761,7 @@ ${dialectGuide(sess.role)}
           try {
             const { generateText, tool, stepCountIs } = await import('ai');
             const { z } = await import('zod');
-            const tools = {
+            let tools = {
               find_orders: tool({ description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو جواله أو الحالة', inputSchema: z.object({ query: z.string().optional(), status: z.enum(['pending', 'in_progress', 'ready', 'completed', 'cancelled']).optional(), limit: z.number().optional() }), execute: async (a) => runTool('find_orders', a) }),
               deliveries: tool({ description: 'الطلبات غير المسلَّمة المتأخرة أو المستحقة اليوم أو خلال يومين', inputSchema: z.object({}), execute: async () => runTool('deliveries', {}) }),
               counts_today: tool({ description: 'عدد الطلبات المسجلة اليوم حسب الحالة', inputSchema: z.object({}), execute: async () => runTool('counts_today', {}) }),
@@ -890,6 +900,15 @@ ${dialectGuide(sess.role)}
                 }),
               } : {}),
             };
+            if (isWorkerRole) {
+              const base = tools;
+              tools = {
+                find_orders: base.find_orders, deliveries: base.deliveries, order_details: base.order_details, set_shelf: base.set_shelf, add_order_note: base.add_order_note,
+                my_stats: tool({ description: 'إنجاز الفني اليوم: عدد الطلبات المنجزة ومتوسط الوقت', inputSchema: z.object({}), execute: async () => runTool('my_stats', {}) }),
+                start_order_work: tool({ description: 'بدء العمل على طلب (يغيّر حالته إلى قيد التنفيذ بعد تأكيد الفني)', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => { setAction({ type: 'set_status', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), status: 'in_progress', label: 'قيد التنفيذ' }); return { pending_user_confirmation: true }; } }),
+                finish_order_work: tool({ description: 'إنهاء العمل على طلب (تم الإنجاز ← جاهز للتسليم) بعد تأكيد الفني', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => { setAction({ type: 'set_status', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), status: 'ready', label: 'جاهز' }); return { pending_user_confirmation: true }; } }),
+              };
+            }
             const runModel = (model) => generateText({
               model,
               system,
