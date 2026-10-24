@@ -504,7 +504,7 @@ export default async function handler(req, res) {
     const isWorkerRole = sess.role === 'staff'; // الفني: طلباته فقط وبدون بيانات عملاء أو مال
     const sb = getSupabaseAdmin();
     const todayRiyadh = () => new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
-    const ORDER_COLS = isWorkerRole ? 'order_number,item_type,description,status,delivery_date,shelf_location,created_at' : ('order_number,customer_name,customer_phone,item_type,description,status,delivery_date,shelf_location,created_at,partner_id' + (canSeeMoney ? ',total_price,payment_status' : ''));
+    const ORDER_COLS = isWorkerRole ? 'order_number,customer_name,item_type,description,status,delivery_date,shelf_location,created_at' : ('order_number,customer_name,customer_phone,item_type,description,status,delivery_date,shelf_location,created_at,partner_id' + (canSeeMoney ? ',total_price,payment_status' : ''));
 
     const tools = [
       { name: 'find_orders', description: 'بحث عن طلبات برقم الطلب أو اسم العميل أو رقم جواله، أو حسب الحالة. للقراءة فقط.',
@@ -526,6 +526,30 @@ export default async function handler(req, res) {
       );
     }
 
+    // تحويل «رقم الطلب أو اسم العميل» إلى رقم طلب: «قطعة خالد التويجري» ← ORD-01002 (مطابقة تقريبية)
+    const levS = (a, b) => { if (a === b) return 0; if (Math.abs(a.length - b.length) > 2) return 3; let p = Array.from({ length: b.length + 1 }, (_, j) => j); for (let i = 1; i <= a.length; i++) { const c = [i]; for (let j = 1; j <= b.length; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = c; } return p[b.length]; };
+    const resolveOrder = async (ref) => {
+      const raw = String(ref || '').trim();
+      const nm = raw.match(/ORD[\s-]?(\d{1,6})/i) || raw.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).match(/^\D{0,6}(\d{1,6})\D{0,3}$/);
+      if (nm) return { ok: true, number: `ORD-${String(parseInt(nm[1], 10)).padStart(5, '0')}` };
+      const strip = (t) => normalizeAr(t).replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter((w) => w.length >= 2 && !['قطعه', 'طلب', 'عميل', 'الاستاذ', 'استاذ', 'ابو', 'السيد'].includes(w)).map((w) => w.replace(/^ال/, ''));
+      const toks = strip(raw);
+      if (!toks.length) return { ok: false, res: { error: 'not_found', note: 'ما حدّد رقم الطلب ولا اسم العميل' } };
+      let q = sb.from('orders').select('order_number,customer_name,item_type,status').is('partner_id', null).order('created_at', { ascending: false }).limit(400);
+      q = q.neq('status', 'cancelled');
+      const { data } = await q;
+      const rows = data || [];
+      const score = (o) => { const ct = strip(o.customer_name || ''); let hit = 0; toks.forEach((t) => { if (ct.some((c) => c === t || c.includes(t) || t.includes(c) && c.length >= 3 || (t.length >= 4 && levS(c, t) <= 1))) hit++; }); return hit; };
+      const scored = rows.map((o) => ({ o, h: score(o) })).filter((x) => x.h > 0);
+      const best = Math.max(0, ...scored.map((x) => x.h));
+      let cands = scored.filter((x) => x.h === best).map((x) => x.o);
+      const active = cands.filter((o) => ['pending', 'in_progress', 'ready'].includes(o.status));
+      if (active.length) cands = active;
+      if (isWorkerRole) cands = cands.filter((o) => ['pending', 'in_progress', 'ready'].includes(o.status));
+      if (!cands.length) return { ok: false, res: { error: 'not_found', note: `ما لقيت طلباً باسم «${raw}»` } };
+      if (cands.length > 1) return { ok: false, res: { ambiguous: true, note: 'أكثر من طلب بهذا الاسم؛ اسأل المستخدم أي قطعة بالنوع أو رقم الطلب', candidates: cands.slice(0, 5).map((o) => ({ order_number: o.order_number, customer_name: o.customer_name, item_type: o.item_type, status: o.status })) } };
+      return { ok: true, number: cands[0].order_number, name: cands[0].customer_name };
+    };
     const runTool = async (name, input) => {
       input = input || {};
       if (isWorkerRole && !['find_orders', 'deliveries', 'counts_today', 'order_details', 'my_stats'].includes(name)) return { error: 'not_allowed' };
@@ -545,7 +569,7 @@ export default async function handler(req, res) {
         let q = sb.from('orders').select(ORDER_COLS).order('created_at', { ascending: false }).limit(Math.min(parseInt(input.limit, 10) || 8, 15));
         if (input.status) q = q.eq('status', input.status);
         const t = String(input.query || '').trim().replace(/[%,()]/g, '').slice(0, 40);
-        if (isWorkerRole) { q = q.in('status', ['pending', 'in_progress', 'ready']); if (t) q = q.ilike('order_number', `%${t}%`); }
+        if (isWorkerRole) { q = q.in('status', ['pending', 'in_progress', 'ready']); if (t) q = q.or(`order_number.ilike.%${t}%,customer_name.ilike.%${t}%`); }
         else if (t) q = q.or(`order_number.ilike.%${t}%,customer_name.ilike.%${t}%,customer_phone.ilike.%${t}%`);
         const { data, error } = await q; if (error) throw error;
         return data || [];
@@ -591,7 +615,7 @@ export default async function handler(req, res) {
       };
       if (name === 'order_details') {
         const num = String(input.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-        const { data, error } = await sb.from('orders').select(isWorkerRole ? 'order_number,item_type,description,notes,status,shelf_location,delivery_date,created_at,quantity,order_items' : ('order_number,customer_name,customer_phone,item_type,description,notes,status,payment_status,paid,shelf_location,delivery_date,created_at,delivered_at,quantity,employee_name' + (canSeeMoney ? ',total_price,payment_method' : ''))).eq('order_number', num).limit(1);
+        const { data, error } = await sb.from('orders').select(isWorkerRole ? 'order_number,customer_name,item_type,description,notes,status,shelf_location,delivery_date,created_at,quantity,order_items' : ('order_number,customer_name,customer_phone,item_type,description,notes,status,payment_status,paid,shelf_location,delivery_date,created_at,delivered_at,quantity,employee_name' + (canSeeMoney ? ',total_price,payment_method' : ''))).eq('order_number', num).limit(1);
         if (error) throw error;
         return data?.[0] || { found: false };
       }
@@ -734,7 +758,7 @@ export default async function handler(req, res) {
 ${dialectGuide(sess.role)}
 الرد يُنطق بصوت عالٍ: اكتب جملاً متصلة كاملة بعلامات ترقيم طبيعية كأنك تتحدث مع شخص، بدون قوائم ولا عناوين ولا نجوم ولا رموز ولا اختصارات، وأرقام بسيطة. اجعل الرد أقل من 350 حرفاً ما لم يطلب التفصيل.
 دورك: ناقش، اسأل أسئلة توضيحية، اقترح حلولاً عملية قابلة للتنفيذ (تسعير، تسليم، متابعة تحصيل الشركات، كفاءة الورشة، تسويق، خدمة العملاء)، وقدّم رأيك بصراحة مع ذكر المفاضلات. لا تخترع أرقاماً: استعمل لقطة البيانات أدناه فقط، وإذا ما كفت قل ذلك.
-${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كلمه بجمل قصيرة جداً، ولا تذكر أسعاراً ولا بيانات عملاء ولا أرقاماً مالية إطلاقاً، ويرى طلباته وتفاصيل الشغل فقط (الوصف، الملاحظات، الرف، الموعد). ساعده يبدأ العمل أو ينهيه ويسجّل الناقص والرف.' : ''}\nأنت وكيل تنفيذي: عندما يطلب المستخدم فعلاً (فتح صفحة أو فاتورة، تغيير حالة، رف، ملاحظة أو «الناقص»، حجز، طلب جديد، تغيير موعد) استدعِ الأداة المناسبة فوراً ولا تكتفِ بالكلام، ولا تقل «تم» إلا بعد استدعاء الأداة. يمكنك استدعاء أكثر من أداة في نفس الرد. للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
+${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كلمه بجمل قصيرة جداً، ولا تذكر أسعاراً ولا بيانات عملاء ولا أرقاماً مالية إطلاقاً، ويرى طلباته وتفاصيل الشغل فقط (الوصف، الملاحظات، الرف، الموعد). ساعده يبدأ العمل أو ينهيه ويسجّل الناقص والرف. يشير الفني للطلب غالباً باسم العميل (مثل «قطعة خالد التويجري»)، فمرّر الاسم كما قاله في حقل order_number وسيُحوَّل لرقم الطلب، وإن ظهر أكثر من طلب اسأله أي قطعة. عند «ناقص/مافي/عاوز يتغير» سجّل الملاحظة بصياغة واضحة كاملة (مثلاً: «ناقص الشكشك — العميل يريد تغييره»).' : ''}\nفي أدوات الطلبات يمكن تمرير رقم الطلب أو اسم العميل في حقل order_number. أنت وكيل تنفيذي: عندما يطلب المستخدم فعلاً (فتح صفحة أو فاتورة، تغيير حالة، رف، ملاحظة أو «الناقص»، حجز، طلب جديد، تغيير موعد) استدعِ الأداة المناسبة فوراً ولا تكتفِ بالكلام، ولا تقل «تم» إلا بعد استدعاء الأداة. يمكنك استدعاء أكثر من أداة في نفس الرد. للأرقام استعمل الدوال المتاحة. لتغيير حالة طلب استعمل change_order_status (لا ينفَّذ إلا بعد تأكيد المستخدم). للبحث في الإنترنت يوجد وضع بحث جوجل عند طلب المستخدم ذلك. الردود مختصرة بالعامية. لا تعطِ استشارة قانونية/ضريبية قاطعة: اذكر أنها إرشاد عام وراجع محاسباً أو هيئة الزكاة للقرار النهائي.
 تاريخ اليوم: ${todayRiyadh()}. لقطة بيانات المحل الآن: ${JSON.stringify(snap).slice(0, 6000)}`;
         const hist = (Array.isArray(history) ? history : []).slice(-10).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 1200) }));
         const errors = [];
@@ -908,6 +932,23 @@ ${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كل
                 start_order_work: tool({ description: 'بدء العمل على طلب (يغيّر حالته إلى قيد التنفيذ بعد تأكيد الفني)', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => { setAction({ type: 'set_status', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), status: 'in_progress', label: 'قيد التنفيذ' }); return { pending_user_confirmation: true }; } }),
                 finish_order_work: tool({ description: 'إنهاء العمل على طلب (تم الإنجاز ← جاهز للتسليم) بعد تأكيد الفني', inputSchema: z.object({ order_number: z.string() }), execute: async (a) => { setAction({ type: 'set_status', order_number: String(a.order_number || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20), status: 'ready', label: 'جاهز' }); return { pending_user_confirmation: true }; } }),
               };
+            }
+            // كل أداة تقبل رقم الطلب أو اسم العميل (نحوّله لرقم، ونُرفق اسم العميل بالإجراء ليظهر في التأكيد)
+            for (const k of Object.keys(tools)) {
+              const t0 = tools[k];
+              if (!t0?.execute || !['find_orders', 'order_details', 'set_shelf', 'add_order_note', 'set_delivery_date', 'change_order_status', 'start_order_work', 'finish_order_work', 'open_order'].includes(k)) continue;
+              tools[k] = { ...t0, execute: async (a, o2) => {
+                let args = a, label = '';
+                if (k !== 'find_orders' && a?.order_number) {
+                  const r = await resolveOrder(a.order_number);
+                  if (!r.ok) return r.res;
+                  args = { ...a, order_number: r.number }; label = r.name || '';
+                }
+                const before = actions.length;
+                const out = await t0.execute(args, o2);
+                if (label) for (let i = before; i < actions.length; i++) if (actions[i].order_number === args.order_number) actions[i].customer = label;
+                return out;
+              } };
             }
             const runModel = (model) => generateText({
               model,

@@ -238,7 +238,8 @@ export default function Assistant() {
   };
 
   // وصف الإجراء للمستخدم قبل التنفيذ
-  const describe = (a) => {
+  const describe = (a0) => {
+    const a = { ...a0, order_number: a0.customer ? `${a0.customer} (${a0.order_number})` : a0.order_number };
     if (a.type === 'set_status') return `تغيير حالة الطلب ${a.order_number} إلى «${a.label}»`;
     if (a.type === 'set_delivery') return `تغيير موعد تسليم الطلب ${a.order_number} إلى ${a.delivery_date}`;
     if (a.type === 'add_note') return `إضافة ملاحظة على الطلب ${a.order_number}: «${a.note}»`;
