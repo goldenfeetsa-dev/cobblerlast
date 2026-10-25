@@ -11,6 +11,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
+import { RiyalText, SarAmount } from '@/components/shared/SarCurrency';
 const STATUS_ICONS = {
   pending: AlertCircle,
   confirmed: CheckCircle,
@@ -158,7 +159,7 @@ export default function MyBookings() {
                 </div>
                 <div className="mt-4 pt-4 flex items-center justify-between" style={{ borderTop: '1px solid rgba(236,232,223,0.1)' }}>
                   <span className="text-xs" style={{ color: 'rgba(236,232,223,0.3)' }}>{t('myBookings.total')}</span>
-                  <span className="font-black text-lg" style={{ color: '#ece8df' }}>{booking.total_price} SAR</span>
+                  <span className="font-black text-lg" style={{ color: '#ece8df' }}><SarAmount value={booking.total_price} /></span>
                 </div>
               </div>
             );

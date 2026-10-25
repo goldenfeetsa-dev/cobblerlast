@@ -7,7 +7,7 @@ import { X, Check } from 'lucide-react';
 import { db, listActiveAuctions, listShopProductsWithBrand, placeBid, storage } from '@/api/supabaseApi';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, RiyalText } from '@/components/shared/SarCurrency';
 import { PAGES } from '@/lib/seo/siteData';
 const AUCTION_SEO = PAGES.find((p) => p.path === '/auction');
 
@@ -78,7 +78,7 @@ function BrandBadge({ brand }) {
 
 function formatSAR(n, isAr) {
   const num = Math.round(Number(n) || 0);
-  return isAr ? `${toArabicDigits(num)} ر.س` : `${num} SAR`;
+  return <SarAmount value={num} decimals={0} />;
 }
 
 // ── بطاقة قطعة دكّة الإسكافي (شراء فوري) ────────────────────────────
@@ -193,7 +193,7 @@ function BidDialog({ listing, isAr, dir, onClose, onSuccess }) {
         <button onClick={onClose} className="absolute top-4 start-4" style={{ color: 'hsl(var(--muted-foreground))' }}><X className="w-5 h-5" /></button>
         <h3 className="font-black text-lg mb-1 text-center" style={{ color: 'hsl(var(--foreground))' }}>{listing.title_ar}</h3>
         <p className="text-xs text-center mb-5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-          {isAr ? `الحد الأدنى للمزايدة: ${minBid} ر.س` : `Minimum bid: ${minBid} SAR`}
+          <RiyalText text={isAr ? `الحد الأدنى للمزايدة: ${minBid} ر.س` : `Minimum bid: ${minBid} SAR`} />
         </p>
         <div className="space-y-3">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={isAr ? 'الاسم' : 'Name'}
@@ -202,7 +202,7 @@ function BidDialog({ listing, isAr, dir, onClose, onSuccess }) {
             className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
           <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={minBid} placeholder={isAr ? 'مبلغ المزايدة' : 'Bid amount'} dir="ltr"
             className="w-full px-4 py-3 rounded-xl text-sm outline-none font-bold" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          {error && <p className="text-xs font-bold" style={{ color: 'hsl(var(--destructive))' }}>{error}</p>}
+          {error && <p className="text-xs font-bold" style={{ color: 'hsl(var(--destructive))' }}><RiyalText text={error} /></p>}
           <button onClick={submit} disabled={loading}
             className="w-full py-3.5 rounded-full font-bold text-sm disabled:opacity-50" style={{ background: 'hsl(var(--brand-brass))', color: 'hsl(var(--foreground))' }}>
             {loading ? (isAr ? 'جارِ الإرسال...' : 'Submitting...') : (isAr ? 'أرسل مزايدتي' : 'Submit bid')}
@@ -297,7 +297,7 @@ function SubmitItemDialog({ isAr, dir, brands, onClose, onSuccess }) {
             <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)}
               className="w-full text-xs" />
           </label>
-          {error && <p className="text-xs font-bold" style={{ color: 'hsl(var(--destructive))' }}>{error}</p>}
+          {error && <p className="text-xs font-bold" style={{ color: 'hsl(var(--destructive))' }}><RiyalText text={error} /></p>}
           <button onClick={submit} disabled={uploading}
             className="w-full py-3.5 rounded-full font-bold text-sm disabled:opacity-50" style={{ background: 'hsl(var(--brand-brass))', color: 'hsl(var(--foreground))' }}>
             {uploading ? (isAr ? 'جارِ الإرسال...' : 'Submitting...') : (isAr ? 'أرسل طلب العرض' : 'Submit for review')}

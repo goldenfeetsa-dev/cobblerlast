@@ -14,6 +14,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import LogoMarquee from '@/components/LogoMarquee';
 import CleanLogo from '@/components/CleanLogo';
+import { RiyalText } from '@/components/shared/SarCurrency';
 const ShopMap = React.lazy(() => import('@/components/shared/ShopMap'));
 
 // بيانات عامة مخزّنة بالـ CDN (علامات/فروع/تواصل/سجل تجاري) — طلب واحد
@@ -233,7 +234,7 @@ function ServicesSection() {
                 <h3 className="text-lg font-semibold" style={{ color: '#ece8df' }}>{s.title}</h3>
                 <p className="mt-1.5 text-sm leading-loose font-light" style={{ color: '#a8a398' }}>{s.desc}</p>
               </div>
-              <span className="text-sm pt-1 whitespace-nowrap" style={{ color: '#ece8df' }}>{s.price}</span>
+              <span className="text-sm pt-1 whitespace-nowrap" style={{ color: '#ece8df' }}><RiyalText text={s.price} /></span>
             </Link>
           ))}
         </div>
@@ -624,7 +625,7 @@ function FaqSection() {
                 <h3 className="font-bold text-base">{f.q}</h3>
                 <span aria-hidden="true" className="text-xl transition-transform group-open:rotate-45" style={{ color: GT }}>+</span>
               </summary>
-              <p className="mt-3 text-sm leading-7" style={{ color: '#bdb8ad' }}>{f.a}</p>
+              <p className="mt-3 text-sm leading-7" style={{ color: '#bdb8ad' }}><RiyalText text={f.a} /></p>
             </details>
           ))}
         </div>

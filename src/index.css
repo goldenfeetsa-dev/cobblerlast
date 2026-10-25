@@ -198,3 +198,22 @@ html.noir button, html.noir a { -webkit-tap-highlight-color: transparent; }
 .leaflet-control-attribution { background: rgba(11,11,12,.7) !important; color: #8d8a82 !important; font-size: 10px !important; }
 .leaflet-control-attribution a { color: #a8a398 !important; }
 .leaflet-control-attribution a[href*="leafletjs"], .leaflet-control-attribution .leaflet-attribution-flag { display: none !important; }
+
+/* Tailwind preflight يجعل img{max-width:100%;height:auto} فيكسر بلاطات Leaflet → خريطة سوداء */
+.leaflet-container img, .leaflet-container .leaflet-tile, .leaflet-container .leaflet-marker-icon { max-width: none !important; max-height: none !important; width: auto; height: auto; }
+.leaflet-container .leaflet-tile { width: 256px !important; height: 256px !important; }
+.leaflet-container .leaflet-marker-icon { width: unset; }
+html.noir .leaflet-container img { border-radius: 0 !important; }
+
+/* المتجر (ستايل سلة داكن) */
+.shop-add { border: 1px solid rgba(255,255,255,.22); color: #ece8df; background: transparent; transition: background .2s, color .2s, border-color .2s, transform .15s; }
+.shop-add:hover:not(:disabled) { background: #ece8df; color: #0b0b0c; border-color: #ece8df; }
+.shop-add-solid { background: #ece8df; color: #0b0b0c; transition: background .2s, transform .15s; }
+.shop-add-solid:hover:not(:disabled) { background: #fff; }
+.shop-chip { border: 1px solid rgba(255,255,255,.12); color: #bdb8ad; background: transparent; transition: all .2s; }
+.shop-chip:hover { border-color: rgba(255,255,255,.35); color: #ece8df; }
+.shop-chip[data-active="true"] { background: #ece8df; color: #0b0b0c; border-color: #ece8df; }
+.shop-input, .shop-select { background: #131315; border: 1px solid rgba(255,255,255,.1); color: #ece8df; transition: border-color .2s; }
+.shop-input:focus, .shop-select:focus { border-color: rgba(255,255,255,.4); }
+.shop-select option { background: #131315; color: #ece8df; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

@@ -6,6 +6,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { pageSeo } from '@/lib/seo/siteData';
 
+import { RiyalText, SarAmount } from '@/components/shared/SarCurrency';
 const GOLD = '#ece8df';
 const TEXT = '#ece8df';
 const STEP_ICONS = [Phone, Truck, Package, CheckCircle];
@@ -102,7 +103,7 @@ export default function ShippingPolicy() {
               <div key={i} className="flex justify-between items-center px-5 py-3 text-sm"
                 style={{ background: i % 2 === 0 ? 'rgba(236,232,223,0.035)' : 'transparent', borderBottom: '1px solid rgba(236,232,223,0.06)' }}>
                 <span style={{ color: 'rgba(236,232,223,0.6)' }}>{r.zone}</span>
-                <span className="font-bold" style={{ color: GOLD }}>{r.price}</span>
+                <span className="font-bold" style={{ color: GOLD }}><RiyalText text={r.price} /></span>
               </div>
             ))}
           </div>

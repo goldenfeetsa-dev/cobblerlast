@@ -21,3 +21,25 @@ export function SarAmount({ value, decimals = 2, style, className = '', symbolSt
     </span>
   );
 }
+
+// يحوّل أي "80 ر.س" / "50 ريال" / "30 SAR" داخل نص عادي إلى رمز الريال الرسمي + الرقم.
+// الاستخدام: <RiyalText text="من 80 ر.س" />  أو  <RiyalText>{string}</RiyalText>
+const SAR_RE = /((?:\d[\d.,٠-٩٬]*)\s*(?:ر\.\s?س|ريال(?:اً|ات)?|SAR|SR)|(?:ر\.\s?س|SAR))/g;
+export function RiyalText({ text, children }) {
+  const str = typeof (text ?? children) === 'string' ? (text ?? children) : null;
+  if (str == null) return <>{text ?? children}</>;
+  const parts = str.split(SAR_RE);
+  return (
+    <>
+      {parts.map((p, i) => {
+        if (i % 2 === 0) return <React.Fragment key={i}>{p}</React.Fragment>;
+        const num = p.match(/^\d[\d.,٠-٩٬]*/);
+        return (
+          <span key={i} dir="ltr" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+            <SarSymbol />{num ? num[0] : ''}
+          </span>
+        );
+      })}
+    </>
+  );
+}

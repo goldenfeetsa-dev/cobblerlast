@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { pageSeo } from '@/lib/seo/siteData';
 
+import { RiyalText } from '@/components/shared/SarCurrency';
 const GOLD = '#ece8df';
 const BG = '#0b0b0c';
 const SECTION_ICONS = [Package, Clock, Shield, CreditCard, AlertCircle];
@@ -110,7 +111,7 @@ export default function RepairPolicy() {
                     {si === 4
                       ? <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#f59e0b' }} />
                       : <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: GOLD }} />}
-                    {item}
+                    <span><RiyalText text={item} /></span>
                   </li>
                 ))}
               </ul>
