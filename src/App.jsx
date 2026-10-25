@@ -73,7 +73,7 @@ const CareerDetail = lazy(() => import('./pages/CareerDetail'));
 const CareersAdmin = lazy(() => import('./pages/CareersAdmin'));
 
 import AppLayout from './components/pos/AppLayout';
-import FloatingWhatsApp from './components/shared/FloatingWhatsApp';
+import NoirTheme from './components/shared/NoirTheme';
 const BookingLanding = lazy(() => import('./pages/BookingLanding'));
 
 const AuthenticatedApp = () => {
@@ -195,7 +195,7 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
       </Routes>
       </Suspense>
-      <FloatingWhatsApp />
+      <NoirTheme />
     </>
   );
 };

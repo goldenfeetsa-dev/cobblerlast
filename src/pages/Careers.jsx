@@ -27,7 +27,7 @@ export default function Careers() {
     : 'Join the Ebra & Khait Cobbler team in Riyadh — browse current openings and apply now.';
 
   return (
-    <div className="min-h-screen font-tajawal" style={{ background: 'var(--cream-bg, #F9F7F2)' }} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen font-tajawal" style={{ background: 'var(--cream-bg, #0b0b0c)' }} dir={isAr ? 'rtl' : 'ltr'}>
       <Helmet>
         <title>{title}</title>
         <meta name="description" content={desc} />
@@ -79,7 +79,7 @@ export default function Careers() {
               <Link
                 key={j.id}
                 to={`/careers/${j.slug}`}
-                className="block bg-white rounded-xl border border-black/5 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
+                className="block bg-[#131315] rounded-xl border border-black/5 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">

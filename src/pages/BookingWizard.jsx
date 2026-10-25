@@ -127,7 +127,7 @@ export default function BookingWizard() {
   if (step === 5 && confirmedBooking) {
     return (
       <div className="min-h-screen bg-stone-50 py-8 px-4" dir={dir}>
-        <div className="max-w-md mx-auto bg-white rounded-3xl shadow-xl p-8">
+        <div className="max-w-md mx-auto bg-[#131315] rounded-3xl shadow-xl p-8">
           <BookingConfirmation booking={confirmedBooking} />
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function BookingWizard() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Main content */}
-          <div className="md:col-span-2 bg-white rounded-3xl shadow-sm border border-stone-100 p-6">
+          <div className="md:col-span-2 bg-[#131315] rounded-3xl shadow-sm border border-stone-100 p-6">
             {step === 1 && (
               <ServiceSelector selectedService={service} onSelect={setService} />
             )}

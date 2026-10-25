@@ -6,14 +6,14 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { pageSeo } from '@/lib/seo/siteData';
 
-const GOLD = '#A67C68';
-const TEXT = '#3E322D';
+const GOLD = '#ece8df';
+const TEXT = '#ece8df';
 
 function Section({ title, children }) {
   return (
     <div className="mb-10">
-      <h2 className="text-xl font-black mb-4 pb-2" style={{ color: GOLD, borderBottom: '1px solid rgba(166,124,104,0.15)' }}>{title}</h2>
-      <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'rgba(62,50,45,0.6)' }}>{children}</div>
+      <h2 className="text-xl font-black mb-4 pb-2" style={{ color: GOLD, borderBottom: '1px solid rgba(236,232,223,0.15)' }}>{title}</h2>
+      <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'rgba(236,232,223,0.6)' }}>{children}</div>
     </div>
   );
 }
@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
   const footer = t('privacyPolicy.footer');
 
   return (
-    <div className="min-h-screen font-tajawal" style={{ background: '#EFE9DD', color: TEXT }} dir={dir}>
+    <div className="min-h-screen font-tajawal" style={{ background: '#0b0b0c', color: TEXT }} dir={dir}>
       <Helmet>
         <title>{pageSeo('/privacy', isAr).title}</title>
         <meta name="description" content={pageSeo('/privacy', isAr).description} />
@@ -35,12 +35,12 @@ export default function PrivacyPolicy() {
 
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 h-16 flex items-center px-6"
-        style={{ background: 'rgba(244,241,234,0.95)', borderBottom: '1px solid rgba(166,124,104,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(11,11,12,0.95)', borderBottom: '1px solid rgba(236,232,223,0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="max-w-4xl mx-auto w-full flex items-center justify-between" dir={dir}>
           <Link to="/" className="text-lg font-black" style={{ color: GOLD }}>{t('common.brand')}</Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(62,50,45,0.5)' }}>{t('common.nav.home')}</Link>
+            <Link to="/" className="text-sm hover:text-yellow-400 transition-colors" style={{ color: 'rgba(236,232,223,0.5)' }}>{t('common.nav.home')}</Link>
           </div>
         </div>
       </nav>
@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
           <Shield className="w-8 h-8" style={{ color: GOLD }} />
           <div>
             <h1 className="text-3xl font-black" style={{ color: TEXT }}>{t('privacyPolicy.title')}</h1>
-            <p className="text-sm mt-1" style={{ color: 'rgba(62,50,45,0.3)' }}>{t('privacyPolicy.lastUpdate')}</p>
+            <p className="text-sm mt-1" style={{ color: 'rgba(236,232,223,0.3)' }}>{t('privacyPolicy.lastUpdate')}</p>
           </div>
         </div>
 
@@ -95,7 +95,7 @@ export default function PrivacyPolicy() {
       </div>
 
       <footer className="py-6 px-6 border-t text-center text-sm" dir={dir}
-        style={{ borderColor: 'rgba(166,124,104,0.08)', color: 'rgba(62,50,45,0.2)', background: '#EFE9DD' }}>
+        style={{ borderColor: 'rgba(236,232,223,0.08)', color: 'rgba(236,232,223,0.2)', background: '#0b0b0c' }}>
         <div className="flex flex-wrap justify-center gap-4 mb-3">
           <Link to="/" className="hover:text-yellow-400 transition-colors">{t('common.nav.home')}</Link>
           <Link to="/about" className="hover:text-yellow-400 transition-colors">{footer.about}</Link>

@@ -1,4 +1,5 @@
 import React from 'react';
+import CleanLogo from './CleanLogo';
 
 /**
  * LogoMarquee — شريط شعارات ثابت (بدون حركة) بخلفية شفافة بالكامل
@@ -14,7 +15,7 @@ export default function LogoMarquee({ items = [] }) {
         {items.map((b, i) => (
           <div className="logo-marquee__item" key={i}>
             {b.logo_url ? (
-              <img src={b.logo_url} alt={b.name_ar || b.name || ''} loading="lazy" />
+              <CleanLogo src={b.logo_url} alt={b.name_ar || b.name || ''} />
             ) : (
               <span>{b.name_ar || b.name}</span>
             )}
@@ -32,7 +33,7 @@ export default function LogoMarquee({ items = [] }) {
         .logo-marquee__track {
           display: flex;
           align-items: center;
-          justify-content: center;
+          justify-content: flex-start;
           flex-wrap: wrap;
           width: 100%;
           gap: 2.5rem;
@@ -43,8 +44,8 @@ export default function LogoMarquee({ items = [] }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 60px;
-          width: 100px;
+          height: 64px;
+          width: 120px;
           padding: 0;
           background: transparent;
         }
@@ -54,12 +55,12 @@ export default function LogoMarquee({ items = [] }) {
           max-width: 100%;
           object-fit: contain;
           background: transparent;
-          filter: grayscale(15%) brightness(1.05);
+          opacity: .85;
           transition: filter 0.25s ease, transform 0.25s ease;
         }
 
         .logo-marquee__item:hover img {
-          filter: grayscale(0%) brightness(1.15);
+          opacity: 1;
           transform: translateY(-2px);
         }
 
@@ -67,7 +68,7 @@ export default function LogoMarquee({ items = [] }) {
           font-weight: 900;
           font-size: 1rem;
           white-space: nowrap;
-          color: rgba(245, 237, 216, 0.6);
+          color: rgba(236, 232, 223, 0.7);
         }
 
         @media (max-width: 768px) {

@@ -6,7 +6,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 // زر تبديل اللغة — يظهر في أعلى شريط التنقل بكل صفحة عامة
 export default function LanguageSwitcher({ className = '', dark = true }) {
   const { lang, toggleLang } = useLanguage();
-  const gold = '#A67C68';
+  const gold = '#ece8df';
 
   return (
     <motion.button

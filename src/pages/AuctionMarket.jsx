@@ -87,7 +87,7 @@ function ShopItemCard({ product, isAr }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
       className="rounded-2xl overflow-hidden flex flex-col h-full transition-transform duration-300 hover:-translate-y-1"
-      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 2px rgba(36,20,11,0.10)' }}>
+      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 2px rgba(236,232,223,0.10)' }}>
       <div className="relative overflow-hidden" style={{ height: 180 }}>
         {product.image_url ? (
           <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-cover" loading="lazy" />
@@ -124,7 +124,7 @@ function AuctionCard({ listing, isAr, onBidClick }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
       className="rounded-2xl overflow-hidden flex flex-col h-full relative transition-transform duration-300 hover:-translate-y-1"
-      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 18px 36px -14px rgba(36,20,11,0.36)' }}>
+      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 18px 36px -14px rgba(236,232,223,0.36)' }}>
       <div className="absolute top-3 start-3 z-10 flex items-center gap-1.5 h-[26px] px-2.5 rounded-full text-white text-[11px] font-black"
         style={{ background: done ? 'hsl(var(--muted-foreground))' : 'hsl(var(--destructive))' }}>
         <ClockIcon className="w-3.5 h-3.5" />{text}
@@ -396,7 +396,7 @@ export default function AuctionMarket() {
       <nav className="sticky top-0 z-40 px-6 h-16 flex items-center justify-between backdrop-blur-md"
         style={{ background: 'hsl(var(--card) / 0.95)', borderBottom: '1px solid hsl(var(--border))' }}>
         <Link to="/" className="flex items-center gap-2">
-          <img src="/images/cobblers-official-mark.png" alt="Cobblers" className="w-8 h-8 object-contain" />
+          <img src="/images/cobblers-official-mark-white.png" alt="Cobblers" className="w-8 h-8 object-contain" />
         </Link>
         <div className="hidden md:flex items-center gap-6 text-sm font-bold" style={{ color: 'hsl(var(--muted-foreground))' }}>
           <Link to="/" className="hover:opacity-70">{isAr ? 'الرئيسية' : 'Home'}</Link>

@@ -117,3 +117,45 @@
     @apply bg-background text-foreground font-tajawal;
   }
 }
+
+/* ═══ الثيم الليلي لصفحات الزوار (html.noir) ═══
+   داكن، زوايا حادة، حدود رفيعة، بدون ظلال، النصوص تبدأ من اليمين (RTL). */
+html.noir {
+  --background: 240 5% 4.5%;
+  --foreground: 40 20% 90%;
+  --card: 240 4% 7.5%;
+  --card-foreground: 40 20% 90%;
+  --popover: 240 4% 7.5%;
+  --popover-foreground: 40 20% 90%;
+  --primary: 40 20% 90%;
+  --primary-foreground: 240 5% 4.5%;
+  --secondary: 240 4% 12%;
+  --secondary-foreground: 40 20% 90%;
+  --muted: 240 4% 11%;
+  --muted-foreground: 40 7% 65%;
+  --accent: 240 4% 14%;
+  --accent-foreground: 40 20% 90%;
+  --border: 240 4% 20%;
+  --input: 240 4% 20%;
+  --ring: 40 20% 90%;
+  --radius: 0px;
+  --brand-brass: 40 20% 90%;
+  color-scheme: dark;
+}
+html.noir body { background: #0b0b0c; color: #ece8df; }
+html.noir [class*="rounded"]:not(.animate-spin):not(.noir-round),
+html.noir [style*="border-radius"]:not(.noir-round) { border-radius: 0 !important; }
+html.noir [class*="shadow"], html.noir [style*="box-shadow"] { box-shadow: none !important; }
+html.noir .text-center:not(button):not(.noir-center) { text-align: start; }
+html.noir .text-center:not(button):not(.noir-center) .mx-auto { margin-inline-start: 0; }
+html.noir img { border-radius: 0 !important; }
+html.noir ::selection { background: #ece8df; color: #0b0b0c; }
+
+/* ألوان Tailwind الجاهزة المستخدمة بصفحات الزوار → لوحة الثيم الليلي */
+html.noir .bg-stone-50, html.noir .bg-amber-50, html.noir .bg-gray-50, html.noir .bg-stone-100 { background-color: #0b0b0c !important; }
+html.noir [class*="border-stone-"], html.noir [class*="border-amber-"], html.noir [class*="border-gray-"] { border-color: #26262a !important; }
+html.noir [class*="text-stone-"], html.noir [class*="text-gray-"] { color: #a8a398 !important; }
+html.noir .text-stone-800, html.noir .text-stone-900, html.noir .text-gray-900, html.noir .text-gray-800 { color: #ece8df !important; }
+html.noir [class*="text-yellow-"], html.noir [class*="text-amber-"] { color: #ece8df !important; }
+html.noir .bg-amber-500, html.noir .bg-amber-400, html.noir .bg-yellow-500, html.noir .bg-yellow-400 { background-color: #ece8df !important; color: #0b0b0c !important; }
+html.noir [class*="border-yellow-"] { border-color: rgba(236,232,223,.3) !important; }

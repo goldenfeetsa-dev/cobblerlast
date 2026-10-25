@@ -13,6 +13,7 @@ const HOME_SEO = PAGES.find((p) => p.path === '/');
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import LogoMarquee from '@/components/LogoMarquee';
+import CleanLogo from '@/components/CleanLogo';
 
 // بيانات عامة مخزّنة بالـ CDN (علامات/فروع/تواصل/سجل تجاري) — طلب واحد
 // مشترك بين كل الأقسام بدل ما كل قسم يسوي استعلامه المنفصل لـ Supabase.
@@ -908,85 +909,58 @@ function Footer() {
     [t('common.footer.privacy'), '/privacy'],
   ];
 
+  const socials = [
+    { href: instagram, icon: Instagram, label: 'Instagram' },
+    { href: tiktok, icon: TiktokIcon, label: 'TikTok' },
+    { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, label: 'WhatsApp' },
+    ...(twitter ? [{ href: twitter, icon: Twitter, label: 'Twitter' }] : []),
+  ];
+  const box = { border: '1px solid rgba(236,232,223,.28)', color: '#ece8df' };
   return (
-    <footer className="py-16 px-6" style={{ background: '#26262a', borderTop: `1px solid ${GB}0.08)` }} dir={dir}>
-      <div className="max-w-lg mx-auto text-center">
-
-        {/* الشعار */}
-        <div className="flex flex-col items-center gap-2 mb-3">
-          <img
-            src="/images/cobblers-official-mark-white.png"
-            alt={t('common.brand')}
-            className="w-16 h-16 rounded-2xl object-contain shadow-sm"
-            style={{ border: `1px solid ${GB}0.1)`, background: '#131315', padding: '6px' }}
-            loading="lazy"
-          />
-          <h3 className="text-xl font-black" style={{ color: T }}>{t('common.brand')}</h3>
-        </div>
-
-        {/* الوصف */}
-        <p className="text-sm leading-relaxed mx-auto mb-6" style={{ color: '#8d8a82', maxWidth: '340px' }}>
-          {t('common.footer.tagline')}
-        </p>
-
-        {/* السوشيال ميديا */}
-        <div className="flex gap-3 justify-center mb-10">
-          {[
-            { href: instagram, icon: Instagram, color: '#E1306C', label: 'Instagram' },
-            { href: tiktok, icon: TiktokIcon, color: '#000000', label: 'TikTok' },
-            { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, color: '#25D366', label: 'WhatsApp' },
-            ...(twitter ? [{ href: twitter, icon: Twitter, color: GT, label: 'Twitter' }] : []),
-          ].map((social, i) => (
-            <motion.a key={i} href={social.href} target="_blank" rel="noopener noreferrer"
-              aria-label={social.label} whileHover={{ scale: 1.15, y: -2 }}
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
-              <social.icon className="w-4 h-4" style={{ color: social.color }} />
-            </motion.a>
-          ))}
-        </div>
-
-        {/* روابط تهمك */}
-        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: GT }}>{t('common.footer.linksTitle')}</h4>
-        <ul className="space-y-3 text-sm mb-10" style={{ color: '#8d8a82' }}>
-          {usefulLinks.map(([label, to]) => (
-            <li key={to}><Link to={to} className="hover:opacity-70 transition-colors">{label}</Link></li>
-          ))}
-        </ul>
-
-        {/* خدمة العملاء */}
-        <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: GT }}>{t('common.footer.customerServiceTitle')}</h4>
-        <div className="flex gap-4 justify-center mb-10">
-          <motion.a href={`tel:${phone}`} whileHover={{ scale: 1.1, y: -2 }} aria-label={t('common.footer.callUs')}
-            className="w-11 h-11 rounded-xl flex items-center justify-center"
-            style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
-            <Phone className="w-4 h-4" style={{ color: GT }} />
-          </motion.a>
-          <motion.a href={`sms:${phone}`} whileHover={{ scale: 1.1, y: -2 }} aria-label={t('common.footer.textUs')}
-            className="w-11 h-11 rounded-xl flex items-center justify-center"
-            style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
-            <Smartphone className="w-4 h-4" style={{ color: GT }} />
-          </motion.a>
-          <motion.a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.1, y: -2 }} aria-label="WhatsApp"
-            className="w-11 h-11 rounded-xl flex items-center justify-center"
-            style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}>
-            <MessageCircle className="w-4 h-4" style={{ color: '#25D366' }} />
-          </motion.a>
-        </div>
-
-        {/* السجل التجاري */}
-        {crNumber && (
-          <div className="flex items-center justify-center gap-3 mb-10">
-            <div className="text-sm" style={{ color: '#8d8a82' }}>
-              <p className="mb-0.5">{t('common.footer.crLabel')}</p>
-              <p className="font-bold" style={{ color: T }}>{crNumber}</p>
+    <footer className="pt-20 pb-10 px-6" style={{ background: '#0b0b0c', borderTop: '1px solid #26262a' }} dir={dir}>
+      <div className="max-w-7xl mx-auto text-start">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
+          <div className="md:col-span-5">
+            <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-14 w-auto object-contain" loading="lazy" />
+            <p className="mt-6 text-sm leading-loose max-w-sm" style={{ color: '#a8a398' }}>{t('common.footer.tagline')}</p>
+            <div className="flex gap-2 mt-8">
+              {socials.map((x, i) => (
+                <a key={i} href={x.href} target="_blank" rel="noopener noreferrer" aria-label={x.label}
+                  className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}>
+                  <x.icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
-            <img src="/images/cr-emblem.jpg" alt="السجل التجاري" className="w-12 h-12 rounded-lg object-cover" style={{ border: `1px solid ${GB}0.15)` }} />
           </div>
-        )}
-
-        <div className="border-t pt-8" style={{ borderColor: GB + '0.08)' }}>
-          <p className="text-sm" style={{ color: '#8d8a82' }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
+          <div className="md:col-span-4">
+            <h4 className="text-sm font-bold mb-6" style={{ color: '#ece8df' }}>{t('common.footer.linksTitle')}</h4>
+            <ul className="space-y-3.5 text-sm" style={{ color: '#a8a398' }}>
+              {usefulLinks.map(([label, to]) => (
+                <li key={to}><Link to={to} className="hover:text-white transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          <div className="md:col-span-3">
+            <h4 className="text-sm font-bold mb-6" style={{ color: '#ece8df' }}>{t('common.footer.customerServiceTitle')}</h4>
+            <div className="flex gap-2">
+              <a href={`tel:${phone}`} aria-label={t('common.footer.callUs')} className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}><Phone className="w-4 h-4" /></a>
+              <a href={`sms:${phone}`} aria-label={t('common.footer.textUs')} className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}><Smartphone className="w-4 h-4" /></a>
+              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}><MessageCircle className="w-4 h-4" /></a>
+            </div>
+            <p className="mt-4 text-sm" dir="ltr" style={{ color: '#a8a398', textAlign: dir === 'rtl' ? 'right' : 'left' }}>{phone}</p>
+            {crNumber && (
+              <div className="mt-8 flex items-center gap-3">
+                <CleanLogo src="/images/cr-emblem.jpg" alt="السجل التجاري" className="w-12 h-12 object-contain" />
+                <div className="text-sm" style={{ color: '#a8a398' }}>
+                  <p className="mb-0.5">{t('common.footer.crLabel')}</p>
+                  <p className="font-bold" style={{ color: '#ece8df' }}>{crNumber}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="mt-16 pt-6" style={{ borderTop: '1px solid #26262a' }}>
+          <p className="text-xs" style={{ color: '#8d8a82' }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
         </div>
       </div>
     </footer>

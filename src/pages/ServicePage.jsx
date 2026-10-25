@@ -7,7 +7,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { SERVICE_PAGES, serviceBySlug } from '@/lib/seo/services';
 import PageNotFound from '@/lib/PageNotFound';
 
-const T = '#3E2723', GT = '#7A5F2E', G = '#C5A059', GB = 'rgba(197,160,89,';
+const T = '#ece8df', GT = '#ece8df', G = '#ece8df', GB = 'rgba(236,232,223,';
 
 /** صفحة خدمة تفصيلية (هبوط لنية بحث محددة) — المحتوى من src/lib/seo/services.js
  *  وهو نفس المصدر اللي يبني الـHTML الثابت للزواحف وقت البناء. */
@@ -24,7 +24,7 @@ export default function ServicePage() {
   const others = SERVICE_PAGES.filter((s) => s.slug !== slug);
 
   return (
-    <div dir={dir} style={{ background: '#f6efe4', minHeight: '100vh', fontFamily: "'Almarai', sans-serif", color: T }}>
+    <div dir={dir} style={{ background: '#0b0b0c', minHeight: '100vh', fontFamily: "'Almarai', sans-serif", color: T }}>
       <Helmet>
         <title>{c.title}</title>
         <meta name="description" content={c.description} />
@@ -42,12 +42,12 @@ export default function ServicePage() {
           <Link to={pre || '/'}>{isAr ? 'الرئيسية' : 'Home'}</Link> / <span>{c.name}</span>
         </nav>
         <h1 className="font-display text-3xl md:text-4xl font-black leading-snug mb-5">{c.h1}</h1>
-        <p className="text-base leading-8 mb-8" style={{ color: '#4a382c' }}>{c.intro}</p>
+        <p className="text-base leading-8 mb-8" style={{ color: '#ece8df' }}>{c.intro}</p>
 
         <h2 className="text-xl font-black mb-4">{isAr ? 'ماذا نصلح ونجدد' : 'What we repair'}</h2>
         <ul className="grid sm:grid-cols-2 gap-3 mb-8">
           {c.covers.map((x) => (
-            <li key={x} className="flex items-start gap-2 rounded-xl px-4 py-3 text-sm font-bold" style={{ background: '#fff', border: `1px solid ${GB}0.25)` }}>
+            <li key={x} className="flex items-start gap-2 rounded-xl px-4 py-3 text-sm font-bold" style={{ background: '#131315', border: `1px solid ${GB}0.25)` }}>
               <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" style={{ color: GT }} /> {x}
             </li>
           ))}
@@ -71,9 +71,9 @@ export default function ServicePage() {
         <h2 className="text-xl font-black mb-4">{isAr ? 'أسئلة شائعة' : 'FAQ'}</h2>
         <div className="space-y-3 mb-12">
           {c.faq.map((f) => (
-            <details key={f.q} className="rounded-2xl px-5 py-4" style={{ background: '#fff', border: `1px solid ${GB}0.2)` }}>
+            <details key={f.q} className="rounded-2xl px-5 py-4" style={{ background: '#131315', border: `1px solid ${GB}0.2)` }}>
               <summary className="font-bold cursor-pointer"><h3 className="inline text-base">{f.q}</h3></summary>
-              <p className="mt-3 text-sm leading-7" style={{ color: '#5a4636' }}>{f.a}</p>
+              <p className="mt-3 text-sm leading-7" style={{ color: '#ece8df' }}>{f.a}</p>
             </details>
           ))}
         </div>
@@ -91,7 +91,7 @@ export default function ServicePage() {
         <ul className="flex flex-wrap gap-2">
           {others.map((s) => (
             <li key={s.slug}>
-              <Link to={`${pre}/services/${s.slug}`} className="inline-block rounded-full px-4 py-2 text-xs font-bold" style={{ background: '#fff', border: `1px solid ${GB}0.3)` }}>
+              <Link to={`${pre}/services/${s.slug}`} className="inline-block rounded-full px-4 py-2 text-xs font-bold" style={{ background: '#131315', border: `1px solid ${GB}0.3)` }}>
                 {s[isAr ? 'ar' : 'en'].name}
               </Link>
             </li>

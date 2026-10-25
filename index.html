@@ -7,7 +7,16 @@
     <link rel="apple-touch-icon" href="/images/cobblers-app-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#f6efe4" />
+    <meta name="theme-color" content="#0b0b0c" />
+    <script>
+      (function () {
+        try {
+          var p = location.pathname.replace(/^\/en(\/|$)/, '/');
+          var pub = p === '/' || /^\/(booking|book|my-bookings|my-loyalty|reviews|shop|auction|repair-policy|about|privacy|shipping-policy|careers|track|partner|services|areas)(\/|$)/.test(p);
+          if (pub) document.documentElement.classList.add('noir');
+        } catch (e) {}
+      })();
+    </script>
     <script>
       (function () {
         try {

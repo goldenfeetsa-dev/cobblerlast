@@ -82,16 +82,16 @@ export default function PartnerPortal() {
       <div className="max-w-3xl mx-auto">{children}</div>
     </div>
   );
-  const field = 'w-full rounded-xl border border-amber-900/20 bg-white px-3 py-2.5 text-sm outline-none focus:border-amber-700';
+  const field = 'w-full rounded-xl border border-amber-900/20 bg-[#131315] px-3 py-2.5 text-sm outline-none focus:border-amber-700';
 
   if (!code || !data) {
     return shell(
-      <form onSubmit={login} className="max-w-sm mx-auto mt-16 bg-white rounded-2xl p-6 shadow-sm border border-amber-900/10 space-y-4">
+      <form onSubmit={login} className="max-w-sm mx-auto mt-16 bg-[#131315] rounded-2xl p-6 shadow-sm border border-amber-900/10 space-y-4">
         <h1 className="text-xl font-black text-center">بوابة الشركاء</h1>
         <p className="text-sm text-center text-gray-500">إبرة وخيط الإسكافي — أدخل رمز الدخول الخاص بشركتك</p>
         <input dir="ltr" value={input} onChange={(e) => setInput(e.target.value)} placeholder="XXXXXXXXXXXX"
           className={field + ' text-center tracking-widest font-mono'} autoComplete="off" autoFocus />
-        <button disabled={loading} className="w-full py-2.5 rounded-xl font-black text-white disabled:opacity-60" style={{ background: '#7c4a1e' }}>
+        <button disabled={loading} className="w-full py-2.5 rounded-xl font-black text-white disabled:opacity-60" style={{ background: '#ece8df' }}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'دخول'}
         </button>
       </form>
@@ -109,20 +109,20 @@ export default function PartnerPortal() {
           <p className="text-xs text-gray-500">بوابة الشركاء — إبرة وخيط الإسكافي</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => load(code)} className="p-2 rounded-xl bg-white border border-amber-900/10" aria-label="تحديث"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></button>
-          <button onClick={logout} className="p-2 rounded-xl bg-white border border-amber-900/10" aria-label="خروج"><LogOut className="w-4 h-4" /></button>
+          <button onClick={() => load(code)} className="p-2 rounded-xl bg-[#131315] border border-amber-900/10" aria-label="تحديث"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></button>
+          <button onClick={logout} className="p-2 rounded-xl bg-[#131315] border border-amber-900/10" aria-label="خروج"><LogOut className="w-4 h-4" /></button>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
         {[['الطلبات الحالية', data.open], ['المنجزة', data.completed], ['طلبات هذا الشهر', data.month_orders]].map(([l, v]) => (
-          <div key={l} className="bg-white rounded-2xl p-4 text-center border border-amber-900/10">
+          <div key={l} className="bg-[#131315] rounded-2xl p-4 text-center border border-amber-900/10">
             <div className="text-2xl font-black">{v}</div><div className="text-xs text-gray-500 mt-1">{l}</div>
           </div>
         ))}
       </div>
 
-      <form onSubmit={submit} className="bg-white rounded-2xl p-5 border border-amber-900/10 space-y-3">
+      <form onSubmit={submit} className="bg-[#131315] rounded-2xl p-5 border border-amber-900/10 space-y-3">
         <h2 className="font-black">إرسال طلب جديد</h2>
         <div className="grid sm:grid-cols-2 gap-3">
           <input className={field} placeholder="اسم العميل" value={form.customer_name} maxLength={120} required onChange={(e) => setForm({ ...form, customer_name: e.target.value })} />
@@ -133,7 +133,7 @@ export default function PartnerPortal() {
           <input className={field} placeholder="رقمكم المرجعي (اختياري)" value={form.partner_ref} maxLength={100} onChange={(e) => setForm({ ...form, partner_ref: e.target.value })} />
         </div>
         <textarea className={field} rows={3} placeholder="وصف المشكلة المطلوب إصلاحها" required maxLength={1000} value={form.issue} onChange={(e) => setForm({ ...form, issue: e.target.value })} />
-        <button disabled={sending} className="w-full py-2.5 rounded-xl font-black text-white flex items-center justify-center gap-2 disabled:opacity-60" style={{ background: '#7c4a1e' }}>
+        <button disabled={sending} className="w-full py-2.5 rounded-xl font-black text-white flex items-center justify-center gap-2 disabled:opacity-60" style={{ background: '#ece8df' }}>
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4" /> إرسال الطلب</>}
         </button>
       </form>
@@ -144,7 +144,7 @@ export default function PartnerPortal() {
           <div className="flex gap-1 text-xs">
             {[['all', 'الكل'], ['open', 'الحالية'], ['done', 'المنجزة']].map(([k, l]) => (
               <button key={k} onClick={() => setFilter(k)} className="px-3 py-1 rounded-full border"
-                style={filter === k ? { background: '#7c4a1e', color: '#fff', borderColor: '#7c4a1e' } : { background: '#fff', borderColor: '#0002' }}>{l}</button>
+                style={filter === k ? { background: '#ece8df', color: '#fff', borderColor: '#ece8df' } : { background: '#131315', borderColor: '#0002' }}>{l}</button>
             ))}
           </div>
         </div>
@@ -152,10 +152,10 @@ export default function PartnerPortal() {
         {orders.map((o) => {
           const st = STATUS[o.status] || STATUS.pending;
           return (
-            <div key={o.order_number} className="bg-white rounded-2xl border border-amber-900/10 overflow-hidden">
+            <div key={o.order_number} className="bg-[#131315] rounded-2xl border border-amber-900/10 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5" style={{ background: st.bg }}>
                 <span className="font-black text-sm" style={{ color: st.color }}>{o.order_number}</span>
-                <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-white" style={{ color: st.color }}>
+                <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-[#131315]" style={{ color: st.color }}>
                   <st.Icon className="w-3.5 h-3.5" />{st.label}
                 </span>
               </div>

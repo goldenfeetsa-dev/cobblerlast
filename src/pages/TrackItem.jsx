@@ -8,12 +8,12 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { pageSeo } from '@/lib/seo/siteData';
 
 // نفس هوية الصفحة الرئيسية الفاخرة (بني شوكولاتة + ذهبي مطفي)
-const T   = '#3E2723';
-const G   = '#C5A059';
-const GT  = '#7A5F2E';
-const GL  = '#D9BE86';
-const GB  = 'rgba(197,160,89,';
-const BG1 = '#F9F7F2';
+const T   = '#ece8df';
+const G   = '#ece8df';
+const GT  = '#ece8df';
+const GL  = '#ece8df';
+const GB  = 'rgba(236,232,223,';
+const BG1 = '#0b0b0c';
 
 const STEPS = [
   { key: 'pending',     icon: Package },
@@ -189,7 +189,7 @@ export default function TrackItem() {
               onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
               placeholder={t('home.track.placeholder')} dir="ltr"
               className="w-full px-5 py-4 rounded-2xl outline-none text-base font-bold"
-              style={{ background: '#fff', border: `1px solid ${GB}0.2)`, color: T }}
+              style={{ background: '#131315', border: `1px solid ${GB}0.2)`, color: T }}
             />
           </motion.div>
           <motion.button
@@ -218,7 +218,7 @@ export default function TrackItem() {
                     transition={{ delay: i * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     whileHover={{ y: -3 }}
                     className="rounded-3xl p-6 transition-shadow"
-                    style={{ background: '#fff', border: `1px solid ${GB}0.18)`, boxShadow: `0 10px 30px ${GB}0.1)` }}>
+                    style={{ background: '#131315', border: `1px solid ${GB}0.18)`, boxShadow: `0 10px 30px ${GB}0.1)` }}>
                     <div className="flex items-center justify-between mb-6">
                       <div>
                         <p className="font-display text-xl font-black" style={{ color: T }}>{r.order_number}</p>

@@ -44,7 +44,7 @@ export default function CareerDetail() {
   const metaDesc = (job.description || job.title).slice(0, 155);
 
   return (
-    <div className="min-h-screen font-tajawal" style={{ background: 'var(--cream-bg, #F9F7F2)' }} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen font-tajawal" style={{ background: 'var(--cream-bg, #0b0b0c)' }} dir={isAr ? 'rtl' : 'ltr'}>
       <Helmet>
         <title>{job.title} | إبرة وخيط الإسكافي</title>
         <meta name="description" content={metaDesc} />
@@ -89,7 +89,7 @@ export default function CareerDetail() {
           {isAr ? '← كل الوظائف' : '← All jobs'}
         </Link>
 
-        <div className="mt-6 bg-white rounded-2xl border border-black/5 p-6 sm:p-8">
+        <div className="mt-6 bg-[#131315] rounded-2xl border border-black/5 p-6 sm:p-8">
           <div className="flex items-center gap-2 mb-2">
             <Briefcase className="w-5 h-5 opacity-60" />
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-black/5">
@@ -121,7 +121,7 @@ export default function CareerDetail() {
             target={job.apply_method === 'link' ? '_blank' : undefined}
             rel={job.apply_method === 'link' ? 'noopener noreferrer' : undefined}
             className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-xl text-white transition-transform hover:scale-[1.02]"
-            style={{ background: 'var(--accent-gold, #C5A059)', color: '#1A130B' }}
+            style={{ background: 'var(--accent-gold, #ece8df)', color: '#1A130B' }}
           >
             <ApplyIcon className="w-4.5 h-4.5" />
             {isAr ? 'قدّم الآن' : 'Apply Now'}
