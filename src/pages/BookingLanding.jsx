@@ -167,7 +167,7 @@ function HeroSection() {
       <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(8,8,10,0) 0%, rgba(8,8,10,0) 14%, rgba(8,8,10,.5) 40%, rgba(8,8,10,.6) 68%, rgba(8,8,10,.82) 100%)' }} />
 
       {/* رأس شفاف عائم */}
-      <header className="absolute top-0 inset-x-0 z-10 grid items-center px-5 md:px-14 pt-5 md:pt-7" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+      <header className="absolute top-0 inset-x-0 z-10 grid items-center px-5 md:px-14 pt-5 md:pt-7" style={{ gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)' }}>
         <nav className="hidden md:flex items-center gap-8 text-[15px] justify-self-start" style={{ color: '#fff', textShadow: '0 1px 10px rgba(0,0,0,.85)' }}>
           {links.map(([label, to]) => (
             to.startsWith('#')
