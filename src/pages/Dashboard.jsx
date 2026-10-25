@@ -31,23 +31,13 @@ function getPeriodStart(key) {
   return null;
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, accentClass }) {
+function StatCard({ title, value, subtitle }) {
   return (
-    <Card className="relative overflow-hidden">
-      <div className={`absolute top-0 right-0 w-24 h-24 -translate-y-6 translate-x-6 rounded-full opacity-10 ${accentClass}`} />
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold mt-1">{value}</p>
-            {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
-          </div>
-          <div className={`p-2.5 rounded-xl ${accentClass} bg-opacity-10`}>
-            <Icon className="w-5 h-5 text-primary" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-card border border-border p-5">
+      <p className="text-[13px] text-muted-foreground">{title}</p>
+      <p className="text-[32px] leading-none font-semibold mt-3 mb-2 tracking-tight tnum">{value}</p>
+      {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : <p className="text-xs">&nbsp;</p>}
+    </div>
   );
 }
 
@@ -160,7 +150,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-2">
           {PERIODS.map(p => (
             <button key={p.key} onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${period === p.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+              className={`px-4 py-1.5 text-[13px] border border-border -mr-px transition-colors ${period === p.key ? 'bg-primary text-primary-foreground border-primary relative z-10' : 'bg-card text-foreground hover:bg-muted'}`}>
               {p.label}
             </button>
           ))}
@@ -242,7 +232,7 @@ export default function Dashboard() {
                   <XAxis dataKey="day" fontSize={12} />
                   <YAxis fontSize={12} />
                   <Tooltip />
-                  <Bar dataKey="orders" fill="hsl(38, 80%, 50%)" radius={[6, 6, 0, 0]} name="Orders" />
+                  <Bar dataKey="orders" fill="#14407a" radius={[0, 0, 0, 0]} name="Orders" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

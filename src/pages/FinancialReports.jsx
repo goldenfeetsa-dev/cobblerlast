@@ -11,8 +11,9 @@
  *    (zatca_status = REPORTED) فقط — رقم يُعتمد عليه فعلياً لإقرار ضريبي
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabaseClient';
-import { db } from '@/api/supabaseApi';
+import { db, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { secureExpenses } from '@/lib/secureApi';
 import { getSession } from '@/lib/sessionStore';
 import { isFinanceUser } from '@/lib/roles';
@@ -30,8 +31,6 @@ import {
   TrendingUp, TrendingDown, Wallet, Receipt, FileDown, FileSpreadsheet,
   Plus, Shield, Calendar, RefreshCw,
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
 import { SarAmount } from '@/components/shared/SarCurrency';
 
@@ -39,7 +38,8 @@ const EXPENSE_CATEGORIES = {
   rent: 'إيجار', salaries: 'رواتب', utilities: 'فواتير خدمات',
   supplies: 'مستلزمات', maintenance: 'صيانة', marketing: 'تسويق', other: 'أخرى',
 };
-const CHART_COLORS = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#7c3aed', '#0891b2', '#64748b'];
+const CHART_COLORS = ['#14407a', '#b42318', '#127a4a', '#9a6700', '#111827', '#6b7280', '#9aa1ad'];
+const fmtN = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n) => (Number(n) || 0).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function monthKeyOf(d) { return format(d, 'yyyy-MM'); }
@@ -70,6 +70,10 @@ export default function FinancialReports() {
   const [newExpense, setNewExpense] = useState({ category: 'other', description: '', amount: '', expense_date: format(new Date(), 'yyyy-MM-dd'), has_vat: false, has_tax_invoice: false, supplier_vat_number: '' });
   const [exporting, setExporting] = useState(false);
   const statementRef = useRef(null);
+  const [shop, setShop] = useState({});
+  useEffect(() => {
+    db.AppSettings.list('-created_at', 1, APP_SETTINGS_SAFE_COLUMNS).then((r) => setShop((r && r[0]) || {})).catch(() => {});
+  }, []);
 
   const [start, end] = range;
 
@@ -216,28 +220,8 @@ export default function FinancialReports() {
     } catch (err) { toast.error('فشل الحفظ: ' + err.message); }
   };
 
-  const exportPDF = async () => {
-    if (!statementRef.current) return;
-    setExporting(true);
-    try {
-      const canvas = await html2canvas(statementRef.current, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = 210, pageHeight = 297;
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight, position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      pdf.save(`كشف-حساب-${format(start, 'yyyy-MM-dd')}-${format(end, 'yyyy-MM-dd')}.pdf`);
-    } finally { setExporting(false); }
-  };
+  // PDF حقيقي بنص قابل للتحديد والبحث: نافذة الطباعة بقالب A4 مخصّص (اختر «حفظ كـ PDF»)
+  const exportPDF = () => { window.print(); };
 
   const exportExcel = async () => {
     setExporting(true);
@@ -266,6 +250,51 @@ export default function FinancialReports() {
     } catch (err) { toast.error(err.message); } finally { setExporting(false); }
   };
 
+  const statementDoc = (
+          <div className="fin-statement" dir="rtl">
+            <div className="fh">
+              <div className="fl">
+                <img src="/images/cobblers-official-mark.png" alt="" />
+                <div>
+                  <b>{shop.shop_name || 'إبرة وخيط الإسكافي'}</b>
+                  <div>
+                    Needle &amp; Thread Cobbler<br />
+                    {[shop.address, shop.city].filter(Boolean).join('، ')}{shop.phone ? ` · ${shop.phone}` : ''}<br />
+                    {shop.vat_number ? <>الرقم الضريبي: <span dir="ltr">{shop.vat_number}</span></> : null}{shop.cr_number ? <> · السجل التجاري: <span dir="ltr">{shop.cr_number}</span></> : null}
+                  </div>
+                </div>
+              </div>
+              <div className="ft"><small>Financial Statement</small><h2>كشف حساب مالي</h2><div dir="ltr" style={{ fontSize: 11, color: '#6b7280' }}>FS-{format(end, 'yyMM')}-{format(start, 'dd')}{format(end, 'dd')}</div></div>
+            </div>
+            <div className="fm">
+              <div><small>الفترة · Period</small><b dir="ltr">{format(start, 'yyyy-MM-dd')} → {format(end, 'yyyy-MM-dd')}</b></div>
+              <div><small>إجمالي الإيراد · Revenue</small><b>{fmtN(totalRevenue)}</b></div>
+              <div><small>إجمالي المصاريف · Expenses</small><b>{fmtN(totalExpenses)}</b></div>
+              <div><small>صافي الربح · Net profit</small><b style={{ color: netProfit < 0 ? '#b42318' : undefined }}>{fmtN(netProfit)} {shop.currency || 'SAR'}</b></div>
+            </div>
+            <table>
+              <thead><tr>
+                <th>التاريخ<i>Date</i></th><th>النوع<i>Type</i></th><th>الوصف<i>Description</i></th>
+                <th className="l">إيراد<i>Credit</i></th><th className="l">مصروف<i>Debit</i></th><th className="l">الرصيد<i>Balance</i></th>
+              </tr></thead>
+              <tbody>
+                {(() => { let run = 0; return statementRows.map((r, i) => { run += r.sign > 0 ? r.amount : -r.amount; return (
+                  <tr key={i}>
+                    <td style={{ whiteSpace: 'nowrap' }}>{r.date ? format(new Date(r.date), 'yyyy-MM-dd') : '—'}</td>
+                    <td>{r.type}</td>
+                    <td style={{ color: '#4b5563' }}>{r.desc}</td>
+                    <td className="l">{r.sign > 0 ? fmtN(r.amount) : ''}</td>
+                    <td className="l">{r.sign < 0 ? fmtN(r.amount) : ''}</td>
+                    <td className="l"><b>{fmtN(run)}</b></td>
+                  </tr>
+                ); }); })()}
+                {statementRows.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>لا توجد حركات في هذه الفترة</td></tr>}
+              </tbody>
+            </table>
+            <div className="ff"><span>{shop.shop_name || 'إبرة وخيط الإسكافي'} · needlecobbler.com{shop.phone ? ` · ${shop.phone}` : ''}</span><span>صدر {format(new Date(), 'yyyy-MM-dd')} · أُعدّ آلياً من النظام</span></div>
+          </div>
+  );
+
   if (!isAdmin) {
     return <div className="flex items-center justify-center h-64 text-gray-400"><Shield className="w-8 h-8 ml-2" /> هذه الصفحة للمسؤولين فقط</div>;
   }
@@ -273,7 +302,7 @@ export default function FinancialReports() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16" dir="rtl">
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center"><Wallet className="w-5 h-5 text-blue-700 dark:text-blue-300" /></div>
+        <div className="w-10 h-10 border border-foreground bg-card flex items-center justify-center"><Wallet className="w-5 h-5" /></div>
         <div>
           <h1 className="text-xl font-black">التقارير المالية</h1>
           <p className="text-sm text-gray-500">أرقام حقيقية من قاعدة البيانات — إيراد فعلي، مصاريف مصنّفة، ضرائب مُبلَّغة</p>
@@ -314,8 +343,8 @@ export default function FinancialReports() {
                 <YAxis fontSize={12} />
                 <Tooltip formatter={(v) => `${fmt(v)} ر.س`} />
                 <Legend />
-                <Bar dataKey="الإيراد" fill="#16a34a" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="المصاريف" fill="#dc2626" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="الإيراد" fill="#14407a" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="المصاريف" fill="#b7bdc8" radius={[0, 0, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -384,63 +413,62 @@ export default function FinancialReports() {
       </Card>
 
       {/* ── كشف الحساب القابل للتصدير ──────────────────── */}
+      <style>{`
+        .fin-statement{font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif;color:#111827;background:#fff;font-size:12px;border:1px solid hsl(var(--border));padding:34px 38px}
+        .fin-statement *{font-variant-numeric:tabular-nums}
+        .fin-statement .fh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #111827}
+        .fin-statement .fh img{height:56px;width:auto;filter:brightness(0)}
+        .fin-statement .fl{display:flex;gap:14px;align-items:center}
+        .fin-statement .fl b{font-size:16px;display:block}
+        .fin-statement .fl div div{color:#6b7280;font-size:10.5px;line-height:1.7;margin-top:3px}
+        .fin-statement .ft{text-align:left}
+        .fin-statement .ft small{font-size:10.5px;letter-spacing:.22em;color:#6b7280;text-transform:uppercase}
+        .fin-statement .ft h2{font-size:26px;font-weight:700;margin:2px 0}
+        .fin-statement .fm{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #111827;margin:16px 0}
+        .fin-statement .fm div{padding:9px 13px;border-inline-start:1px solid #d1d5db}
+        .fin-statement .fm div:first-child{border:0}
+        .fin-statement .fm small{display:block;font-size:9.5px;color:#6b7280;margin-bottom:2px}
+        .fin-statement .fm b{font-size:15px}
+        .fin-statement table{width:100%;border-collapse:collapse}
+        .fin-statement th{background:#f3f4f6;font-size:10.5px;font-weight:600;text-align:right;padding:8px 9px;border-top:1px solid #111827;border-bottom:1px solid #111827}
+        .fin-statement th i{display:block;font-style:normal;font-weight:400;color:#6b7280;font-size:9px}
+        .fin-statement td{padding:8px 9px;border-bottom:1px solid #e5e7eb;font-size:11.5px}
+        .fin-statement .l{text-align:left}
+        .fin-statement .ff{display:flex;justify-content:space-between;margin-top:22px;padding-top:10px;border-top:1px solid #d1d5db;font-size:10px;color:#6b7280}
+        @media print{
+          @page{size:A4;margin:10mm}
+          #root{display:none!important}
+          #fin-print{display:block!important}
+          .fin-statement{border:0;padding:0}
+          .fin-statement tr{break-inside:avoid}
+          .fin-statement *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        }
+      `}</style>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2"><Calendar className="w-4 h-4" />كشف الحساب — {format(start, 'yyyy-MM-dd')} إلى {format(end, 'yyyy-MM-dd')}</CardTitle>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={exportPDF} disabled={exporting} className="gap-1.5"><FileDown className="w-4 h-4" />PDF</Button>
+            <Button size="sm" variant="outline" onClick={exportPDF} disabled={exporting} className="gap-1.5"><FileDown className="w-4 h-4" />طباعة / PDF</Button>
             <Button size="sm" variant="outline" onClick={exportExcel} disabled={exporting} className="gap-1.5"><FileSpreadsheet className="w-4 h-4" />Excel</Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div ref={statementRef} className="bg-white p-6 rounded-lg" dir="rtl">
-            <div className="text-center mb-6 border-b pb-4">
-              <h2 className="text-lg font-black">كشف حساب مالي</h2>
-              <p className="text-sm text-gray-500">{format(start, 'yyyy-MM-dd')} — {format(end, 'yyyy-MM-dd')}</p>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mb-6 text-center">
-              <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg"><div className="text-xs text-gray-500">إجمالي الإيراد</div><div className="font-black text-green-700 dark:text-green-300">{fmt(totalRevenue)}</div></div>
-              <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-lg"><div className="text-xs text-gray-500">إجمالي المصاريف</div><div className="font-black text-red-700 dark:text-red-300">{fmt(totalExpenses)}</div></div>
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg"><div className="text-xs text-gray-500">صافي الربح</div><div className="font-black text-blue-700 dark:text-blue-300">{fmt(netProfit)}</div></div>
-            </div>
-            <table className="w-full text-sm">
-              <thead><tr className="border-b text-gray-500 text-xs">
-                <th className="text-right py-2">التاريخ</th><th className="text-right py-2">النوع</th>
-                <th className="text-right py-2">الوصف</th><th className="text-left py-2">المبلغ</th>
-              </tr></thead>
-              <tbody>
-                {statementRows.map((r, i) => (
-                  <tr key={i} className="border-b border-gray-100">
-                    <td className="py-1.5 text-xs text-gray-500">{r.date ? format(new Date(r.date), 'yyyy-MM-dd') : '—'}</td>
-                    <td className="py-1.5">{r.type}</td>
-                    <td className="py-1.5 text-gray-600">{r.desc}</td>
-                    <td className={`py-1.5 text-left font-mono ${r.sign > 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
-                      {r.sign > 0 ? '+' : '-'}{fmt(r.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {statementDoc}
         </CardContent>
       </Card>
+      {typeof document !== 'undefined' && createPortal(<div id="fin-print" style={{ display: 'none' }}>{statementDoc}</div>, document.body)}
     </div>
   );
 }
 
 function SummaryCard({ icon: Icon, label, value, color, sub }) {
-  const colors = {
-    green: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300', red: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300',
-    blue: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300', purple: 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300',
-  };
+  const bar = { green: '#127a4a', red: '#b42318', blue: '#14407a', purple: '#111827' }[color] || '#111827';
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2 ${colors[color]}`}><Icon className="w-4.5 h-4.5" /></div>
-        <div className="text-xs text-gray-500">{label}</div>
-        <div className="text-lg font-black"><SarAmount value={value} /></div>
-        {sub && <div className="text-[11px] text-gray-400 mt-0.5 truncate">{sub}</div>}
-      </CardContent>
-    </Card>
+    <div className="bg-card border border-border relative p-5">
+      <div className="absolute top-0 inset-x-0 h-[3px]" style={{ background: bar }} />
+      <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{label}</span><Icon className="w-4 h-4" /></div>
+      <div className="text-2xl font-semibold mt-3 tnum"><SarAmount value={value} /></div>
+      {sub && <div className="text-[11.5px] text-muted-foreground mt-1.5 truncate">{sub}</div>}
+    </div>
   );
 }

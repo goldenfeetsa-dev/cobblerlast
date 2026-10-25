@@ -120,16 +120,9 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="p-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-primary flex items-center justify-center p-1.5">
-            <img src="/images/cobblers-official-mark-white.png" alt="إبرة وخيط الإسكافي" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h1 className="font-bold text-sm">إبرة وخيط الإسكافي</h1>
-            <p className="text-[10px] text-sidebar-foreground/50">نظام نقاط البيع</p>
-          </div>
-        </div>
+      <div className="px-5 pt-6 pb-5 border-b border-sidebar-border">
+        <img src="/images/cobblers-official-mark.png" alt="إبرة وخيط الإسكافي" className="h-11 w-auto object-contain" style={{ filter: 'brightness(0)' }} />
+        <p className="text-[11px] text-sidebar-foreground/60 mt-2 tracking-wide">نظام إدارة الورشة والمبيعات</p>
       </div>
 
       {/* Navigation */}
@@ -148,7 +141,7 @@ export default function Sidebar() {
           return (
             <div key={gi} className={gi > 0 ? 'pt-2' : ''}>
               {group.label && (
-                <p className="text-[10px] font-bold uppercase tracking-widest text-sidebar-foreground/30 px-3 py-1.5">
+                <p className="text-[11px] font-semibold tracking-wider text-sidebar-foreground/45 px-3 pt-3 pb-1.5">
                   {group.label}
                 </p>
               )}
@@ -160,10 +153,10 @@ export default function Sidebar() {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-3 px-3 py-2 text-sm border-r-2 transition-colors ${
                       active
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold border-accent'
+                        : 'text-sidebar-foreground border-transparent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                     }`}
                   >
                     <Icon className="w-[17px] h-[17px] shrink-0" />
@@ -182,7 +175,7 @@ export default function Sidebar() {
           href="/booking"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-primary/20 text-primary hover:bg-primary/30 transition-all w-full"
+          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium border border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full"
         >
           <ExternalLink className="w-[18px] h-[18px] shrink-0" />
           <span>موقع الحجز الإلكتروني</span>
@@ -223,7 +216,7 @@ export default function Sidebar() {
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2 mr-2">
-          <img src="/images/cobblers-official-mark-white.png" alt="إبرة وخيط الإسكافي" className="w-6 h-6 rounded-md object-contain" />
+          <img src="/images/cobblers-official-mark.png" alt="إبرة وخيط الإسكافي" className="w-6 h-6 object-contain" style={{ filter: 'brightness(0)' }} />
           <span className="font-bold text-sm">إبرة وخيط الإسكافي</span>
         </div>
       </div>

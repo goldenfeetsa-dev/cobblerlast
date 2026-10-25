@@ -49,26 +49,26 @@ export default function FinancialReport({ orders }) {
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-green-50 dark:bg-green-950/30 rounded-xl p-3 text-center">
-            <Banknote className="w-4 h-4 text-green-600 dark:text-green-400 mx-auto mb-1" />
-            <p className="text-[11px] text-green-700 dark:text-green-300 font-medium">إجمالي النقد</p>
-            <p className="text-lg font-bold text-green-800 dark:text-green-300">{cashTotal.toFixed(0)}</p>
-            <p className="text-[10px] text-green-600 dark:text-green-400">ر.س</p>
+          <div className="bg-muted/50 border border-border rounded-xl p-3 text-start">
+            <Banknote className="w-4 h-4 text-foreground mb-1" />
+            <p className="text-[11px] text-foreground font-medium">إجمالي النقد</p>
+            <p className="text-lg font-bold text-foreground">{cashTotal.toFixed(0)}</p>
+            <p className="text-[10px] text-foreground">ر.س</p>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-3 text-center">
-            <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-            <p className="text-[11px] text-blue-700 dark:text-blue-300 font-medium">إجمالي الشبكة</p>
-            <p className="text-lg font-bold text-blue-800 dark:text-blue-300">{networkTotal.toFixed(0)}</p>
-            <p className="text-[10px] text-blue-600 dark:text-blue-400">ر.س</p>
+          <div className="bg-muted/50 border border-border rounded-xl p-3 text-start">
+            <CreditCard className="w-4 h-4 text-foreground mb-1" />
+            <p className="text-[11px] text-foreground font-medium">إجمالي الشبكة</p>
+            <p className="text-lg font-bold text-foreground">{networkTotal.toFixed(0)}</p>
+            <p className="text-[10px] text-foreground">ر.س</p>
           </div>
-          <div className="bg-primary/10 rounded-xl p-3 text-center">
-            <Wallet className="w-4 h-4 text-primary mx-auto mb-1" />
-            <p className="text-[11px] text-primary font-medium">الإجمالي</p>
-            <p className="text-lg font-bold text-primary">{grandTotal.toFixed(0)}</p>
-            <p className="text-[10px] text-primary/70">ر.س</p>
+          <div className="bg-primary text-primary-foreground p-3 text-start">
+            <Wallet className="w-4 h-4 mb-1" />
+            <p className="text-[11px] font-medium opacity-80">الإجمالي</p>
+            <p className="text-lg font-bold">{grandTotal.toFixed(0)}</p>
+            <p className="text-[10px] opacity-70">ر.س</p>
           </div>
         </div>
-        <p className="text-[10px] text-muted-foreground text-center">* الطلبات الملغاة مستبعدة من الحساب</p>
+        <p className="text-[10px] text-muted-foreground text-start">* الطلبات الملغاة مستبعدة من الحساب</p>
       </CardContent>
     </Card>
   );

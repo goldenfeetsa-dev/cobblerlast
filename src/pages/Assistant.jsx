@@ -439,23 +439,26 @@ export default function Assistant() {
   const wa = () => window.open(`https://wa.me/?text=${encodeURIComponent(last?.content || '')}`, '_blank');
 
   return (
-    <div dir="rtl" className="max-w-2xl mx-auto p-3 flex flex-col" style={{ height: 'calc(100vh - 90px)' }}>
+    <div dir="rtl" className="max-w-4xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 90px)' }}>
       <div className="flex items-center justify-between mb-2 gap-2">
-        <h1 className="font-black text-lg flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-700" />المساعد الذكي</h1>
+        <div>
+          <h1 className="font-bold text-2xl flex items-center gap-3"><span className="w-8 h-8 border border-foreground flex items-center justify-center bg-card"><Sparkles className="w-4 h-4" /></span>المساعد الذكي</h1>
+          <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-2"><span className="inline-block w-2 h-2" style={{ background: '#127a4a' }} />متصل بالبيانات الحيّة · قراءة فقط · أي تعديل يحتاج تأكيدك</p>
+        </div>
         <div className="flex items-center gap-2">
           <select value={lang} onChange={(e) => { setLang(e.target.value); try { localStorage.setItem('assistant_lang', e.target.value); } catch { /* ignore */ } }}
-            className="text-xs border rounded-lg px-2 py-1 bg-background" title="لهجة الإملاء الصوتي">
+            className="text-xs border border-input px-2 py-2 bg-card" title="لهجة الإملاء الصوتي">
             {DIALECTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
-          <button onClick={() => setShowVoice(!showVoice)} className="text-xs border rounded-lg px-2 py-2" title="إعدادات الصوت">🎙 الصوت</button>
-          <button onClick={() => { setSpeakOn(!speakOn); window.speechSynthesis?.cancel(); }} className="p-2 rounded-lg border" title="نطق الردود">
+          <button onClick={() => setShowVoice(!showVoice)} className="text-xs border border-input bg-card px-3 py-2" title="إعدادات الصوت">الصوت</button>
+          <button onClick={() => { setSpeakOn(!speakOn); window.speechSynthesis?.cancel(); }} className="p-2 border border-input bg-card" title="نطق الردود">
             {speakOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
       {showVoice && (
-        <div className="rounded-xl border bg-card p-3 mb-2 space-y-2 text-xs">
+        <div className="border bg-card p-4 mb-2 space-y-2 text-xs">
           <div className="flex gap-2 items-center">
             <span className="shrink-0">الصوت</span>
             <select value={voiceURI || voices[0]?.voiceURI || ''} onChange={(e) => { setVoiceURI(e.target.value); try { localStorage.setItem('assistant_voice', e.target.value); } catch { /* ignore */ } }} className="flex-1 border rounded-lg px-2 py-1 bg-background">
@@ -491,54 +494,55 @@ export default function Assistant() {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto space-y-2 rounded-2xl border bg-card p-3">
+      <div className="flex-1 overflow-auto space-y-5 border bg-background p-1 pt-4">
         {msgs.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
-            <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground' : m.error ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-muted'}`}>{m.content}
+          <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-start' : ''}`}>
+            {m.role !== 'user' && <div className="w-8 h-8 shrink-0 border border-foreground bg-card text-[11px] font-bold flex items-center justify-center">AI</div>}
+            <div className={`max-w-[85%] px-4 py-3 text-[14.5px] leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground' : m.error ? 'bg-card border border-destructive text-destructive' : 'bg-card border border-input'}`}>{m.content}
               {m.relogin && (
                 <button onClick={() => { clearSession(); try { queryClientInstance.clear(); } catch {} fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {}); navigate('/login', { replace: true }); }}
-                  className="block mt-2 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold">تسجيل دخول من جديد</button>
+                  className="block mt-3 px-4 py-1.5 bg-primary text-primary-foreground text-xs font-semibold">تسجيل دخول من جديد</button>
               )}
             </div>
           </div>
         ))}
         {listening && (
-          <div className="flex justify-start"><div className="max-w-[85%] rounded-2xl px-3 py-2 text-sm bg-primary/70 text-primary-foreground">{live || 'أسمعك…'}<span className="inline-block w-1.5 h-4 mr-1 align-middle bg-current animate-pulse" /></div></div>
+          <div className="flex justify-start"><div className="max-w-[85%] px-4 py-3 text-sm bg-primary text-primary-foreground">{live || 'أسمعك…'}<span className="inline-block w-1.5 h-4 mr-1 align-middle bg-current animate-pulse" /></div></div>
         )}
-        {busy && <div className="flex justify-end"><div className="bg-muted rounded-2xl px-3 py-2"><Loader2 className="w-4 h-4 animate-spin" /></div></div>}
+        {busy && <div className="flex gap-3"><div className="w-8 h-8 shrink-0 border border-foreground bg-card text-[11px] font-bold flex items-center justify-center">AI</div><div className="bg-card border border-input px-4 py-3 text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" />أقرأ بيانات النظام وأحلّلها…</div></div>}
         <div ref={endRef} />
       </div>
 
       {msgs.length <= 2 && (
         <div className="flex gap-2 flex-wrap mt-2">
-          {SUGGEST.map((s) => <button key={s} onClick={() => send(s)} className="text-xs border rounded-full px-3 py-1 bg-card">{s}</button>)}
+          {SUGGEST.map((s) => <button key={s} onClick={() => send(s)} className="text-[13px] border border-input px-3 py-1.5 bg-card hover:bg-muted transition-colors">{s}</button>)}
         </div>
       )}
 
       {last && msgs.length > 1 && (
         <div className="flex gap-2 mt-2">
-          <button onClick={copy} className="text-xs border rounded-lg px-3 py-1 flex items-center gap-1"><Copy className="w-3 h-3" />نسخ الرد</button>
-          <button onClick={wa} className="text-xs border rounded-lg px-3 py-1 flex items-center gap-1"><MessageCircle className="w-3 h-3" />إرسال الرد واتساب</button>
+          <button onClick={copy} className="text-xs border border-input bg-card px-3 py-1.5 flex items-center gap-1.5"><Copy className="w-3 h-3" />نسخ الرد</button>
+          <button onClick={wa} className="text-xs border border-input bg-card px-3 py-1.5 flex items-center gap-1.5"><MessageCircle className="w-3 h-3" />إرسال الرد واتساب</button>
         </div>
       )}
 
       {pending && (
-        <div className="mt-2 rounded-xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/30 p-3">
-          <div className="text-xs font-bold mb-2">بانتظار تأكيدك قبل التنفيذ:</div>
-          <ul className="text-xs mb-3 space-y-1 list-disc pr-4">{pending.list.map((a, k) => <li key={k}>{describe(a)}</li>)}</ul>
+        <div className="mt-3 border border-foreground bg-card p-4">
+          <div className="text-xs font-semibold mb-2" style={{ color: '#9a6700' }}>يحتاج تأكيدك قبل التنفيذ</div>
+          <ul className="text-sm mb-3 space-y-1 list-disc pr-4">{pending.list.map((a, k) => <li key={k}>{describe(a)}</li>)}</ul>
           <div className="flex gap-2">
-            <button type="button" onClick={confirmPending} disabled={busy} className="flex-1 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-black disabled:opacity-50">✅ تأكيد التنفيذ</button>
-            <button type="button" onClick={cancelPending} disabled={busy} className="flex-1 py-2.5 rounded-lg border-2 border-red-400 text-red-600 text-sm font-black">✖ لا</button>
+            <button type="button" onClick={confirmPending} disabled={busy} className="flex-1 py-2.5 bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">تأكيد التنفيذ</button>
+            <button type="button" onClick={cancelPending} disabled={busy} className="flex-1 py-2.5 border border-input bg-card text-sm font-semibold">إلغاء</button>
           </div>
         </div>
       )}
 
-      <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 mt-2">
-        <button type="button" onClick={toggleMic} className={`p-3 rounded-xl text-white ${(listening || recording) ? 'bg-red-600 animate-pulse' : ''}`} style={(listening || recording) ? undefined : { background: '#7c4a1e' }} title="تحدث">
+      <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-0 mt-3 border border-foreground bg-card">
+        <button type="button" onClick={toggleMic} className={`px-4 text-white ${(listening || recording) ? 'bg-destructive animate-pulse' : 'bg-primary'}`} title="تحدث">
           {(listening || recording) ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
         </button>
-        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={recording ? 'جاري التسجيل… اضغط المايك لإيقافه' : listening ? 'أسمعك…' : 'اكتب أو اضغط المايك وتكلم'} className="flex-1 rounded-xl border px-3 py-2 text-sm bg-background" />
-        <button disabled={busy || !input.trim()} className="p-3 rounded-xl border disabled:opacity-40"><Send className="w-5 h-5" /></button>
+        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={recording ? 'جاري التسجيل… اضغط المايك لإيقافه' : listening ? 'أسمعك…' : 'اكتب أو اضغط المايك وتكلم'} className="flex-1 px-4 py-3 text-sm bg-card outline-none" />
+        <button disabled={busy || !input.trim()} className="px-4 border-r border-input disabled:opacity-30"><Send className="w-5 h-5" /></button>
       </form>
     </div>
   );

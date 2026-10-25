@@ -21,11 +21,75 @@ const CATEGORY_AR = {
 function styleHeaderRow(row) {
   row.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF111827' } };
     cell.alignment = { horizontal: 'center', vertical: 'middle' };
     cell.border = { bottom: { style: 'thin' } };
   });
   row.height = 22;
+}
+
+// ── تنسيق رسمي موحّد: رأس داكن فقط، لمسة لون خفيفة، تجميد الرأس + فلتر + إعداد طباعة A4 ──
+const COLOR_MAP = {
+  FF1E3A8A: 'FF111827', FF16A34A: 'FF374151', FF2563EB: 'FF374151',
+};
+const FONT_MAP = { FFDC2626: 'FFB42318' };
+const DETAIL_SHEETS = new Set(['تفاصيل الإيراد', 'تفاصيل المصاريف', 'الضرائب', 'المشتريات وضريبة المدخلات']);
+const HAIR = { style: 'thin', color: { argb: 'FFE5E7EB' } };
+
+function finalizeWorkbook(wb, meta) {
+  wb.eachSheet((ws) => {
+    const detail = DETAIL_SHEETS.has(ws.name);
+    // 1) توحيد الألوان
+    ws.eachRow({ includeEmpty: false }, (row) => {
+      row.eachCell({ includeEmpty: false }, (cell) => {
+        const fg = cell.fill?.fgColor?.argb;
+        if (fg && COLOR_MAP[fg]) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_MAP[fg] } };
+        const fc = cell.font?.color?.argb;
+        if (fc && FONT_MAP[fc]) cell.font = { ...cell.font, color: { argb: FONT_MAP[fc] } };
+        if (fc === 'FF16A34A') cell.font = { ...cell.font, color: { argb: 'FF127A4A' } };
+        if (fc === 'FF1E3A8A') cell.font = { ...cell.font, color: { argb: 'FF111827' } };
+      });
+    });
+    // 2) الجداول التفصيلية: ترويسة المنشأة + تجميد + فلتر + حدود خفيفة
+    if (detail) {
+      const cols = ws.columnCount || 4;
+      ws.spliceRows(1, 0,
+        [`${meta.shopName} — ${ws.name}`],
+        [`الفترة: ${meta.startDay} → ${meta.endDay}${meta.vat ? `  ·  الرقم الضريبي: ${meta.vat}` : ''}${meta.cr ? `  ·  السجل التجاري: ${meta.cr}` : ''}  ·  العملة: ريال سعودي`],
+        [],
+      );
+      ws.mergeCells(1, 1, 1, cols); ws.mergeCells(2, 1, 2, cols);
+      ws.getRow(1).font = { bold: true, size: 15, color: { argb: 'FF111827' } };
+      ws.getRow(1).height = 26;
+      ws.getRow(2).font = { size: 10, color: { argb: 'FF6B7280' } };
+      const headerRow = 4;
+      ws.views = [{ rightToLeft: true, state: 'frozen', ySplit: headerRow }];
+      ws.autoFilter = { from: { row: headerRow, column: 1 }, to: { row: headerRow, column: cols } };
+      ws.eachRow((row, n) => {
+        if (n <= headerRow) return;
+        row.eachCell({ includeEmpty: true }, (cell, c) => {
+          if (c > cols) return;
+          cell.border = { bottom: HAIR };
+          cell.alignment = { vertical: 'middle', horizontal: typeof cell.value === 'number' ? 'left' : 'right' };
+        });
+        const isTotal = row.font?.bold;
+        if (isTotal) row.eachCell({ includeEmpty: true }, (cell, c) => {
+          if (c > cols) return;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+          cell.border = { top: { style: 'medium', color: { argb: 'FF111827' } }, bottom: HAIR };
+        });
+      });
+      ws.pageSetup.printTitlesRow = `${headerRow}:${headerRow}`;
+    }
+    // 3) إعداد الطباعة لكل الأوراق
+    ws.pageSetup = {
+      ...ws.pageSetup, paperSize: 9, orientation: detail && ws.columnCount > 5 ? 'landscape' : 'portrait',
+      fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+      margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.7, header: 0.3, footer: 0.3 },
+    };
+    ws.headerFooter = { oddFooter: `&R&"Arial,Regular"&9${meta.shopName}&C&9&P / &N&L&9&D` };
+    ws.properties.tabColor = undefined;
+  });
 }
 
 export default async function handler(req, res) {
@@ -75,7 +139,7 @@ export default async function handler(req, res) {
   const netVatDue = vatCollected - vatPaidDeductible;
 
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Cobblerlast';
+  wb.creator = 'إبرة وخيط الإسكافي';
   wb.created = new Date();
 
   // ══════════════════════════════════════════════════════════
@@ -249,6 +313,8 @@ export default async function handler(req, res) {
   const purchTotalRow = purchSheet.addRow(['', '', '', 'إجمالي ضريبة المدخلات القابلة للخصم', '', Number(vatPaidDeductible.toFixed(2)), '', '']);
   purchTotalRow.font = { bold: true };
   purchTotalRow.getCell(6).numFmt = '#,##0.00';
+
+  finalizeWorkbook(wb, { shopName: settings?.seller_name || 'إبرة وخيط الإسكافي', vat: settings?.vat_number, cr: settings?.cr_number, startDay, endDay });
 
   const buffer = await wb.xlsx.writeBuffer();
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

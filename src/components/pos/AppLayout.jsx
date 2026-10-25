@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import OrderNotifications from './OrderNotifications';
@@ -15,6 +15,12 @@ export default function AppLayout() {
   const session  = getSession();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // الهوية الرسمية لنظام الكاشير (html.pos) — تُزال عند مغادرة النظام
+  useEffect(() => {
+    document.documentElement.classList.add('pos');
+    return () => document.documentElement.classList.remove('pos');
+  }, []);
 
   // قارئ الباركود يعمل من أي شاشة داخل نقطة البيع (بما فيها "طلب جديد")
   // بدون الحاجة للذهاب لصفحة "مسح الباركود" — بمجرد مسح أي كود يفتح الطلب مباشرة
@@ -51,7 +57,10 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+      </Helmet>
       <RealtimeSync />
       <OrderNotifications />
       <Sidebar />
