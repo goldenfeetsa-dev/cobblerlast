@@ -786,12 +786,12 @@ export default function BookingLanding() {
         <meta property="og:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة - الرياض' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair — Riyadh'} />
         <meta property="og:description" content={isAr ? 'حرفيون سعوديون متخصصون في إصلاح وتجديد الأحذية والحقائب الجلدية الفاخرة. خدمة استلام وتوصيل في الرياض.' : 'Saudi craftsmen specialized in repairing luxury shoes and leather bags. Pickup & delivery service in Riyadh.'} />
         <meta property="og:url" content="https://www.needlecobbler.com/" />
-        <meta property="og:image" content="https://www.needlecobbler.com/og-image.jpg" />
+        <meta property="og:image" content="https://www.needlecobbler.com/og-image-v2.jpg" />
         <meta property="og:locale" content={isAr ? 'ar_SA' : 'en_US'} />
         <meta property="og:site_name" content={isAr ? 'إبرة وخيط الإسكافي' : 'Ebra & Khait Cobbler'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={isAr ? 'إبرة وخيط الإسكافي | إصلاح الأحذية والحقائب الفاخرة' : 'Ebra & Khait Cobbler | Luxury Shoe & Bag Repair'} />
-        <meta name="twitter:image" content="https://www.needlecobbler.com/og-image.jpg" />
+        <meta name="twitter:image" content="https://www.needlecobbler.com/og-image-v2.jpg" />
         {/* البيانات المنظمة (LocalBusiness/FAQPage/WebSite) تُحقن بالـHTML الثابت عند البناء — scripts/seo-build.mjs */}
       </Helmet>
       <Navbar />

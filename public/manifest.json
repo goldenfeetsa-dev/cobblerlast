@@ -1,15 +1,21 @@
 {
   "name": "إبرة وخيط الإسكافي",
   "short_name": "إبرة وخيط",
-  "description": "نظام إدارة ورشة إصلاح الأحذية والحقائب الفاخرة",
+  "description": "إبرة وخيط الإسكافي — إصلاح وتجديد الأحذية والحقائب الفاخرة في الرياض",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#e6d9bf",
-  "theme_color": "#5f341a",
+  "background_color": "#0b0b0c",
+  "theme_color": "#0b0b0c",
   "lang": "ar",
   "dir": "rtl",
   "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/images/cobblers-app-icon.png",
       "sizes": "512x512",
@@ -17,7 +23,10 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "shortcuts": [
     {
       "name": "طلب جديد",
