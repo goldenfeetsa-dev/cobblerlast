@@ -167,21 +167,21 @@ function HeroSection() {
       <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(8,8,10,0) 0%, rgba(8,8,10,0) 14%, rgba(8,8,10,.5) 40%, rgba(8,8,10,.6) 68%, rgba(8,8,10,.82) 100%)' }} />
 
       {/* رأس شفاف عائم */}
-      <header className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-5 md:px-14 pt-5 md:pt-7">
-        <nav className="hidden md:flex items-center gap-8 text-[15px] flex-1" style={{ color: '#fff', textShadow: '0 1px 10px rgba(0,0,0,.85)' }}>
+      <header className="absolute top-0 inset-x-0 z-10 grid items-center px-5 md:px-14 pt-5 md:pt-7" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+        <nav className="hidden md:flex items-center gap-8 text-[15px] justify-self-start" style={{ color: '#fff', textShadow: '0 1px 10px rgba(0,0,0,.85)' }}>
           {links.map(([label, to]) => (
             to.startsWith('#')
               ? <a key={to} href={to} className="opacity-90 hover:opacity-100 transition-opacity">{label}</a>
               : <Link key={to} to={to} className="opacity-90 hover:opacity-100 transition-opacity">{label}</Link>
           ))}
         </nav>
-        <Link to="/shop" aria-label={isAr ? 'المتجر' : 'Shop'} className="md:hidden w-10 h-10 flex items-center justify-center" style={{ color: '#ece8df' }}>
+        <Link to="/shop" aria-label={isAr ? 'المتجر' : 'Shop'} className="md:hidden w-10 h-10 flex items-center justify-center justify-self-start" style={{ color: '#ece8df' }}>
           <ShoppingBag className="w-5 h-5" />
         </Link>
         <Link to="/" className="flex justify-center" aria-label={t('common.brand')}>
           <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-12 md:h-16 w-auto object-contain" style={{ filter: 'drop-shadow(0 1px 8px rgba(0,0,0,.8))' }} />
         </Link>
-        <div className="flex-1 flex justify-end items-center gap-3"><LanguageSwitcher /></div>
+        <div className="flex justify-end items-center gap-3 justify-self-end"><LanguageSwitcher /></div>
       </header>
 
       {/* نص الهيرو بالمنتصف */}
