@@ -15,6 +15,7 @@ export default function PinLogin() {
     const existing = getSession();
     if (existing) { navigate(getHomePath(existing.role), { replace: true }); return; }
     window.history.replaceState(null, '', '/login');
+    try { if (sessionStorage.getItem('session_expired')) { sessionStorage.removeItem('session_expired'); setError('انتهت جلستك (12 ساعة). سجّل الدخول من جديد لعرض بياناتك.'); } } catch { /* ignore */ }
     // ملاحظة: لا يوجد أي جلب لبيانات الموظفين أو أرقام الـ PIN هنا —
     // التحقق يتم بالكامل على السيرفر عبر /api/auth/login حتى لا تُفتح أي بيانات حساسة للمتصفح.
   }, [navigate]);

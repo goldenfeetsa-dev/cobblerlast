@@ -119,6 +119,9 @@ export default function Dashboard() {
 
   const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
   const paidOrders = transactions.filter(t => t.payment_status === 'paid');
+  // قبل الضريبة (لمطابقة التقارير المالية) + المحصَّل فعلياً
+  const revenueExVat = transactions.reduce((sum, t) => sum + (t.raw?.subtotal ?? (t.amount || 0) / 1.15), 0);
+  const collected = paidOrders.reduce((sum, t) => sum + (t.amount || 0), 0);
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'in_progress');
 
   // Last 7 days chart
@@ -173,7 +176,7 @@ export default function Dashboard() {
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="إجمالي العمليات" value={transactions.length} subtitle={`${pendingOrders.length} إصلاح قيد الانتظار`} icon={ShoppingBag} accentClass="bg-primary" />
-        <StatCard title="الإيرادات" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`${paidOrders.length} عملية مدفوعة`} icon={Wallet} accentClass="bg-primary" />
+        <StatCard title="الإيرادات (شامل الضريبة)" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`قبل الضريبة ${revenueExVat.toFixed(0)} · محصَّل ${collected.toFixed(0)} (${paidOrders.length} عملية مدفوعة)`} icon={Wallet} accentClass="bg-primary" />
         <StatCard title="العملاء" value={customers.length} icon={Users} accentClass="bg-primary" />
         <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
       </div>

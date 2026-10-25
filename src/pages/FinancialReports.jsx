@@ -93,7 +93,7 @@ export default function FinancialReports() {
       supabase.from('workshop_settlements').select('month_key,total_workshop_cost'),
       supabase.from('zatca_credit_debit_notes').select('note_type,amount,vat_amount,created_at').gte('created_at', startISO).lte('created_at', endISO).eq('zatca_status', 'REPORTED'),
       // "كم لي" — مستحقات على العملاء (غير محصورة بفترة، رقم لحظي)
-      supabase.from('orders').select('total_price').eq('payment_status', 'unpaid').not('status', 'in', '(cancelled,returned)'),
+      supabase.from('orders').select('total_price').eq('payment_status', 'unpaid').neq('status', 'cancelled'), // (قيمة 'returned' غير موجودة بنوع order_status — كانت تسبب خطأ 22P02 فيرجع «كم لي» صفر)
       supabase.from('sales_invoices').select('total').eq('payment_status', 'unpaid'),
       // "كم علي" — مستحقات للموردين
       supabase.from('purchase_invoices').select('taxable_amount,vat_amount,amount_paid').neq('payment_status', 'paid'),
