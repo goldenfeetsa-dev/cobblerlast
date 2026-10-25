@@ -227,3 +227,8 @@ html.pos .bg-gradient-to-br,html.pos .bg-gradient-to-r,html.pos .bg-gradient-to-
 html.pos [data-radix-popper-content-wrapper] > *,html.pos [role="dialog"]{box-shadow:0 8px 30px rgba(17,24,39,.12)!important}
 html.pos .tnum,html.pos table td,html.pos table th{font-variant-numeric:tabular-nums}
 html.pos table thead th{font-weight:500;color:hsl(var(--muted-foreground));background:#fafbfc}
+
+/* خريطة داكنة: قلب ألوان بلاطات OSM القياسية */
+.leaflet-container .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.35)}
+
+.hero-ghost .store-btn{background:rgba(0,0,0,.5);color:#fff;border-color:rgba(255,255,255,.85)}

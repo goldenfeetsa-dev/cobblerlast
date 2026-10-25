@@ -4,7 +4,7 @@ import { MapPin, LocateFixed, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import 'leaflet/dist/leaflet.css';
 
-import { pinIcon, DARK_TILES } from './ShopMap';
+import { pinIcon, DARK_TILES, TILE_SUBDOMAINS } from './ShopMap';
 
 const SHOP_LAT = 24.7136;
 const SHOP_LNG = 46.6753;
@@ -89,7 +89,7 @@ export default function LocationPicker({ onLocationSelect, initialLat, initialLn
           zoomControl={false}
           ref={mapRef}
         >
-          <TileLayer url={DARK_TILES} subdomains="abcd" maxZoom={19} attribution="© OpenStreetMap · © CARTO" />
+          <TileLayer url={DARK_TILES} subdomains={TILE_SUBDOMAINS} maxZoom={19} attribution="© OpenStreetMap" />
           <ClickHandler onPick={placePin} />
           {pin && (
             <Marker

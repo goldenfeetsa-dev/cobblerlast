@@ -163,12 +163,9 @@ function HeroSection() {
     <section dir={dir} className="relative w-full overflow-hidden" style={{ minHeight: '100svh', background: '#0b0b0c' }}>
       <img src="/images/hero-workshop.jpg" alt={isAr ? 'حرفي يخيط حذاءً جلدياً في ورشة إبرة وخيط الإسكافي' : 'Craftsman hand-stitching a leather shoe at Needle & Thread Cobbler'}
         className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '62% 50%' }} fetchpriority="high" />
-      {/* طبقة تدرّج داكنة: كثيفة بالأعلى وأخف بالأسفل لوضوح الشعار والنص */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(8,8,10,.92) 0%, rgba(8,8,10,.62) 38%, rgba(8,8,10,.38) 70%, rgba(8,8,10,.78) 100%)' }} />
-
       {/* رأس شفاف عائم */}
       <header className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-5 md:px-14 pt-5 md:pt-7">
-        <nav className="hidden md:flex items-center gap-8 text-[15px] flex-1" style={{ color: '#ece8df' }}>
+        <nav className="hidden md:flex items-center gap-8 text-[15px] flex-1" style={{ color: '#fff', textShadow: '0 1px 10px rgba(0,0,0,.85)' }}>
           {links.map(([label, to]) => (
             to.startsWith('#')
               ? <a key={to} href={to} className="opacity-90 hover:opacity-100 transition-opacity">{label}</a>
@@ -179,21 +176,21 @@ function HeroSection() {
           <ShoppingBag className="w-5 h-5" />
         </Link>
         <Link to="/" className="flex justify-center" aria-label={t('common.brand')}>
-          <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-12 md:h-16 w-auto object-contain" />
+          <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-12 md:h-16 w-auto object-contain" style={{ filter: 'drop-shadow(0 1px 8px rgba(0,0,0,.8))' }} />
         </Link>
         <div className="flex-1 flex justify-end items-center gap-3"><LanguageSwitcher /></div>
       </header>
 
       {/* نص الهيرو بالمنتصف */}
       <div className="relative z-[1] flex flex-col items-center justify-center text-center px-6" style={{ minHeight: '100svh', paddingTop: 70 }}>
-        <p className="text-xs tracking-[0.3em]" style={{ color: '#d6d1c6' }}>{t('home.hero.eyebrow')}</p>
-        <h1 className="mt-5 font-bold leading-[1.25] max-w-3xl" style={{ fontSize: 'clamp(2.3rem, 6.5vw, 4.4rem)', color: '#fff', textShadow: '0 2px 28px rgba(0,0,0,.5)', textAlign: 'center' }}>
+        <p className="text-xs tracking-[0.3em]" style={{ color: '#fff', textShadow: '0 1px 12px rgba(0,0,0,.9)' }}>{t('home.hero.eyebrow')}</p>
+        <h1 className="mt-5 font-bold leading-[1.25] max-w-3xl" style={{ fontSize: 'clamp(2.3rem, 6.5vw, 4.4rem)', color: '#fff', textShadow: '0 2px 24px rgba(0,0,0,.85), 0 0 3px rgba(0,0,0,.6)', textAlign: 'center' }}>
           {t('home.hero.titleStart')} {t('home.hero.titleEnd')}
         </h1>
-        <h2 className="mt-5 text-base md:text-lg font-light max-w-xl leading-8" style={{ color: '#e5e1d8', textAlign: 'center' }}>{t('home.hero.seoSubtitle')}</h2>
+        <h2 className="mt-5 text-base md:text-lg font-light max-w-xl leading-8" style={{ color: '#fff', textAlign: 'center', textShadow: '0 1px 14px rgba(0,0,0,.9)' }}>{t('home.hero.seoSubtitle')}</h2>
         <div className="mt-9 flex flex-col sm:flex-row gap-3 w-full" style={{ maxWidth: 460 }}>
           <div className="flex-1"><StoreBtn to="/book" primary>{t('home.hero.ctaPrimary')}</StoreBtn></div>
-          <div className="flex-1"><StoreBtn to="/my-bookings">{t('common.nav.trackBooking')}</StoreBtn></div>
+          <div className="flex-1 hero-ghost"><StoreBtn to="/my-bookings">{t('common.nav.trackBooking')}</StoreBtn></div>
         </div>
       </div>
     </section>
@@ -696,6 +693,44 @@ function BranchesSection() {
 }
 
 // ── Footer ────────────────────────────────────────────────────────
+// شعارات الدفع بلون موحّد (لون الفوتر) — كلمات/رموز بسيطة بدون ألوان العلامات
+function PaymentMarks() {
+  const c = '#bdb8ad';
+  const box = { height: 30, width: 'auto', display: 'block' };
+  return (
+    <div className="flex items-center flex-wrap gap-x-7 gap-y-4" dir="ltr" aria-label="Payment methods">
+      <svg viewBox="0 0 64 28" style={box} fill={c} role="img" aria-label="Apple Pay">
+        <g transform="translate(2,3) scale(.8)"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></g>
+        <text x="22" y="20" fontSize="15" fontWeight="600" fontFamily="Inter, Helvetica, Arial, sans-serif">Pay</text>
+      </svg>
+      <svg viewBox="0 0 56 28" style={box} fill={c} role="img" aria-label="Visa">
+        <text x="2" y="22" fontSize="23" fontWeight="900" fontStyle="italic" letterSpacing="-1" fontFamily="Inter, Helvetica, Arial, sans-serif">VISA</text>
+      </svg>
+      <svg viewBox="0 0 44 28" style={box} role="img" aria-label="Mastercard">
+        <circle cx="16" cy="14" r="11" fill={c} />
+        <circle cx="28" cy="14" r="11" fill={c} opacity=".55" />
+      </svg>
+      <svg viewBox="0 0 64 28" style={box} fill={c} role="img" aria-label="mada">
+        <rect x="2" y="6" width="16" height="4" /><rect x="2" y="13" width="16" height="4" />
+        <text x="22" y="14" fontSize="12" fontWeight="700" fontFamily="Inter, Helvetica, Arial, sans-serif">mada</text>
+        <text x="22" y="25" fontSize="10" fontWeight="700" fontFamily="'IBM Plex Sans Arabic', Arial, sans-serif">مدى</text>
+      </svg>
+    </div>
+  );
+}
+
+// شارة تسجيل ضريبة القيمة المضافة (رمز محايد — يُستبدل بالشعار الرسمي لو توفّر ملفه)
+function VatEmblem({ className }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} fill="none" stroke="#ece8df" strokeWidth="2" role="img" aria-label="VAT">
+      <rect x="4" y="4" width="56" height="56" />
+      <rect x="10" y="10" width="44" height="44" strokeOpacity=".45" />
+      <text x="32" y="30" textAnchor="middle" fontSize="14" fontWeight="700" fill="#ece8df" stroke="none" fontFamily="Inter, Arial, sans-serif">VAT</text>
+      <text x="32" y="46" textAnchor="middle" fontSize="9" fill="#ece8df" stroke="none" fontFamily="'IBM Plex Sans Arabic', Arial, sans-serif">15%</text>
+    </svg>
+  );
+}
+
 function Footer() {
   const { t, dir } = useLanguage();
   const { data: siteData } = useSiteData();
@@ -784,6 +819,8 @@ function Footer() {
           <p dir="ltr" style={{ textAlign: isAr ? 'right' : 'left' }}>{phone}</p>
         </div>
 
+        <div className="mt-10"><PaymentMarks /></div>
+
         <div className="mt-10 flex items-center justify-between gap-4 pb-6" style={{ borderBottom: line }}>
           <p className="text-sm" style={{ color: '#bdb8ad' }}>© {new Date().getFullYear()} {t('common.brand')} · {t('common.footer.rights')}</p>
           <div className="flex gap-4">
@@ -795,11 +832,16 @@ function Footer() {
           </div>
         </div>
       </div>
-      {/* شريط السجل والضريبة */}
-      <div className="-mx-6 px-6 py-4 text-center text-xs" style={{ background: '#1f2024', color: '#bdb8ad' }}>
-        {isAr ? 'إبرة وخيط الإسكافي — ' : 'Needle & Thread Cobbler — '}
-        {isAr ? 'رقم السجل التجاري ' : 'CR No. '}<span dir="ltr" className="font-semibold" style={{ color: '#ece8df' }}>{crNumber || '7051288830'}</span>
-        {isAr ? ' · الرقم الضريبي ' : ' · VAT No. '}<span dir="ltr" className="font-semibold" style={{ color: '#ece8df' }}>{vat}</span>
+      {/* شريط الشعارات الرسمية: السجل التجاري + ضريبة القيمة المضافة */}
+      <div className="-mx-6 px-6 py-5 flex items-center justify-center gap-8" style={{ background: '#1f2024', color: '#bdb8ad' }}>
+        <div className="flex items-center gap-3">
+          <img src="/images/cr-emblem-white.png" alt={isAr ? 'السجل التجاري' : 'Commercial Registration'} className="w-12 h-12 object-contain" loading="lazy" />
+          <div className="text-[11px] leading-5"><p>{isAr ? 'السجل التجاري' : 'CR No.'}</p><p dir="ltr" className="font-semibold text-xs" style={{ color: '#ece8df' }}>{crNumber || '7051288830'}</p></div>
+        </div>
+        <div className="flex items-center gap-3">
+          <VatEmblem className="w-12 h-12" />
+          <div className="text-[11px] leading-5"><p>{isAr ? 'الرقم الضريبي' : 'VAT No.'}</p><p dir="ltr" className="font-semibold text-xs" style={{ color: '#ece8df' }}>{vat}</p></div>
+        </div>
       </div>
     </footer>
   );

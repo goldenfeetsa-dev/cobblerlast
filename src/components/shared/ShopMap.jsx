@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -11,16 +11,34 @@ export const pinIcon = L.divIcon({
   iconAnchor: [11, 11],
 });
 
-export const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+// خرائط OpenStreetMap القياسية + فلتر CSS يحوّلها للوضع الداكن (أوثق من مزوّد بلاطات داكنة خارجي)
+export const DARK_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const TILE_SUBDOMAINS = 'abc';
+export const MAPS_LINK = 'https://maps.app.goo.gl/dwDGJv8NoGpKPqvDA';
 
 export default function ShopMap({ lat, lng, zoom = 16, height = 320 }) {
+  const [failed, setFailed] = useState(false);
+  const errs = React.useRef(0);
+  const ok = React.useRef(false);
   return (
-    <div style={{ height }} className="shop-map">
-      <MapContainer center={[lat, lng]} zoom={zoom} style={{ height: '100%', width: '100%', background: '#0b0b0c' }}
+    <div style={{ height, position: 'relative' }} className="shop-map">
+      <MapContainer center={[lat, lng]} zoom={zoom} style={{ height: '100%', width: '100%', background: '#17181b' }}
         scrollWheelZoom={false} zoomControl={false} dragging={true}>
-        <TileLayer url={DARK_TILES} subdomains="abcd" maxZoom={19} attribution="© OpenStreetMap · © CARTO" />
+        <TileLayer url={DARK_TILES} subdomains={TILE_SUBDOMAINS} maxZoom={19} attribution="© OpenStreetMap"
+          eventHandlers={{
+            tileload: () => { ok.current = true; },
+            tileerror: () => { errs.current += 1; if (!ok.current && errs.current >= 3) setFailed(true); },
+          }} />
         <Marker position={[lat, lng]} icon={pinIcon} />
       </MapContainer>
+      {failed && (
+        <a href={MAPS_LINK} target="_blank" rel="noopener noreferrer"
+          className="absolute inset-0 z-[500] flex flex-col items-center justify-center gap-3 text-center"
+          style={{ background: '#17181b', color: '#ece8df' }}>
+          <span className="text-base font-semibold">الرياض، حي العزيزية، شارع الشباب</span>
+          <span className="px-5 py-2.5 text-sm" style={{ background: '#ece8df', color: '#0b0b0c' }}>افتح الموقع في خرائط جوجل</span>
+        </a>
+      )}
     </div>
   );
 }
