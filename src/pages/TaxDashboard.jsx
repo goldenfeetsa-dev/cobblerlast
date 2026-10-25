@@ -4,6 +4,7 @@
  * يطابق هيكل نموذج الإقرار في بوابة هيئة الزكاة والضريبة والجمارك:
  *   أ) ضريبة المبيعات: البنود 1–6   ب) ضريبة المشتريات: البنود 7–12
  *   ج) التسوية: البنود 13–16   — بأعمدة: المبلغ | التعديلات | مبلغ الضريبة
+ * فواتير المنشأة من المرحلة الأولى (الإصدار) — لا يوجد إبلاغ/ربط، فالإقرار يشمل كل الفواتير الصادرة.
  * الإقرار يُقدَّم يدوياً عبر البوابة (zatca.gov.sa)؛ هذه الصفحة ورقة عمل
  * تحسب كل بند وتُظهر مصدره، مع ملاحق تفصيلية تثبت كل رقم.
  */
@@ -60,7 +61,6 @@ export default function TaxDashboard() {
   const [zatcaSettings, setZatcaSettings] = useState(null);
   const [creditNotes, setCreditNotes] = useState([]);
   const [shop, setShop] = useState(null);
-  const [basis, setBasis] = useState('issued'); // issued = كل الفواتير الصادرة | reported = المُبلَّغة لزاتكا فقط
   const [corrections, setCorrections] = useState('');   // بند 14
   const [carried, setCarried] = useState('');           // بند 15
   const [preparedAt, setPreparedAt] = useState(null);
@@ -84,7 +84,7 @@ export default function TaxDashboard() {
         secureExpenses.list({ orderBy: '-expense_date', limit: 2000, gteCol: 'expense_date', gteVal: startDay, lteCol: 'expense_date', lteVal: endDay }),
         supabase.from('suppliers').select('id,name'),
         secureZatca.getSettings().catch(() => null),
-        supabase.from('zatca_credit_debit_notes').select('*').gte('created_at', startISO).lte('created_at', endISO).eq('zatca_status', 'REPORTED'),
+        supabase.from('zatca_credit_debit_notes').select('*').gte('created_at', startISO).lte('created_at', endISO),
         db.AppSettings.list('-created_at', 1, APP_SETTINGS_SAFE_COLUMNS).catch(() => []),
       ]);
       // فواتير المبيعات المجمّعة للشركات تحتوي بنوداً بـ order_id — لا تُحتسب مرتين
@@ -121,21 +121,20 @@ export default function TaxDashboard() {
       const vat = o.vat_amount != null ? num(o.vat_amount) : null;
       const total = num(o.total_price);
       const net = o.subtotal != null ? num(o.subtotal) : (vat != null ? total - vat : total / (1 + VAT_RATE));
-      return { id: 'o' + o.id, kind: 'إصلاح', number: o.order_number, date: o.created_at, net, vat: vat != null ? vat : net * VAT_RATE, zatca: o.zatca_status };
+      return { id: 'o' + o.id, kind: 'إصلاح', number: o.order_number, date: o.created_at, net, vat: vat != null ? vat : net * VAT_RATE, status: o.status };
     }),
     ...sales.filter(x => !['cancelled', 'void', 'voided'].includes(x.status)).map(x => {
       const vat = x.vat_amount != null ? num(x.vat_amount) : null;
       const total = num(x.total);
       const net = x.subtotal != null ? num(x.subtotal) : (vat != null ? total - vat : total / (1 + VAT_RATE));
-      return { id: 's' + x.id, kind: isPartnerInv(x) ? 'فاتورة شركة' : 'مبيعات', number: x.invoice_number, date: x.created_at, net, vat: vat != null ? vat : net * VAT_RATE, zatca: x.zatca_status };
+      return { id: 's' + x.id, kind: isPartnerInv(x) ? 'فاتورة شركة' : 'مبيعات', number: x.invoice_number, date: x.created_at, net, vat: vat != null ? vat : net * VAT_RATE, status: 'completed' };
     }),
   ];
-  const countedDocs = basis === 'reported' ? salesDocs.filter(d => d.zatca === 'REPORTED') : salesDocs;
-  const unreported = salesDocs.filter(d => d.zatca !== 'REPORTED');
+  const countedDocs = salesDocs; // المرحلة الأولى: كل الفواتير الصادرة تُحتسب
   const stdDocs = countedDocs.filter(d => r2(d.vat) > 0);
   const zeroDocs = countedDocs.filter(d => r2(d.vat) <= 0);
 
-  // إشعارات الدائن/المدين المُبلَّغة: المبلغ المخزَّن شامل الضريبة → الصافي = المبلغ − الضريبة
+  // إشعارات الدائن/المدين الصادرة: المبلغ المخزَّن شامل الضريبة → الصافي = المبلغ − الضريبة
   const noteSign = (n) => (n.note_type === 'credit' ? -1 : 1);
   const adjNet = creditNotes.reduce((s, n) => s + noteSign(n) * (num(n.amount) - num(n.vat_amount)), 0);
   const adjVat = creditNotes.reduce((s, n) => s + noteSign(n) * num(n.vat_amount), 0);
@@ -190,7 +189,6 @@ export default function TaxDashboard() {
     { ok: !!crNo, label: 'رقم السجل التجاري مسجَّل', hint: crNo || 'غير مضبوط' },
     { ok: !!address, label: 'العنوان الوطني مكتمل', hint: address || 'غير مضبوط' },
     { ok: isMonth || isQuarter, label: 'الفترة تطابق شهراً أو ربعاً سنوياً كاملاً', hint: `${format(start, 'yyyy-MM-dd')} → ${format(end, 'yyyy-MM-dd')} (${periodDays} يوماً)` },
-    { ok: unreported.length === 0, warn: true, label: 'كل الفواتير مُبلَّغة لزاتكا', hint: unreported.length ? `${unreported.length} فاتورة غير مُبلَّغة${basis === 'issued' ? ' — محتسبة في الإقرار لأن الضريبة تستحق بالتوريد' : ' — مستبعدة من الإقرار'}` : 'لا يوجد' },
     { ok: zeroDocs.length === 0, warn: true, label: 'لا توجد مبيعات بدون ضريبة', hint: zeroDocs.length ? `${zeroDocs.length} عملية ضريبتها صفر وأُدرجت في البند 3 (نسبة الصفر) — راجعها` : 'لا يوجد' },
     { ok: invalidPurchases.length === 0 && nonDeductibleExpenses.length === 0, warn: true, label: 'كل المشتريات والمصروفات قابلة لخصم الضريبة', hint: (invalidPurchases.length + nonDeductibleExpenses.length) ? `${invalidPurchases.length} فاتورة شراء (مورد بلا رقم ضريبي صالح) و${nonDeductibleExpenses.length} مصروف بلا فاتورة ضريبية — مستبعدة` : 'لا يوجد' },
     { ok: Math.abs(box14) < 5000, label: 'التصحيحات من الفترات السابقة أقل من 5,000 ريال (الحد النظامي)', hint: box14 ? fmt(box14) : 'لا يوجد' },
@@ -298,14 +296,14 @@ export default function TaxDashboard() {
       <div className="vr-pb" />
       <h3 className="vr-h3">ملحق (أ) — مبيعات الفترة · Annex A: Sales ({countedDocs.length})</h3>
       <table className="vr-t sm">
-        <thead><tr><th>#</th><th className="lb">رقم المستند</th><th className="lb">النوع</th><th className="lb">التاريخ</th><th className="n">الصافي</th><th className="n">الضريبة</th><th className="lb">زاتكا</th></tr></thead>
+        <thead><tr><th>#</th><th className="lb">رقم المستند</th><th className="lb">النوع</th><th className="lb">التاريخ</th><th className="n">الصافي</th><th className="n">الضريبة</th><th className="lb">الحالة</th></tr></thead>
         <tbody>
           {countedDocs.length === 0 && <tr><td colSpan={7} className="empty">لا توجد مبيعات في هذه الفترة</td></tr>}
           {countedDocs.map((d, i) => (
-            <tr key={d.id}><td className="no">{i + 1}</td><td dir="ltr" className="lb">{d.number}</td><td className="lb">{d.kind}</td><td dir="ltr" className="lb">{d10(d.date)}</td><td className="n"><Money v={d.net} /></td><td className="n"><Money v={d.vat} /></td><td className="lb">{d.zatca === 'REPORTED' ? 'مُبلَّغة' : 'غير مُبلَّغة'}</td></tr>
+            <tr key={d.id}><td className="no">{i + 1}</td><td dir="ltr" className="lb">{d.number}</td><td className="lb">{d.kind}</td><td dir="ltr" className="lb">{d10(d.date)}</td><td className="n"><Money v={d.net} /></td><td className="n"><Money v={d.vat} /></td><td className="lb">{d.status === 'completed' ? 'مكتمل' : 'صادرة'}</td></tr>
           ))}
           {creditNotes.map(n => (
-            <tr key={n.id} className="cn"><td className="no">—</td><td dir="ltr" className="lb">{n.note_number}</td><td className="lb">{n.note_type === 'credit' ? 'إشعار دائن' : 'إشعار مدين'}</td><td dir="ltr" className="lb">{d10(n.created_at)}</td><td className="n"><Money v={noteSign(n) * (num(n.amount) - num(n.vat_amount))} /></td><td className="n"><Money v={noteSign(n) * num(n.vat_amount)} /></td><td className="lb">مُبلَّغ</td></tr>
+            <tr key={n.id} className="cn"><td className="no">—</td><td dir="ltr" className="lb">{n.note_number}</td><td className="lb">{n.note_type === 'credit' ? 'إشعار دائن' : 'إشعار مدين'}</td><td dir="ltr" className="lb">{d10(n.created_at)}</td><td className="n"><Money v={noteSign(n) * (num(n.amount) - num(n.vat_amount))} /></td><td className="n"><Money v={noteSign(n) * num(n.vat_amount)} /></td><td className="lb">صادر</td></tr>
           ))}
         </tbody>
       </table>
@@ -440,13 +438,6 @@ export default function TaxDashboard() {
           </div>
         </div>
         <div className="flex gap-4 flex-wrap items-end text-xs">
-          <div>
-            <p className="text-muted-foreground mb-1">أساس احتساب المبيعات</p>
-            <div className="flex gap-1.5">
-              <Button size="sm" variant={basis === 'issued' ? 'default' : 'outline'} className="rounded-full" onClick={() => setBasis('issued')}>كل الفواتير الصادرة</Button>
-              <Button size="sm" variant={basis === 'reported' ? 'default' : 'outline'} className="rounded-full" onClick={() => setBasis('reported')}>المُبلَّغة لزاتكا فقط</Button>
-            </div>
-          </div>
           <div><Label className="text-muted-foreground">بند 14 — تصحيحات سابقة (±)</Label><Input type="number" step="0.01" className="h-8 w-40 mt-1" value={corrections} onChange={e => setCorrections(e.target.value)} placeholder="0.00" /></div>
           <div><Label className="text-muted-foreground">بند 15 — ضريبة مرحّلة (رصيد دائن)</Label><Input type="number" step="0.01" className="h-8 w-40 mt-1" value={carried} onChange={e => setCarried(e.target.value)} placeholder="0.00" /></div>
           <p className="text-muted-foreground flex items-center gap-1.5 pb-1"><CalendarClock className="w-4 h-4" /> آخر موعد للتقديم والسداد: <b className="text-foreground" dir="ltr">{format(dueDate, 'yyyy-MM-dd')}</b></p>
