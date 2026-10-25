@@ -163,6 +163,9 @@ function HeroSection() {
     <section dir={dir} className="relative w-full overflow-hidden" style={{ minHeight: '100svh', background: '#0b0b0c' }}>
       <img src="/images/hero-workshop.jpg" alt={isAr ? 'حرفي يخيط حذاءً جلدياً في ورشة إبرة وخيط الإسكافي' : 'Craftsman hand-stitching a leather shoe at Needle & Thread Cobbler'}
         className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '62% 50%' }} fetchpriority="high" />
+      {/* طبقة داكنة تبدأ بعد منطقة الرأس (الشعار والسلة بدون تعتيم) وتتدرج نزولاً لوضوح النص */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(8,8,10,0) 0%, rgba(8,8,10,0) 14%, rgba(8,8,10,.5) 40%, rgba(8,8,10,.6) 68%, rgba(8,8,10,.82) 100%)' }} />
+
       {/* رأس شفاف عائم */}
       <header className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-5 md:px-14 pt-5 md:pt-7">
         <nav className="hidden md:flex items-center gap-8 text-[15px] flex-1" style={{ color: '#fff', textShadow: '0 1px 10px rgba(0,0,0,.85)' }}>
