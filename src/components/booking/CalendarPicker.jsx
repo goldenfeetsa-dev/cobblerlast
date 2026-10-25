@@ -98,27 +98,27 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-stone-800 mb-1">اختر الموعد</h2>
-      <p className="text-stone-500 text-sm mb-6">حدد اليوم والوقت المناسب لك</p>
+      <h2 className="text-xl font-bold text-[#ece8df] mb-1">اختر الموعد</h2>
+      <p className="text-[#bdb8ad] text-sm mb-6">حدد اليوم والوقت المناسب لك</p>
 
       {/* Calendar */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-4 mb-4">
+      <div className="bg-[#131315] border border-white/10 rounded-none p-4 mb-4">
         {/* Month nav */}
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setViewDate(d => subMonths(d, 1))} className="w-8 h-8 rounded-lg hover:bg-stone-100 flex items-center justify-center">
-            <ChevronRight className="w-4 h-4 text-stone-600" />
+          <button onClick={() => setViewDate(d => subMonths(d, 1))} className="w-8 h-8 rounded-none hover:bg-white/10 flex items-center justify-center">
+            <ChevronRight className="w-4 h-4 text-[#bdb8ad]" />
           </button>
-          <span className="font-bold text-stone-800">
+          <span className="font-bold text-[#ece8df]">
             {format(viewDate, 'MMMM yyyy', { locale: ar })}
           </span>
-          <button onClick={() => setViewDate(d => addMonths(d, 1))} className="w-8 h-8 rounded-lg hover:bg-stone-100 flex items-center justify-center">
-            <ChevronLeft className="w-4 h-4 text-stone-600" />
+          <button onClick={() => setViewDate(d => addMonths(d, 1))} className="w-8 h-8 rounded-none hover:bg-white/10 flex items-center justify-center">
+            <ChevronLeft className="w-4 h-4 text-[#bdb8ad]" />
           </button>
         </div>
         {/* Day names */}
         <div className="grid grid-cols-7 mb-2">
           {DAY_NAMES.map(d => (
-            <div key={d} className="text-center text-xs text-stone-400 font-medium py-1">{d}</div>
+            <div key={d} className="text-center text-xs text-[#8d8a82] font-medium py-1">{d}</div>
           ))}
         </div>
         {/* Days */}
@@ -134,11 +134,11 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
                 disabled={!available}
                 onClick={() => { onDateChange(day); onTimeChange(null); }}
                 className={cn(
-                  "h-9 w-full rounded-xl text-sm font-medium transition-all",
-                  selected ? "bg-amber-500 dark:bg-amber-900/60 text-white shadow-md shadow-amber-200" :
-                  past ? "text-stone-300 cursor-not-allowed" :
-                  available ? "hover:bg-amber-50 text-stone-700 hover:text-amber-700" :
-                  "text-stone-300 cursor-not-allowed line-through"
+                  "h-9 w-full rounded-none text-sm font-medium transition-all",
+                  selected ? "bg-[#ece8df] text-[#0b0b0c]" :
+                  past ? "text-white/20 cursor-not-allowed" :
+                  available ? "hover:bg-white/10 text-[#ece8df]" :
+                  "text-white/20 cursor-not-allowed line-through"
                 )}
               >
                 {format(day, 'd')}
@@ -151,11 +151,11 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
       {/* Time Slots */}
       {selectedDate && (
         <div>
-          <p className="text-sm font-medium text-stone-600 mb-3">
+          <p className="text-sm font-medium text-[#bdb8ad] mb-3">
             الأوقات المتاحة ليوم {format(selectedDate, 'EEEE d MMMM', { locale: ar })}
           </p>
           {slots.length === 0 ? (
-            <div className="text-center py-8 text-stone-400 bg-stone-50 rounded-xl">
+            <div className="text-center py-8 text-[#8d8a82] bg-[#131315] rounded-none">
               <p className="text-sm">لا توجد أوقات متاحة في هذا اليوم</p>
               <p className="text-xs mt-1">يرجى اختيار يوم آخر</p>
             </div>
@@ -167,12 +167,12 @@ export default function CalendarPicker({ selectedDate, selectedTime, onDateChang
                   disabled={!slot.available}
                   onClick={() => onTimeChange(slot.time)}
                   className={cn(
-                    "py-2.5 rounded-xl text-sm font-medium border-2 transition-all",
+                    "py-2.5 rounded-none text-sm font-medium border-2 transition-all",
                     selectedTime === slot.time
-                      ? "border-amber-500 dark:border-amber-600 bg-amber-500 dark:bg-amber-900/60 text-white shadow-md shadow-amber-100"
+                      ? "border-[#ece8df] bg-[#ece8df] text-[#0b0b0c]"
                       : slot.available
-                      ? "border-stone-200 text-stone-700 hover:border-amber-300 hover:bg-amber-50"
-                      : "border-stone-100 text-stone-300 bg-stone-50 cursor-not-allowed line-through"
+                      ? "border-white/10 text-[#ece8df] hover:border-white/30 hover:bg-white/5"
+                      : "border-white/5 text-white/25 bg-transparent cursor-not-allowed line-through"
                   )}
                 >
                   {slot.time}

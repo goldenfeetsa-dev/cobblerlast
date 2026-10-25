@@ -14,6 +14,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
 import LogoMarquee from '@/components/LogoMarquee';
 import CleanLogo from '@/components/CleanLogo';
+const ShopMap = React.lazy(() => import('@/components/shared/ShopMap'));
 
 // بيانات عامة مخزّنة بالـ CDN (علامات/فروع/تواصل/سجل تجاري) — طلب واحد
 // مشترك بين كل الأقسام بدل ما كل قسم يسوي استعلامه المنفصل لـ Supabase.
@@ -42,6 +43,14 @@ function TiktokIcon({ className, style }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style} aria-hidden="true">
       <path d="M16.6 5.82c-.78-.85-1.24-1.95-1.29-3.14h-3.02v13.9c0 1.5-1.22 2.72-2.72 2.72a2.72 2.72 0 0 1 0-5.44c.26 0 .51.04.75.1v-3.06a5.78 5.78 0 0 0-.75-.05 5.78 5.78 0 1 0 5.78 5.78V9.4a8.7 8.7 0 0 0 5.08 1.63V8.01a5.35 5.35 0 0 1-3.83-2.19Z" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ className, style }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style} aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
     </svg>
   );
 }
@@ -229,18 +238,6 @@ function ServicesSection() {
           ))}
         </div>
 
-        <h3 className="mt-16 text-xl font-semibold" style={{ color: '#ece8df' }}>{t('home.services.howItWorksTitle')}</h3>
-        <div className="mt-5" style={{ borderTop: `1px solid ${HAIR}` }}>
-          {steps.map((step, i) => (
-            <div key={i} className="flex items-start gap-5 py-5" style={{ borderBottom: `1px solid ${HAIR}` }}>
-              <span className="text-[13px] pt-0.5 min-w-[26px]" style={{ color: '#8d8a82' }}>{num(i)}</span>
-              <div>
-                <h4 className="font-semibold" style={{ color: '#ece8df' }}>{step.t}</h4>
-                <p className="mt-1 text-sm leading-loose font-light" style={{ color: '#a8a398' }}>{step.d}</p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -385,57 +382,15 @@ function RequestServiceSection() {
 }
 
 // ── About ─────────────────────────────────────────────────────────
-const ABOUT_STAT_ICONS = [Award, Star, Shield, Gem];
 function AboutSection() {
   const { t, dir } = useLanguage();
-  const stats = t('home.about.stats');
   return (
-    <section id="about" className="py-32 px-6" style={{ background: '#0b0b0c' }} dir={dir}>
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <FadeIn className="grid grid-cols-2 gap-3">
-            {[
-              { src: '/images/gallery/bag-after.png', alt: 'حرفي متخصص يصلح حقيبة جلدية فاخرة' },
-              { src: '/images/gallery/bag-before.png', alt: 'أدوات وخيوط ورشة إصلاح الأحذية' },
-              { src: '/images/gallery/sneaker-before.png', alt: 'ورشة إبرة وخيط الإسكافي في الرياض' },
-              { src: '/images/gallery/sneaker-after.png', alt: 'تبديل نعل حذاء جلدي فاخر' },
-            ].map((img, i) => (
-                <motion.div key={i} className={`rounded-2xl overflow-hidden ${i % 2 === 1 ? 'mt-6' : ''}`}
-                  style={{ border: `1px solid ${GB}0.1)` }}
-                  whileHover={{ scale: 1.03, borderColor: GB + '0.3)' }} transition={{ duration: 0.3 }}>
-                  <img src={img.src} alt={img.alt} className="w-full h-44 object-cover" loading="lazy" />
-                </motion.div>
-              ))}
-          </FadeIn>
-          <FadeIn delay={0.15}>
-            <p className="text-xs tracking-[0.5em] font-bold mb-4 uppercase" style={{ color: GT }}>{t('home.about.eyebrow')}</p>
-            <h2 className="font-display text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
-              {t('home.about.titleLine1')}<br /><span style={{ color: GT }}>{t('home.about.titleLine2')}</span>
-            </h2>
-            <p className="leading-relaxed text-base mb-8" style={{ color: '#a8a398' }}>
-              {t('home.about.desc')}
-            </p>
-            <div className="grid grid-cols-2 gap-3 mb-8">
-              {stats.map((s, i) => (
-                <motion.div key={i} className="rounded-2xl p-4 flex items-center gap-3"
-                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.12)` }}
-                  whileHover={{ borderColor: GB + '0.3)', scale: 1.02 }}>
-                  {React.createElement(ABOUT_STAT_ICONS[i], { className: 'w-5 h-5 shrink-0', style: { color: GT } })}
-                  <div>
-                    <div className="text-xl font-black" style={{ color: GT }}><AnimCounter target={s.num} /></div>
-                    <div className="text-xs" style={{ color: '#a8a398' }}>{s.label}</div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-            <Link to="/about">
-              <MagneticBtn className="px-8 py-3.5 rounded-2xl font-bold text-base text-black"
-                style={{ background: `linear-gradient(135deg, ${G}, ${GL})`, boxShadow: `0 8px 30px ${GB}0.3)` }}>
-                {t('home.about.cta')}
-              </MagneticBtn>
-            </Link>
-          </FadeIn>
-        </div>
+    <section id="about" className="px-6 py-16" dir={dir}>
+      <div className="mx-auto" style={{ maxWidth: 760 }}>
+        <p className="text-xs tracking-[0.25em]" style={{ color: '#8d8a82' }}>{t('home.about.eyebrow')}</p>
+        <h2 className="mt-2.5 text-[28px] font-semibold leading-snug" style={{ color: '#ece8df' }}>{t('home.about.titleLine1')} {t('home.about.titleLine2')}</h2>
+        <p className="mt-4 text-[15px] leading-loose font-light" style={{ color: '#a8a398' }}>{t('home.about.desc')}</p>
+        <Link to="/about" className="store-btn store-btn-s mt-7 inline-flex items-center justify-center min-h-[48px] px-8 font-semibold text-sm">{t('home.about.cta')}</Link>
       </div>
     </section>
   );
@@ -445,46 +400,24 @@ function AboutSection() {
 function ReviewsSection() {
   const { t, dir } = useLanguage();
   const reviews = t('home.reviews.items');
-  const [active, setActive] = useState(0);
-  useEffect(() => {
-    const iv = setInterval(() => setActive(p => (p + 1) % reviews.length), 4500);
-    return () => clearInterval(iv);
-  }, [reviews.length]);
+  const loop = [...reviews, ...reviews];
   return (
-    <section className="py-32 px-6" style={{ background: '#26262a' }} dir={dir}>
-      <div className="max-w-6xl mx-auto">
-        <FadeIn className="text-center mb-14">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.reviews.eyebrow')}</p>
-          <h2 className="font-display text-4xl md:text-5xl font-black" style={{ color: T }}>{t('home.reviews.title')}</h2>
-          <div className="mt-4 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
-        </FadeIn>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reviews.map((r, i) => (
-            <FadeIn key={i} delay={i * 0.07}>
-              <motion.div className="rounded-2xl p-6 flex flex-col gap-4 h-full cursor-pointer"
-                animate={{ background: active === i ? GB + '0.07)' : 'rgba(236,232,223,0.035)', borderColor: active === i ? GB + '0.3)' : 'rgba(236,232,223,0.06)' }}
-                style={{ border: '1px solid' }} whileHover={{ y: -4 }} onClick={() => setActive(i)}>
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: GT }} />)}
-                </div>
-                <p className="text-sm leading-relaxed flex-1" style={{ color: '#bdb8ad' }}>"{r.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-black shrink-0"
-                    style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{r.name[0]}</div>
-                  <div>
-                    <p className="font-bold text-sm" style={{ color: T }}>{r.name}</p>
-                    <p className="text-xs" style={{ color: '#8d8a82' }}>{r.service}</p>
-                  </div>
-                </div>
-              </motion.div>
-            </FadeIn>
-          ))}
-        </div>
-        <div className="flex justify-center gap-2 mt-8">
-          {reviews.map((_, i) => (
-            <motion.button key={i} onClick={() => setActive(i)} className="rounded-full"
-              animate={{ width: active === i ? 22 : 8, background: active === i ? G : GB + '0.2)' }}
-              style={{ height: 8 }} />
+    <section id="reviews" className="py-16 overflow-hidden" dir={dir}>
+      <div className="px-6 mx-auto mb-8" style={{ maxWidth: 760 }}>
+        <p className="text-xs tracking-[0.25em]" style={{ color: '#8d8a82' }}>{t('home.reviews.eyebrow')}</p>
+        <h2 className="mt-2.5 text-[28px] font-semibold" style={{ color: '#ece8df' }}>{t('home.reviews.title')}</h2>
+      </div>
+      <div dir="ltr" className="review-marquee" aria-label={t('home.reviews.title')}>
+        <div className="review-track">
+          {loop.map((r, i) => (
+            <figure key={i} dir={dir} className="review-card" aria-hidden={i >= reviews.length ? 'true' : undefined}>
+              <div className="flex gap-0.5 mb-4">{[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: '#ece8df' }} />)}</div>
+              <blockquote className="text-[15px] leading-loose font-light flex-1" style={{ color: '#cfcac0' }}>{r.text}</blockquote>
+              <figcaption className="mt-5 pt-4 flex items-center justify-between text-sm" style={{ borderTop: '1px solid rgba(255,255,255,.06)' }}>
+                <span className="font-semibold" style={{ color: '#ece8df' }}>{r.name}</span>
+                <span className="text-xs" style={{ color: '#8d8a82' }}>{r.service}</span>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>
@@ -684,9 +617,9 @@ function FaqSection() {
           </h2>
         </FadeIn>
         <div className="space-y-3">
-          {items.map((f, i) => (
-            <details key={i} className="group rounded-2xl px-6 py-5 cursor-pointer"
-              style={{ background: '#131315', border: `1px solid ${GB}0.2)` }}>
+          {items.slice(0, 5).map((f, i) => (
+            <details key={i} className="group px-5 py-5 cursor-pointer"
+              style={{ background: 'transparent', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
               <summary className="font-bold text-base list-none flex items-center justify-between gap-4" style={{ color: T }}>
                 <h3 className="font-bold text-base">{f.q}</h3>
                 <span aria-hidden="true" className="text-xl transition-transform group-open:rotate-45" style={{ color: GT }}>+</span>
@@ -700,40 +633,47 @@ function FaqSection() {
   );
 }
 
+const SHOP = { lat: 24.598775, lng: 46.759599 };
+const SHOP_ADDRESS_AR = 'الرياض، حي العزيزية، شارع الشباب';
+const SHOP_ADDRESS_EN = 'Al Aziziyah District, Al Shabab Street, Riyadh';
+
 function BranchesSection() {
-  const { t, dir } = useLanguage();
+  const { t, dir, lang } = useLanguage();
+  const isAr = lang === 'ar';
   const { data: siteData } = useSiteData();
-  const branches = siteData?.branches || [];
-  const items = branches.length ? branches : [{ name: t('home.branches.mainBranch'), city: t('home.branches.city'), address: t('home.branches.city'), phone: '0549678191' }];
+  const b = (siteData?.branches || [])[0] || {};
+  const phone = b.phone || siteData?.settings?.phone || '0549678191';
+  const mapsUrl = b.maps_url || `https://www.google.com/maps/search/?api=1&query=${SHOP.lat},${SHOP.lng}`;
+  const address = isAr ? SHOP_ADDRESS_AR : SHOP_ADDRESS_EN;
   return (
-    <section id="branches" className="py-28 px-6" style={{ background: '#0b0b0c' }} dir={dir}>
-      <div className="max-w-5xl mx-auto">
-        <FadeIn className="text-center mb-12">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.branches.eyebrow')}</p>
-          <h2 className="font-display text-4xl font-black" style={{ color: T }}>{t('home.branches.title')}</h2>
-        </FadeIn>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {items.map((b, i) => (
-            <FadeIn key={i} delay={i * 0.1}>
-              <motion.div className="rounded-2xl p-6" style={{ background: GB + '0.04)', border: `1px solid ${GB}0.1)` }} whileHover={{ borderColor: GB + '0.3)', y: -4 }}>
-                <h3 className="font-black text-lg mb-3" style={{ color: T }}>{b.name}</h3>
-                <div className="space-y-2 text-sm" style={{ color: '#bdb8ad' }}>
-                  <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: GT }} />{b.city}{b.address && ` — ${b.address}`}</div>
-                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: GT }} />{t('home.branches.hours')}</div>
-                  {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: GT }} /><a href={`tel:${b.phone}`} className="hover:opacity-70">{b.phone}</a></div>}
-                  {b.maps_url && (
-                    <div className="pt-2">
-                      <a href={b.maps_url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg"
-                        style={{ background: GB + '0.08)', color: GT, border: `1px solid ${GB}0.15)` }}>
-                        <MapPin className="w-3.5 h-3.5" /> {t('home.branches.viewMap') || 'فتح الموقع على الخريطة'}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </FadeIn>
-          ))}
+    <section id="branches" className="px-6 py-16" dir={dir}>
+      <div className="mx-auto" style={{ maxWidth: 760 }}>
+        <p className="text-xs tracking-[0.25em]" style={{ color: '#8d8a82' }}>{isAr ? 'موقعنا' : 'Visit us'}</p>
+        <h2 className="mt-2.5 text-[28px] font-semibold" style={{ color: '#ece8df' }}>{isAr ? 'زرنا في الرياض' : 'Find us in Riyadh'}</h2>
+        <div className="mt-7 overflow-hidden" style={{ border: '1px solid rgba(255,255,255,.08)' }}>
+          <div className="relative" style={{ height: 300, background: '#131315' }}>
+            <React.Suspense fallback={null}>
+              <ShopMap lat={SHOP.lat} lng={SHOP.lng} height={300} />
+            </React.Suspense>
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label={isAr ? 'فتح الموقع في الخرائط' : 'Open in Maps'} className="absolute inset-0 z-[500]" />
+          </div>
+          <div className="p-6 flex flex-col gap-5" style={{ background: '#0f0f10' }}>
+            <div className="flex items-start gap-3">
+              <MapPin className="w-5 h-5 mt-0.5 shrink-0" style={{ color: '#ece8df' }} />
+              <div>
+                <p className="font-semibold" style={{ color: '#ece8df' }}>{address}</p>
+                <p className="mt-1 text-sm" style={{ color: '#a8a398' }}>{t('home.branches.hours')}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="store-btn store-btn-p flex items-center justify-center gap-2 min-h-[50px] font-semibold text-sm">
+                <MapPin className="w-4 h-4" />{isAr ? 'الاتجاهات' : 'Directions'}
+              </a>
+              <a href={`tel:${phone}`} className="store-btn store-btn-s flex items-center justify-center gap-2 min-h-[50px] font-semibold text-sm">
+                <Phone className="w-4 h-4" />{isAr ? 'اتصال' : 'Call'}
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -766,7 +706,7 @@ function Footer() {
   const socials = [
     { href: instagram, icon: Instagram, label: 'Instagram' },
     { href: tiktok, icon: TiktokIcon, label: 'TikTok' },
-    { href: `https://wa.me/${whatsapp}`, icon: MessageCircle, label: 'WhatsApp' },
+    { href: `https://wa.me/${whatsapp}`, icon: WhatsAppIcon, label: 'WhatsApp' },
     ...(twitter ? [{ href: twitter, icon: Twitter, label: 'Twitter' }] : []),
   ];
   const box = { border: '1px solid rgba(236,232,223,.28)', color: '#ece8df' };
@@ -798,10 +738,10 @@ function Footer() {
             <h4 className="text-sm font-bold mb-6" style={{ color: '#ece8df' }}>{t('common.footer.customerServiceTitle')}</h4>
             <div className="flex gap-2">
               <a href={`tel:${phone}`} aria-label={t('common.footer.callUs')} className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}><Phone className="w-4 h-4" /></a>
-              <a href={`sms:${phone}`} aria-label={t('common.footer.textUs')} className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}><Smartphone className="w-4 h-4" /></a>
-              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}><MessageCircle className="w-4 h-4" /></a>
+              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-11 h-11 flex items-center justify-center transition-opacity hover:opacity-80" style={{ background: '#ece8df', color: '#0b0b0c' }}><WhatsAppIcon className="w-5 h-5" /></a>
             </div>
             <p className="mt-4 text-sm" dir="ltr" style={{ color: '#a8a398', textAlign: dir === 'rtl' ? 'right' : 'left' }}>{phone}</p>
+            <p className="mt-2 text-sm" style={{ color: '#a8a398' }}>{dir === 'rtl' ? 'الرياض، حي العزيزية، شارع الشباب' : 'Al Aziziyah, Al Shabab St, Riyadh'}</p>
             {crNumber && (
               <div className="mt-8 flex items-center gap-3">
                 <img src="/images/cr-emblem-white.png" alt="السجل التجاري" className="w-12 h-12 object-contain" loading="lazy" />
@@ -859,14 +799,20 @@ export default function BookingLanding() {
       <ServicesSection />
       <BeforeAfterSection />
       <ReviewsSection />
-      <RequestServiceSection />
       <AboutSection />
       <BrandsSection />
-      <ServiceLinksSection />
-      <AreasSection />
-      <FaqSection />
       <BranchesSection />
+      <FaqSection />
       <TrackOrderSection />
+      <section className="px-6 pb-4" dir={isAr ? 'rtl' : 'ltr'}>
+        <details className="mx-auto" style={{ maxWidth: 760, borderTop: '1px solid rgba(255,255,255,.06)' }}>
+          <summary className="cursor-pointer list-none py-5 text-sm flex items-center justify-between" style={{ color: '#a8a398' }}>
+            <span>{isAr ? 'كل خدماتنا وأحياء التغطية' : 'All services & coverage areas'}</span><span aria-hidden="true">+</span>
+          </summary>
+          <ServiceLinksSection />
+          <AreasSection />
+        </details>
+      </section>
       <Footer />
     </div>
   );

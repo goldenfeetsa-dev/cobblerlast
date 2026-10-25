@@ -1,6 +1,5 @@
 import React from 'react';
 import { Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const steps = [
   { id: 1, label: 'الخدمة' },
@@ -9,33 +8,24 @@ const steps = [
   { id: 4, label: 'التأكيد' },
 ];
 
+// مؤشر خطوات خطّي: خط رفيع يتعبّأ بالعاجي مع التقدّم
 export default function StepIndicator({ currentStep }) {
   return (
-    <div className="flex items-center justify-center gap-0 mb-8">
-      {steps.map((step, idx) => (
-        <React.Fragment key={step.id}>
-          <div className="flex flex-col items-center">
-            <div className={cn(
-              "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all",
-              currentStep > step.id ? "bg-green-500 dark:bg-green-900/60 text-white" :
-              currentStep === step.id ? "bg-amber-500 dark:bg-amber-900/60 text-white shadow-lg shadow-amber-200" :
-              "bg-stone-100 text-stone-400"
-            )}>
-              {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
+    <div className="mb-8" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={currentStep}>
+      <div className="flex gap-2">
+        {steps.map((step) => (
+          <div key={step.id} className="flex-1">
+            <div className="h-[3px] bg-white/10 overflow-hidden">
+              <div className="h-full bg-[#ece8df] transition-all duration-500 ease-out"
+                style={{ width: currentStep >= step.id ? '100%' : '0%' }} />
             </div>
-            <span className={cn(
-              "text-xs mt-1 font-medium",
-              currentStep === step.id ? "text-amber-600 dark:text-amber-400" : "text-stone-400"
-            )}>{step.label}</span>
+            <div className={`mt-2.5 flex items-center gap-1.5 text-xs transition-colors ${currentStep === step.id ? 'text-[#ece8df] font-semibold' : currentStep > step.id ? 'text-[#bdb8ad]' : 'text-[#8d8a82]'}`}>
+              {currentStep > step.id ? <Check className="w-3.5 h-3.5" /> : <span>{step.id}</span>}
+              <span>{step.label}</span>
+            </div>
           </div>
-          {idx < steps.length - 1 && (
-            <div className={cn(
-              "h-0.5 w-12 mb-4 transition-all",
-              currentStep > step.id ? "bg-green-400 dark:bg-green-900" : "bg-stone-200"
-            )} />
-          )}
-        </React.Fragment>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

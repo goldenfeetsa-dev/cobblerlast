@@ -179,3 +179,22 @@ html.noir [class*="border-yellow-"] { border-color: rgba(236,232,223,.3) !import
 .store .md\:grid-cols-2, .store .md\:grid-cols-3, .store .md\:grid-cols-4, .store .lg\:grid-cols-2, .store .lg\:grid-cols-3 { grid-template-columns: minmax(0,1fr) !important; }
 .store [class*="py-32"] { padding-block: 4rem !important; }
 .store [class*="py-20"] { padding-block: 3.5rem !important; }
+
+/* شريط التقييمات المتحرك */
+.review-marquee { overflow: hidden; width: 100%; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.review-track { display: flex; gap: 16px; width: max-content; animation: review-scroll 70s linear infinite; padding-inline: 8px; }
+.review-marquee:hover .review-track, .review-marquee:focus-within .review-track { animation-play-state: paused; }
+.review-card { margin: 0; width: min(78vw, 340px); flex: 0 0 auto; display: flex; flex-direction: column; padding: 24px; background: #131315; border: 1px solid rgba(255,255,255,.07); }
+@keyframes review-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .review-track { animation: none; overflow-x: auto; } .review-marquee { overflow-x: auto; } }
+.shop-map .leaflet-container { font-family: inherit; }
+.store details > section { border-top: 0; }
+
+/* حجز: انتقال هادئ بين الخطوات + ملمس للأزرار */
+.step-in { animation: step-in .45s cubic-bezier(.22,1,.36,1) both; }
+@keyframes step-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+html.noir button:not(:disabled):active { transform: scale(.985); }
+html.noir button, html.noir a { -webkit-tap-highlight-color: transparent; }
+.leaflet-control-attribution { background: rgba(11,11,12,.7) !important; color: #8d8a82 !important; font-size: 10px !important; }
+.leaflet-control-attribution a { color: #a8a398 !important; }
+.leaflet-control-attribution a[href*="leafletjs"], .leaflet-control-attribution .leaflet-attribution-flag { display: none !important; }

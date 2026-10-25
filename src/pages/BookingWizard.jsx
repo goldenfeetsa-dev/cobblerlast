@@ -126,8 +126,8 @@ export default function BookingWizard() {
 
   if (step === 5 && confirmedBooking) {
     return (
-      <div className="min-h-screen bg-stone-50 py-8 px-4" dir={dir}>
-        <div className="max-w-md mx-auto bg-[#131315] rounded-3xl shadow-xl p-8">
+      <div className="min-h-screen bg-[#0b0b0c] py-8 px-4" dir={dir}>
+        <div className="max-w-md mx-auto bg-[#131315] rounded-none shadow-xl p-8">
           <BookingConfirmation booking={confirmedBooking} />
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function BookingWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-8 px-4" dir={dir}>
+    <div className="min-h-screen bg-[#0b0b0c] py-8 px-4" dir={dir}>
       <Helmet>
         <title>{pageSeo('/book', isAr).title}</title>
         <meta name="description" content={pageSeo('/book', isAr).description} />
@@ -151,16 +151,15 @@ export default function BookingWizard() {
       </Helmet>
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <Link to="/booking" className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-700 text-sm">
+            <Link to="/booking" className="inline-flex items-center gap-2 text-[#bdb8ad] hover:text-[#ece8df] text-sm">
               <BackIcon className="w-4 h-4" />
               {t('bookingWizard.backHome')}
             </Link>
             <LanguageSwitcher dark={false} />
           </div>
-          <h1 className="text-2xl font-black text-stone-800 flex items-center justify-center gap-2">
-            <Scissors className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+          <h1 className="text-3xl font-semibold text-[#ece8df]">
             {t('bookingWizard.pageTitle')}
           </h1>
         </div>
@@ -169,7 +168,8 @@ export default function BookingWizard() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Main content */}
-          <div className="md:col-span-2 bg-[#131315] rounded-3xl shadow-sm border border-stone-100 p-6">
+          <div className="md:col-span-2 bg-[#0f0f10] border border-white/[0.08] p-6 md:p-8">
+            <div key={step} className="step-in">
             {step === 1 && (
               <ServiceSelector selectedService={service} onSelect={setService} />
             )}
@@ -182,7 +182,7 @@ export default function BookingWizard() {
                   onTimeChange={setSelectedTime}
                   serviceDuration={service?.duration_minutes || 30}
                 />
-                <div className="border-t border-stone-100 pt-6">
+                <div className="border-t border-white/10 pt-6">
                   <BookingTypeSelector
                     bookingType={bookingType}
                     address={address}
@@ -197,55 +197,57 @@ export default function BookingWizard() {
             {step === 3 && (
               <div className="space-y-6">
                 <CustomerForm data={customer} onChange={(k, v) => setCustomer(p => ({ ...p, [k]: v }))} errors={errors} />
-                <div className="border-t border-stone-100 pt-6">
+                <div className="border-t border-white/10 pt-6">
                   <ItemPhotosUploader photos={itemPhotos} onChange={setItemPhotos} />
                 </div>
               </div>
             )}
             {step === 4 && (
               <div>
-                <h2 className="text-xl font-bold text-stone-800 mb-1">{t('bookingWizard.reviewTitle')}</h2>
-                <p className="text-stone-500 text-sm mb-6">{t('bookingWizard.reviewDesc')}</p>
+                <h2 className="text-xl font-bold text-[#ece8df] mb-1">{t('bookingWizard.reviewTitle')}</h2>
+                <p className="text-[#bdb8ad] text-sm mb-6">{t('bookingWizard.reviewDesc')}</p>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">{t('bookingWizard.service')}</span>
-                    <span className="font-bold text-stone-800">{service?.name_ar}</span>
+                  <div className="flex justify-between py-2 border-b border-white/10">
+                    <span className="text-[#bdb8ad]">{t('bookingWizard.service')}</span>
+                    <span className="font-bold text-[#ece8df]">{service?.name_ar}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">{t('bookingWizard.date')}</span>
-                    <span className="font-bold text-stone-800">
+                  <div className="flex justify-between py-2 border-b border-white/10">
+                    <span className="text-[#bdb8ad]">{t('bookingWizard.date')}</span>
+                    <span className="font-bold text-[#ece8df]">
                       {selectedDate && format(selectedDate, 'yyyy/MM/dd')} — {selectedTime}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">{t('bookingWizard.bookingTypeLabel')}</span>
-                    <span className="font-bold text-stone-800">{bookingType === 'home_visit' ? t('bookingWizard.homeVisit') : t('bookingWizard.inStore')}</span>
+                  <div className="flex justify-between py-2 border-b border-white/10">
+                    <span className="text-[#bdb8ad]">{t('bookingWizard.bookingTypeLabel')}</span>
+                    <span className="font-bold text-[#ece8df]">{bookingType === 'home_visit' ? t('bookingWizard.homeVisit') : t('bookingWizard.inStore')}</span>
                   </div>
                   {address && (
-                    <div className="flex justify-between py-2 border-b border-stone-100">
-                      <span className="text-stone-500">{t('bookingWizard.address')}</span>
-                      <span className="font-bold text-stone-800">{address}</span>
+                    <div className="flex justify-between py-2 border-b border-white/10">
+                      <span className="text-[#bdb8ad]">{t('bookingWizard.address')}</span>
+                      <span className="font-bold text-[#ece8df]">{address}</span>
                     </div>
                   )}
-                  <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">{t('bookingWizard.name')}</span>
-                    <span className="font-bold text-stone-800">{customer.name}</span>
+                  <div className="flex justify-between py-2 border-b border-white/10">
+                    <span className="text-[#bdb8ad]">{t('bookingWizard.name')}</span>
+                    <span className="font-bold text-[#ece8df]">{customer.name}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-stone-100">
-                    <span className="text-stone-500">{t('bookingWizard.phone')}</span>
-                    <span className="font-bold text-stone-800">{customer.phone}</span>
+                  <div className="flex justify-between py-2 border-b border-white/10">
+                    <span className="text-[#bdb8ad]">{t('bookingWizard.phone')}</span>
+                    <span className="font-bold text-[#ece8df]">{customer.phone}</span>
                   </div>
                 </div>
               </div>
             )}
 
+            </div>
+
             {/* Navigation */}
-            <div className="flex justify-between mt-8 pt-6 border-t border-stone-100">
+            <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
               <Button
                 variant="outline"
                 onClick={() => setStep(s => s - 1)}
                 disabled={step === 1}
-                className="gap-2"
+                className="gap-2 rounded-none min-h-[48px] border-white/20 bg-transparent text-[#ece8df] hover:bg-white/10 disabled:opacity-30"
               >
                 <BackIcon className="w-4 h-4" />
                 {t('bookingWizard.prev')}
@@ -254,7 +256,7 @@ export default function BookingWizard() {
                 <Button
                   onClick={handleNext}
                   disabled={!canGoNext()}
-                  className="bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold gap-2"
+                  className="bg-[#ece8df] hover:bg-white text-[#0b0b0c] font-bold gap-2 rounded-none min-h-[48px] px-7 disabled:opacity-30"
                 >
                   {t('bookingWizard.next')}
                   {dir === 'rtl' ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
@@ -263,7 +265,7 @@ export default function BookingWizard() {
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="bg-green-600 dark:bg-green-900/70 hover:bg-green-500 text-white font-bold px-8"
+                  className="bg-[#ece8df] hover:bg-white text-[#0b0b0c] font-bold px-8 rounded-none min-h-[48px]"
                 >
                   {submitting ? t('bookingWizard.booking') : t('bookingWizard.confirm')}
                 </Button>
@@ -277,9 +279,9 @@ export default function BookingWizard() {
               <div className="sticky top-6">
                 <LiveInvoice service={service} bookingType={bookingType} />
                 {selectedDate && selectedTime && (
-                  <div className="mt-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-sm text-right">
-                    <p className="font-bold text-amber-800 dark:text-amber-300 mb-1">{t('bookingWizard.chosenDate')}</p>
-                    <p className="text-amber-700 dark:text-amber-300">{format(selectedDate, 'yyyy/MM/dd')} — {selectedTime}</p>
+                  <div className="mt-4 bg-white/5 border border-white/20 rounded-none p-4 text-sm text-right">
+                    <p className="font-bold text-[#ece8df] mb-1">{t('bookingWizard.chosenDate')}</p>
+                    <p className="text-[#ece8df]">{format(selectedDate, 'yyyy/MM/dd')} — {selectedTime}</p>
                   </div>
                 )}
               </div>

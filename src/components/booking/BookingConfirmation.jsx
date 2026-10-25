@@ -21,54 +21,54 @@ export default function BookingConfirmation({ booking }) {
 
   return (
     <div className="text-center">
-      <div className="w-20 h-20 bg-green-100 dark:bg-green-950/40 rounded-full flex items-center justify-center mx-auto mb-4">
-        <CheckCircle className="w-10 h-10 text-green-500 dark:text-green-400" />
+      <div className="w-20 h-20 border border-white/20 flex items-center justify-center mx-auto mb-4">
+        <CheckCircle className="w-10 h-10 text-[#ece8df]" />
       </div>
-      <h2 className="text-2xl font-black text-stone-800 mb-1">تم الحجز بنجاح! 🎉</h2>
-      <p className="text-stone-500 mb-6">سنتواصل معك لتأكيد الموعد</p>
+      <h2 className="text-2xl font-black text-[#ece8df] mb-1">تم الحجز بنجاح</h2>
+      <p className="text-[#bdb8ad] mb-6">سنتواصل معك لتأكيد الموعد</p>
 
       {/* Booking Number */}
-      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 mb-6 flex items-center justify-between">
+      <div className="bg-white/5 border border-white/20 rounded-none p-4 mb-6 flex items-center justify-between">
         <div className="text-right">
-          <p className="text-xs text-stone-500 mb-0.5">رقم الحجز</p>
-          <p className="text-2xl font-black text-amber-600 dark:text-amber-400 tracking-wider">{booking.booking_number}</p>
+          <p className="text-xs text-[#bdb8ad] mb-0.5">رقم الحجز</p>
+          <p className="text-2xl font-black text-[#ece8df] tracking-wider">{booking.booking_number}</p>
         </div>
-        <button onClick={copyNumber} className="w-10 h-10 bg-white rounded-xl border border-amber-200 dark:border-amber-800 flex items-center justify-center hover:bg-amber-100 transition-colors">
-          <Copy className="w-4 h-4 text-stone-500" />
+        <button onClick={copyNumber} className="w-10 h-10 rounded-none border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
+          <Copy className="w-4 h-4 text-[#bdb8ad]" />
         </button>
       </div>
 
       {/* Details */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-5 text-right space-y-3 mb-6">
+      <div className="bg-[#131315] border border-white/10 rounded-none p-5 text-right space-y-3 mb-6">
         <div className="flex items-center gap-3">
-          <Calendar className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+          <Calendar className="w-4 h-4 text-[#ece8df] flex-shrink-0" />
           <div>
-            <p className="text-xs text-stone-400">الموعد</p>
-            <p className="font-bold text-stone-800 text-sm">
+            <p className="text-xs text-[#8d8a82]">الموعد</p>
+            <p className="font-bold text-[#ece8df] text-sm">
               {booking.booking_date && format(new Date(booking.booking_date), 'EEEE d MMMM yyyy', { locale: ar })} — {booking.booking_time}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Receipt className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+          <Receipt className="w-4 h-4 text-[#ece8df] flex-shrink-0" />
           <div>
-            <p className="text-xs text-stone-400">الخدمة</p>
-            <p className="font-bold text-stone-800 text-sm">{booking.service_name}</p>
+            <p className="text-xs text-[#8d8a82]">الخدمة</p>
+            <p className="font-bold text-[#ece8df] text-sm">{booking.service_name}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {booking.booking_type === 'home_visit' ? <Truck className="w-4 h-4 text-amber-500 dark:text-amber-400" /> : <Store className="w-4 h-4 text-amber-500 dark:text-amber-400" />}
+          {booking.booking_type === 'home_visit' ? <Truck className="w-4 h-4 text-[#ece8df]" /> : <Store className="w-4 h-4 text-[#ece8df]" />}
           <div>
-            <p className="text-xs text-stone-400">نوع الخدمة</p>
-            <p className="font-bold text-stone-800 text-sm">
+            <p className="text-xs text-[#8d8a82]">نوع الخدمة</p>
+            <p className="font-bold text-[#ece8df] text-sm">
               {booking.booking_type === 'home_visit' ? 'توصيل' : 'استلام من المحل'}
               {booking.address && ` — ${booking.address}`}
             </p>
           </div>
         </div>
-        <div className="border-t border-stone-100 pt-3 flex items-center justify-between">
-          <span className="text-stone-500 text-sm">الإجمالي مع الضريبة</span>
-          <span className="text-xl font-black text-amber-600 dark:text-amber-400"><SarAmount value={total} /></span>
+        <div className="border-t border-white/10 pt-3 flex items-center justify-between">
+          <span className="text-[#bdb8ad] text-sm">الإجمالي مع الضريبة</span>
+          <span className="text-xl font-black text-[#ece8df]"><SarAmount value={total} /></span>
         </div>
       </div>
 
@@ -77,7 +77,7 @@ export default function BookingConfirmation({ booking }) {
           <Button variant="outline" className="w-full">تتبع حجزك</Button>
         </Link>
         <Link to="/" className="flex-1">
-          <Button className="w-full bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold">
+          <Button className="w-full bg-[#ece8df] hover:bg-white text-[#0b0b0c] font-bold rounded-none">
             العودة للرئيسية
           </Button>
         </Link>

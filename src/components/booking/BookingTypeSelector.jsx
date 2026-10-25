@@ -9,37 +9,37 @@ const DELIVERY_FEE = 25;
 export default function BookingTypeSelector({ bookingType, address, location, onTypeChange, onAddressChange, onLocationChange }) {
   return (
     <div className="mb-6">
-      <p className="text-sm font-medium text-stone-600 mb-3">نوع الخدمة</p>
+      <p className="text-sm font-medium text-[#bdb8ad] mb-3">نوع الخدمة</p>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <button
           onClick={() => onTypeChange('in_store')}
           className={cn(
-            "p-4 rounded-xl border-2 text-center transition-all",
+            "p-4 rounded-none border-2 text-center transition-all",
             bookingType === 'in_store'
-              ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30"
-              : "border-stone-200 hover:border-amber-200"
+              ? "border-[#ece8df] bg-[#ece8df]/10"
+              : "border-white/10 hover:border-white/30"
           )}
         >
-          <Store className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'in_store' ? "text-amber-500 dark:text-amber-400" : "text-stone-400")} />
-          <p className={cn("font-bold text-sm", bookingType === 'in_store' ? "text-amber-700 dark:text-amber-300" : "text-stone-600")}>
+          <Store className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'in_store' ? "text-[#ece8df]" : "text-[#8d8a82]")} />
+          <p className={cn("font-bold text-sm", bookingType === 'in_store' ? "text-[#ece8df]" : "text-[#bdb8ad]")}>
             استلام من المحل
           </p>
-          <p className="text-xs text-stone-400 mt-0.5">مجاني</p>
+          <p className="text-xs text-[#8d8a82] mt-0.5">مجاني</p>
         </button>
         <button
           onClick={() => onTypeChange('home_visit')}
           className={cn(
-            "p-4 rounded-xl border-2 text-center transition-all",
+            "p-4 rounded-none border-2 text-center transition-all",
             bookingType === 'home_visit'
-              ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30"
-              : "border-stone-200 hover:border-amber-200"
+              ? "border-[#ece8df] bg-[#ece8df]/10"
+              : "border-white/10 hover:border-white/30"
           )}
         >
-          <Truck className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'home_visit' ? "text-amber-500 dark:text-amber-400" : "text-stone-400")} />
-          <p className={cn("font-bold text-sm", bookingType === 'home_visit' ? "text-amber-700 dark:text-amber-300" : "text-stone-600")}>
+          <Truck className={cn("w-7 h-7 mx-auto mb-2", bookingType === 'home_visit' ? "text-[#ece8df]" : "text-[#8d8a82]")} />
+          <p className={cn("font-bold text-sm", bookingType === 'home_visit' ? "text-[#ece8df]" : "text-[#bdb8ad]")}>
             توصيل
           </p>
-          <p className="text-xs text-stone-400 mt-0.5">+<SarAmount value={DELIVERY_FEE} /></p>
+          <p className="text-xs text-[#8d8a82] mt-0.5">+<SarAmount value={DELIVERY_FEE} /></p>
         </button>
       </div>
 

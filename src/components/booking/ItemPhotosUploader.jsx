@@ -32,15 +32,15 @@ export default function ItemPhotosUploader({ photos = [], onChange }) {
 
   return (
     <div>
-      <label className="text-sm font-medium text-stone-700 flex items-center gap-2 mb-3">
-        <Camera className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+      <label className="text-sm font-medium text-[#ece8df] flex items-center gap-2 mb-3">
+        <Camera className="w-4 h-4 text-[#ece8df]" />
         صور لنا أغراضك عشان نضبطك
-        <span className="text-xs text-stone-400 font-normal">(حتى {MAX_PHOTOS} صور)</span>
+        <span className="text-xs text-[#8d8a82] font-normal">(حتى {MAX_PHOTOS} صور)</span>
       </label>
 
       <div className="grid grid-cols-3 gap-3">
         {photos.map((url, idx) => (
-          <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border-2 border-stone-200 group">
+          <div key={idx} className="relative aspect-square rounded-none overflow-hidden border-2 border-white/10 group">
             <img src={url} alt={`قطعة ${idx + 1}`} className="w-full h-full object-cover" />
             <button
               type="button"
@@ -53,13 +53,13 @@ export default function ItemPhotosUploader({ photos = [], onChange }) {
         ))}
 
         {photos.length < MAX_PHOTOS && (
-          <label className={`aspect-square rounded-xl border-2 border-dashed border-stone-300 hover:border-amber-400 hover:bg-amber-50 flex flex-col items-center justify-center cursor-pointer transition-all ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
+          <label className={`aspect-square rounded-none border-2 border-dashed border-white/20 hover:border-white/20 hover:bg-white/5 flex flex-col items-center justify-center cursor-pointer transition-all ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
             {uploading ? (
-              <Loader2 className="w-7 h-7 text-amber-500 dark:text-amber-400 animate-spin" />
+              <Loader2 className="w-7 h-7 text-[#ece8df] animate-spin" />
             ) : (
               <>
-                <ImagePlus className="w-7 h-7 text-stone-400 mb-1" />
-                <span className="text-xs text-stone-400">أضف صورة</span>
+                <ImagePlus className="w-7 h-7 text-[#8d8a82] mb-1" />
+                <span className="text-xs text-[#8d8a82]">أضف صورة</span>
               </>
             )}
             <input
@@ -74,7 +74,7 @@ export default function ItemPhotosUploader({ photos = [], onChange }) {
       </div>
 
       {photos.length > 0 && (
-        <p className="text-xs text-stone-400 mt-2 text-right">
+        <p className="text-xs text-[#8d8a82] mt-2 text-right">
           ✓ تم رفع {photos.length} {photos.length === 1 ? 'صورة' : 'صور'} — ستظهر للفني قبل وصول قطعتك
         </p>
       )}

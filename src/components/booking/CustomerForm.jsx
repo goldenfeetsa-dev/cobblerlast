@@ -8,8 +8,8 @@ export default function CustomerForm({ data, onChange, errors = {} }) {
     const Icon = icon;
     return (
       <div>
-        <label className="text-sm font-medium text-stone-700 mb-1.5 flex items-center gap-1.5">
-          <Icon className="w-4 h-4 text-stone-400" />
+        <label className="text-sm font-medium text-[#ece8df] mb-1.5 flex items-center gap-1.5">
+          <Icon className="w-4 h-4 text-[#8d8a82]" />
           {label}
           {['name', 'phone'].includes(key) && <span className="text-red-400 dark:text-red-300">*</span>}
         </label>
@@ -28,15 +28,15 @@ export default function CustomerForm({ data, onChange, errors = {} }) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-stone-800 mb-1">بياناتك</h2>
-      <p className="text-stone-500 text-sm mb-6">نحتاج بياناتك لتأكيد الحجز</p>
+      <h2 className="text-xl font-bold text-[#ece8df] mb-1">بياناتك</h2>
+      <p className="text-[#bdb8ad] text-sm mb-6">نحتاج بياناتك لتأكيد الحجز</p>
       <div className="space-y-4">
         {field('name', 'الاسم الكامل', User, 'أدخل اسمك الكامل')}
         {field('phone', 'رقم الجوال', Phone, '05XXXXXXXX', 'tel')}
         {field('email', 'البريد الإلكتروني (اختياري)', Mail, 'email@example.com', 'email')}
         <div>
-          <label className="text-sm font-medium text-stone-700 mb-1.5 flex items-center gap-1.5">
-            <MessageSquare className="w-4 h-4 text-stone-400" />
+          <label className="text-sm font-medium text-[#ece8df] mb-1.5 flex items-center gap-1.5">
+            <MessageSquare className="w-4 h-4 text-[#8d8a82]" />
             ملاحظات إضافية (اختياري)
           </label>
           <textarea
@@ -45,7 +45,7 @@ export default function CustomerForm({ data, onChange, errors = {} }) {
             placeholder="أي تفاصيل إضافية عن الغرض أو الإصلاح المطلوب..."
             rows={3}
             dir="rtl"
-            className="w-full text-right rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+            className="w-full text-right rounded-none border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
           />
         </div>
       </div>
