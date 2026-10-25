@@ -49,15 +49,15 @@ function TiktokIcon({ className, style }) {
 // كل قيمة هنا مطابقة حرفياً لـ tokens.json حتى تكون هذه الصفحة (أهم
 // صفحة بالموقع) متطابقة مع باقي التطبيق بدل أن تكون بمعزل عنه بألوان
 // قديمة سابقة على اعتماد الشعار الرسمي.
-const G   = '#a9803f';   // brand-brass — للخلفيات والحدود والتدرّجات الكبيرة فقط (وليس النص)
-const GT  = '#5f341a';   // primary — حبر الشعار الرسمي بالضبط (تم أخذ عيّنة منه برمجياً)،
+const G   = '#ece8df';   // brand-brass — للخلفيات والحدود والتدرّجات الكبيرة فقط (وليس النص)
+const GT  = '#ece8df';   // primary — حبر الشعار الرسمي بالضبط (تم أخذ عيّنة منه برمجياً)،
                           // يُستخدم للنص والأيقونات حصراً (brass لا يكفي تباينه للنص الصغير)
-const D   = '#ead9c2';   // secondary — كريمي أغمق شوي، لتدرّجات بسيطة
-const T   = '#24140b';   // foreground — النص الأساسي الداكن في كل الموقع
-const GB  = 'rgba(169,128,63,'; // نفس G (brand-brass) بصيغة rgba قابلة لإضافة شفافية
-const GL  = '#d4ab6d';   // تدرّج ذهبي/برونزي أفتح (brand-brass في الوضع الداكن)
-const BG1 = '#e6d9bf';   // background — بيج واضح (كان قريب جداً من الأبيض)
-const BG2 = '#dcccac';   // قسم متبادل أغمق شوي، لإحساس بصري بالفصل بين الأقسام
+const D   = '#131315';   // secondary — كريمي أغمق شوي، لتدرّجات بسيطة
+const T   = '#ece8df';   // foreground — النص الأساسي الداكن في كل الموقع
+const GB  = 'rgba(236,232,223,'; // نفس G (brand-brass) بصيغة rgba قابلة لإضافة شفافية
+const GL  = '#cfc9bb';   // تدرّج ذهبي/برونزي أفتح (brand-brass في الوضع الداكن)
+const BG1 = '#0b0b0c';   // background — بيج واضح (كان قريب جداً من الأبيض)
+const BG2 = '#131315';   // قسم متبادل أغمق شوي، لإحساس بصري بالفصل بين الأقسام
 
 // ── FadeIn ────────────────────────────────────────────────────────
 function FadeIn({ children, delay = 0, className = '', x = 0, y = 32 }) {
@@ -157,11 +157,11 @@ function Navbar() {
     <motion.nav className="fixed top-0 inset-x-0 z-50 px-6"
       initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
       <div className={`max-w-7xl mx-auto mt-3 rounded-2xl px-5 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-2xl' : ''}`}
-        style={{ background: scrolled ? 'rgba(244,241,234,0.78)' : 'rgba(244,241,234,0.45)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', border: `1px solid ${scrolled ? GB + '0.25)' : GB + '0.1)'}`, boxShadow: scrolled ? `0 8px 32px rgba(62,39,35,0.08), inset 0 1px 0 rgba(255,255,255,0.5)` : 'inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+        style={{ background: scrolled ? 'rgba(11,11,12,0.78)' : 'rgba(11,11,12,0.45)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', border: `1px solid ${scrolled ? GB + '0.25)' : GB + '0.1)'}`, boxShadow: scrolled ? `0 8px 32px rgba(62,39,35,0.08), inset 0 1px 0 rgba(255,255,255,0.5)` : 'inset 0 1px 0 rgba(255,255,255,0.3)' }}>
         <Link to="/" dir={dir}>
           <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
             <img
-              src="/images/cobblers-official-mark.png"
+              src="/images/cobblers-official-mark-white.png"
               alt={t('common.brandShort')}
               className="w-8 h-8 rounded-lg object-contain"
             />
@@ -171,8 +171,8 @@ function Navbar() {
 
         <div className="hidden md:flex items-center gap-6" dir={dir}>
           {links.map(l => l.to
-            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#5B4A3E' }}>{l.label}</Link>
-            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#5B4A3E' }}>{l.label}</a>
+            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#bdb8ad' }}>{l.label}</Link>
+            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#bdb8ad' }}>{l.label}</a>
           )}
         </div>
 
@@ -212,14 +212,14 @@ function Navbar() {
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="md:hidden max-w-7xl mx-auto mt-2 rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(244,241,234,0.96)', backdropFilter: 'blur(20px)', border: `1px solid ${GB}0.15)` }}
+            style={{ background: 'rgba(11,11,12,0.96)', backdropFilter: 'blur(20px)', border: `1px solid ${GB}0.15)` }}
           >
             <div className="p-4 flex flex-col gap-1" dir={dir}>
               {links.map(l => l.to
                 ? <Link key={l.label} to={l.href} onClick={() => setMobileOpen(false)}
-                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(36,20,11,0.06)]" style={{ color: T }}>{l.label}</Link>
+                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(236,232,223,0.06)]" style={{ color: T }}>{l.label}</Link>
                 : <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)}
-                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(36,20,11,0.06)]" style={{ color: T }}>{l.label}</a>
+                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(236,232,223,0.06)]" style={{ color: T }}>{l.label}</a>
               )}
               <Link to="/my-bookings" onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-2 text-sm font-bold py-3 px-3 rounded-xl mt-1"
@@ -240,433 +240,52 @@ function Navbar() {
   );
 }
 
-// ── أيقونات SVG أصلية لبطاقات "وش عندنا" (بدون أي إيموجي) ───────────
-function ToolboxIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <rect x="3" y="9" width="18" height="10" rx="2"></rect>
-      <path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"></path>
-      <line x1="3" y1="13" x2="21" y2="13"></line>
-      <line x1="12" y1="11" x2="12" y2="15"></line>
-    </svg>
-  );
-}
-function GavelIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <rect x="8.5" y="2.5" width="5" height="9" rx="1" transform="rotate(45 11 7)"></rect>
-      <line x1="7" y1="12.5" x2="3" y2="16.5"></line>
-      <line x1="9.5" y1="15" x2="5.5" y2="19"></line>
-      <line x1="3" y1="21" x2="9" y2="21"></line>
-    </svg>
-  );
-}
-function WrenchIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-    </svg>
-  );
-}
-function MapPinIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-      <circle cx="12" cy="10" r="3"></circle>
-    </svg>
-  );
-}
-
-// ── وش عندنا — ٤ أبواب رئيسية تُرى مباشرة بالصفحة الرئيسية بدون فتح
-// أي قائمة (نفس أسلوب "180 درجة")، مباشرة تحت الهيرو ────────────────
-function PillarsSection() {
-  const { t, dir, lang } = useLanguage();
-  const isAr = lang === 'ar';
-  const PILLARS = [
-    {
-      Icon: ToolboxIcon, tone: D, toneText: T,
-      title: isAr ? 'دكّة الإسكافي' : "Cobbler's Bench",
-      desc: isAr ? 'مستلزمات ورشة وقطع مجدّدة بسعر ثابت' : 'Workshop supplies & refurbished pieces, fixed price',
-      cta: isAr ? 'تصفّح المستلزمات' : 'Browse items', to: '/shop', variant: 'outline',
-    },
-    {
-      Icon: GavelIcon, tone: G, toneText: '#24140b',
-      title: isAr ? 'سوق المزاد' : 'Auction Market',
-      desc: isAr ? 'مزايدة مباشرة على قطع جلدية فاخرة نادرة' : 'Live bidding on rare refurbished leather pieces',
-      cta: isAr ? 'ادخل المزاد' : 'Enter auction', to: '/auction', variant: 'brass',
-    },
-    {
-      Icon: WrenchIcon, tone: '#1f4d38', toneText: '#f7f3ea',
-      title: isAr ? 'احجز إصلاح' : 'Book a Repair',
-      desc: isAr ? 'ترميم وتلميع وتبديل نعال لأرقى الماركات' : 'Restoration, polishing & resoling for top brands',
-      cta: isAr ? 'احجز الآن' : 'Book now', to: '/book', variant: 'primary',
-    },
-    {
-      Icon: MapPinIcon, tone: BG2, toneText: T,
-      title: isAr ? 'تتبّع طلبك' : 'Track your order',
-      desc: isAr ? 'اعرف وين وصلت قطعتك بالضبط — لحظة بلحظة' : 'Know exactly where your item is, in real time',
-      cta: isAr ? 'تتبّع الآن' : 'Track now', to: '#track', variant: 'outline',
-    },
-  ];
-
-  return (
-    <section className="py-20 px-6" style={{ background: BG1 }} dir={dir}>
-      <div className="max-w-6xl mx-auto">
-        <FadeIn className="text-center mb-12">
-          <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: GT }}>
-            {isAr ? 'وش عندنا' : "WHAT WE OFFER"}
-          </p>
-          <h2 className="font-display text-3xl md:text-4xl font-black" style={{ color: T }}>
-            {isAr ? 'كل شي بمكان واحد' : 'Everything, in one place'}
-          </h2>
-        </FadeIn>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {PILLARS.map((p, i) => {
-            const isAnchor = p.to.startsWith('#');
-            const Wrapper = isAnchor ? 'a' : Link;
-            const wrapperProps = isAnchor ? { href: p.to } : { to: p.to };
-            return (
-              <FadeIn key={p.title} delay={i * 0.08}>
-                <Wrapper {...wrapperProps} className="block h-full">
-                  <motion.div whileHover={{ y: -6 }} transition={{ duration: 0.3 }}
-                    className="h-full rounded-2xl p-6 flex flex-col"
-                    style={{ background: 'rgba(36,20,11,0.03)', border: `1px solid ${GB}0.1)` }}>
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: p.tone, color: p.toneText }}>
-                      <p.Icon style={{ width: 22, height: 22 }} />
-                    </div>
-                    <h3 className="font-black text-base mb-1.5" style={{ color: T }}>{p.title}</h3>
-                    <p className="text-xs leading-relaxed mb-5 flex-1" style={{ color: '#6E5C4E' }}>{p.desc}</p>
-                    <span className="text-xs font-bold px-4 py-2 rounded-full text-center w-fit"
-                      style={{
-                        background: p.variant === 'brass' ? `linear-gradient(135deg, ${G}, ${GL})` : p.variant === 'primary' ? GT : 'transparent',
-                        color: p.variant === 'outline' ? GT : p.variant === 'primary' ? '#fbf3e9' : '#24140b',
-                        border: p.variant === 'outline' ? `1px solid ${GB}0.3)` : 'none',
-                      }}>
-                      {p.cta}
-                    </span>
-                  </motion.div>
-                </Wrapper>
-              </FadeIn>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ── Hero ─────────────────────────────────────────────────────────
 function HeroSection() {
   const { t, dir, lang } = useLanguage();
-  const words = t('home.hero.words');
-  const [wordIdx, setWordIdx] = useState(0);
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 600], [0, 160]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
-
-  useEffect(() => {
-    setWordIdx(0);
-    const t2 = setInterval(() => setWordIdx(p => (p + 1) % words.length), 2200);
-    return () => clearInterval(t2);
-  }, [lang]);
-
-  const stats = t('home.hero.stats');
-  const statIcons = [Award, Heart, Shield];
+  const isAr = lang === 'ar';
   const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
-
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 30% 20%, #FBF9F5 0%, #f6efe4 50%, #EDE4D0 100%)' }}>
-
-      {/* Animated orb — تم تخفيفها من 3 دوائر متحركة لدائرة واحدة لتقليل العبء على الرسوميات */}
-      <GlowOrb x="75%" y="35%" size={500} color="rgba(201,168,76,0.10)" blur={130} />
-
-      {/* Grid pattern */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `linear-gradient(${GB}0.04) 1px, transparent 1px), linear-gradient(90deg, ${GB}0.04) 1px, transparent 1px)`,
-        backgroundSize: '60px 60px',
-        maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 80%)'
-      }} />
-
-      {/* Diagonal decorative lines */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(5)].map((_, i) => (
-          <motion.div key={i} className="absolute"
-            style={{ left: `${-10 + i * 28}%`, top: 0, bottom: 0, width: 1, background: `linear-gradient(180deg, transparent, ${GB}0.06), transparent)`, transform: 'skewX(-15deg)' }}
-            initial={{ scaleY: 0, originY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 1.5, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }} />
-        ))}
-      </div>
-
-      <motion.div style={{ y: heroY, opacity: heroOpacity }}
-        className="relative z-10 max-w-7xl mx-auto px-6 w-full pt-24 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center min-h-[80vh]" dir={dir}>
-
-          {/* ── Left: Text ── */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Eyebrow */}
-            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}
-              className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-bold tracking-widest"
-              style={{ background: GB + '0.08)', border: `1px solid ${GB}0.25)`, color: GT }}>
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
-                <Sparkles className="w-3.5 h-3.5" />
-              </motion.div>
-              {t('home.hero.eyebrow')}
-            </motion.div>
-
-            {/* Main headline */}
-            <div>
-              <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }}
-                className="font-display text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2" style={{ color: T }}>
-                {t('home.hero.titleStart')}
-              </motion.h1>
-
-              {/* Animated word */}
-              <div className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1] mb-2 overflow-hidden" style={{ height: '1.15em' }}>
-                <AnimatePresence mode="wait">
-                  <motion.span key={lang + wordIdx}
-                    initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '-100%', opacity: 0 }}
-                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                    className="block" style={{ color: GT }}>
-                    {words[wordIdx]}
-                  </motion.span>
-                </AnimatePresence>
-              </div>
-
-              {t('home.hero.titleEnd') && (
-                <motion.h1 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }}
-                  className="font-display text-5xl md:text-6xl xl:text-7xl font-black leading-[1.1]" style={{ color: T }}>
-                  {t('home.hero.titleEnd')}
-                </motion.h1>
-              )}
-
-              {/* عنوان فرعي H2 غني بالكلمات المفتاحية (تصليح أحذية/شنط بالرياض) —
-                  يبقي العنوان الرئيسي H1 شاعرياً/العلامة التجارية كما هو، بينما
-                  يعطي جوجل نص واضح ومباشر يطابق ما يبحث عنه الناس فعلياً. */}
-              <h2 className="text-sm md:text-base font-semibold mt-3" style={{ color: '#5B4A3E' }}>
-                {t('home.hero.seoSubtitle')}
-              </h2>
+    <section className="relative overflow-hidden" style={{ background: '#0b0b0c', minHeight: '100svh' }}>
+      <img src="/images/gallery/bag-after.png" alt={isAr ? 'حقيبة جلدية بعد الترميم في ورشة إبرة وخيط الإسكافي' : 'Leather handbag after restoration at Ebra & Khait Cobbler'}
+        className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'grayscale(.25) contrast(1.08)' }} fetchpriority="high" />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,6,.55) 0%, rgba(5,5,6,.45) 40%, rgba(5,5,6,.82) 100%)' }} />
+      <div className="relative z-10 max-w-7xl mx-auto px-6 flex flex-col justify-end" dir={dir} style={{ minHeight: '100svh', paddingTop: 120, paddingBottom: 72 }}>
+        <div className="flex flex-wrap items-end justify-between gap-10">
+          <div className="max-w-sm space-y-6">
+            <p className="text-base md:text-lg leading-loose font-light" style={{ color: '#cfcac0' }}>{t('home.hero.desc')}</p>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/book" className="inline-flex items-center gap-2 px-8 h-13 py-3.5 font-bold text-sm md:text-base transition-colors"
+                style={{ background: '#ece8df', color: '#0b0b0c', border: '1px solid #ece8df' }}>
+                {t('home.hero.ctaPrimary')}<ArrowIcon className="w-4 h-4" />
+              </Link>
+              <Link to="/shop" className="inline-flex items-center gap-2 px-8 py-3.5 font-bold text-sm md:text-base transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]"
+                style={{ border: '1px solid #ece8df', color: '#ece8df' }}>
+                {t('home.hero.ctaSecondary')}
+              </Link>
             </div>
-
-            {/* Desc */}
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-base md:text-lg leading-relaxed max-w-lg" style={{ color: '#5B4A3E' }}>
-              {t('home.hero.desc')}
-            </motion.p>
-
-            {/* Feature pills */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.5 }}
-              className="flex flex-wrap gap-2">
-              {t('home.hero.pills').map((p, i) => (
-                <motion.span key={i} whileHover={{ scale: 1.05, borderColor: G }}
-                  className="text-xs px-3.5 py-1.5 rounded-full font-medium transition-all cursor-default"
-                  style={{ background: GB + '0.05)', border: `1px solid ${GB}0.15)`, color: '#5B4A3E' }}>{p}</motion.span>
-              ))}
-            </motion.div>
-
-            {/* CTA Buttons */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.6 }}
-              className="flex flex-wrap gap-4 items-center">
-              <Link to="/book">
-                <MagneticBtn className="group relative px-9 py-4 rounded-2xl font-black text-base text-black overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, ${G}, ${GL})`, boxShadow: `0 16px 50px ${GB}0.45)` }}>
-                  <span className="relative z-10 flex items-center gap-2">
-                    {t('home.hero.ctaPrimary')}
-                    <motion.div animate={{ x: dir === 'rtl' ? [0, 4, 0] : [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                      <ArrowIcon className="w-4 h-4" />
-                    </motion.div>
-                  </span>
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: `linear-gradient(135deg, ${GL}, ${G})` }} />
-                </MagneticBtn>
-              </Link>
-
-              <Link to="/shop">
-                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                  className="flex items-center gap-2.5 px-7 py-4 rounded-2xl font-bold text-sm transition-all"
-                  style={{ border: `1px solid ${GB}0.2)`, color: T, background: GB + '0.04)' }}>
-                  <ShoppingBag className="w-4 h-4" style={{ color: GT }} />
-                  {t('home.hero.ctaSecondary')}
-                </motion.div>
-              </Link>
-            </motion.div>
-
-            {/* Stats Row */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.75 }}
-              className="flex gap-8 pt-6 border-t" style={{ borderColor: GB + '0.1)' }}>
-              {stats.map((s, i) => {
-                const Icon = statIcons[i];
-                return (
-                  <div key={i} className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 shrink-0" style={{ color: GT }} />
-                    <div>
-                      <div className="text-xl font-black" style={{ color: GT }}>
-                        <AnimCounter target={s.num} />
-                      </div>
-                      <div className="text-xs" style={{ color: '#6E5C4E' }}>{s.label}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </motion.div>
           </div>
-
-          {/* ── Right: 3D Visual Card Stack ── */}
-          <motion.div initial={{ opacity: 0, x: -60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.1, delay: 0.3 }}
-            className="lg:col-span-2 relative flex items-center justify-center" style={{ height: 520 }}>
-
-            {/* Card stack */}
-            {[
-              { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', alt: 'إصلاح وترميم أحذية جلدية فاخرة في الرياض', rotate: -8, z: 0, x: -20, y: 20, scale: 0.88 },
-              { src: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', alt: 'تجديد وتنظيف حقائب جلدية فاخرة', rotate: 4, z: 1, x: 15, y: 10, scale: 0.93 },
-              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', alt: 'ورشة إبرة وخيط الإسكافي المتخصصة في الرياض', priority: true, rotate: 0, z: 2, x: 0, y: 0, scale: 1 },
-            ].map((card, i) => (
-              <motion.div key={i} className="absolute rounded-3xl overflow-hidden shadow-2xl"
-                style={{ width: 280, height: 360, zIndex: card.z, border: `1px solid ${GB}${0.08 + i * 0.08})` }}
-                initial={{ rotate: card.rotate, x: card.x, y: card.y, scale: card.scale }}
-                whileHover={i === 2 ? { scale: 1.03, rotate: -1, y: -8 } : {}}
-                animate={{
-                  rotate: card.rotate,
-                  x: card.x,
-                  y: [card.y, card.y - 6, card.y],
-                  scale: card.scale
-                }}
-                transition={{ y: { duration: 3 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.7 } }}>
-                <img src={card.src} alt={card.alt} className="w-full h-full object-cover" />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,5,0,0.7) 0%, transparent 60%)' }} />
-              </motion.div>
-            ))}
-
-            {/* Floating badge — top right */}
-            <motion.div
-              animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-6 end-2 z-20 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs"
-              style={{ background: 'rgba(244,241,234,0.72)', border: `1px solid ${GB}0.35)`, backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', boxShadow: `0 8px 30px ${GB}0.2), inset 0 1px 0 rgba(255,255,255,0.5)` }}>
-              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>
-                <CheckCircle className="w-3.5 h-3.5 text-black" />
-              </div>
-              <div>
-                <div className="font-black" style={{ color: T }}>{t('home.hero.badgeQuality')}</div>
-                <div style={{ color: '#6E5C4E' }}>{t('home.hero.badgeQualitySub')}</div>
-              </div>
-            </motion.div>
-
-            {/* Floating badge — bottom left */}
-            <motion.div
-              animate={{ y: [0, 10, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute bottom-10 start-0 z-20 px-4 py-3 rounded-2xl"
-              style={{ background: 'rgba(244,241,234,0.72)', border: `1px solid ${GB}0.28)`, backdropFilter: 'blur(20px) saturate(160%)', WebkitBackdropFilter: 'blur(20px) saturate(160%)', boxShadow: `0 8px 24px ${GB}0.15), inset 0 1px 0 rgba(255,255,255,0.5)` }}>
-              <div className="flex items-center gap-2 mb-1.5">
-                {[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-current" style={{ color: GT }} />)}
-              </div>
-              <div className="text-xs font-black" style={{ color: T }}>{t('home.hero.badgeRating')}</div>
-              <div className="text-xs" style={{ color: '#6E5C4E' }}>{t('home.hero.badgeRatingSub')}</div>
-            </motion.div>
-
-            {/* Live indicator */}
-            <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute top-1/2 -start-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-              style={{ background: 'rgba(244,241,234,0.9)', border: `1px solid rgba(50,200,100,0.3)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-              <motion.div className="w-2 h-2 rounded-full" style={{ background: '#22c55e' }}
-                animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
-              <span style={{ color: '#22c55e', fontWeight: 700 }}>{t('home.hero.liveNow')}</span>
-            </motion.div>
-
-            {/* Gold glow under cards */}
-            <div className="absolute bottom-0 start-1/2 -translate-x-1/2 w-2/3 h-20 blur-3xl rounded-full pointer-events-none"
-              style={{ background: `${GB}0.2)` }} />
-          </motion.div>
+          <div>
+            <h1 className="font-display font-black leading-[1.08] text-white" style={{ fontSize: 'clamp(2.6rem, 8.5vw, 8rem)', letterSpacing: '-.02em' }}>
+              {t('home.hero.titleStart')}{' '}<span style={{ color: '#ece8df' }}>{t('home.hero.titleEnd')}</span>
+            </h1>
+            <h2 className="mt-4 text-sm md:text-base font-light tracking-wide" style={{ color: '#bdb8ad' }}>{t('home.hero.seoSubtitle')}</h2>
+          </div>
         </div>
-      </motion.div>
-
-      {/* Scroll hint */}
-      <div className="absolute bottom-8 start-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{ color: '#8A7969' }}>
-        <span className="text-xs tracking-widest">{t('home.hero.scrollHint')}</span>
-        <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
-          <ChevronDown className="w-5 h-5" />
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-// ── Scroll-driven Craft Motion ───────────────────────────────────
-// المشهد لا يعمل كفيديو: كل حركة مرتبطة مباشرة بنسبة نزول المستخدم.
-function CraftMotionSection() {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
-  const shoeY = useTransform(scrollYProgress, [0, .18, .42, .68, 1], [80, 10, -5, -20, -35]);
-  const shoeScale = useTransform(scrollYProgress, [0, .18, .55, 1], [.72, .9, 1.04, 1]);
-  const shoeRotate = useTransform(scrollYProgress, [0, .3, .62, 1], [-7, -2, 3, 0]);
-  const shoeX = useTransform(scrollYProgress, [0, .5, 1], [0, 18, 0]);
-  const needleX = useTransform(scrollYProgress, [0, .18, .35, .55, .75, 1], [180, 110, 30, -35, -105, -160]);
-  const needleY = useTransform(scrollYProgress, [0, .18, .35, .55, .75, 1], [-80, -15, 55, -5, 45, 0]);
-  const needleRotate = useTransform(scrollYProgress, [0, .2, .4, .6, .8, 1], [55, 25, -12, 18, -18, -38]);
-  const threadPath = useTransform(scrollYProgress, [0, .08, .18, .3, .42, .55, .68, .82, 1], [0, 8, 18, 32, 47, 62, 76, 90, 100]);
-  const glow = useTransform(scrollYProgress, [0, .2, .45, .7, 1], [0.08, .25, .5, .35, .7]);
-  const textOpacity = useTransform(scrollYProgress, [.72, .84, 1], [0, 1, 1]);
-  const textY = useTransform(scrollYProgress, [.72, .9, 1], [35, 0, -5]);
-
-  return (
-    <section ref={ref} className="relative h-[240vh]" style={{ background: '#120C08' }} dir="rtl">
-      <div className="sticky top-0 h-screen overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 opacity-40" style={{ backgroundImage: `linear-gradient(rgba(169,128,63,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(169,128,63,.045) 1px, transparent 1px)`, backgroundSize: '70px 70px' }} />
-        <motion.div className="absolute w-[55vw] h-[55vw] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(169,128,63,.18), transparent 65%)', opacity: glow, filter: 'blur(28px)' }} />
-
-        <div className="relative w-full max-w-6xl h-full mx-auto px-6 flex items-center justify-center">
-          <div className="absolute top-[14%] text-center z-30 pointer-events-none">
-            <motion.p style={{ opacity: useTransform(scrollYProgress, [0,.18], [1,0]) }} className="text-[10px] tracking-[.45em] font-bold" >CRAFTED BY PRECISION</motion.p>
-            <motion.h2 style={{ opacity: useTransform(scrollYProgress, [0,.22], [1,0]), y: useTransform(scrollYProgress, [0,.22], [0,-30]) }} className="font-display text-3xl md:text-5xl font-black mt-3 text-[#E8DEC8]">الصنعة تبدأ من خيط</motion.h2>
-          </div>
-
-          <motion.div style={{ x: shoeX, y: shoeY, scale: shoeScale, rotate: shoeRotate }} className="relative z-10 w-[min(62vw,620px)] aspect-[1.35/1] flex items-center justify-center">
-            <div className="absolute inset-x-[10%] bottom-[5%] h-[18%] rounded-full bg-black/70 blur-2xl" />
-            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=90" alt="حذاء يُخاط بعناية" className="relative w-full h-full object-contain drop-shadow-[0_35px_45px_rgba(0,0,0,.7)]" />
-            <motion.div className="absolute -inset-8 rounded-full pointer-events-none" style={{ boxShadow: '0 0 90px rgba(169,128,63,.35)', opacity: glow }} />
-          </motion.div>
-
-          {/* الإبرة تتحرك مع الـscroll وتخترق مسار الخياطة بصرياً */}
-          <motion.div style={{ x: needleX, y: needleY, rotate: needleRotate }} className="absolute z-30 pointer-events-none w-32 h-10 md:w-44 md:h-12">
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[88%] h-[3px] rounded-full bg-gradient-to-l from-[#f5d78d] via-[#a9803f] to-[#6d4e1f] shadow-[0_0_12px_rgba(169,128,63,.9)]" />
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border border-[#E8DEC8] shadow-[0_0_14px_rgba(169,128,63,.8)]" />
-            <div className="absolute left-5 top-1/2 w-2 h-2 -translate-y-1/2 rounded-full bg-[#F5D78D]" />
-          </motion.div>
-
-          {/* خيط SVG طويل؛ strokeDashoffset يتقدم مع النزول */}
-          <svg className="absolute inset-0 w-full h-full z-20 pointer-events-none" viewBox="0 0 1200 800" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="goldThread" x1="0" x2="1"><stop offset="0" stopColor="#5f341a"/><stop offset=".45" stopColor="#F5D78D"/><stop offset="1" stopColor="#a9803f"/></linearGradient>
-              <filter id="threadGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            </defs>
-            <motion.path d="M980 560 C860 480 920 390 790 420 S650 570 560 455 S410 350 300 470" fill="none" stroke="url(#goldThread)" strokeWidth="4" strokeLinecap="round" filter="url(#threadGlow)" pathLength="100" style={{ pathLength: threadPath }} />
-          </svg>
-
-          {/* أذرع روبوتية بسيطة — تدخل أثناء مرحلة الخياطة */}
-          <motion.div style={{ opacity: useTransform(scrollYProgress, [.15,.25,.78,.9], [0,1,1,0]) }} className="absolute z-[25] left-[8%] top-[40%] w-36 h-8 origin-right rounded-full bg-gradient-to-r from-[#33271e] via-[#b08a49] to-[#e1c47e] shadow-lg rotate-[18deg] pointer-events-none" />
-          <motion.div style={{ opacity: useTransform(scrollYProgress, [.15,.25,.78,.9], [0,1,1,0]) }} className="absolute z-[25] right-[8%] top-[42%] w-36 h-8 origin-left rounded-full bg-gradient-to-l from-[#33271e] via-[#b08a49] to-[#e1c47e] shadow-lg rotate-[-18deg] pointer-events-none" />
-
-          <motion.div style={{ opacity: textOpacity, y: textY }} className="absolute bottom-[16%] z-40 text-center">
-            <div className="mx-auto mb-5 h-px w-28 bg-gradient-to-r from-transparent via-[#a9803f] to-transparent" />
-            <p className="text-[#d4ab6d] text-xs tracking-[.4em] mb-3">THE COBBLER'S SIGNATURE</p>
-            <h3 className="font-display text-4xl md:text-6xl font-black text-[#F4E8CE] drop-shadow-[0_0_24px_rgba(169,128,63,.35)]">إبرة وخيط الإسكافي</h3>
-            <p className="mt-4 text-[#A9977F] text-sm">كل غرزة لها قصة.</p>
-          </motion.div>
-
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 text-[#A9977F] text-[10px] tracking-[.3em]">
-            <span>SCROLL TO CRAFT</span>
-            <motion.div animate={{ y:[0,7,0] }} transition={{ duration:1.4, repeat:Infinity }} className="w-px h-10 bg-gradient-to-b from-[#a9803f] to-transparent" />
-          </div>
+        <div className="mt-14 pt-6 flex flex-wrap gap-x-10 gap-y-3 text-sm" style={{ borderTop: '1px solid rgba(236,232,223,.18)', color: '#bdb8ad' }}>
+          {(t('home.hero.stats') || []).map((s, i) => (
+            <div key={i} className="flex items-baseline gap-2"><span className="text-2xl font-black" style={{ color: '#ece8df' }}><AnimCounter target={s.num} /></span><span>{s.label}</span></div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-// ── Ticker / Process Strip ────────────────────────────────────────
 function TickerStrip() {
   const { t } = useLanguage();
   const items = t('home.ticker');
   return (
-    <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #E4D8BE, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
+    <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #1a1a1c, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
       <div className="flex gap-0">
         {[0, 1].map(k => (
           <motion.div key={k} className="flex gap-10 shrink-0 pe-10"
@@ -683,9 +302,9 @@ function TickerStrip() {
 
 // ── Services ─────────────────────────────────────────────────────
 const SERVICE_META = [
-  { icon: Scissors, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80' },
-  { icon: Package, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80' },
-  { icon: Sparkles, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80' },
+  { icon: Scissors, img: '/images/gallery/sneaker-after.png' },
+  { icon: Package, img: '/images/gallery/bag-before.png' },
+  { icon: Sparkles, img: '/images/gallery/bag-after.png' },
 ];
 const STEP_ICONS = [MessageCircle, Package, Scissors, CheckCircle];
 
@@ -694,12 +313,12 @@ function ServicesSection() {
   const services = t('home.services.items');
   const steps = t('home.services.steps');
   return (
-    <section id="services" className="py-32 px-6" style={{ background: '#f6efe4' }}>
+    <section id="services" className="py-32 px-6" style={{ background: '#0b0b0c' }}>
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.services.eyebrow')}</p>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.services.title')}</h2>
-          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
+          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#a8a398' }}>
             {t('home.services.desc')}
           </p>
           <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
@@ -709,7 +328,7 @@ function ServicesSection() {
           {services.map((s, i) => (
             <FadeIn key={i} delay={i * 0.12}>
               <motion.div className="group rounded-3xl overflow-hidden h-full flex flex-col cursor-pointer"
-                style={{ background: `rgba(36,20,11,0.035)`, border: `1px solid ${GB}0.08)` }}
+                style={{ background: `rgba(236,232,223,0.035)`, border: `1px solid ${GB}0.08)` }}
                 whileHover={{ y: -8, borderColor: `${GB}0.25)`, boxShadow: `0 30px 60px ${GB}0.15)` }}
                 transition={{ duration: 0.35 }}>
 
@@ -730,7 +349,7 @@ function ServicesSection() {
                     {React.createElement(SERVICE_META[i].icon, { className: 'w-3 h-3' })}{s.tag}
                   </span>
                   <h3 className="text-xl font-black mb-2" style={{ color: T }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: '#6E5C4E' }}>{s.desc}</p>
+                  <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: '#a8a398' }}>{s.desc}</p>
                   <Link to="/book">
                     <motion.div whileHover={{ gap: '16px' }} className="flex items-center gap-2 font-bold text-sm"
                       style={{ color: GT }}>
@@ -746,7 +365,7 @@ function ServicesSection() {
 
         {/* How it works */}
         <FadeIn delay={0.2} className="mt-24">
-          <div className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(201,168,76,0.04)', border: `1px solid ${GB}0.1)` }}>
+          <div className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(236,232,223,0.04)', border: `1px solid ${GB}0.1)` }}>
             <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase text-center" style={{ color: GT }}>{t('home.services.howItWorks')}</p>
             <h3 className="text-3xl font-black text-center mb-10" style={{ color: T }}>{t('home.services.howItWorksTitle')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -761,7 +380,7 @@ function ServicesSection() {
                       style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{i + 1}</span>
                   </div>
                   <h4 className="font-black mb-1.5" style={{ color: T }}>{step.t}</h4>
-                  <p className="text-xs leading-relaxed" style={{ color: '#6E5C4E' }}>{step.d}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: '#a8a398' }}>{step.d}</p>
                 </FadeIn>
               ))}
             </div>
@@ -777,12 +396,12 @@ function BeforeAfterSection() {
   const { t, dir } = useLanguage();
   const items = t('home.beforeAfter.items');
   return (
-    <section id="before-after" className="py-32 px-6" style={{ background: '#ede3d3' }}>
+    <section id="before-after" className="py-32 px-6" style={{ background: '#26262a' }}>
       <div className="max-w-6xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-16">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.beforeAfter.eyebrow')}</p>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.beforeAfter.title')}</h2>
-          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#6E5C4E' }}>
+          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#a8a398' }}>
             {t('home.beforeAfter.desc')}
           </p>
           <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
@@ -791,7 +410,7 @@ function BeforeAfterSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {items.map((item, i) => (
             <FadeIn key={i} delay={i * 0.12}>
-              <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${GB}0.12)`, background: 'rgba(36,20,11,0.035)' }}>
+              <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${GB}0.12)`, background: 'rgba(236,232,223,0.035)' }}>
                 <BeforeAfterSlider
                   beforeImage={item.before}
                   afterImage={item.after}
@@ -800,7 +419,7 @@ function BeforeAfterSection() {
                 />
                 <div className="px-5 py-4 text-center">
                   <p className="font-black text-sm" style={{ color: T }}>{item.label}</p>
-                  <p className="text-[11px] mt-1" style={{ color: '#6E5C4E' }}>{t('home.beforeAfter.hint')}</p>
+                  <p className="text-[11px] mt-1" style={{ color: '#a8a398' }}>{t('home.beforeAfter.hint')}</p>
                 </div>
               </div>
             </FadeIn>
@@ -839,12 +458,12 @@ function RequestServiceSection() {
   };
 
   return (
-    <section id="request" className="py-32 px-6" style={{ background: '#ede3d3' }}>
+    <section id="request" className="py-32 px-6" style={{ background: '#26262a' }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-14">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.request.eyebrow')}</p>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.request.title')}</h2>
-          <p className="text-sm" style={{ color: '#6E5C4E' }}>{t('home.request.desc')}</p>
+          <p className="text-sm" style={{ color: '#a8a398' }}>{t('home.request.desc')}</p>
         </FadeIn>
 
         <AnimatePresence mode="wait">
@@ -855,16 +474,16 @@ function RequestServiceSection() {
                 <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: GT }} />
               </motion.div>
               <h3 className="text-2xl font-black mb-2" style={{ color: T }}>{t('home.request.doneTitle')}</h3>
-              <p style={{ color: '#5B4A3E' }}>{t('home.request.doneDesc')}</p>
+              <p style={{ color: '#bdb8ad' }}>{t('home.request.doneDesc')}</p>
               <button onClick={() => setSent(false)} className="mt-6 text-sm underline" style={{ color: GT }}>{t('home.request.sendAnother')}</button>
             </motion.div>
           ) : (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(36,20,11,0.035)', border: `1px solid ${GB}0.1)` }}>
+              className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(236,232,223,0.035)', border: `1px solid ${GB}0.1)` }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 {[['name', t('home.request.nameLabel'), t('home.request.namePh')], ['phone', t('home.request.phoneLabel'), '05XXXXXXXX']].map(([k, label, ph]) => (
                   <div key={k} className="space-y-2">
-                    <label className="text-xs font-bold" style={{ color: '#5B4A3E' }}>{label}</label>
+                    <label className="text-xs font-bold" style={{ color: '#bdb8ad' }}>{label}</label>
                     <input value={form[k]} onChange={e => upd(k, e.target.value)}
                       placeholder={ph} dir={k === 'phone' ? 'ltr' : dir}
                       className="w-full px-4 py-3.5 rounded-xl outline-none text-sm transition-all"
@@ -875,18 +494,18 @@ function RequestServiceSection() {
                 ))}
               </div>
               <div className="mb-5 space-y-2">
-                <label className="text-xs font-bold" style={{ color: '#5B4A3E' }}>{t('home.request.serviceLabel')}</label>
+                <label className="text-xs font-bold" style={{ color: '#bdb8ad' }}>{t('home.request.serviceLabel')}</label>
                 <select value={form.service} onChange={e => upd('service', e.target.value)}
                   className="w-full px-4 py-3.5 rounded-xl outline-none text-sm"
                   style={{ background: GB + '0.04)', border: `1px solid ${GB}0.12)`, color: form.service ? T : `${GB}0.3)` }}>
                   <option value="">{t('home.request.chooseService')}</option>
                   {t('home.request.serviceOptions').map(s => (
-                    <option key={s} value={s} style={{ background: '#f6efe4' }}>{s}</option>
+                    <option key={s} value={s} style={{ background: '#0b0b0c' }}>{s}</option>
                   ))}
                 </select>
               </div>
               <div className="mb-8 space-y-2">
-                <label className="text-xs font-bold" style={{ color: '#5B4A3E' }}>{t('home.request.notesLabel')}</label>
+                <label className="text-xs font-bold" style={{ color: '#bdb8ad' }}>{t('home.request.notesLabel')}</label>
                 <textarea value={form.notes} onChange={e => upd('notes', e.target.value)}
                   placeholder={t('home.request.notesPh')} rows={3}
                   className="w-full px-4 py-3.5 rounded-xl outline-none text-sm resize-none"
@@ -916,15 +535,15 @@ function AboutSection() {
   const { t, dir } = useLanguage();
   const stats = t('home.about.stats');
   return (
-    <section id="about" className="py-32 px-6" style={{ background: '#f6efe4' }} dir={dir}>
+    <section id="about" className="py-32 px-6" style={{ background: '#0b0b0c' }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <FadeIn className="grid grid-cols-2 gap-3">
             {[
-              { src: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80', alt: 'حرفي متخصص يصلح حقيبة جلدية فاخرة' },
-              { src: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80', alt: 'أدوات وخيوط ورشة إصلاح الأحذية' },
-              { src: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80', alt: 'ورشة إبرة وخيط الإسكافي في الرياض' },
-              { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80', alt: 'تبديل نعل حذاء جلدي فاخر' },
+              { src: '/images/gallery/bag-after.png', alt: 'حرفي متخصص يصلح حقيبة جلدية فاخرة' },
+              { src: '/images/gallery/bag-before.png', alt: 'أدوات وخيوط ورشة إصلاح الأحذية' },
+              { src: '/images/gallery/sneaker-before.png', alt: 'ورشة إبرة وخيط الإسكافي في الرياض' },
+              { src: '/images/gallery/sneaker-after.png', alt: 'تبديل نعل حذاء جلدي فاخر' },
             ].map((img, i) => (
                 <motion.div key={i} className={`rounded-2xl overflow-hidden ${i % 2 === 1 ? 'mt-6' : ''}`}
                   style={{ border: `1px solid ${GB}0.1)` }}
@@ -938,7 +557,7 @@ function AboutSection() {
             <h2 className="font-display text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ color: T }}>
               {t('home.about.titleLine1')}<br /><span style={{ color: GT }}>{t('home.about.titleLine2')}</span>
             </h2>
-            <p className="leading-relaxed text-base mb-8" style={{ color: '#6E5C4E' }}>
+            <p className="leading-relaxed text-base mb-8" style={{ color: '#a8a398' }}>
               {t('home.about.desc')}
             </p>
             <div className="grid grid-cols-2 gap-3 mb-8">
@@ -949,7 +568,7 @@ function AboutSection() {
                   {React.createElement(ABOUT_STAT_ICONS[i], { className: 'w-5 h-5 shrink-0', style: { color: GT } })}
                   <div>
                     <div className="text-xl font-black" style={{ color: GT }}><AnimCounter target={s.num} /></div>
-                    <div className="text-xs" style={{ color: '#6E5C4E' }}>{s.label}</div>
+                    <div className="text-xs" style={{ color: '#a8a398' }}>{s.label}</div>
                   </div>
                 </motion.div>
               ))}
@@ -977,7 +596,7 @@ function ReviewsSection() {
     return () => clearInterval(iv);
   }, [reviews.length]);
   return (
-    <section className="py-32 px-6" style={{ background: '#ede3d3' }} dir={dir}>
+    <section className="py-32 px-6" style={{ background: '#26262a' }} dir={dir}>
       <div className="max-w-6xl mx-auto">
         <FadeIn className="text-center mb-14">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.reviews.eyebrow')}</p>
@@ -988,18 +607,18 @@ function ReviewsSection() {
           {reviews.map((r, i) => (
             <FadeIn key={i} delay={i * 0.07}>
               <motion.div className="rounded-2xl p-6 flex flex-col gap-4 h-full cursor-pointer"
-                animate={{ background: active === i ? GB + '0.07)' : 'rgba(36,20,11,0.035)', borderColor: active === i ? GB + '0.3)' : 'rgba(36,20,11,0.06)' }}
+                animate={{ background: active === i ? GB + '0.07)' : 'rgba(236,232,223,0.035)', borderColor: active === i ? GB + '0.3)' : 'rgba(236,232,223,0.06)' }}
                 style={{ border: '1px solid' }} whileHover={{ y: -4 }} onClick={() => setActive(i)}>
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, s) => <Star key={s} className="w-3.5 h-3.5 fill-current" style={{ color: GT }} />)}
                 </div>
-                <p className="text-sm leading-relaxed flex-1" style={{ color: '#5B4A3E' }}>"{r.text}"</p>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: '#bdb8ad' }}>"{r.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-black shrink-0"
                     style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{r.name[0]}</div>
                   <div>
                     <p className="font-bold text-sm" style={{ color: T }}>{r.name}</p>
-                    <p className="text-xs" style={{ color: '#8A7969' }}>{r.service}</p>
+                    <p className="text-xs" style={{ color: '#8d8a82' }}>{r.service}</p>
                   </div>
                 </div>
               </motion.div>
@@ -1033,7 +652,7 @@ function BrandsSection() {
   // صريح "نتعامل مع" / "أرقى العلامات العالمية" يوضح للزائر إنه
   // مكان عرض العلامات التي تُعمل معها الورشة
   return (
-    <section className="py-20 px-6" style={{ background: '#f6efe4', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
+    <section className="py-20 px-6" style={{ background: '#0b0b0c', borderTop: `1px solid ${GB}0.08)`, borderBottom: `1px solid ${GB}0.08)` }}>
       <div className="max-w-5xl mx-auto" dir={dir}>
         <FadeIn className="text-center mb-12">
           <p className="text-xs tracking-[0.5em] font-bold mb-2 uppercase" style={{ color: GT }}>{t('home.brands.eyebrow')}</p>
@@ -1071,12 +690,12 @@ function TrackOrderSection() {
   };
 
   return (
-    <section id="track" className="py-28 px-6" style={{ background: '#ede3d3' }} dir={dir}>
+    <section id="track" className="py-28 px-6" style={{ background: '#26262a' }} dir={dir}>
       <div className="max-w-2xl mx-auto text-center">
         <FadeIn>
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.track.eyebrow')}</p>
           <h2 className="font-display text-4xl font-black mb-3" style={{ color: T }}>{t('home.track.title')}</h2>
-          <p className="text-sm mb-8" style={{ color: '#6E5C4E' }}>{t('home.track.desc')}</p>
+          <p className="text-sm mb-8" style={{ color: '#a8a398' }}>{t('home.track.desc')}</p>
           <div className="flex gap-3 max-w-md mx-auto mb-6">
             <input value={code} onChange={e => setCode(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()}
@@ -1100,7 +719,7 @@ function TrackOrderSection() {
               ) : (
                 <div className="space-y-3">
                   {results.length > 1 && (
-                    <p className="text-xs text-start" style={{ color: '#5B4A3E' }}>
+                    <p className="text-xs text-start" style={{ color: '#bdb8ad' }}>
                       {t('home.track.multipleFound') || `عدد الطلبات الموجودة: ${results.length}`}
                     </p>
                   )}
@@ -1148,9 +767,9 @@ function ServiceLinksSection() {
           {SERVICE_PAGES.map((s) => (
             <li key={s.slug}>
               <Link to={`${pre}/services/${s.slug}`} className="block rounded-2xl px-5 py-4 font-bold text-sm h-full transition-shadow hover:shadow-md"
-                style={{ background: '#fff', border: `1px solid ${GB}0.25)`, color: T }}>
+                style={{ background: '#131315', border: `1px solid ${GB}0.25)`, color: T }}>
                 {s[isAr ? 'ar' : 'en'].name}
-                <span className="block text-xs font-normal mt-1" style={{ color: '#6E5C4E' }}>{s[isAr ? 'ar' : 'en'].h1}</span>
+                <span className="block text-xs font-normal mt-1" style={{ color: '#a8a398' }}>{s[isAr ? 'ar' : 'en'].h1}</span>
               </Link>
             </li>
           ))}
@@ -1166,7 +785,7 @@ function AreasSection() {
   const isAr = lang === 'ar';
   const pre = isAr ? '' : '/en';
   const top = ['hittin', 'malqa', 'olaya', 'yasmin', 'naseem', 'aziziyah', 'shifa', 'rawdah'].map((s) => DISTRICTS.find((d) => d.slug === s));
-  const chip = { background: '#fff', border: `1px solid ${GB}0.3)`, color: T };
+  const chip = { background: '#131315', border: `1px solid ${GB}0.3)`, color: T };
   return (
     <section id="areas" className="py-24 px-6" style={{ background: BG2 }} dir={dir}>
       <div className="max-w-4xl mx-auto text-center">
@@ -1175,7 +794,7 @@ function AreasSection() {
           <h2 className="font-display text-3xl md:text-4xl font-black mb-4" style={{ color: T }}>
             {isAr ? 'نخدم كل أحياء الرياض بالاستلام والتوصيل' : 'We serve every Riyadh district with pickup & delivery'}
           </h2>
-          <p className="text-sm mb-8 leading-7" style={{ color: '#5a4636' }}>
+          <p className="text-sm mb-8 leading-7" style={{ color: '#bdb8ad' }}>
             {isAr ? 'فرعنا في العزيزية جنوب الرياض، ونستلم قطعتك من موقعك في أي حي. ومن خارج الرياض نستقبلها بالشحن عبر أرامكس.' : 'Our branch is in Al Aziziyah, South Riyadh, and we collect your item from any district. From outside Riyadh we receive it by courier via Aramex.'}
           </p>
         </FadeIn>
@@ -1212,12 +831,12 @@ function FaqSection() {
         <div className="space-y-3">
           {items.map((f, i) => (
             <details key={i} className="group rounded-2xl px-6 py-5 cursor-pointer"
-              style={{ background: '#fff', border: `1px solid ${GB}0.2)` }}>
+              style={{ background: '#131315', border: `1px solid ${GB}0.2)` }}>
               <summary className="font-bold text-base list-none flex items-center justify-between gap-4" style={{ color: T }}>
                 <h3 className="font-bold text-base">{f.q}</h3>
                 <span aria-hidden="true" className="text-xl transition-transform group-open:rotate-45" style={{ color: GT }}>+</span>
               </summary>
-              <p className="mt-3 text-sm leading-7" style={{ color: '#5a4636' }}>{f.a}</p>
+              <p className="mt-3 text-sm leading-7" style={{ color: '#bdb8ad' }}>{f.a}</p>
             </details>
           ))}
         </div>
@@ -1232,7 +851,7 @@ function BranchesSection() {
   const branches = siteData?.branches || [];
   const items = branches.length ? branches : [{ name: t('home.branches.mainBranch'), city: t('home.branches.city'), address: t('home.branches.city'), phone: '0549678191' }];
   return (
-    <section id="branches" className="py-28 px-6" style={{ background: '#f6efe4' }} dir={dir}>
+    <section id="branches" className="py-28 px-6" style={{ background: '#0b0b0c' }} dir={dir}>
       <div className="max-w-5xl mx-auto">
         <FadeIn className="text-center mb-12">
           <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.branches.eyebrow')}</p>
@@ -1243,7 +862,7 @@ function BranchesSection() {
             <FadeIn key={i} delay={i * 0.1}>
               <motion.div className="rounded-2xl p-6" style={{ background: GB + '0.04)', border: `1px solid ${GB}0.1)` }} whileHover={{ borderColor: GB + '0.3)', y: -4 }}>
                 <h3 className="font-black text-lg mb-3" style={{ color: T }}>{b.name}</h3>
-                <div className="space-y-2 text-sm" style={{ color: '#5B4A3E' }}>
+                <div className="space-y-2 text-sm" style={{ color: '#bdb8ad' }}>
                   <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" style={{ color: GT }} />{b.city}{b.address && ` — ${b.address}`}</div>
                   <div className="flex items-center gap-2"><Clock className="w-4 h-4 shrink-0" style={{ color: GT }} />{t('home.branches.hours')}</div>
                   {b.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" style={{ color: GT }} /><a href={`tel:${b.phone}`} className="hover:opacity-70">{b.phone}</a></div>}
@@ -1290,23 +909,23 @@ function Footer() {
   ];
 
   return (
-    <footer className="py-16 px-6" style={{ background: '#ede3d3', borderTop: `1px solid ${GB}0.08)` }} dir={dir}>
+    <footer className="py-16 px-6" style={{ background: '#26262a', borderTop: `1px solid ${GB}0.08)` }} dir={dir}>
       <div className="max-w-lg mx-auto text-center">
 
         {/* الشعار */}
         <div className="flex flex-col items-center gap-2 mb-3">
           <img
-            src="/images/cobblers-official-mark.png"
+            src="/images/cobblers-official-mark-white.png"
             alt={t('common.brand')}
             className="w-16 h-16 rounded-2xl object-contain shadow-sm"
-            style={{ border: `1px solid ${GB}0.1)`, background: '#fffaf3', padding: '6px' }}
+            style={{ border: `1px solid ${GB}0.1)`, background: '#131315', padding: '6px' }}
             loading="lazy"
           />
           <h3 className="text-xl font-black" style={{ color: T }}>{t('common.brand')}</h3>
         </div>
 
         {/* الوصف */}
-        <p className="text-sm leading-relaxed mx-auto mb-6" style={{ color: '#8A7969', maxWidth: '340px' }}>
+        <p className="text-sm leading-relaxed mx-auto mb-6" style={{ color: '#8d8a82', maxWidth: '340px' }}>
           {t('common.footer.tagline')}
         </p>
 
@@ -1329,7 +948,7 @@ function Footer() {
 
         {/* روابط تهمك */}
         <h4 className="text-xs tracking-widest font-bold mb-5 uppercase" style={{ color: GT }}>{t('common.footer.linksTitle')}</h4>
-        <ul className="space-y-3 text-sm mb-10" style={{ color: '#8A7969' }}>
+        <ul className="space-y-3 text-sm mb-10" style={{ color: '#8d8a82' }}>
           {usefulLinks.map(([label, to]) => (
             <li key={to}><Link to={to} className="hover:opacity-70 transition-colors">{label}</Link></li>
           ))}
@@ -1358,7 +977,7 @@ function Footer() {
         {/* السجل التجاري */}
         {crNumber && (
           <div className="flex items-center justify-center gap-3 mb-10">
-            <div className="text-sm" style={{ color: '#8A7969' }}>
+            <div className="text-sm" style={{ color: '#8d8a82' }}>
               <p className="mb-0.5">{t('common.footer.crLabel')}</p>
               <p className="font-bold" style={{ color: T }}>{crNumber}</p>
             </div>
@@ -1367,7 +986,7 @@ function Footer() {
         )}
 
         <div className="border-t pt-8" style={{ borderColor: GB + '0.08)' }}>
-          <p className="text-sm" style={{ color: '#8A7969' }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
+          <p className="text-sm" style={{ color: '#8d8a82' }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
         </div>
       </div>
     </footer>
@@ -1408,8 +1027,6 @@ export default function BookingLanding() {
       </Helmet>
       <Navbar />
       <HeroSection />
-      <PillarsSection />
-      <CraftMotionSection />
       <TickerStrip />
       <ServicesSection />
       <BeforeAfterSection />
