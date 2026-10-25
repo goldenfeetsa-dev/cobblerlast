@@ -127,266 +127,120 @@ function AnimCounter({ target, duration = 2 }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────────
+const HAIR = 'rgba(255,255,255,0.06)';
+
+// رأس الصفحة: شعار شفاف بالمنتصف فقط (مثل المتاجر الراقية) + مبدّل اللغة
 function Navbar() {
-  const { t, dir, lang } = useLanguage();
-  const isAr = lang === 'ar';
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', fn, { passive: true });
-    return () => window.removeEventListener('scroll', fn);
-  }, []);
-  // القائمة تُغلق تلقائياً لو المستخدم كبّر الشاشة (نفس الأخطاء
-  // الشائعة بقوائم الجوال اللي تفضل مفتوحة على شاشات ديسكتوب)
-  useEffect(() => {
-    const onResize = () => { if (window.innerWidth >= 768) setMobileOpen(false); };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  const links = [
-    { label: t('common.nav.services'), href: '#services' },
-    { label: isAr ? 'دكّة الإسكافي' : "Cobbler's Bench", href: '/shop', to: true },
-    { label: isAr ? 'سوق المزاد' : 'Auction', href: '/auction', to: true },
-    { label: t('common.nav.story'), href: '#about' },
-    { label: t('common.nav.customers'), href: '#reviews' },
-    { label: isAr ? 'تتبّع طلبك' : 'Track order', href: '#track', anchorOnHome: true },
-  ];
-
+  const { t, dir } = useLanguage();
   return (
-    <motion.nav className="fixed top-0 inset-x-0 z-50 px-6"
-      initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-      <div className={`max-w-7xl mx-auto mt-3 rounded-2xl px-5 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-2xl' : ''}`}
-        style={{ background: scrolled ? 'rgba(11,11,12,0.78)' : 'rgba(11,11,12,0.45)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', border: `1px solid ${scrolled ? GB + '0.25)' : GB + '0.1)'}`, boxShadow: scrolled ? `0 8px 32px rgba(62,39,35,0.08), inset 0 1px 0 rgba(255,255,255,0.5)` : 'inset 0 1px 0 rgba(255,255,255,0.3)' }}>
-        <Link to="/" dir={dir}>
-          <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2">
-            <img
-              src="/images/cobblers-official-mark-white.png"
-              alt={t('common.brandShort')}
-              className="w-8 h-8 rounded-lg object-contain"
-            />
-            <span className="font-black text-sm" style={{ color: T }}>{t('common.brandShort')}</span>
-          </motion.div>
-        </Link>
+    <header className="relative px-6 pt-7 pb-5" dir={dir}>
+      <div className="absolute top-6 end-5"><LanguageSwitcher /></div>
+      <Link to="/" className="flex justify-center" aria-label={t('common.brand')}>
+        <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-14 w-auto object-contain" />
+      </Link>
+    </header>
+  );
+}
 
-        <div className="hidden md:flex items-center gap-6" dir={dir}>
-          {links.map(l => l.to
-            ? <Link key={l.label} to={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#bdb8ad' }}>{l.label}</Link>
-            : <a key={l.label} href={l.href} className="text-sm font-medium transition-colors hover:opacity-70" style={{ color: '#bdb8ad' }}>{l.label}</a>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher />
-          <Link to="/my-bookings" className="hidden md:block text-xs font-bold px-4 py-2 rounded-full transition-all"
-            style={{ color: GT, border: `1px solid ${GB}0.3)`, background: GB + '0.05)' }}>
-            {t('common.nav.trackBooking')}
-          </Link>
-          <Link to="/book" className="hidden sm:block">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              className="text-xs font-black px-5 py-2 rounded-full text-black"
-              style={{ background: `linear-gradient(135deg, ${G}, ${GL})`, boxShadow: `0 4px 20px ${GB}0.4)` }}>
-              {t('common.nav.bookNow')}
-            </motion.div>
-          </Link>
-          {/* زر قائمة الجوال — كانت روابط الموقع (الخدمات/قصتنا/آراء العملاء/
-              المتجر/تتبع الحجز) تختفي بالكامل على الجوال بدون أي بديل إطلاقاً،
-              فالزائر من الجوال ما يقدر يوصلها أبداً */}
-          <button
-            onClick={() => setMobileOpen(o => !o)}
-            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-            style={{ background: GB + '0.08)', border: `1px solid ${GB}0.2)`, color: T }}
-            aria-label={mobileOpen ? 'إغلاق القائمة' : 'فتح القائمة'}
-          >
-            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile dropdown */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="md:hidden max-w-7xl mx-auto mt-2 rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(11,11,12,0.96)', backdropFilter: 'blur(20px)', border: `1px solid ${GB}0.15)` }}
-          >
-            <div className="p-4 flex flex-col gap-1" dir={dir}>
-              {links.map(l => l.to
-                ? <Link key={l.label} to={l.href} onClick={() => setMobileOpen(false)}
-                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(236,232,223,0.06)]" style={{ color: T }}>{l.label}</Link>
-                : <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)}
-                    className="text-sm font-medium py-3 px-3 rounded-xl transition-colors hover:bg-[rgba(236,232,223,0.06)]" style={{ color: T }}>{l.label}</a>
-              )}
-              <Link to="/my-bookings" onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 text-sm font-bold py-3 px-3 rounded-xl mt-1"
-                style={{ color: GT, border: `1px solid ${GB}0.25)` }}>
-                <CalendarCheck className="w-4 h-4" />
-                {t('common.nav.trackBooking')}
-              </Link>
-              <Link to="/book" onClick={() => setMobileOpen(false)}
-                className="text-center text-sm font-black py-3 rounded-xl text-black mt-1"
-                style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>
-                {t('common.nav.bookNow')}
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+function StoreBtn({ to, primary, children }) {
+  return (
+    <Link to={to}
+      className={`store-btn flex items-center justify-center min-h-[54px] font-semibold text-base ${primary ? 'store-btn-p' : 'store-btn-s'}`}>
+      {children}
+    </Link>
   );
 }
 
 function HeroSection() {
   const { t, dir, lang } = useLanguage();
   const isAr = lang === 'ar';
-  const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
   return (
-    <section className="relative overflow-hidden" style={{ background: '#0b0b0c', minHeight: '100svh' }}>
-      <img src="/images/gallery/bag-after.png" alt={isAr ? 'حقيبة جلدية بعد الترميم في ورشة إبرة وخيط الإسكافي' : 'Leather handbag after restoration at Ebra & Khait Cobbler'}
-        className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'grayscale(.25) contrast(1.08)' }} fetchpriority="high" />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,5,6,.55) 0%, rgba(5,5,6,.45) 40%, rgba(5,5,6,.82) 100%)' }} />
-      <div className="relative z-10 max-w-7xl mx-auto px-6 flex flex-col justify-end" dir={dir} style={{ minHeight: '100svh', paddingTop: 120, paddingBottom: 72 }}>
-        <div className="flex flex-wrap items-end justify-between gap-10">
-          <div className="max-w-sm space-y-6">
-            <p className="text-base md:text-lg leading-loose font-light" style={{ color: '#cfcac0' }}>{t('home.hero.desc')}</p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/book" className="inline-flex items-center gap-2 px-8 h-13 py-3.5 font-bold text-sm md:text-base transition-colors"
-                style={{ background: '#ece8df', color: '#0b0b0c', border: '1px solid #ece8df' }}>
-                {t('home.hero.ctaPrimary')}<ArrowIcon className="w-4 h-4" />
-              </Link>
-              <Link to="/shop" className="inline-flex items-center gap-2 px-8 py-3.5 font-bold text-sm md:text-base transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]"
-                style={{ border: '1px solid #ece8df', color: '#ece8df' }}>
-                {t('home.hero.ctaSecondary')}
-              </Link>
-            </div>
-          </div>
-          <div>
-            <h1 className="font-display font-black leading-[1.08] text-white" style={{ fontSize: 'clamp(2.6rem, 8.5vw, 8rem)', letterSpacing: '-.02em' }}>
-              {t('home.hero.titleStart')}{' '}<span style={{ color: '#ece8df' }}>{t('home.hero.titleEnd')}</span>
-            </h1>
-            <h2 className="mt-4 text-sm md:text-base font-light tracking-wide" style={{ color: '#bdb8ad' }}>{t('home.hero.seoSubtitle')}</h2>
-          </div>
+    <section dir={dir}>
+      <div className="relative mx-auto overflow-hidden aspect-[4/5] md:aspect-auto md:h-[72svh]" style={{ maxWidth: 1040 }}>
+        <img src="/images/gallery/bag-after.png" alt={isAr ? 'حقيبة جلدية بعد الترميم في ورشة إبرة وخيط الإسكافي' : 'Leather handbag after restoration'}
+          className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'grayscale(.2) contrast(1.05)' }} fetchpriority="high" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(11,11,12,0) 30%, rgba(11,11,12,.55) 62%, #0b0b0c 100%)' }} />
+        <div className="absolute inset-x-6 bottom-7">
+          <p className="text-xs tracking-[0.25em]" style={{ color: '#bdb8ad' }}>{t('home.hero.eyebrow')}</p>
+          <h1 className="mt-3 font-semibold leading-[1.2]" style={{ fontSize: 'clamp(2.2rem, 7vw, 3.6rem)', color: '#ece8df' }}>
+            {t('home.hero.titleStart')} {t('home.hero.titleEnd')}
+          </h1>
+          <h2 className="mt-3 text-sm font-light" style={{ color: '#a8a398' }}>{t('home.hero.seoSubtitle')}</h2>
         </div>
-        <div className="mt-14 pt-6 flex flex-wrap gap-x-10 gap-y-3 text-sm" style={{ borderTop: '1px solid rgba(236,232,223,.18)', color: '#bdb8ad' }}>
-          {(t('home.hero.stats') || []).map((s, i) => (
-            <div key={i} className="flex items-baseline gap-2"><span className="text-2xl font-black" style={{ color: '#ece8df' }}><AnimCounter target={s.num} /></span><span>{s.label}</span></div>
-          ))}
-        </div>
+      </div>
+      <div className="mx-auto px-6 pt-2 pb-9 flex flex-col gap-3" style={{ maxWidth: 560 }}>
+        <StoreBtn to="/book" primary>{t('home.hero.ctaPrimary')}</StoreBtn>
+        <StoreBtn to="/my-bookings">{t('common.nav.trackBooking')}</StoreBtn>
       </div>
     </section>
   );
 }
 
-function TickerStrip() {
-  const { t } = useLanguage();
-  const items = t('home.ticker');
+// قائمة الروابط: صفوف بعرض الشاشة مثل قوائم المتاجر
+function MenuRows() {
+  const { t, dir, lang } = useLanguage();
+  const isAr = lang === 'ar';
+  const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const rows = [
+    [isAr ? 'دكّة الإسكافي — المتجر' : "Cobbler's Bench — Shop", '/shop'],
+    [isAr ? 'سوق المزاد' : 'Auction', '/auction'],
+    [isAr ? 'تتبّع طلبك' : 'Track order', '#track'],
+    [t('common.nav.story'), '#about'],
+    [t('common.nav.customers'), '#reviews'],
+  ];
   return (
-    <div className="py-4 overflow-hidden relative" style={{ background: `linear-gradient(90deg, ${D}, #1a1a1c, ${D})`, borderTop: `1px solid ${GB}0.15)`, borderBottom: `1px solid ${GB}0.15)` }}>
-      <div className="flex gap-0">
-        {[0, 1].map(k => (
-          <motion.div key={k} className="flex gap-10 shrink-0 pe-10"
-            animate={{ x: ['0%', '-100%'] }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}>
-            {items.map((item, i) => (
-              <span key={i} className="whitespace-nowrap text-sm font-bold" style={{ color: GT }}>{item}</span>
-            ))}
-          </motion.div>
-        ))}
-      </div>
-    </div>
+    <nav className="mx-auto" style={{ maxWidth: 760 }} dir={dir} aria-label={isAr ? 'القائمة' : 'Menu'}>
+      {rows.map(([label, href], i) => {
+        const inner = (<><span>{label}</span><Arrow className="w-4 h-4 store-arrow" /></>);
+        const cls = 'store-row flex items-center justify-between px-6 py-5 text-[17px]';
+        const st = { borderBottom: `1px solid ${HAIR}`, borderTop: i === 0 ? `1px solid ${HAIR}` : undefined };
+        return href.startsWith('/')
+          ? <Link key={href} to={href} className={cls} style={st}>{inner}</Link>
+          : <a key={href} href={href} className={cls} style={st}>{inner}</a>;
+      })}
+    </nav>
   );
 }
 
 // ── Services ─────────────────────────────────────────────────────
-const SERVICE_META = [
-  { icon: Scissors, img: '/images/gallery/sneaker-after.png' },
-  { icon: Package, img: '/images/gallery/bag-before.png' },
-  { icon: Sparkles, img: '/images/gallery/bag-after.png' },
-];
-const STEP_ICONS = [MessageCircle, Package, Scissors, CheckCircle];
+const toAr = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
 
 function ServicesSection() {
-  const { t, dir } = useLanguage();
+  const { t, dir, lang } = useLanguage();
   const services = t('home.services.items');
   const steps = t('home.services.steps');
+  const num = (i) => (lang === 'ar' ? toAr(String(i + 1).padStart(2, '0')) : String(i + 1).padStart(2, '0'));
   return (
-    <section id="services" className="py-32 px-6" style={{ background: '#0b0b0c' }}>
-      <div className="max-w-6xl mx-auto" dir={dir}>
-        <FadeIn className="text-center mb-16">
-          <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase" style={{ color: GT }}>{t('home.services.eyebrow')}</p>
-          <h2 className="font-display text-4xl md:text-5xl font-black mb-4" style={{ color: T }}>{t('home.services.title')}</h2>
-          <p className="text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#a8a398' }}>
-            {t('home.services.desc')}
-          </p>
-          <div className="mt-6 w-24 h-0.5 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${G}, transparent)` }} />
-        </FadeIn>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <section id="services" className="px-6 pt-16 pb-4" dir={dir} style={{ background: '#0b0b0c' }}>
+      <div className="mx-auto" style={{ maxWidth: 760 }}>
+        <p className="text-xs tracking-[0.25em]" style={{ color: '#8d8a82' }}>{t('home.services.eyebrow')}</p>
+        <h2 className="mt-2.5 text-[28px] font-semibold leading-snug" style={{ color: '#ece8df' }}>{t('home.services.title')}</h2>
+        <p className="mt-3 text-sm leading-loose font-light" style={{ color: '#a8a398' }}>{t('home.services.desc')}</p>
+        <div className="mt-7" style={{ borderTop: `1px solid ${HAIR}` }}>
           {services.map((s, i) => (
-            <FadeIn key={i} delay={i * 0.12}>
-              <motion.div className="group rounded-3xl overflow-hidden h-full flex flex-col cursor-pointer"
-                style={{ background: `rgba(236,232,223,0.035)`, border: `1px solid ${GB}0.08)` }}
-                whileHover={{ y: -8, borderColor: `${GB}0.25)`, boxShadow: `0 30px 60px ${GB}0.15)` }}
-                transition={{ duration: 0.35 }}>
-
-                {/* Image */}
-                <div className="relative overflow-hidden" style={{ height: 220 }}>
-                  <motion.img src={SERVICE_META[i].img} alt={s.title + ' — إبرة وخيط الإسكافي'}
-                    className="w-full h-full object-cover" loading="lazy"
-                    whileHover={{ scale: 1.08 }} transition={{ duration: 0.6 }} />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, #0A0500 100%)' }} />
-                  {/* Price tag */}
-                  <div className="absolute top-4 start-4 px-3 py-1.5 rounded-xl text-xs font-black text-black"
-                    style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{s.price}</div>
-                </div>
-
-                <div className="p-6 flex flex-col flex-1">
-                  <span className="inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-xs font-bold w-fit"
-                    style={{ background: GB + '0.1)', color: GT, border: `1px solid ${GB}0.2)` }}>
-                    {React.createElement(SERVICE_META[i].icon, { className: 'w-3 h-3' })}{s.tag}
-                  </span>
-                  <h3 className="text-xl font-black mb-2" style={{ color: T }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: '#a8a398' }}>{s.desc}</p>
-                  <Link to="/book">
-                    <motion.div whileHover={{ gap: '16px' }} className="flex items-center gap-2 font-bold text-sm"
-                      style={{ color: GT }}>
-                      <span>{t('home.services.bookThis')}</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </motion.div>
-                  </Link>
-                </div>
-              </motion.div>
-            </FadeIn>
+            <Link key={i} to="/book" className="store-row flex items-start gap-5 py-6" style={{ borderBottom: `1px solid ${HAIR}` }}>
+              <span className="text-[13px] pt-1 min-w-[26px]" style={{ color: '#8d8a82' }}>{num(i)}</span>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold" style={{ color: '#ece8df' }}>{s.title}</h3>
+                <p className="mt-1.5 text-sm leading-loose font-light" style={{ color: '#a8a398' }}>{s.desc}</p>
+              </div>
+              <span className="text-sm pt-1 whitespace-nowrap" style={{ color: '#ece8df' }}>{s.price}</span>
+            </Link>
           ))}
         </div>
 
-        {/* How it works */}
-        <FadeIn delay={0.2} className="mt-24">
-          <div className="rounded-3xl p-8 md:p-12" style={{ background: 'rgba(236,232,223,0.04)', border: `1px solid ${GB}0.1)` }}>
-            <p className="text-xs tracking-[0.5em] font-bold mb-3 uppercase text-center" style={{ color: GT }}>{t('home.services.howItWorks')}</p>
-            <h3 className="text-3xl font-black text-center mb-10" style={{ color: T }}>{t('home.services.howItWorksTitle')}</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {steps.map((step, i) => (
-                <FadeIn key={i} delay={i * 0.1} className="text-center">
-                  <div className="relative inline-flex mb-4">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
-                      style={{ background: `linear-gradient(135deg, ${GB}0.12), ${GB}0.04))`, border: `1px solid ${GB}0.2)` }}>
-                      {React.createElement(STEP_ICONS[i], { className: 'w-6 h-6', style: { color: GT } })}
-                    </div>
-                    <span className="absolute -top-2 -end-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center text-black"
-                      style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>{i + 1}</span>
-                  </div>
-                  <h4 className="font-black mb-1.5" style={{ color: T }}>{step.t}</h4>
-                  <p className="text-xs leading-relaxed" style={{ color: '#a8a398' }}>{step.d}</p>
-                </FadeIn>
-              ))}
+        <h3 className="mt-16 text-xl font-semibold" style={{ color: '#ece8df' }}>{t('home.services.howItWorksTitle')}</h3>
+        <div className="mt-5" style={{ borderTop: `1px solid ${HAIR}` }}>
+          {steps.map((step, i) => (
+            <div key={i} className="flex items-start gap-5 py-5" style={{ borderBottom: `1px solid ${HAIR}` }}>
+              <span className="text-[13px] pt-0.5 min-w-[26px]" style={{ color: '#8d8a82' }}>{num(i)}</span>
+              <div>
+                <h4 className="font-semibold" style={{ color: '#ece8df' }}>{step.t}</h4>
+                <p className="mt-1 text-sm leading-loose font-light" style={{ color: '#a8a398' }}>{step.d}</p>
+              </div>
             </div>
-          </div>
-        </FadeIn>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -950,7 +804,7 @@ function Footer() {
             <p className="mt-4 text-sm" dir="ltr" style={{ color: '#a8a398', textAlign: dir === 'rtl' ? 'right' : 'left' }}>{phone}</p>
             {crNumber && (
               <div className="mt-8 flex items-center gap-3">
-                <CleanLogo src="/images/cr-emblem.jpg" alt="السجل التجاري" className="w-12 h-12 object-contain" />
+                <img src="/images/cr-emblem-white.png" alt="السجل التجاري" className="w-12 h-12 object-contain" loading="lazy" />
                 <div className="text-sm" style={{ color: '#a8a398' }}>
                   <p className="mb-0.5">{t('common.footer.crLabel')}</p>
                   <p className="font-bold" style={{ color: '#ece8df' }}>{crNumber}</p>
@@ -973,7 +827,7 @@ export default function BookingLanding() {
   const { lang } = useLanguage();
   const isAr = lang === 'ar';
   return (
-    <div className="font-tajawal" style={{ scrollBehavior: 'smooth' }}>
+    <div className="font-tajawal store" style={{ scrollBehavior: 'smooth' }}>
       <Helmet>
         <html lang={isAr ? 'ar' : 'en'} />
         <title>{isAr
@@ -1001,7 +855,7 @@ export default function BookingLanding() {
       </Helmet>
       <Navbar />
       <HeroSection />
-      <TickerStrip />
+      <MenuRows />
       <ServicesSection />
       <BeforeAfterSection />
       <ReviewsSection />

@@ -159,3 +159,23 @@ html.noir .text-stone-800, html.noir .text-stone-900, html.noir .text-gray-900, 
 html.noir [class*="text-yellow-"], html.noir [class*="text-amber-"] { color: #ece8df !important; }
 html.noir .bg-amber-500, html.noir .bg-amber-400, html.noir .bg-yellow-500, html.noir .bg-yellow-400 { background-color: #ece8df !important; color: #0b0b0c !important; }
 html.noir [class*="border-yellow-"] { border-color: rgba(236,232,223,.3) !important; }
+
+/* ═══ نمط المتجر (الصفحة الرئيسية): عمود عمودي واحد، صفوف بحدود رفيعة ═══ */
+.store-btn { box-sizing: border-box; transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease; }
+.store-btn:active { transform: scale(.98); }
+.store-btn-p { background: #ece8df; color: #0b0b0c; }
+.store-btn-p:hover { background: #fff; }
+.store-btn-s { border: 1px solid rgba(255,255,255,.22); color: #ece8df; }
+.store-btn-s:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.4); }
+.store-row { color: #ece8df; transition: background .2s ease, padding .2s ease; }
+.store-row:hover { background: rgba(255,255,255,.03); }
+.store-row:active { background: rgba(255,255,255,.06); }
+.store-row .store-arrow { opacity: .5; transition: transform .2s ease, opacity .2s ease; }
+.store-row:hover .store-arrow { opacity: 1; transform: translateX(-4px); }
+[dir="ltr"] .store-row:hover .store-arrow { transform: translateX(4px); }
+.store section { background: #0b0b0c !important; border-top: 1px solid rgba(255,255,255,.06); }
+.store section:first-of-type { border-top: 0; }
+.store section > div[class*="max-w"] { max-width: 760px; }
+.store .md\:grid-cols-2, .store .md\:grid-cols-3, .store .md\:grid-cols-4, .store .lg\:grid-cols-2, .store .lg\:grid-cols-3 { grid-template-columns: minmax(0,1fr) !important; }
+.store [class*="py-32"] { padding-block: 4rem !important; }
+.store [class*="py-20"] { padding-block: 3.5rem !important; }
