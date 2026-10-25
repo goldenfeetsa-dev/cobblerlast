@@ -25,7 +25,7 @@ import {
 import { format } from 'date-fns';
 import ReceiptView from '@/components/pos/ReceiptView';
 import { salesInvoiceToReceipt } from '@/lib/invoiceAdapter';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, RiyalText } from '@/components/shared/SarCurrency';
 
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
@@ -747,7 +747,7 @@ export default function SalesSystem() {
               <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center mb-2`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
-              <p className="text-xl font-black">{s.value}</p>
+              <p className="text-xl font-black"><RiyalText text={s.value} /></p>
               <p className="text-xs text-muted-foreground">{s.label}</p>
             </CardContent>
           </Card>

@@ -12,6 +12,15 @@ export function SarSymbol({ style, className = '' }) {
   return <i className={`sar-symbol ${className}`} style={style} aria-label="ريال سعودي" />;
 }
 
+// رمز الريال + أي محتوى جاهز التنسيق: <Sar>{money(x)}</Sar>
+export function Sar({ children, style, className = '' }) {
+  return (
+    <span className={className} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap', ...style }} dir="ltr">
+      <SarSymbol />{children}
+    </span>
+  );
+}
+
 export function SarAmount({ value, decimals = 2, style, className = '', symbolStyle }) {
   const num = typeof value === 'number' ? value : parseFloat(value) || 0;
   return (

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, RiyalText } from '@/components/shared/SarCurrency';
 
 const STATUS_CONFIG = {
   pending:     { label: 'قيد الانتظار',  color: 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' },
@@ -113,7 +113,7 @@ export default function BookingAdmin() {
           { label: 'الإيرادات', value: `${stats.revenue.toFixed(0)} ر.س`, color: 'text-amber-600 dark:text-amber-400' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-2xl border border-stone-200 p-4 text-center">
-            <p className={cn("text-2xl font-black", s.color)}>{s.value}</p>
+            <p className={cn("text-2xl font-black", s.color)}><RiyalText text={String(s.value)} /></p>
             <p className="text-xs text-stone-400 mt-1">{s.label}</p>
           </div>
         ))}

@@ -25,7 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { logAudit } from '@/lib/auditLog';
 import { secureZatca } from '@/lib/secureApi';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 
 const ITEM_LABELS = {
   shoes: 'أحذية', bag: 'حقيبة', dress: 'فستان', suit: 'بدلة',
@@ -46,7 +46,7 @@ const STATUS_LABELS = {
 function buildWhatsAppMessage(order, newStatus) {
   const statusLabel = STATUS_LABELS[newStatus] || newStatus;
   const itemLabel = ITEM_LABELS[order.item_type] || order.item_type;
-  return `السلام عليكم ${order.customer_name} 👋\n\nنود إعلامك بتحديث حالة طلبك:\n\n🔖 رقم الطلب: ${order.order_number}\n📦 القطعة: ${itemLabel}\n📊 الحالة الجديدة: ${statusLabel}\n💰 المبلغ: ${order.total_price?.toFixed(2)} ر.س\n\nشكراً لثقتك بـ إبرة وخيط الإسكافي 🌟`;
+  return `السلام عليكم ${order.customer_name} 👋\n\nنود إعلامك بتحديث حالة طلبك:\n\n🔖 رقم الطلب: ${order.order_number}\n📦 القطعة: ${itemLabel}\n📊 الحالة الجديدة: ${statusLabel}\n💰 المبلغ: ${order.total_price?.toFixed(2)} ريال\n\nشكراً لثقتك بـ إبرة وخيط الإسكافي 🌟`;
 }
 
 function sendWhatsAppNotification(order, newStatus) {
@@ -74,7 +74,7 @@ async function sendEmailNotification(order, newStatus) {
     <p style="margin: 4px 0;"><strong style="color: #C9A84C;">رقم الطلب:</strong> ${order.order_number}</p>
     <p style="margin: 4px 0;"><strong style="color: #C9A84C;">القطعة:</strong> ${itemLabel}</p>
     <p style="margin: 4px 0;"><strong style="color: #C9A84C;">الحالة الجديدة:</strong> ${statusLabel}</p>
-    <p style="margin: 4px 0;"><strong style="color: #C9A84C;">المبلغ:</strong> ${order.total_price?.toFixed(2)} ر.س</p>
+    <p style="margin: 4px 0;"><strong style="color: #C9A84C;">المبلغ:</strong> ${order.total_price?.toFixed(2)} ريال</p>
   </div>
   <p style="color: rgba(245,237,216,0.5); font-size: 13px;">شكراً لثقتك بنا 🌟</p>
 </div>`
@@ -568,7 +568,7 @@ function OrderDetailsFull() {
                       <CreditCard className="w-4 h-4 text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">الإجمالي</p>
-                        <p className="text-2xl font-bold">{order.total_price?.toFixed(2)} <span className="text-sm font-normal">SAR</span></p>
+                        <p className="text-2xl font-bold"><Sar>{order.total_price?.toFixed(2)}</Sar></p>
                       </div>
                     </div>
                   </div>
@@ -685,7 +685,7 @@ function OrderDetailsFull() {
                   <Input type="number" min="1" value={editForm.quantity} onChange={e => setEditForm(f => ({ ...f, quantity: parseInt(e.target.value) || 1 }))} />
                 </div>
                 <div>
-                  <Label>السعر الإجمالي (ر.س)</Label>
+                  <Label>السعر الإجمالي (<SarSymbol />)</Label>
                   <Input type="number" step="0.01" value={editForm.total_price} disabled readOnly
                     className="bg-muted cursor-not-allowed" />
                   <p className="text-xs text-muted-foreground mt-1">
@@ -733,7 +733,7 @@ function OrderDetailsFull() {
               </Select>
             </div>
             <div>
-              <Label>المبلغ شامل الضريبة (ر.س)</Label>
+              <Label>المبلغ شامل الضريبة (<SarSymbol />)</Label>
               <Input type="number" step="0.01" value={noteForm.amount} onChange={e => setNoteForm(f => ({ ...f, amount: e.target.value }))} />
             </div>
             <div>

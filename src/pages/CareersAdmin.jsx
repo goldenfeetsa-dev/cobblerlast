@@ -175,7 +175,7 @@ export default function CareersAdmin() {
             </div>
             <div>
               <label className="text-sm font-medium text-stone-700 mb-1.5 block">الراتب (اختياري)</label>
-              <Input value={form.salary_note} onChange={e => setForm(p => ({ ...p, salary_note: e.target.value }))} placeholder="مثال: 4000 - 5500 ر.س أو يُحدد بعد المقابلة" dir="rtl" className="text-right" />
+              <Input value={form.salary_note} onChange={e => setForm(p => ({ ...p, salary_note: e.target.value }))} placeholder="مثال: 4000 - 5500 ريال أو يُحدد بعد المقابلة" dir="rtl" className="text-right" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

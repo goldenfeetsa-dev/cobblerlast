@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Gavel, Star } from 'lucide-react';
 import ProductImageUploader from '@/components/shop/ProductImageUploader';
 import { toast } from 'sonner';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 
 const CATEGORIES = { bags: 'حقائب', shoes: 'أحذية', accessories: 'إكسسوارات', other: 'أخرى' };
 const STATUSES = { active: 'نشط', pending: 'بانتظار المراجعة', ended: 'منتهي', sold: 'مباع', cancelled: 'ملغي' };
@@ -57,11 +57,11 @@ function ListingForm({ initial, brands, onSave, onCancel }) {
           </select>
         </div>
         <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">السعر الابتدائي (ر.س) *</label>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">السعر الابتدائي (<SarSymbol />) *</label>
           <Input type="number" value={form.starting_price} onChange={(e) => set('starting_price', e.target.value)} placeholder="500" />
         </div>
         <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">حد الزيادة لكل مزايدة (ر.س)</label>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">حد الزيادة لكل مزايدة (<SarSymbol />)</label>
           <Input type="number" value={form.bid_increment} onChange={(e) => set('bid_increment', e.target.value)} placeholder="10" />
         </div>
         <div>

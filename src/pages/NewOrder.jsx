@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 import { useZATCA } from '@/lib/zatca/useZATCA';
 import { notifyCustomerDirect } from '@/lib/notifyCustomer';
 import LocationPicker from '@/components/shared/LocationPicker';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, SarSymbol, RiyalText } from '@/components/shared/SarCurrency';
 
 const ITEM_TYPES = [
   { value: 'shoes', label: 'أحذية' },
@@ -568,15 +568,15 @@ function CobblerTab({ session }) {
         <CardHeader className="pb-4"><CardTitle className="text-base">الدفع</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>السعر الإجمالي شامل الضريبة (ر.س) *</Label>
+            <Label>السعر الإجمالي شامل الضريبة (<SarSymbol />) *</Label>
             <Input type="number" min={0} step={0.01} value={form.total_price}
               onChange={e => update('total_price', e.target.value)} placeholder="0.00" required className="text-xl font-bold h-14" />
             {/* معاينة حية: توضّح للموظف السعر قبل الضريبة المُستخرَج من الإجمالي قبل ما يحفظ الطلب */}
             {form.total_price > 0 && (
               <p className="text-sm font-bold" style={{ color: '#059669' }}>
-                {true
+                <RiyalText text={true
                   ? `قبل الضريبة: ${(parseFloat(form.total_price) / 1.15).toFixed(2)} ر.س — الإجمالي (شامل 15%): ${parseFloat(form.total_price).toFixed(2)} ر.س`
-                  : `الإجمالي (الضريبة معطّلة): ${parseFloat(form.total_price).toFixed(2)} ر.س`}
+                  : `الإجمالي (الضريبة معطّلة): ${parseFloat(form.total_price).toFixed(2)} ر.س`} />
               </p>
             )}
           </div>

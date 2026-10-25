@@ -9,6 +9,7 @@ import { isFullAdmin } from '@/lib/roles';
 import { partnerApi } from './PartnersAdmin';
 import { PartnerInvoiceDoc, PartnerStatementDoc } from '@/components/partners/PartnerDocs';
 
+import { Sar } from '@/components/shared/SarCurrency';
 const money = (n) => `${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const day = (d) => (d ? String(d).slice(0, 10) : '—');
 const api = (id, action, method = 'GET', body) =>
@@ -100,12 +101,12 @@ export default function PartnerAccount() {
         onClick={() => { setTab('orders'); setFilter('unpaid'); setSel(new Set(dueOrders.filter(isInvoiceable).map((o) => o.id))); }}
         className="w-full rounded-2xl border-2 border-red-300 bg-red-50 p-3 text-right flex items-center justify-between">
         <span className="flex items-center gap-2 text-red-700 font-bold text-sm"><Wallet className="w-5 h-5" />مستحق السداد الآن ({dueOrders.length} شنطة مرّ عليها {p.payment_terms_days} يوم من استلام الطلب)</span>
-        <span className="text-lg font-black text-red-700">{money(dueTotal)} ر.س</span>
+        <span className="text-lg font-black text-red-700"><Sar>{money(dueTotal)}</Sar></span>
       </button>
 
       {soonOrders.length > 0 && (
         <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-3 text-sm font-bold text-amber-800">
-          ⏰ تنبيه: {soonOrders.length} شنطة يحل موعد سدادها خلال يومين — إجمالي {money(soonTotal)} ر.س
+          ⏰ تنبيه: {soonOrders.length} شنطة يحل موعد سدادها خلال يومين — إجمالي <Sar>{money(soonTotal)}</Sar>
         </div>
       )}
       {dueNotDelivered > 0 && (
@@ -131,7 +132,7 @@ export default function PartnerAccount() {
           {selected.length > 0 && (
             <div className="sticky top-2 z-10 rounded-2xl bg-white border-2 border-amber-600 shadow p-3 flex flex-wrap items-center gap-2">
               <div className="flex-1 text-sm">
-                <b>{selected.length}</b> محدد — الإجمالي شامل الضريبة: <b className="text-base">{money(selTotal)} ر.س</b>
+                <b>{selected.length}</b> محدد — الإجمالي شامل الضريبة: <b className="text-base"><Sar>{money(selTotal)}</Sar></b>
               </div>
               <button onClick={() => openLabels(selected.map((o) => o.id))} className="px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1"><Barcode className="w-4 h-4" />طباعة باركودات</button>
               <button disabled={!selInvoiceable || issue.isPending} onClick={() => issue.mutate(selected.map((o) => o.id))}
@@ -190,7 +191,7 @@ export default function PartnerAccount() {
                 <div className="font-bold text-sm" dir="ltr">{i.invoice_number}</div>
                 <div className="text-xs text-gray-500">{day(i.created_at)} · {i.order_count} شنطة · {i.zatca_status === 'REPORTED' ? 'مُبلَّغة لزاتكا' : 'بانتظار الإبلاغ'}</div>
               </div>
-              <div className="font-black">{money(i.total)} ر.س</div>
+              <div className="font-black"><Sar>{money(i.total)}</Sar></div>
             </button>
           ))}
         </div>
@@ -247,12 +248,12 @@ function Intake({ partnerId, services, canEdit, orders, onDone, openLabels }) {
             ))}
           </div>
           <input value={b.notes} onChange={(e) => upd(i, { notes: e.target.value })} placeholder="ملاحظات" className="w-full rounded-xl border px-3 py-2 text-sm" maxLength={500} />
-          <div className="text-xs text-gray-500">شامل الضريبة (تقديري): <b>{money(bagTotal(b))}</b> ر.س</div>
+          <div className="text-xs text-gray-500">شامل الضريبة (تقديري): <Sar><b>{money(bagTotal(b))}</b></Sar></div>
         </div>
       ))}
       <div className="flex gap-2 items-center">
         <button onClick={() => setBags([...bags, blank()])} className="px-3 py-2 rounded-xl border text-sm font-bold flex items-center gap-1"><Plus className="w-4 h-4" />شنطة أخرى</button>
-        <div className="flex-1 text-sm text-left">الإجمالي: <b>{money(grand)}</b> ر.س</div>
+        <div className="flex-1 text-sm text-left">الإجمالي: <Sar><b>{money(grand)}</b></Sar></div>
         <button disabled={!valid || save.isPending} onClick={() => save.mutate()} className="px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-1 disabled:opacity-40" style={{ background: '#7c4a1e' }}>
           {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Barcode className="w-4 h-4" />}تسجيل وطباعة الباركودات
         </button>

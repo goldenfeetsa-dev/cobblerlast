@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { format, startOfDay, startOfMonth, startOfYear } from 'date-fns';
 import { unifyTransactions, summarizeEmployeePerformance, summarizeByBranch } from '@/lib/analytics';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, RiyalText } from '@/components/shared/SarCurrency';
 import WorkerRace from '@/components/pos/WorkerRace';
 
 const PERIODS = [
@@ -43,7 +43,7 @@ function RankRow({ i, name, branch, metricLabel, metricValue, secondaryLabel, se
         <div className="flex gap-5 text-sm">
           <div className="flex items-center gap-1.5">
             <span className="font-bold">{metricValue}</span>
-            <span className="text-muted-foreground text-xs">{metricLabel}</span>
+            <span className="text-muted-foreground text-xs"><RiyalText text={metricLabel} /></span>
           </div>
           {secondaryLabel && (
             <div className="flex items-center gap-1.5">

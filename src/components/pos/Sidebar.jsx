@@ -9,6 +9,16 @@ import { getSession, clearSession } from '@/lib/sessionStore';
 import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';
 import { queryClientInstance } from '@/lib/query-client';
 
+const TONES = {
+  '/pos':'tone-blue','/new-order':'tone-green','/staff':'tone-orange','/orders':'tone-indigo','/invoices':'tone-teal',
+  '/calendar':'tone-red','/scan':'tone-gray','/assistant':'tone-purple','/sales':'tone-orange','/suppliers':'tone-gray',
+  '/purchasing':'tone-pink','/returns':'tone-red','/admin/partners':'tone-indigo','/customers':'tone-blue','/employees':'tone-teal','/leaderboard':'tone-orange','/financial-reports':'tone-green',
+  '/tax-dashboard':'tone-indigo','/audit':'tone-red','/site-analytics':'tone-blue','/admin/bookings':'tone-pink','/admin/reviews':'tone-orange',
+  '/admin/brands':'tone-purple','/admin/shop':'tone-teal','/admin/services':'tone-gray','/admin/working-hours':'tone-blue',
+  '/admin/branches':'tone-green','/admin/careers':'tone-indigo','/zatca':'tone-teal','/social-settings':'tone-pink',
+  '/loyalty':'tone-orange','/loyalty-members':'tone-purple','/settings':'tone-gray',
+};
+
 // ─── Groups: مرتبة حسب الاستخدام الأكثر، الإعدادات دائماً آخراً
 const navGroups = [
   {
@@ -120,8 +130,8 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5 border-b border-sidebar-border">
-        <img src="/images/cobblers-official-mark.png" alt="إبرة وخيط الإسكافي" className="h-11 w-auto object-contain" style={{ filter: 'brightness(0)' }} />
+      <div className="px-5 pt-6 pb-4">
+        <img src="/images/cobblers-official-mark.png" alt="إبرة وخيط الإسكافي" className="h-11 w-auto object-contain" style={{ filter: 'var(--logo-filter, brightness(0))' }} />
         <p className="text-[11px] text-sidebar-foreground/60 mt-2 tracking-wide">نظام إدارة الورشة والمبيعات</p>
       </div>
 
@@ -153,13 +163,13 @@ export default function Sidebar() {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2 text-sm border-r-2 transition-colors ${
+                    className={`flex items-center gap-3 px-2.5 py-1.5 text-[13.5px] rounded-xl transition-all ${
                       active
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold border-accent'
-                        : 'text-sidebar-foreground border-transparent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                        ? 'bg-white/80 dark:bg-white/10 text-foreground font-semibold shadow-[0_2px_10px_rgba(31,45,90,.10)]'
+                        : 'text-sidebar-foreground hover:bg-white/50 dark:hover:bg-white/5'
                     }`}
                   >
-                    <Icon className="w-[17px] h-[17px] shrink-0" />
+                    <span className={`ios-tile ${TONES[item.path] || 'tone-gray'}`}><Icon className="w-[16px] h-[16px]" strokeWidth={2.2} /></span>
                     {item.label}
                   </Link>
                 );
@@ -175,7 +185,7 @@ export default function Sidebar() {
           href="/booking"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium border border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full"
+          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl bg-white/50 dark:bg-white/5 border border-white/70 dark:border-white/10 text-sidebar-foreground hover:bg-white/80 transition-colors w-full"
         >
           <ExternalLink className="w-[18px] h-[18px] shrink-0" />
           <span>موقع الحجز الإلكتروني</span>
@@ -183,7 +193,7 @@ export default function Sidebar() {
       </div>
 
       {/* User info + Logout */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-black/5 dark:border-white/10">
         <button
           onClick={toggleDark}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all w-full mb-2"

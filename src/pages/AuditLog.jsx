@@ -12,7 +12,7 @@ import { ClipboardList, Search, ExternalLink, Calendar, Building2, User, Activit
 import { format } from 'date-fns';
 import { unifyTransactions } from '@/lib/analytics';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 
 const ACTION_LABELS = {
   create: { label: 'إنشاء', class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },
@@ -175,19 +175,19 @@ export default function AuditLog() {
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{totalRevenue.toFixed(0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">الإيراد الكلي (ر.س)</p>
+            <p className="text-xs text-muted-foreground mt-1">الإيراد الكلي (<SarSymbol />)</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-black text-green-600 dark:text-green-400">{cashTotal.toFixed(0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">نقد (ر.س)</p>
+            <p className="text-xs text-muted-foreground mt-1">نقد (<SarSymbol />)</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-black text-blue-600 dark:text-blue-400">{networkTotal.toFixed(0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">شبكة (ر.س)</p>
+            <p className="text-xs text-muted-foreground mt-1">شبكة (<SarSymbol />)</p>
           </CardContent>
         </Card>
       </div>

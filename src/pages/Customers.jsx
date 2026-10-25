@@ -16,7 +16,7 @@ import { isFullAdmin } from '@/lib/roles';
 import { logAudit } from '@/lib/auditLog';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar } from '@/components/shared/SarCurrency';
 
 const ORDER_STATUS_LABELS = {
   pending: 'قيد الانتظار', in_progress: 'جارٍ التنفيذ', ready: 'جاهز',
@@ -269,7 +269,7 @@ export default function Customers() {
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Wallet className="w-3.5 h-3.5" />
-                      {(c.total_spent || 0).toFixed(0)} SAR
+                      <Sar>{(c.total_spent || 0).toFixed(0)}</Sar>
                     </div>
                   </div>
                   <StampCard customer={c} stampsRequired={stampsRequired} isAdmin={isAdmin} />

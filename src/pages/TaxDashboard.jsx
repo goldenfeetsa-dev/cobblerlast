@@ -27,7 +27,7 @@ import {
   ShoppingBag, RefreshCw,
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, RiyalText } from '@/components/shared/SarCurrency';
 
 // ملاحظة مهمة: locale 'ar-SA' يعرض الأرقام بالهندي (٠١٢٣٤...) في أغلب
 // المتصفحات، وهذا كان سبب ظهور أرقام غير مقروءة/غير متوافقة مع الأنظمة
@@ -251,7 +251,7 @@ export default function TaxDashboard() {
           )}
         </tbody>
       </table>
-      {section.note && <p style={{ fontSize: '10px', color: '#d97706', marginTop: '4px' }}>{section.note}</p>}
+      {section.note && <p style={{ fontSize: '10px', color: '#d97706', marginTop: '4px' }}><RiyalText text={section.note} /></p>}
     </div>
   );
 

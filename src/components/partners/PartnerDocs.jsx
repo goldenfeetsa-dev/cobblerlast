@@ -5,6 +5,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { Printer, X } from 'lucide-react';
 import { db, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 
+import { Sar, SarSymbol } from '@/components/shared/SarCurrency';
 const INK = '#111827';
 const BRAND = '#111827';
 const ACC = '#14407a';
@@ -126,7 +127,7 @@ export function PartnerInvoiceDoc({ inv, onClose }) {
             <div><small>تاريخ الإصدار · Issue date</small><b>{day(inv.created_at)}</b></div>
             <div><small>تاريخ التوريد · Supply date</small><b>{day(inv.created_at)}</b></div>
             <div><small>طريقة الدفع · Payment</small><b>{({ online: 'تحويل / إلكتروني', cash: 'نقداً', network: 'شبكة', mada: 'مدى', card: 'بطاقة' })[inv.payment_method] || '—'}</b></div>
-            <div><small>العملة · Currency</small><b>{shop.currency || 'SAR'}</b></div>
+            <div><small>العملة · Currency</small><b><SarSymbol /></b></div>
           </div>
           <div className="pdoc-parties">
             <div className="pdoc-card">
@@ -181,7 +182,7 @@ export function PartnerInvoiceDoc({ inv, onClose }) {
             <div className="box">
               <div><span>المجموع قبل الضريبة · Subtotal</span><b>{money(inv.subtotal)}</b></div>
               <div><span>ضريبة القيمة المضافة {rate}٪ · VAT</span><b>{money(inv.vat_amount)}</b></div>
-              <div className="grand"><span>المستحق · Total due</span><span>{money(inv.total)} {shop.currency || 'SAR'}</span></div>
+              <div className="grand"><span>المستحق · Total due</span><span><Sar>{money(inv.total)}</Sar></span></div>
             </div>
           </div>
           <div className="pdoc-note">
@@ -269,7 +270,7 @@ export function PartnerStatementDoc({ data, onClose }) {
               <div><span>إجمالي المسدد · Paid</span><b style={{ color: '#127a4a' }}>{money(paid)}</b></div>
               <div><span>غير المسدد · Outstanding</span><b style={{ color: '#b42318' }}>{money(unpaid)}</b></div>
               <div><span>منه مستحق الآن · Overdue</span><b>{money(overdue)}</b></div>
-              <div className="grand"><span>الرصيد المستحق · Balance</span><span>{money(unpaid)} {shop.currency || 'SAR'}</span></div>
+              <div className="grand"><span>الرصيد المستحق · Balance</span><span><Sar>{money(unpaid)}</Sar></span></div>
             </div>
           </div>
           <div className="pdoc-note">المبالغ شاملة ضريبة القيمة المضافة. يُرجى مراجعة الكشف وإبلاغنا بأي ملاحظة خلال ٧ أيام من تاريخ الإصدار.</div>

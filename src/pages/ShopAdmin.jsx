@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Package, Star, ToggleLeft, ToggleRight, AlertTriangle } from 'lucide-react';
 import ProductImageUploader from '@/components/shop/ProductImageUploader';
 import { toast } from 'sonner';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 
 const CATEGORIES = {
   soles: 'نعال وأكواع',
@@ -48,7 +48,7 @@ function ProductForm({ initial, onSave, onCancel }) {
           </select>
         </div>
         <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">السعر (ر.س) *</label>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">السعر (<SarSymbol />) *</label>
           <Input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="85" />
         </div>
         <div>

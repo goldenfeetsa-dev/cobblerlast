@@ -16,7 +16,7 @@ import {
   ClipboardList, Calculator, ShieldCheck, TrendingDown
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, SarSymbol, RiyalText } from '@/components/shared/SarCurrency';
 
 const UNITS = { piece: 'حبة', dozen: 'درزن', carton: 'كرتون', kg: 'كغ', liter: 'لتر' };
 
@@ -260,14 +260,14 @@ function SettlementTab({ items, session }) {
       `قيد محاسبي — تسوية مصروفات الورشة`,
       `الشهر: ${monthLabel(selectedMonth)}`,
       `─────────────────────────────────`,
-      `مدين: حساب مصروفات الورشة   ${data.totalWorkshopCost.toFixed(2)} ر.س`,
-      `دائن: حساب مخزون الورشة      ${data.totalWorkshopCost.toFixed(2)} ر.س`,
+      `مدين: حساب مصروفات الورشة   ${data.totalWorkshopCost.toFixed(2)} ريال`,
+      `دائن: حساب مخزون الورشة      ${data.totalWorkshopCost.toFixed(2)} ريال`,
       `─────────────────────────────────`,
-      `إجمالي إيراد الشهر (منتجات + طلبات إصلاح): ${data.totalSalesRevenue.toFixed(2)} ر.س`,
-      `تكلفة البضاعة المباعة: ${data.totalSalesCost.toFixed(2)} ر.س`,
-      `إجمالي ربح المبيعات:   ${data.grossProfit.toFixed(2)} ر.س`,
-      `(-) تكاليف الورشة:    ${data.totalWorkshopCost.toFixed(2)} ر.س`,
-      `= صافي الربح الحقيقي:  ${data.netProfit.toFixed(2)} ر.س`,
+      `إجمالي إيراد الشهر (منتجات + طلبات إصلاح): ${data.totalSalesRevenue.toFixed(2)} ريال`,
+      `تكلفة البضاعة المباعة: ${data.totalSalesCost.toFixed(2)} ريال`,
+      `إجمالي ربح المبيعات:   ${data.grossProfit.toFixed(2)} ريال`,
+      `(-) تكاليف الورشة:    ${data.totalWorkshopCost.toFixed(2)} ريال`,
+      `= صافي الربح الحقيقي:  ${data.netProfit.toFixed(2)} ريال`,
       `─────────────────────────────────`,
       `اعتمد بواسطة: ${session?.name || 'المدير'}`,
       `تاريخ الاعتماد: ${format(new Date(), 'yyyy/MM/dd HH:mm')}`,
@@ -382,15 +382,15 @@ function SettlementTab({ items, session }) {
           {/* Summary preview */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'إجمالي مبيعات الشهر', val: totalSalesRevenue.toFixed(2), sub: 'ر.س', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-              { label: 'تكاليف الورشة (مقدّر)', val: totalWorkshopCost.toFixed(2), sub: 'ر.س', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/30' },
-              { label: 'إجمالي ربح المبيعات', val: grossProfit.toFixed(2), sub: 'ر.س', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-950/30' },
-              { label: 'صافي الربح الحقيقي', val: netProfit.toFixed(2), sub: 'ر.س', color: netProfit >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400', bg: 'bg-primary/5' },
+              { label: 'إجمالي مبيعات الشهر', val: totalSalesRevenue.toFixed(2), sub: '', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+              { label: 'تكاليف الورشة (مقدّر)', val: totalWorkshopCost.toFixed(2), sub: '', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/30' },
+              { label: 'إجمالي ربح المبيعات', val: grossProfit.toFixed(2), sub: '', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-950/30' },
+              { label: 'صافي الربح الحقيقي', val: netProfit.toFixed(2), sub: '', color: netProfit >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400', bg: 'bg-primary/5' },
             ].map((s, i) => (
               <Card key={i}>
                 <CardContent className="p-4 text-center">
                   <p className={`text-2xl font-black ${s.color}`}>{s.val}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{s.label} ({s.sub})</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{s.label} (<SarSymbol />)</p>
                 </CardContent>
               </Card>
             ))}
@@ -628,7 +628,7 @@ export default function WorkshopSystem() {
               <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center mb-2`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
-              <p className="text-xl font-black">{s.value}</p>
+              <p className="text-xl font-black"><RiyalText text={s.value} /></p>
               <p className="text-xs text-muted-foreground">{s.label}</p>
             </CardContent>
           </Card>

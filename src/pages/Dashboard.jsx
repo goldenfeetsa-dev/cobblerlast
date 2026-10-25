@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import FinancialReport from '@/components/dashboard/FinancialReport';
 import { unifyTransactions, summarizeByBranch } from '@/lib/analytics';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, RiyalText } from '@/components/shared/SarCurrency';
 
 const PERIODS = [
   { key: 'today', label: 'اليوم' },
@@ -31,12 +31,15 @@ function getPeriodStart(key) {
   return null;
 }
 
-function StatCard({ title, value, subtitle }) {
+function StatCard({ title, value, subtitle, icon: Icon, tone = 'tone-blue' }) {
   return (
-    <div className="bg-card border border-border p-5">
-      <p className="text-[13px] text-muted-foreground">{title}</p>
-      <p className="text-[32px] leading-none font-semibold mt-3 mb-2 tracking-tight tnum">{value}</p>
-      {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : <p className="text-xs">&nbsp;</p>}
+    <div className="bg-card p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] text-muted-foreground font-medium">{title}</p>
+        {Icon && <span className={`ios-tile ${tone}`}><Icon className="w-[17px] h-[17px]" strokeWidth={2.2} /></span>}
+      </div>
+      <p className="text-[32px] leading-none font-semibold mt-3 mb-2 tracking-tight tnum"><RiyalText text={typeof value==='string'?value:undefined}>{typeof value==='string'?undefined:value}</RiyalText></p>
+      {subtitle ? <p className="text-xs text-muted-foreground"><RiyalText text={subtitle} /></p> : <p className="text-xs">&nbsp;</p>}
     </div>
   );
 }
@@ -153,7 +156,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-2">
           {PERIODS.map(p => (
             <button key={p.key} onClick={() => setPeriod(p.key)}
-              className={`px-4 py-1.5 text-[13px] border border-border -mr-px transition-colors ${period === p.key ? 'bg-primary text-primary-foreground border-primary relative z-10' : 'bg-card text-foreground hover:bg-muted'}`}>
+              className={`px-4 py-1.5 text-[13px] rounded-full border transition-all ${period === p.key ? 'bg-primary text-primary-foreground border-transparent font-semibold' : 'bg-card text-foreground border-white/70 hover:bg-white/80'}`}>
               {p.label}
             </button>
           ))}
@@ -175,10 +178,10 @@ export default function Dashboard() {
           <div className="text-xs text-muted-foreground flex items-center gap-2 mb-2"><span className="inline-block w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />جاري تحميل البيانات… الأرقام قد تكتمل خلال لحظات</div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="إجمالي العمليات" value={transactions.length} subtitle={`${pendingOrders.length} إصلاح قيد الانتظار`} icon={ShoppingBag} accentClass="bg-primary" />
-        <StatCard title="الإيرادات (شامل الضريبة)" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`قبل الضريبة ${revenueExVat.toFixed(0)} · محصَّل ${collected.toFixed(0)} (${paidOrders.length} عملية مدفوعة)`} icon={Wallet} accentClass="bg-primary" />
-        <StatCard title="العملاء" value={customers.length} icon={Users} accentClass="bg-primary" />
-        <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} accentClass="bg-primary" />
+        <StatCard title="إجمالي العمليات" value={transactions.length} subtitle={`${pendingOrders.length} إصلاح قيد الانتظار`} icon={ShoppingBag} tone="tone-blue" />
+        <StatCard title="الإيرادات (شامل الضريبة)" value={`${totalRevenue.toFixed(0)} ر.س`} subtitle={`قبل الضريبة ${revenueExVat.toFixed(0)} · محصَّل ${collected.toFixed(0)} (${paidOrders.length} عملية مدفوعة)`} icon={Wallet} tone="tone-green" />
+        <StatCard title="العملاء" value={customers.length} icon={Users} tone="tone-orange" />
+        <StatCard title="نسبة الإنجاز" value={orders.length ? `${Math.round((orders.filter(o => o.status === 'completed').length / orders.length) * 100)}%` : '0%'} icon={TrendingUp} tone="tone-purple" />
       </div>
 
       {/* مقارنة الفروع — أي فرع يحقق أعلى إيراد، ظاهرة فقط للإدارة ولو فيه أكثر من فرع */}
@@ -235,7 +238,7 @@ export default function Dashboard() {
                   <XAxis dataKey="day" fontSize={12} />
                   <YAxis fontSize={12} />
                   <Tooltip />
-                  <Bar dataKey="orders" fill="#14407a" radius={[0, 0, 0, 0]} name="Orders" />
+                  <Bar dataKey="orders" fill="#0a84ff" radius={[8, 8, 0, 0]} name="Orders" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -262,7 +265,7 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground font-mono">{t.number}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold">{t.amount?.toFixed(0)} SAR</p>
+                    <p className="text-sm font-bold"><Sar>{t.amount?.toFixed(0)}</Sar></p>
                     <Badge variant="outline" className="text-[10px]">
                       {t.kind === 'repair' ? (t.status || '—') : 'بيع منتج'}
                     </Badge>

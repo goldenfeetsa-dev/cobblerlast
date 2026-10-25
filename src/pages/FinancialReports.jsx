@@ -32,7 +32,7 @@ import {
   Plus, Shield, Calendar, RefreshCw,
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 
 const EXPENSE_CATEGORIES = {
   rent: 'إيجار', salaries: 'رواتب', utilities: 'فواتير خدمات',
@@ -270,7 +270,7 @@ export default function FinancialReports() {
               <div><small>الفترة · Period</small><b dir="ltr">{format(start, 'yyyy-MM-dd')} → {format(end, 'yyyy-MM-dd')}</b></div>
               <div><small>إجمالي الإيراد · Revenue</small><b>{fmtN(totalRevenue)}</b></div>
               <div><small>إجمالي المصاريف · Expenses</small><b>{fmtN(totalExpenses)}</b></div>
-              <div><small>صافي الربح · Net profit</small><b style={{ color: netProfit < 0 ? '#b42318' : undefined }}>{fmtN(netProfit)} {shop.currency || 'SAR'}</b></div>
+              <div><small>صافي الربح · Net profit</small><b style={{ color: netProfit < 0 ? '#b42318' : undefined }}><Sar>{fmtN(netProfit)}</Sar></b></div>
             </div>
             <table>
               <thead><tr>
@@ -341,7 +341,7 @@ export default function FinancialReports() {
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="month" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip formatter={(v) => `${fmt(v)} ر.س`} />
+                <Tooltip formatter={(v) => <Sar>{fmt(v)}</Sar>} />
                 <Legend />
                 <Bar dataKey="الإيراد" fill="#14407a" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="المصاريف" fill="#b7bdc8" radius={[0, 0, 0, 0]} />
@@ -360,7 +360,7 @@ export default function FinancialReports() {
                   <Pie data={expenseByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => e.name}>
                     {expenseByCategory.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => `${fmt(v)} ر.س`} />
+                  <Tooltip formatter={(v) => <Sar>{fmt(v)}</Sar>} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -390,7 +390,7 @@ export default function FinancialReports() {
             <Input type="date" value={newExpense.expense_date} onChange={e => setNewExpense(p => ({ ...p, expense_date: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">المبلغ (ر.س)</Label>
+            <Label className="text-xs">المبلغ (<SarSymbol />)</Label>
             <div className="flex gap-2">
               <Input type="number" value={newExpense.amount} onChange={e => setNewExpense(p => ({ ...p, amount: e.target.value }))} placeholder="0.00" />
               <Button onClick={addExpense}>إضافة</Button>

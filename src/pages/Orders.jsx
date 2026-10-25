@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useLoyalty } from '@/lib/loyalty/useLoyalty';
 import { logAudit } from '@/lib/auditLog';
 
+import { Sar, SarSymbol } from '@/components/shared/SarCurrency';
 const STATUS_CONFIG = {
   pending: { label: 'قيد الانتظار', icon: Clock, class: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
   in_progress: { label: 'جارٍ التنفيذ', icon: Loader2, class: 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
@@ -192,7 +193,7 @@ export default function Orders() {
                     {session?.role !== 'staff' && (
                       <>
                         <p className="font-bold text-lg">{order.total_price?.toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">ر.س</p>
+                        <p className="text-xs text-muted-foreground"><SarSymbol /></p>
                         <Badge variant="outline" className={`text-[10px] ${order.payment_status === 'paid' ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300'}`}>
                           {order.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
                         </Badge>

@@ -12,6 +12,7 @@ import { useLoyalty } from '@/lib/loyalty/useLoyalty';
 import { parseCommand, normalize, STATUS_AR } from '@/lib/assistantNlu';
 import { queryClientInstance } from '@/lib/query-client';
 
+import { RiyalText } from '@/components/shared/SarCurrency';
 // أفضل تفسير من بدائل التعرف الصوتي: أول بديل يفهمه المحرك، وإلا الأول
 function bestAlternative(alts) {
   for (const a of alts) { const t = parseCommand(a).type; if (t !== 'unknown' && t !== 'empty') return a; }
@@ -498,7 +499,7 @@ export default function Assistant() {
         {msgs.map((m, i) => (
           <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-start' : ''}`}>
             {m.role !== 'user' && <div className="w-8 h-8 shrink-0 border border-foreground bg-card text-[11px] font-bold flex items-center justify-center">AI</div>}
-            <div className={`max-w-[85%] px-4 py-3 text-[14.5px] leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground' : m.error ? 'bg-card border border-destructive text-destructive' : 'bg-card border border-input'}`}>{m.content}
+            <div className={`max-w-[85%] px-4 py-3 text-[14.5px] leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground' : m.error ? 'bg-card border border-destructive text-destructive' : 'bg-card border border-input'}`}><RiyalText text={m.content} />
               {m.relogin && (
                 <button onClick={() => { clearSession(); try { queryClientInstance.clear(); } catch {} fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {}); navigate('/login', { replace: true }); }}
                   className="block mt-3 px-4 py-1.5 bg-primary text-primary-foreground text-xs font-semibold">تسجيل دخول من جديد</button>
@@ -529,7 +530,7 @@ export default function Assistant() {
       {pending && (
         <div className="mt-3 border border-foreground bg-card p-4">
           <div className="text-xs font-semibold mb-2" style={{ color: '#9a6700' }}>يحتاج تأكيدك قبل التنفيذ</div>
-          <ul className="text-sm mb-3 space-y-1 list-disc pr-4">{pending.list.map((a, k) => <li key={k}>{describe(a)}</li>)}</ul>
+          <ul className="text-sm mb-3 space-y-1 list-disc pr-4">{pending.list.map((a, k) => <li key={k}><RiyalText text={describe(a)} /></li>)}</ul>
           <div className="flex gap-2">
             <button type="button" onClick={confirmPending} disabled={busy} className="flex-1 py-2.5 bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">تأكيد التنفيذ</button>
             <button type="button" onClick={cancelPending} disabled={busy} className="flex-1 py-2.5 border border-input bg-card text-sm font-semibold">إلغاء</button>

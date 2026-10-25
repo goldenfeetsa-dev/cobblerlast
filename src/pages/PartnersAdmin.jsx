@@ -7,12 +7,14 @@ import { Loader2, Copy, Plus, Power, ChevronLeft, AlertTriangle } from 'lucide-r
 import { getSession } from '@/lib/sessionStore';
 import { isFullAdmin } from '@/lib/roles';
 
+import { RiyalText } from '@/components/shared/SarCurrency';
 export async function partnerApi(path, opts = {}) {
   const res = await fetch(path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.error || `فشل الطلب (${res.status})`);
   return body;
 }
+const R = (t) => <RiyalText text={t} />;
 const money = (n) => `${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س`;
 
 export default function PartnersAdmin() {
@@ -56,7 +58,7 @@ export default function PartnersAdmin() {
         <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-3 text-sm font-bold text-amber-800 space-y-1">
           <div>⏰ تنبيه: مبالغ يحل سدادها خلال يومين</div>
           {partners.filter((p) => Number(p.soon_count) > 0).map((p) => (
-            <div key={p.id} className="text-xs font-normal">{p.name}: {p.soon_count} شنطة — {money(p.soon_total)}</div>
+            <div key={p.id} className="text-xs font-normal">{p.name}: {p.soon_count} شنطة — {R(money(p.soon_total))}</div>
           ))}
         </div>
       )}
@@ -64,11 +66,11 @@ export default function PartnersAdmin() {
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-3">
           <div className="text-xs text-red-700 font-bold">مستحق السداد الآن (مرّ على استلام الطلب المدة المتفق عليها)</div>
-          <div className="text-lg font-black text-red-700">{money(totalDue)}</div>
+          <div className="text-lg font-black text-red-700">{R(money(totalDue))}</div>
         </div>
         <div className="rounded-2xl border bg-white p-3">
           <div className="text-xs text-gray-500 font-bold">إجمالي غير المسدّد</div>
-          <div className="text-lg font-black">{money(totalUnpaid)}</div>
+          <div className="text-lg font-black">{R(money(totalUnpaid))}</div>
         </div>
       </div>
 
@@ -108,8 +110,8 @@ export default function PartnersAdmin() {
             <div key={p.id} className="rounded-2xl border bg-white px-4 py-3 flex items-center gap-3">
               <Link to={`/admin/partners/${p.id}`} className="flex-1 min-w-0">
                 <div className="font-bold flex items-center gap-1">{p.name}<ChevronLeft className="w-4 h-4 text-gray-400" /></div>
-                <div className="text-xs text-gray-500">قيد العمل: {p.open} · الإجمالي: {p.total} · غير مسدّد: {money(p.unpaid_total)}</div>
-                {Number(p.due_total) > 0 && <div className="text-xs font-bold text-red-600">مستحق الآن: {money(p.due_total)} ({p.due_count} شنطة)</div>}
+                <div className="text-xs text-gray-500">قيد العمل: {p.open} · الإجمالي: {p.total} · غير مسدّد: {R(money(p.unpaid_total))}</div>
+                {Number(p.due_total) > 0 && <div className="text-xs font-bold text-red-600">مستحق الآن: {R(money(p.due_total))} ({p.due_count} شنطة)</div>}
               </Link>
               {canEdit && (
                 <button onClick={() => toggle.mutate({ id: p.id, is_active: !p.is_active })}

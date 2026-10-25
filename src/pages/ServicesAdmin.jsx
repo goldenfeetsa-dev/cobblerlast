@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { SarAmount } from '@/components/shared/SarCurrency';
+import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 
 const EMPTY = { name: '', name_ar: '', category: 'shoes', description: '', price: '', duration_minutes: 30, is_active: true };
 
@@ -153,7 +153,7 @@ export default function ServicesAdmin() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-stone-700 mb-1.5 block">السعر (ر.س) *</label>
+                <label className="text-sm font-medium text-stone-700 mb-1.5 block">السعر (<SarSymbol />) *</label>
                 <Input value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} type="number" min="0" placeholder="50" />
               </div>
               <div>
