@@ -232,31 +232,31 @@ html.pos{
   --border:220 20% 88%;--input:220 18% 82%;--ring:211 100% 50%;
   --chart-1:211 100% 50%;--chart-2:142 69% 45%;--chart-3:35 100% 50%;--chart-4:271 76% 63%;--chart-5:174 72% 40%;
   --radius:1rem;
-  --glass:rgba(255,255,255,.62);--glass-strong:rgba(255,255,255,.78);--glass-border:rgba(255,255,255,.85);
+  --glass:rgba(255,255,255,.34);--glass-strong:rgba(255,255,255,.58);--glass-border:rgba(255,255,255,.7);
   --glass-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 8px 30px rgba(31,45,90,.08),0 1px 3px rgba(31,45,90,.06);
-  --pos-bg:radial-gradient(900px 600px at 85% -5%,rgba(10,132,255,.22),transparent 60%),radial-gradient(800px 560px at 5% 10%,rgba(191,90,242,.16),transparent 60%),radial-gradient(900px 640px at 60% 105%,rgba(48,209,88,.16),transparent 60%),radial-gradient(700px 500px at 0% 100%,rgba(255,159,10,.14),transparent 60%),#eef1f8;
+  --pos-bg:radial-gradient(520px 420px at 82% 8%,rgba(10,132,255,.55),transparent 70%),radial-gradient(480px 400px at 8% 18%,rgba(191,90,242,.45),transparent 70%),radial-gradient(520px 420px at 70% 92%,rgba(48,209,88,.40),transparent 70%),radial-gradient(460px 380px at 5% 88%,rgba(255,159,10,.42),transparent 70%),radial-gradient(380px 320px at 45% 50%,rgba(255,45,111,.22),transparent 70%),#e8ecf6;
 }
 html.pos.dark{
   --logo-filter:brightness(0) invert(1);
-  --background:228 28% 7%;--foreground:220 20% 95%;
-  --card:228 22% 14%;--card-foreground:220 20% 95%;
-  --popover:228 22% 14%;--popover-foreground:220 20% 95%;
+  --background:0 0% 0%;--foreground:0 0% 100%;
+  --card:240 3% 11%;--card-foreground:0 0% 100%;
+  --popover:240 3% 11%;--popover-foreground:0 0% 100%;
   --primary:211 100% 58%;--primary-foreground:0 0% 100%;
-  --secondary:228 18% 20%;--secondary-foreground:220 20% 95%;
-  --muted:228 18% 20%;--muted-foreground:220 10% 66%;
+  --secondary:240 3% 17%;--secondary-foreground:0 0% 100%;
+  --muted:240 3% 17%;--muted-foreground:240 5% 64%;
   --accent:211 100% 58%;--accent-foreground:0 0% 100%;
   --destructive:4 100% 62%;
-  --border:228 14% 26%;--input:228 14% 30%;--ring:211 100% 58%;
-  --glass:rgba(34,38,56,.58);--glass-strong:rgba(40,45,66,.8);--glass-border:rgba(255,255,255,.1);
+  --border:240 3% 24%;--input:240 3% 28%;--ring:211 100% 58%;
+  --glass:rgba(44,44,52,.42);--glass-strong:rgba(44,44,52,.72);--glass-border:rgba(255,255,255,.16);
   --glass-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 10px 34px rgba(0,0,0,.35);
-  --pos-bg:radial-gradient(900px 600px at 85% -5%,rgba(10,132,255,.28),transparent 60%),radial-gradient(800px 560px at 5% 10%,rgba(191,90,242,.22),transparent 60%),radial-gradient(900px 640px at 60% 105%,rgba(48,209,88,.14),transparent 60%),#0b0d16;
+  --pos-bg:radial-gradient(520px 420px at 82% 8%,rgba(10,132,255,.42),transparent 70%),radial-gradient(480px 400px at 8% 18%,rgba(191,90,242,.34),transparent 70%),radial-gradient(520px 420px at 70% 92%,rgba(48,209,88,.24),transparent 70%),radial-gradient(420px 360px at 5% 88%,rgba(255,69,58,.22),transparent 70%),#000;
 }
 html.pos body{background:var(--pos-bg);background-attachment:fixed;color:hsl(var(--foreground))}
 html.pos body *:not(.sar-symbol):not(code):not(pre){font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Arabic','IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif}
 html.pos .pos-shell{background:transparent}
 /* الأسطح الزجاجية */
 html.pos .bg-card,html.pos .bg-sidebar,html.pos [role="dialog"],html.pos [data-radix-popper-content-wrapper] > *{
-  background-color:var(--glass)!important;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+  background-color:var(--glass)!important;-webkit-backdrop-filter:blur(28px) saturate(200%);backdrop-filter:blur(28px) saturate(200%);
   border:1px solid var(--glass-border)!important;box-shadow:var(--glass-shadow)!important}
 html.pos .bg-card{border-radius:var(--radius)}
 html.pos [role="dialog"]{background-color:var(--glass-strong)!important;border-radius:22px}
@@ -300,3 +300,10 @@ html.pos .ios-tile-lg{width:40px;height:40px;border-radius:12px}
 .leaflet-container .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.35)}
 
 .hero-ghost .store-btn{background:rgba(0,0,0,.5);color:#fff;border-color:rgba(255,255,255,.85)}
+
+html.pos.dark .bg-white{background-color:var(--glass-strong)}
+html.pos.dark table thead th{background:rgba(255,255,255,.06)}
+html.pos.dark .text-green-600,html.pos.dark .text-green-700{color:#30d158}
+html.pos.dark .text-red-600,html.pos.dark .text-red-700{color:#ff453a}
+html.pos.dark .text-amber-600,html.pos.dark .text-amber-700{color:#ff9f0a}
+html.pos.dark .text-blue-600,html.pos.dark .text-blue-700{color:#64a8ff}
