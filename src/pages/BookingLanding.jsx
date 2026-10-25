@@ -139,18 +139,7 @@ function AnimCounter({ target, duration = 2 }) {
 // ── Navbar ────────────────────────────────────────────────────────
 const HAIR = 'rgba(255,255,255,0.06)';
 
-// رأس الصفحة: شعار شفاف بالمنتصف فقط (مثل المتاجر الراقية) + مبدّل اللغة
-function Navbar() {
-  const { t, dir } = useLanguage();
-  return (
-    <header className="relative px-6 pt-7 pb-5" dir={dir}>
-      <div className="absolute top-6 end-5"><LanguageSwitcher /></div>
-      <Link to="/" className="flex justify-center" aria-label={t('common.brand')}>
-        <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-14 w-auto object-contain" />
-      </Link>
-    </header>
-  );
-}
+// (الرأس الشفاف صار جزءاً من الهيرو — انظر HeroSection)
 
 function StoreBtn({ to, primary, children }) {
   return (
@@ -164,23 +153,48 @@ function StoreBtn({ to, primary, children }) {
 function HeroSection() {
   const { t, dir, lang } = useLanguage();
   const isAr = lang === 'ar';
+  const links = [
+    [isAr ? 'الخدمات' : 'Services', '#services'],
+    [isAr ? 'المتجر' : 'Shop', '/shop'],
+    [isAr ? 'المزاد' : 'Auction', '/auction'],
+    [isAr ? 'تتبّع الطلب' : 'Track order', '#track'],
+  ];
   return (
-    <section dir={dir}>
-      <div className="relative mx-auto overflow-hidden aspect-[4/5] md:aspect-auto md:h-[72svh]" style={{ maxWidth: 1040 }}>
-        <img src="/images/gallery/bag-after.png" alt={isAr ? 'حقيبة جلدية بعد الترميم في ورشة إبرة وخيط الإسكافي' : 'Leather handbag after restoration'}
-          className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'grayscale(.2) contrast(1.05)' }} fetchpriority="high" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(11,11,12,0) 30%, rgba(11,11,12,.55) 62%, #0b0b0c 100%)' }} />
-        <div className="absolute inset-x-6 bottom-7">
-          <p className="text-xs tracking-[0.25em]" style={{ color: '#bdb8ad' }}>{t('home.hero.eyebrow')}</p>
-          <h1 className="mt-3 font-semibold leading-[1.2]" style={{ fontSize: 'clamp(2.2rem, 7vw, 3.6rem)', color: '#ece8df' }}>
-            {t('home.hero.titleStart')} {t('home.hero.titleEnd')}
-          </h1>
-          <h2 className="mt-3 text-sm font-light" style={{ color: '#a8a398' }}>{t('home.hero.seoSubtitle')}</h2>
+    <section dir={dir} className="relative w-full overflow-hidden" style={{ minHeight: '100svh', background: '#0b0b0c' }}>
+      <img src="/images/hero-workshop.jpg" alt={isAr ? 'حرفي يخيط حذاءً جلدياً في ورشة إبرة وخيط الإسكافي' : 'Craftsman hand-stitching a leather shoe at Needle & Thread Cobbler'}
+        className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '62% 50%' }} fetchpriority="high" />
+      {/* طبقة تدرّج داكنة: كثيفة بالأعلى وأخف بالأسفل لوضوح الشعار والنص */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(8,8,10,.92) 0%, rgba(8,8,10,.62) 38%, rgba(8,8,10,.38) 70%, rgba(8,8,10,.78) 100%)' }} />
+
+      {/* رأس شفاف عائم */}
+      <header className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-5 md:px-14 pt-5 md:pt-7">
+        <nav className="hidden md:flex items-center gap-8 text-[15px] flex-1" style={{ color: '#ece8df' }}>
+          {links.map(([label, to]) => (
+            to.startsWith('#')
+              ? <a key={to} href={to} className="opacity-90 hover:opacity-100 transition-opacity">{label}</a>
+              : <Link key={to} to={to} className="opacity-90 hover:opacity-100 transition-opacity">{label}</Link>
+          ))}
+        </nav>
+        <Link to="/shop" aria-label={isAr ? 'المتجر' : 'Shop'} className="md:hidden w-10 h-10 flex items-center justify-center" style={{ color: '#ece8df' }}>
+          <ShoppingBag className="w-5 h-5" />
+        </Link>
+        <Link to="/" className="flex justify-center" aria-label={t('common.brand')}>
+          <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-12 md:h-16 w-auto object-contain" />
+        </Link>
+        <div className="flex-1 flex justify-end items-center gap-3"><LanguageSwitcher /></div>
+      </header>
+
+      {/* نص الهيرو بالمنتصف */}
+      <div className="relative z-[1] flex flex-col items-center justify-center text-center px-6" style={{ minHeight: '100svh', paddingTop: 70 }}>
+        <p className="text-xs tracking-[0.3em]" style={{ color: '#d6d1c6' }}>{t('home.hero.eyebrow')}</p>
+        <h1 className="mt-5 font-bold leading-[1.25] max-w-3xl" style={{ fontSize: 'clamp(2.3rem, 6.5vw, 4.4rem)', color: '#fff', textShadow: '0 2px 28px rgba(0,0,0,.5)', textAlign: 'center' }}>
+          {t('home.hero.titleStart')} {t('home.hero.titleEnd')}
+        </h1>
+        <h2 className="mt-5 text-base md:text-lg font-light max-w-xl leading-8" style={{ color: '#e5e1d8', textAlign: 'center' }}>{t('home.hero.seoSubtitle')}</h2>
+        <div className="mt-9 flex flex-col sm:flex-row gap-3 w-full" style={{ maxWidth: 460 }}>
+          <div className="flex-1"><StoreBtn to="/book" primary>{t('home.hero.ctaPrimary')}</StoreBtn></div>
+          <div className="flex-1"><StoreBtn to="/my-bookings">{t('common.nav.trackBooking')}</StoreBtn></div>
         </div>
-      </div>
-      <div className="mx-auto px-6 pt-2 pb-9 flex flex-col gap-3" style={{ maxWidth: 560 }}>
-        <StoreBtn to="/book" primary>{t('home.hero.ctaPrimary')}</StoreBtn>
-        <StoreBtn to="/my-bookings">{t('common.nav.trackBooking')}</StoreBtn>
       </div>
     </section>
   );
@@ -710,53 +724,82 @@ function Footer() {
     { href: `https://wa.me/${whatsapp}`, icon: WhatsAppIcon, label: 'WhatsApp' },
     ...(twitter ? [{ href: twitter, icon: Twitter, label: 'Twitter' }] : []),
   ];
-  const box = { border: '1px solid rgba(236,232,223,.28)', color: '#ece8df' };
+  const isAr = dir === 'rtl';
+  const vat = '314151483700003';
+  const groups = [
+    { title: isAr ? 'الشركة' : 'Company', links: [[t('common.footer.about'), '/about'], [t('common.footer.careers'), '/careers'], [isAr ? 'فرعنا' : 'Our branch', '#branches']] },
+    { title: isAr ? 'خدمة العملاء' : 'Customer service', links: [[t('common.footer.book'), '/book'], [t('common.footer.trackBooking'), '/my-bookings'], [t('common.footer.shop'), '/shop'], [isAr ? 'اتصل بنا' : 'Call us', `tel:${phone}`], [isAr ? 'واتساب' : 'WhatsApp', `https://wa.me/${whatsapp}`]] },
+    { title: isAr ? 'السياسات' : 'Policies', links: [[t('common.footer.repairPolicy'), '/repair-policy'], [t('common.footer.shipping'), '/shipping-policy'], [t('common.footer.privacy'), '/privacy']] },
+  ];
+  const LinkItem = ({ to, children }) => (/^(tel:|https?:|#)/.test(to)
+    ? <a href={to} className="hover:text-white transition-colors" {...(to.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{children}</a>
+    : <Link to={to} className="hover:text-white transition-colors">{children}</Link>);
+  const line = '1px solid rgba(255,255,255,.14)';
   return (
-    <footer className="pt-20 pb-10 px-6" style={{ background: '#0b0b0c', borderTop: '1px solid #26262a' }} dir={dir}>
-      <div className="max-w-7xl mx-auto text-start">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
-          <div className="md:col-span-5">
-            <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-14 w-auto object-contain" loading="lazy" />
-            <p className="mt-6 text-sm leading-loose max-w-sm" style={{ color: '#a8a398' }}>{t('common.footer.tagline')}</p>
-            <div className="flex gap-2 mt-8">
-              {socials.map((x, i) => (
-                <a key={i} href={x.href} target="_blank" rel="noopener noreferrer" aria-label={x.label}
-                  className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}>
-                  <x.icon className="w-4 h-4" />
-                </a>
-              ))}
+    <footer className="px-6 pt-14 pb-0" style={{ background: '#2a2b30', color: '#d9d6cf' }} dir={dir}>
+      <div className="max-w-5xl mx-auto">
+        {/* صف تواصل بخط سفلي مثل نموذج الاشتراك */}
+        <h3 className="text-xl md:text-2xl font-normal" style={{ color: '#ece8df' }}>{isAr ? 'تواصل معنا للحصول على أفضل خدمة' : 'Get in touch for the best service'}</h3>
+        <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer"
+          className="mt-6 flex items-center justify-between pb-4 text-sm" style={{ borderBottom: '2px solid #ece8df', color: '#bdb8ad' }}>
+          <span>{isAr ? 'راسلنا على واتساب' : 'Message us on WhatsApp'}</span>
+          {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+        </a>
+
+        <div className="flex justify-center mt-14 mb-10">
+          <img src="/images/cobblers-official-mark-white.png" alt={t('common.brand')} className="h-20 w-auto object-contain opacity-90" loading="lazy" />
+        </div>
+
+        {/* جوال: أكورديون */}
+        <div className="md:hidden">
+          {groups.map((g) => (
+            <details key={g.title} className="group" style={{ borderTop: line }}>
+              <summary className="flex items-center justify-between py-6 text-lg cursor-pointer list-none" style={{ color: '#ece8df' }}>
+                {g.title}
+                <span className="text-2xl leading-none group-open:hidden" aria-hidden>+</span>
+                <span className="text-2xl leading-none hidden group-open:inline" aria-hidden>−</span>
+              </summary>
+              <ul className="pb-6 space-y-4 text-sm" style={{ color: '#bdb8ad' }}>
+                {g.links.map(([label, to]) => <li key={label}><LinkItem to={to}>{label}</LinkItem></li>)}
+              </ul>
+            </details>
+          ))}
+          <div style={{ borderTop: line }} />
+        </div>
+
+        {/* ديسكتوب: ثلاثة أعمدة */}
+        <div className="hidden md:grid grid-cols-3 gap-10 pt-10" style={{ borderTop: line }}>
+          {groups.map((g) => (
+            <div key={g.title}>
+              <h4 className="text-base mb-5" style={{ color: '#ece8df' }}>{g.title}</h4>
+              <ul className="space-y-3.5 text-sm" style={{ color: '#bdb8ad' }}>
+                {g.links.map(([label, to]) => <li key={label}><LinkItem to={to}>{label}</LinkItem></li>)}
+              </ul>
             </div>
-          </div>
-          <div className="md:col-span-4">
-            <h4 className="text-sm font-bold mb-6" style={{ color: '#ece8df' }}>{t('common.footer.linksTitle')}</h4>
-            <ul className="space-y-3.5 text-sm" style={{ color: '#a8a398' }}>
-              {usefulLinks.map(([label, to]) => (
-                <li key={to}><Link to={to} className="hover:text-white transition-colors">{label}</Link></li>
-              ))}
-            </ul>
-          </div>
-          <div className="md:col-span-3">
-            <h4 className="text-sm font-bold mb-6" style={{ color: '#ece8df' }}>{t('common.footer.customerServiceTitle')}</h4>
-            <div className="flex gap-2">
-              <a href={`tel:${phone}`} aria-label={t('common.footer.callUs')} className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#ece8df] hover:text-[#0b0b0c]" style={box}><Phone className="w-4 h-4" /></a>
-              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-11 h-11 flex items-center justify-center transition-opacity hover:opacity-80" style={{ background: '#ece8df', color: '#0b0b0c' }}><WhatsAppIcon className="w-5 h-5" /></a>
-            </div>
-            <p className="mt-4 text-sm" dir="ltr" style={{ color: '#a8a398', textAlign: dir === 'rtl' ? 'right' : 'left' }}>{phone}</p>
-            <p className="mt-2 text-sm" style={{ color: '#a8a398' }}>{dir === 'rtl' ? 'الرياض، حي العزيزية، شارع الشباب' : 'Al Aziziyah, Al Shabab St, Riyadh'}</p>
-            {crNumber && (
-              <div className="mt-8 flex items-center gap-3">
-                <img src="/images/cr-emblem-white.png" alt="السجل التجاري" className="w-12 h-12 object-contain" loading="lazy" />
-                <div className="text-sm" style={{ color: '#a8a398' }}>
-                  <p className="mb-0.5">{t('common.footer.crLabel')}</p>
-                  <p className="font-bold" style={{ color: '#ece8df' }}>{crNumber}</p>
-                </div>
-              </div>
-            )}
+          ))}
+        </div>
+
+        <div className="mt-8 text-sm leading-8" style={{ color: '#bdb8ad' }}>
+          <p>{isAr ? 'الرياض، حي العزيزية، شارع الشباب' : 'Al Aziziyah, Al Shabab St, Riyadh'}</p>
+          <p dir="ltr" style={{ textAlign: isAr ? 'right' : 'left' }}>{phone}</p>
+        </div>
+
+        <div className="mt-10 flex items-center justify-between gap-4 pb-6" style={{ borderBottom: line }}>
+          <p className="text-sm" style={{ color: '#bdb8ad' }}>© {new Date().getFullYear()} {t('common.brand')} · {t('common.footer.rights')}</p>
+          <div className="flex gap-4">
+            {socials.map((x, i) => (
+              <a key={i} href={x.href} target="_blank" rel="noopener noreferrer" aria-label={x.label} className="opacity-80 hover:opacity-100 transition-opacity" style={{ color: '#ece8df' }}>
+                <x.icon className="w-5 h-5" />
+              </a>
+            ))}
           </div>
         </div>
-        <div className="mt-16 pt-6" style={{ borderTop: '1px solid #26262a' }}>
-          <p className="text-xs" style={{ color: '#8d8a82' }}>© {new Date().getFullYear()} {t('common.brand')}. {t('common.footer.rights')}</p>
-        </div>
+      </div>
+      {/* شريط السجل والضريبة */}
+      <div className="-mx-6 px-6 py-4 text-center text-xs" style={{ background: '#1f2024', color: '#bdb8ad' }}>
+        {isAr ? 'إبرة وخيط الإسكافي — ' : 'Needle & Thread Cobbler — '}
+        {isAr ? 'رقم السجل التجاري ' : 'CR No. '}<span dir="ltr" className="font-semibold" style={{ color: '#ece8df' }}>{crNumber || '7051288830'}</span>
+        {isAr ? ' · الرقم الضريبي ' : ' · VAT No. '}<span dir="ltr" className="font-semibold" style={{ color: '#ece8df' }}>{vat}</span>
       </div>
     </footer>
   );
@@ -794,7 +837,6 @@ export default function BookingLanding() {
         <meta name="twitter:image" content="https://www.needlecobbler.com/og-image-v2.jpg" />
         {/* البيانات المنظمة (LocalBusiness/FAQPage/WebSite) تُحقن بالـHTML الثابت عند البناء — scripts/seo-build.mjs */}
       </Helmet>
-      <Navbar />
       <HeroSection />
       <MenuRows />
       <ServicesSection />
