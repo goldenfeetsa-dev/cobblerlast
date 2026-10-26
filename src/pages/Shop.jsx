@@ -149,6 +149,9 @@ function ProductSheet({ product, onClose, onAdd, t, dir, isAr }) {
           <h2 className="text-2xl font-semibold leading-snug" style={{ color: INK }}>{product.name_ar}</h2>
           <Price product={product} size="text-2xl" />
           {product.description && <p className="text-[15px] leading-loose font-light" style={{ color: '#a8a398' }}>{product.description}</p>}
+          {String(product.id).length > 8 && (
+            <Link to={`${isAr ? '' : '/en'}/shop/${product.id}`} className="text-xs underline" style={{ color: '#bdb8ad' }}>{isAr ? 'صفحة المنتج' : 'Product page'}</Link>
+          )}
           <div className="flex items-center gap-2 text-sm" style={{ color: product.in_stock ? '#bdb8ad' : '#8d8a82' }}>
             <span className="w-2 h-2 inline-block" style={{ background: product.in_stock ? '#4ade80' : '#6b7280' }} />
             {product.in_stock ? (isAr ? 'متوفر' : 'In stock') : t('shop.outOfStock')}
@@ -296,10 +299,11 @@ export default function Shop() {
             "position": i + 1,
             "item": {
               "@type": "Product",
-              "@id": `https://www.needlecobbler.com/shop#product-${p.id}`,
+              "@id": `https://www.needlecobbler.com/shop/${p.id}#product`,
+              "url": `https://www.needlecobbler.com/shop/${p.id}`,
               "name": p.name_ar || p.name,
               "description": p.description || p.name_ar,
-              "image": p.image_url,
+              "image": p.image_url ? (/^https?:\/\//.test(p.image_url) ? p.image_url : `https://www.needlecobbler.com${p.image_url.startsWith('/') ? '' : '/'}${p.image_url}`) : undefined,
               "sku": p.sku || String(p.id),
               "brand": { "@type": "Brand", "name": "إبرة وخيط الإسكافي" },
               "offers": {
@@ -307,7 +311,7 @@ export default function Shop() {
                 "price": p.price,
                 "priceCurrency": "SAR",
                 "availability": p.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                "url": `https://www.needlecobbler.com/shop#product-${p.id}`,
+                "url": `https://www.needlecobbler.com/shop/${p.id}`,
                 "seller": { "@type": "Organization", "name": "إبرة وخيط الإسكافي", "url": "https://www.needlecobbler.com" },
                 "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
               }

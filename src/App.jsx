@@ -63,6 +63,7 @@ const Purchasing = lazy(() => import('./pages/Purchasing'));
 const PartnerPortal = lazy(() => import('./pages/PartnerPortal'));
 const PartnersAdmin = lazy(() => import('./pages/PartnersAdmin'));
 const PartnerAccount = lazy(() => import('./pages/PartnerAccount'));
+const ProductPage = lazy(() => import('./pages/ProductPage'));
 const Returns = lazy(() => import('./pages/Returns'));
 const ServicePage = lazy(() => import('./pages/ServicePage'));
 const AreaPage = lazy(() => import('./pages/AreaPage'));
@@ -120,6 +121,7 @@ const AuthenticatedApp = () => {
         <Route path="/my-loyalty" element={<MyLoyalty />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/shop/:id" element={<ProductPage />} />
         <Route path="/auction" element={<AuctionMarket />} />
         <Route path="/repair-policy" element={<RepairPolicy />} />
         <Route path="/about" element={<AboutUs />} />
@@ -132,6 +134,7 @@ const AuthenticatedApp = () => {
         <Route path="/en" element={<BookingLanding />} />
         <Route path="/en/book" element={<BookingWizard />} />
         <Route path="/en/shop" element={<Shop />} />
+        <Route path="/en/shop/:id" element={<ProductPage />} />
         <Route path="/en/auction" element={<AuctionMarket />} />
         <Route path="/en/reviews" element={<Reviews />} />
         <Route path="/en/about" element={<AboutUs />} />

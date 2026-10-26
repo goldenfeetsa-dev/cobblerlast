@@ -28,6 +28,25 @@ const esc = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 const jsonLd = (obj) => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
 const li = (arr) => `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`;
 
+// ───────────── منتجات المتجر (من قاعدة البيانات وقت البناء؛ أي فشل = بدون صفحات منتجات) ─────────────
+const absImg = (u) => (!u ? null : /^https?:\/\//.test(u) ? u : SITE.url + (u.startsWith('/') ? u : '/' + u));
+async function fetchProducts() {
+  try {
+    if (process.env.SEO_PRODUCTS_FILE) return JSON.parse(fs.readFileSync(process.env.SEO_PRODUCTS_FILE, 'utf8'));
+    const base = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://bwuvldnlfgobqpdfhyql.supabase.co';
+    const key = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dXZsZG5sZmdvYnFwZGZoeXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTM4NzUsImV4cCI6MjA5Mjk2OTg3NX0.mE9_sVG0E2ZWwkLq9lDFZEKM5xPidSNCsyx9AJrxAgo';
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(`${base}/rest/v1/products?select=id,name,name_ar,description,price,original_price,image_url,sku,in_stock,category,brand_name&price=gt.0&order=sort_order.asc`, { headers: { apikey: key, Authorization: `Bearer ${key}` }, signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows.filter((p) => p.id && (p.name_ar || p.name)) : [];
+  } catch (e) { console.warn('[seo-build] تعذّر جلب المنتجات (تم تجاهله):', e.message); return []; }
+}
+const PRODUCTS = await fetchProducts();
+const prodName = (p, lang) => (lang === 'ar' ? (p.name_ar || p.name) : (p.name || p.name_ar));
+const prodDesc = (p, lang) => (p.description && String(p.description).trim()) || (lang === 'ar' ? `${p.name_ar || p.name} — من متجر إبرة وخيط الإسكافي، توصيل داخل الرياض.` : `${p.name || p.name_ar} — from Ebra & Khait Cobbler shop, delivery in Riyadh.`);
+
 // ───────────── سجل الصفحات (ثابتة + خدمات) ─────────────
 const REG = [
   ...PAGES.map((p) => ({ path: p.path, priority: p.priority, changefreq: p.changefreq, kind: 'page', ar: { title: p.title, description: p.description }, en: p.en })),
@@ -37,6 +56,9 @@ const REG = [
     changefreq: 'monthly', kind: 'area', area: a,
     ar: { title: areaContent(a.slug, 'ar').title, description: areaContent(a.slug, 'ar').description },
     en: { title: areaContent(a.slug, 'en').title, description: areaContent(a.slug, 'en').description } })),
+  ...PRODUCTS.map((p) => ({ path: `/shop/${p.id}`, priority: '0.7', changefreq: 'weekly', kind: 'product', prod: p,
+    ar: { title: `${prodName(p, 'ar')} | متجر إبرة وخيط الإسكافي`, description: prodDesc(p, 'ar').slice(0, 300) },
+    en: { title: `${prodName(p, 'en')} | Ebra & Khait Cobbler Shop`, description: prodDesc(p, 'en').slice(0, 300) } })),
 ];
 const pathOf = (p, lang) => (lang === 'ar' ? p : p === '/' ? '/en' : '/en' + p);
 const urlOf = (p, lang) => { const x = pathOf(p, lang); return x === '/' ? SITE.url + '/' : SITE.url + x; };
@@ -109,6 +131,19 @@ function graphFor(page, lang) {
       provider: { '@id': BUSINESS_ID }, url });
     nodes.push(faqNode(lang, c.faq, `${url}#faq`));
   }
+  if (page.kind === 'product') {
+    const p = page.prod, shop = urlOf('/shop', lang);
+    crumbs.length = 1;
+    crumbs.push({ '@type': 'ListItem', position: 2, name: lang === 'ar' ? 'المتجر' : 'Shop', item: shop });
+    crumbs.push({ '@type': 'ListItem', position: 3, name: prodName(p, lang), item: url });
+    nodes[1] = { '@type': 'BreadcrumbList', itemListElement: crumbs };
+    nodes.push({ '@type': 'Product', '@id': `${url}#product`, url, name: prodName(p, lang), description: prodDesc(p, lang), inLanguage: lang,
+      ...(p.image_url ? { image: [absImg(p.image_url)] } : {}), sku: p.sku || String(p.id), mpn: p.sku || String(p.id),
+      brand: { '@type': 'Brand', name: p.brand_name || SITE.nameAr }, ...(p.category ? { category: p.category } : {}),
+      offers: { '@type': 'Offer', url, priceCurrency: 'SAR', price: Number(p.price).toFixed(2), itemCondition: 'https://schema.org/NewCondition',
+        availability: p.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        priceValidUntil: new Date(Date.now() + 365 * 864e5).toISOString().slice(0, 10), seller: { '@id': BUSINESS_ID } } });
+  }
   if (page.kind === 'service') {
     const c = page.svc[lang];
     nodes.push({ '@type': 'Service', '@id': `${url}#service`, name: c.h1, description: c.description, serviceType: c.name, inLanguage: lang,
@@ -154,6 +189,12 @@ function bodyFor(page, lang) {
       `<h2>${ar ? 'أسئلة شائعة' : 'FAQ'}</h2>${c.faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}` +
       `<p><a href="${pathOf('/book', lang)}">${ar ? 'احجز موعدك' : 'Book your repair'}</a></p>` +
       `<h2>${T.other_h}</h2><ul>${others.map((s) => `<li><a href="${pathOf('/services/' + s.slug, lang)}">${esc(s[lang].name)}</a></li>`).join('')}</ul>` + contactHtml(lang);
+  } else if (page.kind === 'product') {
+    const p = page.prod;
+    inner = h(prodName(p, lang)) + (p.image_url ? `<p><img src="${esc(absImg(p.image_url))}" alt="${esc(prodName(p, lang))}" width="480" /></p>` : '') +
+      `<p>${esc(prodDesc(p, lang))}</p><p><strong>${ar ? 'السعر' : 'Price'}:</strong> ${Number(p.price)} ${ar ? 'ريال سعودي' : 'SAR'} — ${p.in_stock ? (ar ? 'متوفر' : 'In stock') : (ar ? 'غير متوفر' : 'Out of stock')}</p>` +
+      `<p>${ar ? 'الطلب عبر واتساب والتوصيل داخل الرياض (مجاني للطلبات فوق 200 ريال).' : 'Order via WhatsApp; delivery in Riyadh (free above SAR 200).'}</p>` +
+      `<p><a href="${pathOf('/shop', lang)}">${ar ? 'العودة للمتجر' : 'Back to shop'}</a></p>` + contactHtml(lang);
   } else if (page.path === '/') {
     inner = h(T.h1home) + `<p>${esc(tr.home.hero.desc)}</p><p>${esc(tr.home.hero.seoSubtitle)}.</p>` +
       `<h2>${T.services_h}</h2><ul>${T.services.map((s) => `<li><strong>${esc(s.name)}</strong> — ${esc(s.desc)}</li>`).join('')}</ul>` +
@@ -178,6 +219,7 @@ function bodyFor(page, lang) {
   } else if (page.path === '/shop') {
     inner = h(ar ? 'متجر إبرة وخيط — مستلزمات العناية بالأحذية والحقائب' : "Cobbler's Shop — Shoe & Bag Care Supplies") + `<p>${esc(tr.shop.subtitle)}.</p>` +
       `<h2>${ar ? 'أقسام المتجر' : 'Shop categories'}</h2>${li(tr.shop.categories.filter((c) => c.key !== 'all').map((c) => c.label))}` +
+      (PRODUCTS.length ? `<h2>${ar ? 'المنتجات' : 'Products'}</h2><ul>${PRODUCTS.map((p) => `<li><a href="${pathOf('/shop/' + p.id, lang)}">${esc(prodName(p, lang))}</a> — ${Number(p.price)} ${ar ? 'ريال' : 'SAR'}</li>`).join('')}</ul>` : '') +
       `<p>${ar ? 'الطلب يتم عبر السلة ثم واتساب، والتوصيل داخل الرياض (مجاني للطلبات فوق 200 ريال).' : 'Order through the cart and WhatsApp; delivery in Riyadh is free for orders above SAR 200.'} ${esc(tr.shop.needSomethingElse)}.</p>` + contactHtml(lang);
   } else if (page.path === '/book') {
     inner = h(ar ? 'احجز موعد تصليح حذاء أو حقيبة في الرياض' : 'Book a shoe or bag repair in Riyadh') +
