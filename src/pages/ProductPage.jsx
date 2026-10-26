@@ -31,8 +31,19 @@ export default function ProductPage() {
     },
   });
 
+  const { data: related = [] } = useQuery({
+    queryKey: ['product-related', id],
+    enabled: !!p,
+    queryFn: async () => {
+      const { data } = await supabase.from('products').select('id,name,name_ar,price,image_url,in_stock,category').gt('price', 0).neq('id', id).order('sort_order').limit(8);
+      const rows = data || [];
+      return [...rows.filter((r) => r.category === p.category), ...rows.filter((r) => r.category !== p.category)].slice(0, 4);
+    },
+  });
+
   const name = p ? (isAr ? p.name_ar || p.name : p.name || p.name_ar) : '';
-  const desc = p?.description || (isAr ? `${name} — من متجر إبرة وخيط الإسكافي` : `${name} — Ebra & Khait Cobbler shop`);
+  const bodyText = p ? (isAr ? p.description : p.description_en || p.description) : '';
+  const desc = bodyText || (isAr ? `${name} — من متجر إبرة وخيط الإسكافي` : `${name} — Ebra & Khait Cobbler shop`);
   const url = `${SITE}${prefix}/shop/${id}`;
 
   const ld = p && {
@@ -70,7 +81,10 @@ export default function ProductPage() {
         </Helmet>
       )}
       <div className="max-w-4xl mx-auto">
-        <Link to={`${prefix}/shop`} className="text-sm underline" style={{ color: '#bdb8ad' }}>{isAr ? '← العودة للمتجر' : '← Back to shop'}</Link>
+        <nav aria-label="breadcrumb" className="text-sm flex flex-wrap gap-2" style={{ color: '#8d8a82' }}>
+          <Link to={prefix || '/'} className="underline">{isAr ? 'الرئيسية' : 'Home'}</Link><span>/</span>
+          <Link to={`${prefix}/shop`} className="underline">{isAr ? 'المتجر' : 'Shop'}</Link>{p && <><span>/</span><span style={{ color: '#bdb8ad' }}>{name}</span></>}
+        </nav>
         {isLoading && <Loader2 className="w-6 h-6 animate-spin mx-auto mt-20" />}
         {!isLoading && !p && <p className="text-center mt-20" style={{ color: '#8d8a82' }}>{isAr ? 'المنتج غير موجود' : 'Product not found'}</p>}
         {p && (
@@ -85,7 +99,8 @@ export default function ProductPage() {
                 <span className="text-2xl font-bold"><SarAmount value={p.price} decimals={0} /></span>
                 {p.original_price > p.price && <span className="text-sm line-through" style={{ color: '#8d8a82' }}><SarAmount value={p.original_price} decimals={0} /></span>}
               </div>
-              {p.description && <p className="leading-loose font-light" style={{ color: '#a8a398' }}>{p.description}</p>}
+              {bodyText && <p className="leading-loose font-light" style={{ color: '#a8a398' }}>{bodyText}</p>}
+              {p.sku && <div className="text-xs" style={{ color: '#8d8a82' }}>SKU: {p.sku}</div>}
               <div className="text-sm" style={{ color: p.in_stock ? '#4ade80' : '#8d8a82' }}>{p.in_stock ? (isAr ? 'متوفر' : 'In stock') : (isAr ? 'غير متوفر' : 'Out of stock')}</div>
               <button disabled={!p.in_stock} onClick={order} className="min-h-[52px] font-semibold disabled:opacity-40" style={{ background: INK, color: '#0b0b0c' }}>
                 {isAr ? 'اطلب عبر واتساب' : 'Order on WhatsApp'}
@@ -93,6 +108,32 @@ export default function ProductPage() {
               <p className="text-xs" style={{ color: '#8d8a82' }}>{isAr ? 'توصيل داخل الرياض — مجاني للطلبات فوق 200 ريال.' : 'Delivery in Riyadh — free above SAR 200.'}</p>
             </div>
           </div>
+        )}
+
+        {p && (
+          <div className="mt-10 grid sm:grid-cols-3 gap-3 text-sm" style={{ color: '#bdb8ad' }}>
+            {[
+              [isAr ? 'توصيل داخل الرياض' : 'Delivery in Riyadh', isAr ? 'مجاني للطلبات فوق 200 ريال، و30 ريال دونها.' : 'Free above SAR 200, SAR 30 below.'],
+              [isAr ? 'طرق الدفع' : 'Payment', isAr ? 'نقداً، تحويل بنكي، Apple Pay، مدى.' : 'Cash, bank transfer, Apple Pay, Mada.'],
+              [isAr ? 'تأكيد الطلب' : 'Order confirmation', isAr ? 'نؤكد الطلب والتوصيل معك عبر واتساب.' : 'We confirm your order and delivery on WhatsApp.'],
+            ].map(([t, d]) => (
+              <div key={t} className="p-4" style={{ border: '1px solid rgba(255,255,255,0.08)' }}><div className="font-semibold mb-1" style={{ color: INK }}>{t}</div>{d}</div>
+            ))}
+          </div>
+        )}
+
+        {related.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-lg font-semibold mb-4">{isAr ? 'منتجات أخرى قد تعجبك' : 'You may also like'}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {related.map((r) => (
+                <Link key={r.id} to={`${prefix}/shop/${r.id}`} className="block" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ aspectRatio: '1 / 1', background: '#131315' }}>{r.image_url && <img src={r.image_url} alt={isAr ? r.name_ar || r.name : r.name || r.name_ar} loading="lazy" className="w-full h-full object-cover" />}</div>
+                  <div className="p-3 text-sm"><div className="line-clamp-2">{isAr ? r.name_ar || r.name : r.name || r.name_ar}</div><div className="mt-1 font-bold"><SarAmount value={r.price} decimals={0} /></div></div>
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </div>

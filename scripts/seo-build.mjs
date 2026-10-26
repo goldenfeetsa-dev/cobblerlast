@@ -36,7 +36,7 @@ async function fetchProducts() {
     const base = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://bwuvldnlfgobqpdfhyql.supabase.co';
     const key = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dXZsZG5sZmdvYnFwZGZoeXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTM4NzUsImV4cCI6MjA5Mjk2OTg3NX0.mE9_sVG0E2ZWwkLq9lDFZEKM5xPidSNCsyx9AJrxAgo';
     const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
-    const r = await fetch(`${base}/rest/v1/products?select=id,name,name_ar,description,price,original_price,image_url,sku,in_stock,category,brand_name&price=gt.0&order=sort_order.asc`, { headers: { apikey: key, Authorization: `Bearer ${key}` }, signal: ctrl.signal });
+    const r = await fetch(`${base}/rest/v1/products?select=id,name,name_ar,description,description_en,price,original_price,image_url,sku,in_stock,category,brand_name&price=gt.0&order=sort_order.asc`, { headers: { apikey: key, Authorization: `Bearer ${key}` }, signal: ctrl.signal });
     clearTimeout(t);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const rows = await r.json();
@@ -45,7 +45,7 @@ async function fetchProducts() {
 }
 const PRODUCTS = await fetchProducts();
 const prodName = (p, lang) => (lang === 'ar' ? (p.name_ar || p.name) : (p.name || p.name_ar));
-const prodDesc = (p, lang) => (p.description && String(p.description).trim()) || (lang === 'ar' ? `${p.name_ar || p.name} — من متجر إبرة وخيط الإسكافي، توصيل داخل الرياض.` : `${p.name || p.name_ar} — from Ebra & Khait Cobbler shop, delivery in Riyadh.`);
+const prodDesc = (p, lang) => String((lang === 'en' ? p.description_en : p.description) || '').trim() || (lang === 'ar' ? `${p.name_ar || p.name} — من متجر إبرة وخيط الإسكافي، توصيل داخل الرياض.` : `${p.name || p.name_ar} — from Ebra & Khait Cobbler shop, delivery in Riyadh.`);
 
 // ───────────── سجل الصفحات (ثابتة + خدمات) ─────────────
 const REG = [
