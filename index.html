@@ -144,9 +144,14 @@
     <link rel="dns-prefetch" href="https://bwuvldnlfgobqpdfhyql.supabase.co" />
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <style>
+      @keyframes logoGlow{0%,100%{opacity:.18;filter:drop-shadow(0 0 0 rgba(201,168,76,0))}50%{opacity:1;filter:drop-shadow(0 0 22px rgba(201,168,76,.65))}}
+      .logo-glow{animation:logoGlow 2s ease-in-out infinite}
+      @media (prefers-reduced-motion:reduce){.logo-glow{animation:none;opacity:.9}}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--boot--><div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#060300"><img src="/images/cobblers-official-mark-white.png" alt="" class="logo-glow" width="120" style="width:120px;height:auto"></div><!--/boot--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

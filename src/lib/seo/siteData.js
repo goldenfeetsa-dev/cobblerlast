@@ -103,7 +103,7 @@ export const FAQ = {
 /** صفحات الموقع العامة القابلة للفهرسة — العنوان/الوصف للصفحات الداخلية */
 export const PAGES = [
   { path: '/', priority: '1.0', changefreq: 'weekly',
-    en: { title: 'Ebra & Khait Cobbler | Shoe & Luxury Bag Repair in Riyadh', description: 'Riyadh cobbler for shoe repair and luxury leather bag restoration (Hermès, Louis Vuitton, Chanel), travel bags and military boots. Pickup, 30-day guarantee.' },
+    en: { title: 'Ebra & Khait Cobbler (Needle & Thread) | Shoe & Luxury Bag Repair Riyadh', description: 'Ebra & Khait Cobbler — Needle & Thread Cobbler — is Riyadh’s shoe repair and luxury handbag restoration workshop: Hermès, Louis Vuitton, Chanel, suitcases, sneakers and military boots. Free pickup, 30-day guarantee.' },
     title: 'إبرة وخيط الإسكافي | تصليح أحذية وشنط جلدية بالرياض',
     description: 'تصليح وترميم الأحذية والحقائب الجلدية الفاخرة في الرياض (هيرمس، لويس فيتون، شانيل). استلام من موقعك، ضمان 30 يوماً، وتتبع مباشر لقطعتك.' },
   { path: '/book', priority: '0.9', changefreq: 'weekly',

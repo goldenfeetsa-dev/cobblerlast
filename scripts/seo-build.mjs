@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SITE, SITE_EN, FAQ, PAGES } from '../src/lib/seo/siteData.js';
+import { ALL_EN } from '../src/lib/seo/keywords.js';
 import { SERVICE_PAGES } from '../src/lib/seo/services.js';
 import { ALL_AREAS, areaContent, SECTORS, DISTRICTS } from '../src/lib/seo/areas.js';
 import { translations } from '../src/lib/i18n/translations.js';
@@ -261,14 +262,27 @@ function render(template, page, lang) {
   const alt = `\n    <link rel="alternate" hreflang="ar" href="${urlOf(page.path, 'ar')}" />\n    <link rel="alternate" hreflang="en" href="${urlOf(page.path, 'en')}" />\n    <link rel="alternate" hreflang="x-default" href="${urlOf(page.path, 'ar')}" />`;
   h = h.replace('</title>', () => `</title>${alt}`);
   const setMeta = (attr, key, val) => { h = h.replace(new RegExp(`<meta ${attr}="${key}" content="[^"]*"\\s*\\/?>`), () => `<meta ${attr}="${key}" content="${esc(val)}" />`); };
-  setMeta('property', 'og:url', url); setMeta('property', 'og:title', short + ' | ' + T.name); setMeta('property', 'og:description', meta.description);
+  const brandTitle = lang === 'en' ? (meta.title.includes('Ebra & Khait') ? meta.title : short + ' | ' + T.name) : (short + ' | ' + T.name);
+  const ogTitle = (lang === 'en' && meta.title.includes('Ebra & Khait')) ? meta.title : (short.includes(T.name) ? short : brandTitle);
+  setMeta('property', 'og:url', url); setMeta('property', 'og:title', ogTitle); setMeta('property', 'og:description', meta.description);
+  const kw = lang === 'en'
+    ? [...new Set(['Ebra & Khait Cobbler', 'Needle and Thread Cobbler', 'Ebra and Khait', 'Ebra Khait Cobbler', 'Cobblers Riyadh', ...ALL_EN])].slice(0, 40)
+    : null;
+  if (kw) setMeta('name', 'keywords', kw.join(', '));
+  if (lang === 'en') {
+    setMeta('name', 'author', 'Ebra & Khait Cobbler (Needle & Thread Cobbler)');
+    setMeta('name', 'language', 'English');
+    setMeta('property', 'og:site_name', 'Ebra & Khait Cobbler — Needle & Thread Cobbler');
+    setMeta('property', 'og:image:alt', 'Ebra & Khait Cobbler (Needle & Thread Cobbler) — shoe and luxury bag repair in Riyadh');
+    h = h.replace(/<meta name="twitter:image" content="[^"]*"\s*\/?>/, (m) => m + '\n    <meta name="twitter:image:alt" content="Ebra &amp; Khait Cobbler — shoe and luxury bag repair in Riyadh" />');
+  }
   setMeta('property', 'og:locale', T.locale);
-  setMeta('name', 'twitter:url', url); setMeta('name', 'twitter:title', short + ' | ' + T.name); setMeta('name', 'twitter:description', meta.description);
+  setMeta('name', 'twitter:url', url); setMeta('name', 'twitter:title', ogTitle); setMeta('name', 'twitter:description', meta.description);
   h = h.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => jsonLd(graphFor(page, lang)));
   const verif = [SITE.gscVerification && `<meta name="google-site-verification" content="${esc(SITE.gscVerification)}" />`,
     SITE.bingVerification && `<meta name="msvalidate.01" content="${esc(SITE.bingVerification)}" />`].filter(Boolean).join('\n    ');
   if (verif) h = h.replace('</head>', () => `    ${verif}\n  </head>`);
-  h = h.replace('<div id="root"></div>', () => `<div id="root">${bodyFor(page, lang)}</div>`);
+  h = h.replace(/<div id="root">(?:<!--boot-->[\s\S]*?<!--\/boot-->)?<\/div>/, () => `<div id="root">${bodyFor(page, lang)}</div>`);
   return h;
 }
 

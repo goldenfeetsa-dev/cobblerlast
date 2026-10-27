@@ -92,6 +92,18 @@ export const KEYWORDS = {
       'shoe repair Al Aziziyah Riyadh', 'shoe repair Al Naseem Riyadh', 'shoe repair Saudi Arabia by mail', 'send shoes for repair Saudi Arabia',
       'send handbag for repair Saudi Arabia', 'luxury bag repair Saudi Arabia', 'shoe repair pickup Riyadh all districts',
     ],
+    'Brand names (English)': [
+      'Ebra & Khait', 'Ebra and Khait Cobbler', 'Ebra Khait', 'Ibra wa Khait', 'Needle & Thread Cobbler Riyadh', 'Needle and Thread shoe repair', 'Cobblers Riyadh', 'Al Eskafi Riyadh', 'Eskafi Riyadh',
+    ],
+    'More shoe & leather services': [
+      'shoe repair shop near me Riyadh', 'cobbler shop Riyadh', 'shoe resole Riyadh', 'shoe sole glue repair', 'heel tip replacement Riyadh', 'women shoe repair Riyadh',
+      'dress shoe repair Riyadh', 'leather shoe cleaning Riyadh', 'leather conditioning Riyadh', 'suede shoe repair Riyadh', 'shoe dyeing Riyadh', 'sandal repair Riyadh',
+      'leather jacket repair Riyadh', 'belt repair Riyadh', 'wallet repair Riyadh', 'leather sofa repair Riyadh', 'leather restoration and dyeing',
+    ],
+    'Online & pickup': [
+      'shoe repair delivery Riyadh', 'online shoe repair Saudi Arabia', 'bag repair pickup Riyadh', 'repair service with pickup Riyadh', 'track my repair order', 'shoe repair with warranty Riyadh',
+      'shoe repair price Riyadh', 'bag repair cost Riyadh', 'zipper replacement cost Riyadh',
+    ],
     'Service & questions': [
       'shoe repair pickup and delivery Riyadh', 'how much does shoe repair cost', 'how much to repair a leather bag', 'cracked leather bag repair',
     ],
