@@ -10,11 +10,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import ApplicantsPanel from '@/components/careers/ApplicantsPanel';
 
 const EMPTY = {
   title: '', department: '', employment_type: 'full_time', location: '',
   description: '', requirements: '', salary_note: '',
-  apply_method: 'whatsapp', apply_value: '', is_active: true,
+  apply_method: 'whatsapp', apply_value: '966549678191', is_active: true,
+  title_en: '', description_en: '', keywords: '',
 };
 
 const EMPLOYMENT_LABELS = { full_time: 'دوام كامل', part_time: 'دوام جزئي', contract: 'عقد مؤقت' };
@@ -32,6 +34,7 @@ function slugify(title) {
 export default function CareersAdmin() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [applicantsFor, setApplicantsFor] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -67,7 +70,7 @@ export default function CareersAdmin() {
   const openEdit = (j) => { setEditing(j); setForm({ ...EMPTY, ...j }); setOpen(true); };
 
   const handleSave = () => {
-    if (!form.title || !form.apply_value) return;
+    if (!form.title) return;
     save.mutate(form);
   };
 
@@ -108,7 +111,8 @@ export default function CareersAdmin() {
                     <span className="flex items-center gap-1"><ExternalLink className="w-3.5 h-3.5" />التقديم: {APPLY_LABELS[j.apply_method]}</span>
                   </div>
                 </div>
-                <div className="flex gap-1 flex-shrink-0">
+                <div className="flex gap-1 flex-shrink-0 items-center">
+                  <Button size="sm" variant="outline" onClick={() => setApplicantsFor(j)} className="h-8 text-xs">المتقدمون</Button>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(j)} className="h-8 w-8">
                     <Pencil className="w-3.5 h-3.5" />
                   </Button>
@@ -133,6 +137,8 @@ export default function CareersAdmin() {
           ))}
         </div>
       )}
+
+      {applicantsFor && <ApplicantsPanel job={applicantsFor} onClose={() => setApplicantsFor(null)} />}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto">
@@ -166,15 +172,28 @@ export default function CareersAdmin() {
               <Input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="مثال: الرياض - فرع العليا" dir="rtl" className="text-right" />
             </div>
             <div>
-              <label className="text-sm font-medium text-stone-700 mb-1.5 block">وصف الوظيفة</label>
+              <label className="text-sm font-medium text-stone-700 mb-1.5 block">مهام الوظيفة (سطر لكل مهمة — تظهر للزوار)</label>
               <Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="نبذة عن المهام والمسؤوليات" dir="rtl" className="text-right min-h-[80px]" />
             </div>
             <div>
-              <label className="text-sm font-medium text-stone-700 mb-1.5 block">المتطلبات</label>
+              <label className="text-sm font-medium text-stone-700 mb-1.5 block">المتطلبات (داخلية — لا تظهر للزوار)</label>
               <Textarea value={form.requirements} onChange={e => setForm(p => ({ ...p, requirements: e.target.value }))} placeholder="كل شرط بسطر مستقل" dir="rtl" className="text-right min-h-[80px]" />
             </div>
             <div>
-              <label className="text-sm font-medium text-stone-700 mb-1.5 block">الراتب (اختياري)</label>
+              <label className="text-sm font-medium text-stone-700 mb-1.5 block">المسمى بالإنجليزية (للنسخة الإنجليزية وجوجل)</label>
+              <Input value={form.title_en || ''} onChange={e => setForm(p => ({ ...p, title_en: e.target.value }))} placeholder="Bag Repair Technician" dir="ltr" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-stone-700 mb-1.5 block">المهام بالإنجليزية (سطر لكل مهمة)</label>
+              <Textarea value={form.description_en || ''} onChange={e => setForm(p => ({ ...p, description_en: e.target.value }))} dir="ltr" className="min-h-[80px]" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-stone-700 mb-1.5 block">كلمات تحليل السيرة (ATS)</label>
+              <Textarea value={form.keywords || ''} onChange={e => setForm(p => ({ ...p, keywords: e.target.value }))} dir="rtl" className="min-h-[70px] text-right" placeholder="افصل بين الكلمات بفاصلة، والمرادفات بـ / مثل: جلد/leather, خياطة/sewing/stitching" />
+              <p className="text-xs text-stone-400 mt-1">إن تُركت فارغة تُستخرج الكلمات تلقائياً من المهام.</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-stone-700 mb-1.5 block">الراتب (داخلي فقط — لا يظهر للزوار)</label>
               <Input value={form.salary_note} onChange={e => setForm(p => ({ ...p, salary_note: e.target.value }))} placeholder="مثال: 4000 - 5500 ريال أو يُحدد بعد المقابلة" dir="rtl" className="text-right" />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -212,7 +231,7 @@ export default function CareersAdmin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
-            <Button onClick={handleSave} disabled={!form.title || !form.apply_value || save.isPending} className="bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold">
+            <Button onClick={handleSave} disabled={!form.title || save.isPending} className="bg-amber-500 dark:bg-amber-900/60 hover:bg-amber-400 text-stone-900 font-bold">
               {save.isPending ? 'جارٍ الحفظ...' : 'حفظ ونشر'}
             </Button>
           </DialogFooter>

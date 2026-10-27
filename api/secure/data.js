@@ -1109,6 +1109,54 @@ ${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كل
     }
   }
 
+  // ── طلبات التوظيف: عرض/تنزيل السيرة (رابط موقّع قصير)/تحديث الحالة/حذف — owner/admin/manager ──
+  if (resourceKey === 'applications') {
+    const sess = getSessionFromRequest(req);
+    if (!sess) return res.status(401).json({ error: 'unauthenticated' });
+    if (!['owner', 'admin', 'manager'].includes(sess.role)) return res.status(403).json({ error: 'forbidden' });
+    const sb = getSupabaseAdmin();
+    try {
+      const { id, job_id, op } = req.query;
+      if (req.method === 'GET' && op === 'cv') {
+        if (!id) return res.status(400).json({ error: 'missing_id' });
+        const { data: a } = await sb.from('job_applications').select('cv_path').eq('id', id).single();
+        if (!a?.cv_path) return res.status(404).json({ error: 'no_cv' });
+        const { data, error } = await sb.storage.from('cvs').createSignedUrl(a.cv_path, 120);
+        if (error) throw error;
+        return res.status(200).json({ url: data.signedUrl });
+      }
+      if (req.method === 'GET') {
+        let q = sb.from('job_applications')
+          .select('id,job_id,full_name,phone,email,city,years_experience,about,cv_path,ats_score,ats_matched,ats_missing,status,created_at')
+          .order('ats_score', { ascending: false }).order('created_at', { ascending: false }).limit(300);
+        if (job_id) q = q.eq('job_id', job_id);
+        const { data, error } = await q;
+        if (error) throw error;
+        return res.status(200).json(data || []);
+      }
+      if (req.method === 'PATCH') {
+        if (!id) return res.status(400).json({ error: 'missing_id' });
+        const status = ['new', 'shortlisted', 'interview', 'rejected', 'hired'].includes(req.body?.status) ? req.body.status : null;
+        if (!status) return res.status(400).json({ error: 'invalid_status' });
+        const { error } = await sb.from('job_applications').update({ status }).eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ ok: true });
+      }
+      if (req.method === 'DELETE') {
+        if (!id) return res.status(400).json({ error: 'missing_id' });
+        const { data: a } = await sb.from('job_applications').select('cv_path').eq('id', id).single();
+        if (a?.cv_path) await sb.storage.from('cvs').remove([a.cv_path]);
+        const { error } = await sb.from('job_applications').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ ok: true });
+      }
+      return res.status(405).json({ error: 'method_not_allowed' });
+    } catch (err) {
+      console.error('api/secure/data (applications) error', err);
+      return res.status(500).json({ error: err.message || 'server_error' });
+    }
+  }
+
   // ── مساعد الفني الذكي: يفهم الطلب ويرد، عبر Claude API (مفتاح على السيرفر فقط) ──
   if (resourceKey === 'tech-ai') {
     const sess = getSessionFromRequest(req);
