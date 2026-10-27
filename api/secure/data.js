@@ -33,6 +33,19 @@ const RESOURCES = {
     write: ['owner', 'admin', 'manager', 'cashier'],
     del: ['owner', 'admin', 'manager'],
   },
+  // المزاد: الجمهور يتعامل عبر دوال RPC فقط؛ الإدارة عبر هذا الـ endpoint
+  auction_listings: {
+    table: 'auction_listings',
+    read: ['owner', 'admin', 'manager'],
+    write: ['owner', 'admin', 'manager'],
+    del: ['owner', 'admin', 'manager'],
+  },
+  auction_bids: {
+    table: 'auction_bids',
+    read: ['owner', 'admin', 'manager'],
+    write: [],
+    del: ['owner', 'admin'],
+  },
 };
 
 // تطبيع عربي مبسّط للمطابقة (تشكيل/همزات/تاء مربوطة)

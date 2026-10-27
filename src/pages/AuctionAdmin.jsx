@@ -8,6 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Gavel, Star } from 'lucide-react';
 import ProductImageUploader from '@/components/shop/ProductImageUploader';
 import { toast } from 'sonner';
+import { secureResource } from '@/lib/secureApi';
+
+const auctionApi = secureResource('auction_listings');
+const bidsApi = secureResource('auction_bids');
 import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 
 const CATEGORIES = { bags: 'حقائب', shoes: 'أحذية', accessories: 'إكسسوارات', other: 'أخرى' };
@@ -100,7 +104,7 @@ export default function AuctionAdmin() {
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ['auction-listings-admin'],
-    queryFn: () => db.AuctionListing.list('-created_at', 200),
+    queryFn: () => auctionApi.list('-created_at', 200),
   });
   const { data: brands = [] } = useQuery({
     queryKey: ['brands-for-auction-admin'],
@@ -124,24 +128,36 @@ export default function AuctionAdmin() {
   });
 
   const createMut = useMutation({
-    mutationFn: (d) => db.AuctionListing.create(buildPayload(d)),
+    mutationFn: (d) => auctionApi.create({ ...buildPayload(d), status: 'active' }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['auction-listings-admin'] }); setAdding(false); toast.success('تمت إضافة قطعة المزاد'); },
     onError: (e) => toast.error(`فشل إضافة القطعة: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, ...d }) => db.AuctionListing.update(id, buildPayload(d)),
+    mutationFn: ({ id, ...d }) => auctionApi.update(id, buildPayload(d)),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['auction-listings-admin'] }); setEditing(null); toast.success('تم تحديث القطعة'); },
     onError: (e) => toast.error(`فشل تعديل القطعة: ${e.message || 'خطأ غير معروف'}`),
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => db.AuctionListing.delete(id),
+    mutationFn: (id) => auctionApi.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['auction-listings-admin'] }); toast.success('تم حذف القطعة'); },
     onError: (e) => toast.error(`فشل حذف القطعة: ${e.message || 'خطأ غير معروف'}`),
   });
 
-  const setStatus = (l, status) => updateMut.mutate({ id: l.id, ...l, ends_at: l.ends_at?.slice(0, 16), status });
+  const statusMut = useMutation({
+    mutationFn: ({ id, patch }) => auctionApi.update(id, patch),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['auction-listings-admin'] }); toast.success('تم التحديث'); },
+    onError: (e) => toast.error(`فشل التحديث: ${e.message}`),
+  });
+  const setStatus = (l, status) => statusMut.mutate({ id: l.id, patch: { status } });
+  // إعادة فتح المزاد المنتهي لمدة 24 ساعة وتفعيله (يعيد فتح قطعة انتهى وقتها)
+  const reopen = (l) => statusMut.mutate({ id: l.id, patch: { status: 'active', ends_at: new Date(Date.now() + 24 * 3600e3).toISOString() } });
+  const [bidsFor, setBidsFor] = useState(null);
+  const { data: bids = [] } = useQuery({
+    queryKey: ['auction-bids-admin', bidsFor?.id], enabled: !!bidsFor,
+    queryFn: () => bidsApi.filter({ listing_id: bidsFor.id }, '-amount', 50),
+  });
 
   if (!['admin', 'owner', 'manager'].includes(session?.role)) {
     return <div className="p-8 text-center text-muted-foreground">غير مصرح لك بالوصول</div>;
@@ -199,6 +215,8 @@ export default function AuctionAdmin() {
                     ) : (
                       <Button size="sm" variant="outline" onClick={() => setStatus(l, 'active')}>تفعيل</Button>
                     )}
+                    <Button size="sm" variant="outline" onClick={() => setBidsFor(bidsFor?.id === l.id ? null : l)}>المزايدات</Button>
+                    {new Date(l.ends_at) < new Date() && <Button size="sm" variant="outline" onClick={() => reopen(l)}>إعادة فتح 24 ساعة</Button>}
                     <button onClick={() => { setEditing(l); setAdding(false); }} className="p-2 rounded-lg hover:bg-muted transition-colors">
                       <Pencil className="w-4 h-4 text-muted-foreground" />
                     </button>
@@ -206,6 +224,13 @@ export default function AuctionAdmin() {
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </button>
                   </div>
+                </div>
+              )}
+              {bidsFor?.id === l.id && (
+                <div className="rounded-xl border mt-2 p-3 text-sm space-y-1" style={{ borderColor: 'hsl(var(--border))' }}>
+                  {bids.length === 0 ? <p className="text-muted-foreground">لا توجد مزايدات</p> : bids.map((b) => (
+                    <div key={b.id} className="flex justify-between"><span>{b.bidder_name} — <span dir="ltr">{b.bidder_phone}</span></span><span className="font-bold"><SarAmount value={b.amount} /></span></div>
+                  ))}
                 </div>
               )}
             </div>

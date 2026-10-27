@@ -65,3 +65,15 @@ export const secureZatca = {
     });
   },
 };
+
+
+/** واجهة عامة لموارد /api/secure/data (قائمة بيضاء على السيرفر) */
+export const secureResource = (resource) => ({
+  list: (orderBy = '-created_at', limit = 200) =>
+    secureFetch(`/api/secure/data?resource=${resource}&op=list&orderBy=${encodeURIComponent(orderBy)}&limit=${limit}`),
+  filter: (filters = {}, orderBy = '-created_at', limit = 200) =>
+    secureFetch(`/api/secure/data?resource=${resource}&op=filter&orderBy=${encodeURIComponent(orderBy)}&limit=${limit}&filters=${encodeURIComponent(JSON.stringify(filters))}`),
+  create: (record) => secureFetch(`/api/secure/data?resource=${resource}`, { method: 'POST', body: JSON.stringify(record) }),
+  update: (id, record) => secureFetch(`/api/secure/data?resource=${resource}&id=${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(record) }),
+  delete: (id) => secureFetch(`/api/secure/data?resource=${resource}&id=${encodeURIComponent(id)}`, { method: 'DELETE' }),
+});

@@ -1,506 +1,349 @@
+/**
+ * AuctionMarket — سوق المزاد (مزايدة مباشرة على قطع جلدية مجدّدة)
+ * كل تعامل الزوار عبر دوال Postgres آمنة (auction_public_list / auction_place_bid / auction_submit_item):
+ * لا جدول مكشوف، أسماء المزايدين مقنّعة، والتحقق الكامل على الخادم (حد أدنى، انتهاء الوقت، تمديد ضد القنص).
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check } from 'lucide-react';
-import { db, listActiveAuctions, listShopProductsWithBrand, placeBid, storage } from '@/api/supabaseApi';
+import { X, Check, Gavel, Clock, Flame, ArrowLeftRight, Loader2 } from 'lucide-react';
+import { db, storage } from '@/api/supabaseApi';
+import { supabase } from '@/lib/supabaseClient';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { SarAmount, RiyalText } from '@/components/shared/SarCurrency';
+import { SarAmount } from '@/components/shared/SarCurrency';
 import { PAGES } from '@/lib/seo/siteData';
+
 const AUCTION_SEO = PAGES.find((p) => p.path === '/auction');
+const SITE = 'https://www.needlecobbler.com';
+const INK = '#ece8df';
+const HAIR = 'rgba(255,255,255,0.1)';
+const MUTED = '#8d8a82';
+const CATS = { all: ['الكل', 'All'], bags: ['حقائب', 'Bags'], shoes: ['أحذية', 'Shoes'], accessories: ['إكسسوارات', 'Accessories'], other: ['أخرى', 'Other'] };
+const SORTS = { soon: ['ينتهي قريباً', 'Ending soon'], high: ['الأعلى سعراً', 'Highest price'], bids: ['الأكثر مزايدة', 'Most bids'] };
+const inputCls = 'w-full bg-transparent px-4 py-3 text-sm outline-none focus:border-[#ece8df]';
+const inputStyle = { border: `1px solid ${HAIR}`, color: INK };
 
-// ── أيقونات SVG أصلية (نفس تصميم أيقونات الصفحة الرئيسية بالضبط —
-// لا إيموجي إطلاقاً، طبقاً لطلب العميل الصريح) ──────────────────────
-function ToolboxIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <rect x="3" y="9" width="18" height="10" rx="2"></rect>
-      <path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"></path>
-      <line x1="3" y1="13" x2="21" y2="13"></line>
-      <line x1="12" y1="11" x2="12" y2="15"></line>
-    </svg>
-  );
-}
-function GavelIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <rect x="8.5" y="2.5" width="5" height="9" rx="1" transform="rotate(45 11 7)"></rect>
-      <line x1="7" y1="12.5" x2="3" y2="16.5"></line>
-      <line x1="9.5" y1="15" x2="5.5" y2="19"></line>
-      <line x1="3" y1="21" x2="9" y2="21"></line>
-    </svg>
-  );
-}
-function ClockIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="12" cy="12" r="9"></circle>
-      <polyline points="12 7 12 12 15.5 14"></polyline>
-    </svg>
-  );
-}
+const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+const toAr = (s) => String(s).replace(/[0-9]/g, (d) => AR_DIGITS[d]);
 
-const AR_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-function toArabicDigits(s) { return String(s).replace(/[0-9]/g, (d) => AR_DIGITS[d]); }
-
-function useCountdown(endsAt, isAr) {
-  const target = useMemo(() => new Date(endsAt).getTime(), [endsAt]);
+function useNow(ms = 1000) {
   const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const diff = target - now;
-  if (diff <= 0) return { done: true, text: isAr ? toArabicDigits('٠٠:٠٠:٠٠') : '00:00:00' };
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), ms); return () => clearInterval(id); }, [ms]);
+  return now;
+}
+function timeLeft(endsAt, now, isAr) {
+  const diff = new Date(endsAt).getTime() - now;
+  if (diff <= 0) return { done: true, soon: false, text: isAr ? 'انتهى' : 'Ended' };
+  const d = Math.floor(diff / 864e5), h = Math.floor((diff % 864e5) / 36e5), m = Math.floor((diff % 36e5) / 6e4), s = Math.floor((diff % 6e4) / 1e3);
   const pad = (n) => String(n).padStart(2, '0');
-  const text = `${pad(h)}:${pad(m)}:${pad(s)}`;
-  return { done: false, text: isAr ? toArabicDigits(text) : text };
+  const t = d > 0 ? `${d}${isAr ? 'ي' : 'd'} ${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(h)}:${pad(m)}:${pad(s)}`;
+  return { done: false, soon: diff < 36e5, text: isAr ? toAr(t) : t };
 }
 
-function BrandBadge({ brand }) {
-  if (!brand) return null;
+async function rpc(name, args) {
+  const { data, error } = await supabase.rpc(name, args);
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+// ── بطاقة قطعة ──
+function AuctionCard({ l, isAr, now, onBid }) {
+  const [after, setAfter] = useState(true);
+  const t = timeLeft(l.ends_at, now, isAr);
+  const hasPair = l.before_image_url && l.after_image_url;
+  const img = hasPair ? (after ? l.after_image_url : l.before_image_url) : l.image_url || l.after_image_url;
+  const title = isAr ? l.title_ar : l.title || l.title_ar;
   return (
-    <div className="flex items-center gap-1.5">
-      {brand.logo_url && (
-        <img src={brand.logo_url} alt={brand.name_ar || brand.name} className="h-4 w-auto object-contain opacity-80" loading="lazy" />
-      )}
-      <span className="text-[11px] font-bold" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        {brand.name_ar || brand.name}
-      </span>
-    </div>
-  );
-}
-
-function formatSAR(n, isAr) {
-  const num = Math.round(Number(n) || 0);
-  return <SarAmount value={num} decimals={0} />;
-}
-
-// ── بطاقة قطعة دكّة الإسكافي (شراء فوري) ────────────────────────────
-function ShopItemCard({ product, isAr }) {
-  const discount = product.original_price ? Math.round((1 - product.price / product.original_price) * 100) : 0;
-  return (
-    <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-      className="rounded-2xl overflow-hidden flex flex-col h-full transition-transform duration-300 hover:-translate-y-1"
-      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 2px rgba(236,232,223,0.10)' }}>
-      <div className="relative overflow-hidden" style={{ height: 180 }}>
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'hsl(var(--secondary))' }}>
-            <ToolboxIcon className="w-8 h-8" style={{ color: 'hsl(var(--secondary-foreground))' }} />
-          </div>
-        )}
-        {discount > 0 && (
-          <div className="absolute top-3 start-3 px-2 py-1 rounded-full text-xs font-bold text-white" style={{ background: 'hsl(var(--destructive))' }}>
-            -{toArabicDigits(discount)}%
-          </div>
-        )}
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-black text-sm mb-1" style={{ color: 'hsl(var(--foreground))' }}>{product.name_ar}</h3>
-        <BrandBadge brand={product.brand} />
-        <div className="flex items-center justify-between mt-3">
-          <div>
-            <span className="text-base font-black" style={{ color: 'hsl(var(--brand-brass))' }}>{formatSAR(product.price, isAr)}</span>
-            {product.original_price && (
-              <span className="text-xs line-through ms-2" style={{ color: 'hsl(var(--muted-foreground))' }}>{formatSAR(product.original_price, isAr)}</span>
-            )}
-          </div>
+    <motion.article initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col" style={{ border: `1px solid ${HAIR}`, background: '#0f0f11' }}>
+      <div className="relative" style={{ aspectRatio: '4 / 5', background: '#131315' }}>
+        {img ? <img src={img} alt={title} loading="lazy" className="w-full h-full object-cover" />
+          : <div className="w-full h-full flex items-center justify-center"><Gavel className="w-10 h-10" style={{ color: '#3a3a3e' }} /></div>}
+        <div className="absolute top-3 start-3 flex flex-col gap-1.5 items-start">
+          <span className="inline-flex items-center gap-1.5 px-2.5 h-7 text-[11px] font-bold" style={{ background: t.done ? '#3a3a3e' : t.soon ? '#b91c1c' : 'rgba(11,11,12,.85)', color: '#fff', backdropFilter: 'blur(6px)' }}>
+            {t.soon && !t.done ? <Flame className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}{t.text}
+          </span>
+          {l.is_featured && <span className="px-2.5 h-6 inline-flex items-center text-[10px] font-bold tracking-wide" style={{ background: INK, color: '#0b0b0c' }}>{isAr ? 'مميزة' : 'FEATURED'}</span>}
         </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── بطاقة قطعة سوق المزاد (مزايدة مباشرة) ───────────────────────────
-function AuctionCard({ listing, isAr, onBidClick }) {
-  const { text, done } = useCountdown(listing.ends_at, isAr);
-  return (
-    <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-      className="rounded-2xl overflow-hidden flex flex-col h-full relative transition-transform duration-300 hover:-translate-y-1"
-      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 18px 36px -14px rgba(236,232,223,0.36)' }}>
-      <div className="absolute top-3 start-3 z-10 flex items-center gap-1.5 h-[26px] px-2.5 rounded-full text-white text-[11px] font-black"
-        style={{ background: done ? 'hsl(var(--muted-foreground))' : 'hsl(var(--destructive))' }}>
-        <ClockIcon className="w-3.5 h-3.5" />{text}
-      </div>
-      <div className="relative overflow-hidden" style={{ height: 180 }}>
-        {listing.image_url ? (
-          <img src={listing.image_url} alt={listing.title_ar} className="w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'hsl(var(--secondary))' }}>
-            <GavelIcon className="w-8 h-8" style={{ color: 'hsl(var(--secondary-foreground))' }} />
-          </div>
-        )}
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-black text-sm mb-1" style={{ color: 'hsl(var(--foreground))' }}>{listing.title_ar}</h3>
-        <BrandBadge brand={listing.brand} />
-        <div className="flex items-center justify-between mt-3">
-          <div>
-            <p className="text-[10px] font-bold mb-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{isAr ? 'أعلى مزايدة حالياً' : 'Current bid'}</p>
-            <span className="text-base font-black" style={{ color: 'hsl(var(--brand-brass))' }}>{formatSAR(listing.current_price, isAr)}</span>
-          </div>
-          <button onClick={() => onBidClick(listing)} disabled={done}
-            className="px-4 py-2 rounded-full text-xs font-bold disabled:opacity-40 transition-transform hover:scale-105"
-            style={{ background: done ? 'hsl(var(--muted))' : 'hsl(var(--brand-brass))', color: 'hsl(var(--foreground))' }}>
-            {done ? (isAr ? 'انتهى المزاد' : 'Ended') : (isAr ? 'زايد الآن' : 'Bid now')}
+        {hasPair && (
+          <button onClick={() => setAfter((v) => !v)} className="absolute bottom-3 end-3 inline-flex items-center gap-1.5 px-3 h-8 text-[11px] font-bold" style={{ background: 'rgba(11,11,12,.85)', color: INK, border: `1px solid ${HAIR}` }}>
+            <ArrowLeftRight className="w-3.5 h-3.5" />{after ? (isAr ? 'شاهد قبل الترميم' : 'See before') : (isAr ? 'شاهد بعد الترميم' : 'See after')}
           </button>
-        </div>
-        <div className="flex justify-between text-[11px] mt-2 pt-2" style={{ color: 'hsl(var(--muted-foreground))', borderTop: '1px dashed hsl(var(--border))' }}>
-          <span>{isAr ? `${toArabicDigits(listing.bid_count)} مزايدة` : `${listing.bid_count} bids`}</span>
-          <span>{isAr ? 'الحد الأدنى للمزايدة التالية' : 'Next min. bid'}: {formatSAR(Number(listing.current_price) + Number(listing.bid_increment), isAr)}</span>
-        </div>
+        )}
       </div>
-    </motion.div>
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        {l.brand && <span className="text-[11px] tracking-wide" style={{ color: MUTED }}>{isAr ? l.brand.name_ar || l.brand.name : l.brand.name || l.brand.name_ar}</span>}
+        <h3 className="font-semibold leading-snug line-clamp-2" style={{ color: INK }}>{title}</h3>
+        <div className="flex items-end justify-between mt-auto pt-2">
+          <div>
+            <p className="text-[10px] mb-0.5" style={{ color: MUTED }}>{l.bid_count > 0 ? (isAr ? 'أعلى مزايدة' : 'Current bid') : (isAr ? 'سعر البداية' : 'Starting price')}</p>
+            <span className="text-lg font-bold" style={{ color: INK }}><SarAmount value={l.bid_count > 0 ? l.current_price : l.starting_price} decimals={0} /></span>
+          </div>
+          <div className="text-end text-[11px]" style={{ color: MUTED }}>
+            <div>{isAr ? `${toAr(l.bid_count)} مزايدة` : `${l.bid_count} bids`}</div>
+            {l.top_bidder && <div>{isAr ? 'الأعلى:' : 'Top:'} {l.top_bidder}</div>}
+          </div>
+        </div>
+        <button onClick={() => onBid(l)} disabled={t.done} className="mt-2 min-h-[46px] font-semibold text-sm disabled:opacity-40" style={{ background: t.done ? '#2a2a2d' : INK, color: t.done ? '#8d8a82' : '#0b0b0c' }}>
+          {t.done ? (isAr ? 'انتهى المزاد' : 'Auction ended') : (isAr ? 'زايد الآن' : 'Place bid')}
+        </button>
+      </div>
+    </motion.article>
   );
 }
 
-// ── نافذة المزايدة ───────────────────────────────────────────────────
-function BidDialog({ listing, isAr, dir, onClose, onSuccess }) {
-  const minBid = Number(listing.current_price) + Number(listing.bid_increment);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [amount, setAmount] = useState(String(minBid));
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const submit = async () => {
-    setError('');
-    if (!name.trim() || !phone.trim()) { setError(isAr ? 'الاسم والجوال مطلوبان' : 'Name and phone are required'); return; }
-    if (Number(amount) < minBid) { setError(isAr ? `أقل مزايدة مقبولة ${minBid} ر.س` : `Minimum bid is ${minBid} SAR`); return; }
-    setLoading(true);
-    try {
-      await placeBid({ listingId: listing.id, bidderName: name.trim(), bidderPhone: phone.trim(), amount: Number(amount) });
-      onSuccess();
-    } catch (e) {
-      setError(e.message || (isAr ? 'تعذّر تسجيل المزايدة' : 'Could not place bid'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
+function Modal({ children, onClose, dir }) {
+  useEffect(() => {
+    const k = (e) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', k);
+    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', k); document.body.style.overflow = prev; };
+  }, [onClose]);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={dir}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-sm rounded-2xl p-6 z-10" style={{ background: 'hsl(var(--card))' }}>
-        <button onClick={onClose} className="absolute top-4 start-4" style={{ color: 'hsl(var(--muted-foreground))' }}><X className="w-5 h-5" /></button>
-        <h3 className="font-black text-lg mb-1 text-center" style={{ color: 'hsl(var(--foreground))' }}>{listing.title_ar}</h3>
-        <p className="text-xs text-center mb-5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-          <RiyalText text={isAr ? `الحد الأدنى للمزايدة: ${minBid} ر.س` : `Minimum bid: ${minBid} SAR`} />
-        </p>
-        <div className="space-y-3">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={isAr ? 'الاسم' : 'Name'}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={isAr ? 'رقم الجوال' : 'Phone'} dir="ltr"
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={minBid} placeholder={isAr ? 'مبلغ المزايدة' : 'Bid amount'} dir="ltr"
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none font-bold" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          {error && <p className="text-xs font-bold" style={{ color: 'hsl(var(--destructive))' }}><RiyalText text={error} /></p>}
-          <button onClick={submit} disabled={loading}
-            className="w-full py-3.5 rounded-full font-bold text-sm disabled:opacity-50" style={{ background: 'hsl(var(--brand-brass))', color: 'hsl(var(--foreground))' }}>
-            {loading ? (isAr ? 'جارِ الإرسال...' : 'Submitting...') : (isAr ? 'أرسل مزايدتي' : 'Submit bid')}
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" dir={dir}>
+      <div className="absolute inset-0 bg-black/75" onClick={onClose} />
+      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="relative w-full sm:max-w-md max-h-[92svh] overflow-y-auto p-6" style={{ background: '#0b0b0c', border: `1px solid ${HAIR}`, color: INK }}>
+        <button onClick={onClose} className="absolute top-4 end-4" style={{ color: MUTED }} aria-label="close"><X className="w-5 h-5" /></button>
+        {children}
       </motion.div>
     </div>
   );
 }
 
-// ── نافذة "اعرض قطعتك" — العميل يقدّم طلب عرض قطعته بالمزاد، وتظهر
-// عند فريق العمل بحالة "بانتظار المراجعة" (pending) لحد ما يراجعوها
-// ويحددوا السعر الابتدائي ووقت الانتهاء الفعلي، فتصير نشطة للجميع.
+// ── نافذة المزايدة ──
+function BidDialog({ listing, isAr, dir, onClose, onSuccess }) {
+  const inc = Number(listing.bid_increment) || 10;
+  const base = listing.bid_count > 0 ? Number(listing.current_price) : Number(listing.starting_price);
+  const minBid = listing.bid_count > 0 ? base + inc : Math.max(base, inc);
+  const [name, setName] = useState(() => { try { return localStorage.getItem('auc_name') || ''; } catch { return ''; } });
+  const [phone, setPhone] = useState(() => { try { return localStorage.getItem('auc_phone') || ''; } catch { return ''; } });
+  const [amount, setAmount] = useState(String(minBid));
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const { data: history = [] } = useQuery({ queryKey: ['auction-bids', listing.id], queryFn: () => rpc('auction_bids_public', { p_listing: listing.id }), refetchInterval: 8000 });
+
+  const submit = async () => {
+    setError('');
+    if (!name.trim() || !phone.trim()) return setError(isAr ? 'الاسم والجوال مطلوبان' : 'Name and phone are required');
+    if (Number(amount) < minBid) return setError(isAr ? `أقل مزايدة مقبولة ${minBid} ر.س` : `Minimum bid is ${minBid} SAR`);
+    setBusy(true);
+    try {
+      const r = await rpc('auction_place_bid', { p_listing: listing.id, p_name: name.trim(), p_phone: phone.trim(), p_amount: Number(amount) });
+      if (!r?.ok) throw new Error(r?.error || 'error');
+      try { localStorage.setItem('auc_name', name.trim()); localStorage.setItem('auc_phone', phone.trim()); } catch { /* ignore */ }
+      onSuccess();
+    } catch (e) { setError(e.message); } finally { setBusy(false); }
+  };
+
+  return (
+    <Modal onClose={onClose} dir={dir}>
+      <h3 className="text-lg font-semibold pe-8 mb-1">{isAr ? listing.title_ar : listing.title || listing.title_ar}</h3>
+      <p className="text-sm mb-4" style={{ color: MUTED }}>{isAr ? 'الحد الأدنى للمزايدة' : 'Minimum bid'}: <b style={{ color: INK }}><SarAmount value={minBid} decimals={0} /></b></p>
+      <div className="flex gap-2 mb-3">
+        {[0, 1, 3].map((k) => { const v = minBid + inc * k; return (
+          <button key={k} onClick={() => setAmount(String(v))} className="flex-1 min-h-[40px] text-sm" style={{ border: `1px solid ${Number(amount) === v ? INK : HAIR}`, color: INK }}><SarAmount value={v} decimals={0} /></button>
+        ); })}
+      </div>
+      <div className="space-y-3">
+        <input className={inputCls} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder={isAr ? 'الاسم' : 'Name'} maxLength={80} />
+        <input className={inputCls} style={inputStyle} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XXXXXXXX" dir="ltr" inputMode="tel" />
+        <input className={inputCls + ' font-bold'} style={inputStyle} value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={minBid} dir="ltr" />
+        {error && <p className="text-xs font-bold" style={{ color: '#f87171' }}>{error}</p>}
+        <button onClick={submit} disabled={busy} className="w-full min-h-[50px] font-semibold flex items-center justify-center gap-2 disabled:opacity-60" style={{ background: INK, color: '#0b0b0c' }}>
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (isAr ? 'تأكيد المزايدة' : 'Confirm bid')}
+        </button>
+        <p className="text-[11px]" style={{ color: MUTED }}>{isAr ? 'إذا زايد أحد في آخر 3 دقائق يُمدَّد المزاد 3 دقائق. يتواصل معك فريقنا عند الفوز.' : 'A bid in the final 3 minutes extends the auction by 3 minutes. Our team will contact you if you win.'}</p>
+      </div>
+      {history.length > 0 && (
+        <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${HAIR}` }}>
+          <p className="text-xs mb-2" style={{ color: MUTED }}>{isAr ? 'آخر المزايدات' : 'Recent bids'}</p>
+          {history.map((h, i) => (
+            <div key={i} className="flex justify-between text-sm py-1" style={{ color: i === 0 ? INK : '#a8a398' }}><span>{h.name}</span><span><SarAmount value={h.amount} decimals={0} /></span></div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+// ── نافذة عرض قطعة للبيع ──
 function SubmitItemDialog({ isAr, dir, brands, onClose, onSuccess }) {
   const [form, setForm] = useState({ name: '', phone: '', category: 'bags', brand_id: '', title_ar: '', description_ar: '' });
   const [photo, setPhoto] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
     setError('');
-    if (!form.name.trim() || !form.phone.trim() || !form.title_ar.trim()) {
-      setError(isAr ? 'الاسم والجوال واسم القطعة مطلوبين' : 'Name, phone and item title are required');
-      return;
-    }
-    setUploading(true);
+    if (!form.name.trim() || !form.phone.trim() || !form.title_ar.trim()) return setError(isAr ? 'الاسم والجوال ووصف القطعة مطلوبة' : 'Name, phone and item description are required');
+    setBusy(true);
     try {
       let image_url = null;
       if (photo) {
-        const { file_url } = await storage.uploadFile({ file: photo, bucket: 'auction-submissions' });
-        image_url = file_url;
+        if (photo.size > 5 * 1024 * 1024) throw new Error(isAr ? 'حجم الصورة أكبر من 5 ميجا' : 'Photo is larger than 5 MB');
+        image_url = (await storage.uploadFile({ file: photo, bucket: 'auction-submissions' })).file_url;
       }
-      await db.AuctionListing.create({
-        title: form.title_ar,
-        title_ar: form.title_ar,
-        description_ar: form.description_ar || null,
-        category: form.category,
-        brand_id: form.brand_id || null,
-        image_url,
-        status: 'pending',
-        starting_price: 0,
-        current_price: 0,
-        bid_increment: 10,
-        ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        submitter_name: form.name.trim(),
-        submitter_phone: form.phone.trim(),
-      });
+      const r = await rpc('auction_submit_item', { p: { ...form, image_url } });
+      if (!r?.ok) throw new Error(r?.error || 'error');
       onSuccess();
-    } catch (e) {
-      setError(e.message || (isAr ? 'تعذّر إرسال الطلب' : 'Could not submit'));
-    } finally {
-      setUploading(false);
-    }
+    } catch (e) { setError(e.message); } finally { setBusy(false); }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={dir}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-md rounded-2xl p-6 z-10 max-h-[90vh] overflow-y-auto" style={{ background: 'hsl(var(--card))' }}>
-        <button onClick={onClose} className="absolute top-4 start-4" style={{ color: 'hsl(var(--muted-foreground))' }}><X className="w-5 h-5" /></button>
-        <h3 className="font-black text-lg mb-1 text-center" style={{ color: 'hsl(var(--foreground))' }}>{isAr ? 'اعرض قطعتك بالمزاد' : 'Submit your piece'}</h3>
-        <p className="text-xs text-center mb-5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-          {isAr ? 'نراجع طلبك ونتواصل معك لتحديد سعر البداية قبل ما تظهر بالمزاد' : "We'll review and contact you to set a starting price before it goes live"}
-        </p>
-        <div className="space-y-3">
-          <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder={isAr ? 'اسمك' : 'Your name'}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          <input value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder={isAr ? 'رقم جوالك' : 'Your phone'} dir="ltr"
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          <select value={form.category} onChange={(e) => set('category', e.target.value)}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }}>
-            <option value="bags">{isAr ? 'حقيبة' : 'Bag'}</option>
-            <option value="shoes">{isAr ? 'حذاء' : 'Shoes'}</option>
-            <option value="accessories">{isAr ? 'إكسسوار' : 'Accessory'}</option>
-            <option value="other">{isAr ? 'أخرى' : 'Other'}</option>
+    <Modal onClose={onClose} dir={dir}>
+      <h3 className="text-lg font-semibold mb-1">{isAr ? 'اعرض قطعتك للبيع بالمزاد' : 'Sell your piece at auction'}</h3>
+      <p className="text-xs mb-5" style={{ color: MUTED }}>{isAr ? 'نراجع طلبك ونتواصل معك لتحديد سعر البداية ووقت الانتهاء قبل نشر القطعة.' : 'We review your request and contact you to set the starting price and end time before publishing.'}</p>
+      <div className="space-y-3">
+        <input className={inputCls} style={inputStyle} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder={isAr ? 'اسمك' : 'Your name'} maxLength={80} />
+        <input className={inputCls} style={inputStyle} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="05XXXXXXXX" dir="ltr" inputMode="tel" />
+        <select className={inputCls} style={{ ...inputStyle, background: '#0b0b0c' }} value={form.category} onChange={(e) => set('category', e.target.value)}>
+          {Object.entries(CATS).filter(([k]) => k !== 'all').map(([k, v]) => <option key={k} value={k}>{v[isAr ? 0 : 1]}</option>)}
+        </select>
+        {brands.length > 0 && (
+          <select className={inputCls} style={{ ...inputStyle, background: '#0b0b0c' }} value={form.brand_id} onChange={(e) => set('brand_id', e.target.value)}>
+            <option value="">{isAr ? 'البراند (اختياري)' : 'Brand (optional)'}</option>
+            {brands.map((b) => <option key={b.id} value={b.id}>{b.name_ar || b.name}</option>)}
           </select>
-          {brands.length > 0 && (
-            <select value={form.brand_id} onChange={(e) => set('brand_id', e.target.value)}
-              className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }}>
-              <option value="">{isAr ? 'البراند (اختياري)' : 'Brand (optional)'}</option>
-              {brands.map((b) => <option key={b.id} value={b.id}>{b.name_ar || b.name}</option>)}
-            </select>
-          )}
-          <input value={form.title_ar} onChange={(e) => set('title_ar', e.target.value)} placeholder={isAr ? 'وصف مختصر للقطعة' : 'Short item description'}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          <textarea value={form.description_ar} onChange={(e) => set('description_ar', e.target.value)} placeholder={isAr ? 'تفاصيل إضافية عن حالة القطعة (اختياري)' : 'Extra details about condition (optional)'} rows={2}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-          <label className="block">
-            <span className="text-xs font-bold mb-1 block" style={{ color: 'hsl(var(--muted-foreground))' }}>{isAr ? 'صورة القطعة (اختياري)' : 'Photo (optional)'}</span>
-            <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)}
-              className="w-full text-xs" />
-          </label>
-          {error && <p className="text-xs font-bold" style={{ color: 'hsl(var(--destructive))' }}><RiyalText text={error} /></p>}
-          <button onClick={submit} disabled={uploading}
-            className="w-full py-3.5 rounded-full font-bold text-sm disabled:opacity-50" style={{ background: 'hsl(var(--brand-brass))', color: 'hsl(var(--foreground))' }}>
-            {uploading ? (isAr ? 'جارِ الإرسال...' : 'Submitting...') : (isAr ? 'أرسل طلب العرض' : 'Submit for review')}
-          </button>
-        </div>
-      </motion.div>
-    </div>
+        )}
+        <input className={inputCls} style={inputStyle} value={form.title_ar} onChange={(e) => set('title_ar', e.target.value)} placeholder={isAr ? 'وصف مختصر للقطعة' : 'Short description'} maxLength={160} />
+        <textarea className={inputCls} style={inputStyle} rows={2} value={form.description_ar} onChange={(e) => set('description_ar', e.target.value)} placeholder={isAr ? 'تفاصيل الحالة (اختياري)' : 'Condition details (optional)'} maxLength={600} />
+        <label className="block text-xs" style={{ color: MUTED }}>{isAr ? 'صورة القطعة (اختياري)' : 'Photo (optional)'}
+          <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} className="block mt-1 w-full text-xs" />
+        </label>
+        {error && <p className="text-xs font-bold" style={{ color: '#f87171' }}>{error}</p>}
+        <button onClick={submit} disabled={busy} className="w-full min-h-[50px] font-semibold flex items-center justify-center gap-2 disabled:opacity-60" style={{ background: INK, color: '#0b0b0c' }}>
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (isAr ? 'إرسال الطلب' : 'Submit request')}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
-// ── شريط فلترة بالبراند — يظهر شعارات البراندات الحقيقية اللي رفعها
-// المتجر (Gucci, Dior, Hermes...)، الضغط على أي وحدة يفلتر كل من
-// دكّة الإسكافي وسوق المزاد بنفس البراند
-function BrandFilterBar({ brands, selectedBrandId, onSelect, isAr }) {
-  if (brands.length === 0) return null;
+function Toast({ show, text }) {
   return (
-    <div className="flex items-center gap-3 overflow-x-auto pb-2 mb-8 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-      <button onClick={() => onSelect(null)}
-        className="shrink-0 px-4 h-11 rounded-full text-xs font-black transition-all"
-        style={{
-          background: selectedBrandId === null ? 'hsl(var(--brand-brass))' : 'hsl(var(--card))',
-          color: selectedBrandId === null ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-          border: '1px solid hsl(var(--border))',
-        }}>
-        {isAr ? 'كل البراندات' : 'All brands'}
-      </button>
-      {brands.map((b) => (
-        <button key={b.id} onClick={() => onSelect(b.id === selectedBrandId ? null : b.id)}
-          className="shrink-0 flex items-center gap-2 px-4 h-11 rounded-full transition-all"
-          style={{
-            background: selectedBrandId === b.id ? 'hsl(var(--brand-brass))' : 'hsl(var(--card))',
-            border: selectedBrandId === b.id ? '1px solid hsl(var(--brand-brass))' : '1px solid hsl(var(--border))',
-          }}>
-          {b.logo_url && <img src={b.logo_url} alt={b.name_ar || b.name} className="h-5 w-auto object-contain" loading="lazy" />}
-          <span className="text-xs font-bold" style={{ color: selectedBrandId === b.id ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-            {b.name_ar || b.name}
-          </span>
-        </button>
-      ))}
-    </div>
+    <AnimatePresence>
+      {show && (
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="fixed bottom-6 inset-x-0 flex justify-center z-[60] px-4">
+          <div className="px-6 py-3 text-sm font-semibold flex items-center gap-2" style={{ background: INK, color: '#0b0b0c' }}><Check className="w-4 h-4" />{text}</div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
 export default function AuctionMarket() {
   const { dir, lang } = useLanguage();
   const isAr = lang === 'ar';
-  const [activeBidListing, setActiveBidListing] = useState(null);
-  const [bidSuccess, setBidSuccess] = useState(false);
+  const prefix = isAr ? '' : '/en';
+  const qc = useQueryClient();
+  const now = useNow();
+  const [bidFor, setBidFor] = useState(null);
   const [submitOpen, setSubmitOpen] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [selectedBrandId, setSelectedBrandId] = useState(null);
-  const queryClient = useQueryClient();
+  const [toast, setToast] = useState('');
+  const [brandId, setBrandId] = useState(null);
+  const [cat, setCat] = useState('all');
+  const [sort, setSort] = useState('soon');
 
-  const { data: brands = [] } = useQuery({
-    queryKey: ['brands-active'],
-    queryFn: () => db.Brand.list('sort_order', 100),
-  });
-  const { data: shopProducts = [] } = useQuery({
-    queryKey: ['products-public-with-brand'],
-    queryFn: () => listShopProductsWithBrand(),
-  });
-  const { data: auctions = [] } = useQuery({
-    queryKey: ['auctions-active'],
-    queryFn: () => listActiveAuctions(),
-    refetchInterval: 15000, // تحديث دوري خفيف — يعكس مزايدات المستخدمين الآخرين بدون إعادة تحميل الصفحة
-  });
+  const { data: brands = [] } = useQuery({ queryKey: ['brands-active'], queryFn: () => db.Brand.list('sort_order', 100) });
+  const { data: auctions = [], isLoading } = useQuery({ queryKey: ['auctions-active'], queryFn: () => rpc('auction_public_list'), refetchInterval: 10000 });
 
-  // فلترة بالبراند المختار — تطبّق على القسمين معاً (الدكّة والمزاد)
-  const filteredShopProducts = selectedBrandId ? shopProducts.filter((p) => p.brand?.id === selectedBrandId || p.brand_id === selectedBrandId) : shopProducts;
-  const filteredAuctions = selectedBrandId ? auctions.filter((l) => l.brand?.id === selectedBrandId || l.brand_id === selectedBrandId) : auctions;
+  const list = useMemo(() => {
+    let a = auctions.filter((l) => (!brandId || l.brand_id === brandId) && (cat === 'all' || l.category === cat));
+    const live = (l) => new Date(l.ends_at).getTime() > now;
+    const cmp = { soon: (x, y) => new Date(x.ends_at) - new Date(y.ends_at), high: (x, y) => y.current_price - x.current_price, bids: (x, y) => y.bid_count - x.bid_count }[sort];
+    return [...a.filter(live).sort(cmp), ...a.filter((l) => !live(l)).sort((x, y) => new Date(y.ends_at) - new Date(x.ends_at))];
+  }, [auctions, brandId, cat, sort, now]);
+  const liveCount = auctions.filter((l) => new Date(l.ends_at).getTime() > now).length;
+  const usedBrands = brands.filter((b) => auctions.some((l) => l.brand_id === b.id));
 
-  const handleBidSuccess = () => {
-    setActiveBidListing(null);
-    setBidSuccess(true);
-    queryClient.invalidateQueries({ queryKey: ['auctions-active'] });
-    setTimeout(() => setBidSuccess(false), 3000);
-  };
-
-  const handleSubmitSuccess = () => {
-    setSubmitOpen(false);
-    setSubmitSuccess(true);
-    setTimeout(() => setSubmitSuccess(false), 4000);
-  };
+  const flash = (t) => { setToast(t); setTimeout(() => setToast(''), 3500); };
+  const seo = isAr ? AUCTION_SEO : AUCTION_SEO.en;
+  const steps = isAr
+    ? [['١', 'اختر القطعة', 'تصفّح الصور وحالة الترميم قبل وبعد.'], ['٢', 'زايد', 'أدخل بياناتك ومبلغك، والحد الأدنى يظهر لك.'], ['٣', 'اربح', 'صاحب أعلى مزايدة عند الانتهاء يفوز ونتواصل معه.']]
+    : [['1', 'Pick a piece', 'Browse photos and the restoration condition.'], ['2', 'Place a bid', 'Enter your details and amount — the minimum is shown.'], ['3', 'Win', 'The highest bid at the end wins and we contact you.']];
 
   return (
-    <div dir={dir} style={{ background: 'hsl(var(--background))', minHeight: '100vh' }} className="font-tajawal">
+    <div dir={dir} className="min-h-screen" style={{ background: '#0b0b0c', color: INK }}>
       <Helmet>
-        <title>{isAr ? AUCTION_SEO.title : AUCTION_SEO.en.title}</title>
-        <meta name="description" content={isAr
-          ? AUCTION_SEO.description
-          : AUCTION_SEO.en.description} />
-        <link rel="canonical" href="https://www.needlecobbler.com/auction" />
+        <title>{seo.title}</title>
+        <meta name="description" content={seo.description} />
+        <link rel="canonical" href={`${SITE}${prefix}/auction`} />
+        <link rel="alternate" hrefLang="ar" href={`${SITE}/auction`} />
+        <link rel="alternate" hrefLang="en" href={`${SITE}/en/auction`} />
+        <link rel="alternate" hrefLang="x-default" href={`${SITE}/auction`} />
       </Helmet>
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 px-6 h-16 flex items-center justify-between backdrop-blur-md"
-        style={{ background: 'hsl(var(--card) / 0.95)', borderBottom: '1px solid hsl(var(--border))' }}>
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/images/cobblers-official-mark-white.png" alt="Cobblers" className="w-8 h-8 object-contain" />
-        </Link>
-        <div className="hidden md:flex items-center gap-6 text-sm font-bold" style={{ color: 'hsl(var(--muted-foreground))' }}>
-          <Link to="/" className="hover:opacity-70">{isAr ? 'الرئيسية' : 'Home'}</Link>
-          <a href="#dekka" className="hover:opacity-70">{isAr ? 'دكّة الإسكافي' : "Cobbler's Bench"}</a>
-          <a href="#mazad" className="hover:opacity-70">{isAr ? 'سوق المزاد' : 'Auction'}</a>
-          <Link to="/my-bookings" className="hover:opacity-70">{isAr ? 'تتبّع طلبك' : 'Track order'}</Link>
-        </div>
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher />
-          <button onClick={() => setSubmitOpen(true)}
-            className="px-4 h-9 rounded-full text-xs font-bold flex items-center" style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
-            {isAr ? 'بيع قطعتك' : 'Sell your piece'}
-          </button>
-        </div>
-      </nav>
+      <header className="sticky top-0 z-40 h-16 px-4 sm:px-6 grid grid-cols-3 items-center" style={{ background: 'rgba(11,11,12,.92)', backdropFilter: 'blur(14px)', borderBottom: `1px solid ${HAIR}` }}>
+        <Link to={prefix || '/'} className="justify-self-start text-sm" style={{ color: '#bdb8ad' }}>{isAr ? '← الرئيسية' : '← Home'}</Link>
+        <Link to={prefix || '/'} className="justify-self-center"><img src="/images/cobblers-official-mark-white.png" alt="Ebra & Khait Cobbler" className="h-9 w-auto" /></Link>
+        <div className="justify-self-end flex items-center gap-3"><LanguageSwitcher /></div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-6 pt-8">
-        <BrandFilterBar brands={brands} selectedBrandId={selectedBrandId} onSelect={setSelectedBrandId} isAr={isAr} />
-      </div>
+      <section className="max-w-3xl mx-auto px-5 pt-14 pb-10 text-center">
+        <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: MUTED }}>{isAr ? 'مزايدة مباشرة' : 'Live auction'}</p>
+        <h1 className="text-3xl sm:text-5xl font-light leading-tight mb-4">{isAr ? 'سوق المزاد' : 'Auction Market'}</h1>
+        <p className="font-light leading-loose max-w-xl mx-auto mb-6" style={{ color: '#a8a398' }}>
+          {isAr ? 'حقائب وأحذية جلدية رمّمناها بأيدي حرفيينا، تُعرض للمزايدة المباشرة. زايد على ما يعجبك وتابع الوقت المتبقي لحظة بلحظة.' : 'Leather bags and shoes restored by our craftsmen, offered for live bidding. Bid on what you love and follow the countdown in real time.'}
+        </p>
+        <button onClick={() => setSubmitOpen(true)} className="px-8 min-h-[48px] text-sm font-semibold" style={{ border: `1px solid ${INK}`, color: INK }}>{isAr ? 'بيع قطعتك بالمزاد' : 'Sell your piece'}</button>
+      </section>
 
-      {/* Section A: دكّة الإسكافي */}
-      <section id="dekka" className="max-w-7xl mx-auto px-6 pt-4">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }}>
-            <ToolboxIcon className="w-5.5 h-5.5" style={{ width: 22, height: 22 }} />
-          </div>
-          <div>
-            <p className="text-xs font-black tracking-widest uppercase" style={{ color: 'hsl(var(--secondary-foreground))' }}>
-              {isAr ? 'شراء فوري · سعر ثابت' : 'Buy now · Fixed price'}
-            </p>
-            <h1 className="font-display font-bold text-2xl" style={{ color: 'hsl(var(--foreground))' }}>{isAr ? 'دكّة الإسكافي' : "Cobbler's Bench"}</h1>
-          </div>
-        </div>
-        {filteredShopProducts.length === 0 ? (
-          <p className="text-sm py-8" style={{ color: 'hsl(var(--muted-foreground))' }}>{isAr ? 'لا توجد قطع معروضة حالياً' : 'No items available right now'}</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4">
-            {filteredShopProducts.slice(0, 8).map((p) => <ShopItemCard key={p.id} product={p} isAr={isAr} />)}
-          </div>
-        )}
-        <div className="text-center pb-4">
-          <Link to="/shop" className="text-sm font-bold hover:opacity-70" style={{ color: 'hsl(var(--brand-brass))' }}>
-            {isAr ? 'عرض كل القطع ←' : 'View all items →'}
-          </Link>
+      <section className="max-w-5xl mx-auto px-5 pb-10">
+        <div className="grid sm:grid-cols-3 gap-px" style={{ background: HAIR }}>
+          {steps.map(([n, t, d]) => (
+            <div key={t} className="p-5" style={{ background: '#0b0b0c' }}>
+              <div className="text-2xl font-light mb-2" style={{ color: MUTED }}>{n}</div>
+              <div className="font-semibold mb-1">{t}</div><div className="text-sm font-light" style={{ color: '#a8a398' }}>{d}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-6"><div style={{ borderTop: '2px dashed hsl(var(--border))' }} /></div>
-
-      {/* Section B: سوق المزاد */}
-      <section id="mazad" className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'hsl(var(--brand-brass))', color: 'hsl(var(--foreground))' }}>
-            <GavelIcon style={{ width: 22, height: 22 }} />
+      <section className="max-w-6xl mx-auto px-5 pb-16">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {Object.entries(CATS).map(([k, v]) => (
+              <button key={k} onClick={() => setCat(k)} className="shrink-0 px-4 h-9 text-xs font-semibold" style={cat === k ? { background: INK, color: '#0b0b0c' } : { border: `1px solid ${HAIR}`, color: '#bdb8ad' }}>{v[isAr ? 0 : 1]}</button>
+            ))}
           </div>
-          <div>
-            <p className="text-xs font-black tracking-widest uppercase" style={{ color: 'hsl(var(--brand-brass))' }}>
-              {isAr ? 'مزايدة مباشرة · قطع نادرة' : 'Live bidding · Rare pieces'}
-            </p>
-            <h1 className="font-display font-bold text-2xl" style={{ color: 'hsl(var(--foreground))' }}>{isAr ? 'سوق المزاد' : 'Auction Market'}</h1>
-          </div>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="h-9 px-3 text-xs bg-transparent" style={{ border: `1px solid ${HAIR}`, color: INK }}>
+            {Object.entries(SORTS).map(([k, v]) => <option key={k} value={k} style={{ background: '#0b0b0c' }}>{v[isAr ? 0 : 1]}</option>)}
+          </select>
         </div>
-        {filteredAuctions.length === 0 ? (
-          <p className="text-sm py-8" style={{ color: 'hsl(var(--muted-foreground))' }}>{isAr ? 'لا توجد مزادات نشطة حالياً — تابعنا قريباً' : 'No active auctions right now — check back soon'}</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5 pb-8">
-            {filteredAuctions.map((l) => <AuctionCard key={l.id} listing={l} isAr={isAr} onBidClick={setActiveBidListing} />)}
+        {usedBrands.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-3" style={{ scrollbarWidth: 'none' }}>
+            <button onClick={() => setBrandId(null)} className="shrink-0 px-4 h-9 text-xs" style={!brandId ? { background: INK, color: '#0b0b0c' } : { border: `1px solid ${HAIR}`, color: '#bdb8ad' }}>{isAr ? 'كل البراندات' : 'All brands'}</button>
+            {usedBrands.map((b) => (
+              <button key={b.id} onClick={() => setBrandId(brandId === b.id ? null : b.id)} className="shrink-0 flex items-center gap-2 px-4 h-9 text-xs" style={brandId === b.id ? { background: INK, color: '#0b0b0c' } : { border: `1px solid ${HAIR}`, color: '#bdb8ad' }}>
+                {b.logo_url && <img src={b.logo_url} alt="" className="h-4 w-auto" loading="lazy" />}{b.name_ar || b.name}
+              </button>
+            ))}
           </div>
+        )}
+        <p className="text-xs mb-4" style={{ color: MUTED }}>{isAr ? `${toAr(liveCount)} مزاد جارٍ الآن` : `${liveCount} live auctions`}</p>
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">{[1, 2, 3].map((i) => <div key={i} className="h-96 animate-pulse" style={{ background: 'rgba(255,255,255,.05)' }} />)}</div>
+        ) : list.length === 0 ? (
+          <div className="text-center py-20 px-4" style={{ border: `1px dashed ${HAIR}` }}>
+            <Gavel className="w-8 h-8 mx-auto mb-4" style={{ color: MUTED }} />
+            <p className="mb-2">{isAr ? 'لا توجد مزادات جارية حالياً' : 'No live auctions right now'}</p>
+            <p className="text-sm font-light mb-6" style={{ color: MUTED }}>{isAr ? 'تُضاف قطع جديدة باستمرار — ويمكنك عرض قطعتك الخاصة.' : 'New pieces are added regularly — and you can submit your own.'}</p>
+            <Link to={`${prefix}/shop`} className="text-sm underline" style={{ color: '#bdb8ad' }}>{isAr ? 'تسوّق منتجات العناية بالجلود' : 'Shop leather care products'}</Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">{list.map((l) => <AuctionCard key={l.id} l={l} isAr={isAr} now={now} onBid={setBidFor} />)}</div>
         )}
       </section>
 
-      <AnimatePresence>
-        {activeBidListing && (
-          <BidDialog listing={activeBidListing} isAr={isAr} dir={dir} onClose={() => setActiveBidListing(null)} onSuccess={handleBidSuccess} />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {bidSuccess && (
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 inset-x-0 flex justify-center z-50">
-            <div className="px-6 py-3 rounded-full font-bold text-sm shadow-lg flex items-center gap-2" style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-              <Check className="w-4 h-4" />{isAr ? 'تم تسجيل مزايدتك بنجاح' : 'Your bid was placed'}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {submitOpen && (
-          <SubmitItemDialog isAr={isAr} dir={dir} brands={brands} onClose={() => setSubmitOpen(false)} onSuccess={handleSubmitSuccess} />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {submitSuccess && (
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 inset-x-0 flex justify-center z-50">
-            <div className="px-6 py-3 rounded-full font-bold text-sm shadow-lg flex items-center gap-2" style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-              <Check className="w-4 h-4" />{isAr ? 'وصلنا طلبك! بنتواصل معك قريباً' : "Got it! We'll contact you soon"}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {bidFor && <BidDialog listing={bidFor} isAr={isAr} dir={dir} onClose={() => setBidFor(null)}
+        onSuccess={() => { setBidFor(null); flash(isAr ? 'تم تسجيل مزايدتك بنجاح' : 'Your bid was placed'); qc.invalidateQueries({ queryKey: ['auctions-active'] }); }} />}
+      {submitOpen && <SubmitItemDialog isAr={isAr} dir={dir} brands={brands} onClose={() => setSubmitOpen(false)}
+        onSuccess={() => { setSubmitOpen(false); flash(isAr ? 'وصلنا طلبك، سنتواصل معك قريباً' : "Got it — we'll contact you soon"); }} />}
+      <Toast show={!!toast} text={toast} />
     </div>
   );
 }
