@@ -12,6 +12,10 @@ on:
         description: 'بناء iOS و macOS أيضاً (أبطأ)'
         type: boolean
         default: false
+      screenshots:
+        description: 'توليد لقطات شاشة للتصميم (فرع ci/screenshots)'
+        type: boolean
+        default: false
 
 concurrency:
   group: mobile-${{ github.ref }}
@@ -78,3 +82,26 @@ jobs:
       - run: PLATFORMS=ios,macos bash tool/bootstrap.sh
       - run: flutter build ios --release --no-codesign
       - run: flutter build macos --release
+
+  screenshots:
+    name: لقطات الشاشة
+    if: github.event_name == 'workflow_dispatch' && inputs.screenshots
+    runs-on: ubuntu-latest
+    needs: android
+    permissions:
+      contents: write
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: flutter pub get
+      - run: flutter test test_screens --update-goldens
+      - name: نشر اللقطات في فرع ci/screenshots
+        run: |
+          mkdir -p /tmp/shots && cp test_screens/shots/*.png /tmp/shots/
+          cd /tmp/shots
+          git init -q -b ci/screenshots
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add . && git commit -qm "screenshots ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci/screenshots

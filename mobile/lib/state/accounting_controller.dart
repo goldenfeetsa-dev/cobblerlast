@@ -137,6 +137,18 @@ class AccountingController extends ChangeNotifier {
     await load();
   }
 
+  /// لاختبارات لقطات الشاشة فقط: يضع بيانات جاهزة بدون اتصال.
+  @visibleForTesting
+  void debugSet(AccountingReport report, List<Expense> expenses, {DateTime? from, DateTime? to}) {
+    _report = report;
+    _expenses = expenses;
+    if (from != null) _from = from;
+    if (to != null) _to = to;
+    _loading = false;
+    _error = null;
+    notifyListeners();
+  }
+
   void clear() {
     _report = null;
     _expenses = const [];

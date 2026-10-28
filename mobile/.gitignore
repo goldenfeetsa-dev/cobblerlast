@@ -20,3 +20,6 @@ web/
 .idea/
 *.iml
 .vscode/
+
+# لقطات الشاشة المولّدة
+test_screens/shots/

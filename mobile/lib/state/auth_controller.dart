@@ -93,6 +93,19 @@ class AuthController extends ChangeNotifier {
     _set(AuthStatus.unauthenticated);
   }
 
+  @visibleForTesting
+  void debugSignIn(Employee e) {
+    _employee = e;
+    _set(AuthStatus.authenticated);
+  }
+
+  @visibleForTesting
+  void debugSignedOut([String? message]) {
+    _employee = null;
+    _message = message;
+    _set(AuthStatus.unauthenticated);
+  }
+
   void _expire(String msg) {
     if (_status == AuthStatus.unauthenticated) return;
     _employee = null;
