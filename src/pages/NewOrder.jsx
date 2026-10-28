@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { publishDisplay } from '@/lib/customerDisplay';
+import { publishDisplay, publishThanks } from '@/lib/customerDisplay';
 import { useNavigate } from 'react-router-dom';
 import { db, EMPLOYEE_SAFE_COLUMNS, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { supabase } from '@/lib/supabaseClient';
@@ -87,14 +87,22 @@ function CobblerTab({ session }) {
   });
 
   const formRef = useRef(null);
-  // شاشة العميل: نبثّ الطلب الحالي (بدون بيانات تواصل) ونرجع للعرض الفاخر عند مغادرة الصفحة
+  // شاشة العميل: تُفتح مع فتح صفحة «طلب جديد»، وكل حقل يظهر عليها بعد الانتهاء منه (مغادرة الحقل) أو فور اختيار خيار.
+  // الاسم والسعر (حقول كتابة) يُنقلان عند مغادرتها؛ القطع والاستلام والدفع (اختيارات) فوراً. لا نبثّ رقم الجوال ولا العنوان.
+  const [committed, setCommitted] = useState({ name: '', total: '' });
+  const commitText = () => setCommitted((c) => (c.name === form.customer_name && c.total === form.total_price ? c : { name: form.customer_name, total: form.total_price }));
   useEffect(() => {
-    const total = parseFloat(form.total_price) || 0;
+    const total = parseFloat(committed.total) || 0;
     const lines = pieces.map((p) => ({ label: [ITEM_TYPES.find((t) => t.value === p.item_type)?.label || '', ...(p.services || [])].filter(Boolean).join(' — ') })).filter((l) => l.label);
     const subtotal = total / 1.15;
-    publishDisplay((total > 0 || lines.length) ? { mode: 'order', name: form.customer_name?.trim().split(' ')[0] || '', lines, subtotal, vat: total - subtotal, total } : null);
-  }, [pieces, form.total_price, form.customer_name]);
-  useEffect(() => () => publishDisplay(null), []);
+    publishDisplay({
+      mode: 'order', stage: true, name: committed.name?.trim().split(' ')[0] || '', lines,
+      delivery: form.delivery_method, date: form.delivery_date || '', payStatus: form.payment_status, payMethod: form.payment_method,
+      subtotal, vat: total - subtotal, total,
+    });
+  }, [pieces, committed, form.delivery_method, form.delivery_date, form.payment_status, form.payment_method]);
+  const thanksRef = useRef(false);
+  useEffect(() => () => { if (!thanksRef.current) publishDisplay(null); }, []);
   // مسودة جاهزة من المساعد الذكي: تعبئة النموذج للمراجعة فقط، والحفظ يتم من المستخدم
   useEffect(() => {
     try {
@@ -236,6 +244,8 @@ function CobblerTab({ session }) {
       } else {
         toast.success('تم إنشاء الطلب — لكن إرسال زاتكا واجه مشكلة، راجع سجل زاتكا');
       }
+      thanksRef.current = true;
+      publishThanks({ name: form.customer_name?.trim().split(' ')[0] || '', orderNumber: order.order_number });
       navigate(`/orders/${order.id}`, { state: { justCreated: true } });
     },
     onError: (e) => toast.error(`فشل حفظ الطلب: ${e.message || 'خطأ غير معروف'}`),
@@ -332,7 +342,7 @@ function CobblerTab({ session }) {
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} onBlurCapture={commitText} className="space-y-6">
       {/* Customer Info */}
       <Card>
         <CardHeader className="pb-4"><CardTitle className="text-base">بيانات العميل</CardTitle></CardHeader>

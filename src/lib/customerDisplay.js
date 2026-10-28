@@ -23,6 +23,13 @@ export function publishDisplay(state) {
   clearInterval(hb);
   if (state) hb = setInterval(post, 10000);
 }
+/** شاشة شكر بعد حفظ الطلب ثم عودة تلقائية للعرض الترحيبي */
+let thanksTimer = null;
+export function publishThanks(payload, ms = 9000) {
+  publishDisplay({ mode: 'thanks', ...payload });
+  clearTimeout(thanksTimer);
+  thanksTimer = setTimeout(() => publishDisplay(null), ms);
+}
 export function subscribeDisplay(cb) {
   let c = null;
   try { c = new BroadcastChannel(NAME); c.onmessage = (e) => { if (!e.data?.hello) cb(e.data?.state ?? null); }; c.postMessage({ hello: true }); } catch { /* ignore */ }
