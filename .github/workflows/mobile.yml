@@ -80,6 +80,18 @@ jobs:
           name: windows-app
           path: mobile/build/windows/x64/runner/Release/
           retention-days: 30
+      - name: مثبّت ويندوز (setup.exe)
+        if: github.event_name == 'workflow_dispatch' && inputs.testfiles
+        run: |
+          ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          [ -f "$ISCC" ] || choco install innosetup -y --no-progress
+          APP_VERSION="1.0.${{ github.run_number }}" "$ISCC" tool/windows_installer.iss
+      - if: github.event_name == 'workflow_dispatch' && inputs.testfiles
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-setup
+          path: mobile/build/installer/needlecobbler-windows-setup.exe
+          retention-days: 14
 
   apple:
     name: iOS + macOS (بدون توقيع)
@@ -259,7 +271,7 @@ jobs:
           mkdir -p out
           cp a/android-apk/app-arm64-v8a-release.apk out/needlecobbler-android.apk
           cp a/android-apk/app-armeabi-v7a-release.apk out/needlecobbler-android-old-phones.apk 2>/dev/null || true
-          (cd a/windows-app && zip -qr /tmp/out/needlecobbler-windows.zip .)
+          cp a/windows-setup/needlecobbler-windows-setup.exe out/
           cp a/ios-unsigned-ipa/*.ipa out/needlecobbler-ios-unsigned.ipa
           ls -la out
       - name: رفع للفرع
