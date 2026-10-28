@@ -1,5 +1,6 @@
 // لقطات شاشة حقيقية للتطبيق (بالخطوط والألوان الفعلية) لمراجعة التصميم.
 // تُشغَّل يدوياً من GitHub Actions:  flutter test test_screens --update-goldens
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 import 'dart:convert';
 import 'dart:io';
 

@@ -41,9 +41,13 @@ jobs:
       - name: تجهيز المنصات
         run: PLATFORMS=android bash tool/bootstrap.sh
       - name: تحليل الكود
-        run: flutter analyze --no-fatal-infos
+        run: |
+          flutter analyze --no-fatal-infos > analyze.txt 2>&1 || { grep -E "(error|warning) -" analyze.txt | head -40 | sed 's/^/::error::/'; exit 1; }
+          grep -cE "info -" analyze.txt || true
       - name: الاختبارات
-        run: flutter test
+        run: |
+          flutter test --reporter expanded > test.txt 2>&1 || { grep -E "\[E\]|Expected|Actual|Error|error:" test.txt | head -40 | sed 's/^/::error::/'; exit 1; }
+          tail -1 test.txt
       - name: بناء APK
         run: flutter build apk --release --split-per-abi
       - uses: actions/upload-artifact@v4
@@ -96,7 +100,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: { channel: stable, cache: true }
       - run: flutter pub get
-      - run: flutter test test_screens --update-goldens
+      - run: |
+          flutter test test_screens --update-goldens > shots.txt 2>&1 || { grep -E "\[E\]|Error|error:|Exception" shots.txt | head -40 | sed 's/^/::error::/'; exit 1; }
       - name: نشر اللقطات في فرع ci/screenshots
         run: |
           mkdir -p /tmp/shots && cp test_screens/shots/*.png /tmp/shots/
