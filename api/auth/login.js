@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   }
 
   const { pin } = req.body || {};
-  if (!pin || typeof pin !== 'string' || !/^\d{4}$/.test(pin)) {
+  if (!pin || typeof pin !== 'string' || !/^\d{4,8}$/.test(pin)) {
     return res.status(400).json({ success: false, error: 'invalid_pin' });
   }
 
@@ -46,9 +46,8 @@ export default async function handler(req, res) {
       }
     }
 
-    const { data: match } = await sb.from('employees')
-      .select('id, name, role, avatar_url, is_active, branch_id, branch_name')
-      .eq('pin', pin).eq('is_active', true).limit(1).maybeSingle();
+    // التحقق من الـ PIN داخل قاعدة البيانات (bcrypt) — لا يخرج أي PIN ولا hash للخادم
+    const { data: match } = await sb.rpc('employee_login_by_pin', { p_pin: pin });
 
     if (!match) {
       let locked = false;

@@ -46,7 +46,7 @@ const T = {
   loyalty_membership_settings: { r: NS, i: OWN, u: OWN, d: OWN },
   bookings: { r: NS, i: NS, u: NS, d: OWN, pubI: true, pubRPhone: true },
   services: { r: ALL, i: OWN, u: OWN, d: OWN, pubR: true },
-  job_postings: { r: ALL, i: OWN, u: OWN, d: OWN, pubR: true },
+  job_postings: { r: ALL, i: OWN, u: OWN, d: OWN, pubR: true, pubSafe: 'id,title,title_en,slug,department,employment_type,location,description,description_en,apply_method,is_active,sort_order,created_at' },
   reviews: { r: ALL, i: NS, u: OWN, d: OWN, pubR: true, pubI: true, pubRFilter: ['is_approved', 'eq.true'] },
   working_hours: { r: ALL, i: OWN, u: OWN, d: OWN, pubR: true },
   brands: { r: ALL, i: OWN, u: OWN, d: OWN, pubR: true },
@@ -56,8 +56,8 @@ const T = {
   workshop_settlements: { r: FIN, i: FIN, u: FIN, d: OWN },
   operations_plans: { r: FIN, i: FIN, u: FIN, d: OWN },
   workflow_stages: { r: ALL, i: OWN, u: OWN, d: OWN },
-  auction_listings: { r: ALL, i: OWN, u: OWN, d: OWN, pubR: true, pubI: true },
-  auction_bids: { r: ALL, i: ALL, u: [], d: OWN, pubR: true, pubI: true, hideCols: ['bidder_phone'] },
+  auction_listings: { r: ALL, i: OWN, u: OWN, d: OWN },
+  auction_bids: { r: ALL, i: ALL, u: [], d: OWN },
   zatca_credit_debit_notes: { r: FIN, i: [], u: [], d: [] },
 };
 
@@ -65,6 +65,11 @@ const RPC = {
   partner_login: { pub: true },
   partner_orders: { pub: true },
   partner_submit_order: { pub: true },
+  auction_public_list: { pub: true },
+  auction_bids_public: { pub: true },
+  auction_place_bid: { pub: true },
+  auction_submit_item: { pub: true },
+  submit_job_application: { pub: true },
   get_monthly_financial_trend: { roles: FIN },
 };
 
@@ -73,6 +78,7 @@ const FN = { 'loyalty-notify': NS, 'send-email': NS };
 const BUCKETS = {
   'order-photos': { up: ALL, pubUp: true, del: NS },
   'auction-submissions': { up: ALL, pubUp: true, del: OWN },
+  cvs: { up: OWN, pubUp: true, del: OWN },
   'purchase-invoices': { up: FIN, del: OWN },
   'purchase-documents': { up: FIN, del: OWN },
   orders: { up: NS, del: OWN },
@@ -224,6 +230,11 @@ export async function handleSbProxy(req, res) {
           const b = req.body && typeof req.body === 'object' ? req.body : {};
           if (!Object.keys(b).length || !Object.keys(b).every((k) => STAFF_ORDER_UPDATE.includes(k))) return deny(res, 403, 'forbidden_fields');
         }
+      } else if (isPublic && pol.pubSafe && op === 'r') {
+        // الزائر يرى أعمدة العرض فقط (بدون الراتب/المتطلبات الداخلية/الكلمات المفتاحية)
+        const allowed = pol.pubSafe.split(',');
+        const ok = sel && sel !== '*' && !/[()]/.test(sel) ? sel.split(',').map((x) => x.trim()) : null;
+        q.set('select', ok && ok.every((c) => allowed.includes(c)) ? ok.join(',') : pol.pubSafe);
       } else if (pol.safe && (op === 'r' || wantsRows)) {
         // لا نُرجع pin ولا أعمدة الأسرار أبداً
         const safeCols = role === 'staff' && pol.staffCols ? pol.staffCols : pol.safe;
@@ -296,6 +307,7 @@ export async function handleSbProxy(req, res) {
     if (method === 'POST' || method === 'PUT') {
       if (isPublic ? !b.pubUp : !b.up.includes(role)) return deny(res, isPublic ? 401 : 403, 'forbidden');
       if (isPublic && rateLimited(ip, 'up', 10, 60_000)) return deny(res, 429, 'too_many_requests');
+      if (isPublic && /^true$/i.test(String(req.headers['x-upsert'] || ''))) return deny(res, 403, 'forbidden');
       const ct = String(req.headers['content-type'] || '');
       if (/svg|html|xml|javascript/i.test(ct)) return deny(res, 415, 'type_not_allowed');
     } else if (method === 'DELETE') {

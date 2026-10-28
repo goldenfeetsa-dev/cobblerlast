@@ -56,6 +56,7 @@ export default function Employees() {
   });
 
   const saveMutation = useMutation({
+    onError: (e) => toast.error(/pin_in_use/.test(JSON.stringify(e?.message ?? e)) ? 'رقم PIN مستخدم لموظف آخر، اختر رقماً مختلفاً' : 'تعذّر الحفظ، حاول مرة ثانية'),
     mutationFn: async (data) => {
       if (editingEmployee) {
         return db.Employee.update(editingEmployee.id, data, EMPLOYEE_SAFE_COLUMNS);
