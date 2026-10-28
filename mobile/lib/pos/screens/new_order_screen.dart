@@ -466,7 +466,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
           borderRadius: BorderRadius.circular(14),
           onTap: () => setState(() => _delivery = v),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               color: sel ? Pos.primary.withValues(alpha: .06) : null,
@@ -474,8 +474,8 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
             ),
             child: Row(children: [
               Icon(icon, color: sel ? Pos.primary : Pos.muted),
-              const SizedBox(width: 10),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(width: 8),
+              Expanded(child: Text(label, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))),
             ]),
           ),
         ),

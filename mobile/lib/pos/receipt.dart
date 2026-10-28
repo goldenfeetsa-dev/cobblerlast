@@ -75,6 +75,9 @@ class Receipt extends StatelessWidget {
     String two(int n) => n.toString().padLeft(2, '0');
     final dt = '${two(created.day)}/${two(created.month)}/${created.year} — ${two(created.hour)}:${two(created.minute)}:${two(created.second)}';
     final z = o.zatcaStatus;
+    // فاتورة منتج (من المبيعات) لها أصناف متعددة بخلاف فاتورة الإصلاح
+    final items = (o.raw['items'] is List) ? (o.raw['items'] as List).whereType<Map>().toList() : const <Map>[];
+    final isProduct = items.isNotEmpty;
 
     Widget row(String l, String v, {bool bold = false, bool large = false}) => Padding(
           padding: const EdgeInsets.only(bottom: 3),
@@ -133,7 +136,7 @@ class Receipt extends StatelessWidget {
           ),
           dashed,
           row('رقم الفاتورة / Invoice No', o.number, bold: true),
-          row('نوع الفاتورة', 'خدمة إصلاح'),
+          row('نوع الفاتورة', isProduct ? 'بيع منتج' : 'خدمة إصلاح'),
           row('التاريخ والوقت / Date & Time', dt),
           row('الموظف', o.employeeName ?? '—'),
           if ((o.raw['branch_name'] ?? '').toString().isNotEmpty) row('الفرع', '${o.raw['branch_name']}'),
@@ -142,7 +145,7 @@ class Receipt extends StatelessWidget {
           const SizedBox(height: 4),
           row('الاسم', o.customerName, bold: true),
           if (o.customerPhone != null && o.customerPhone!.isNotEmpty) row('الجوال', o.customerPhone!),
-          if (o.deliveryDate != null)
+          if (!isProduct && o.deliveryDate != null)
             Container(
               margin: const EdgeInsets.symmetric(vertical: 3),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -168,7 +171,7 @@ class Receipt extends StatelessWidget {
               ]),
             ),
           dashed,
-          const Text('تفاصيل الخدمة', style: title),
+          Text(isProduct ? 'الأصناف المباعة' : 'تفاصيل الخدمة', style: title),
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.only(bottom: 3),
@@ -180,11 +183,28 @@ class Receipt extends StatelessWidget {
               Expanded(flex: 2, child: Text('السعر', textAlign: TextAlign.left, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700))),
             ]),
           ),
-          Row(children: [
-            Expanded(flex: 3, child: Text(o.itemLabel, style: const TextStyle(fontSize: 10))),
-            Expanded(child: Text('${o.quantity}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 10))),
-            Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: money(sub))),
-          ]),
+          if (isProduct)
+            for (final it in items)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(children: [
+                  Expanded(flex: 3, child: Text('${it['item_name'] ?? ''}', style: const TextStyle(fontSize: 10))),
+                  Expanded(child: Text('${it['qty'] ?? 1}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 10))),
+                  Expanded(
+                    flex: 2,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: money(((it['sell_price'] as num?) ?? 0).toDouble() * ((it['qty'] as num?) ?? 1).toDouble()),
+                    ),
+                  ),
+                ]),
+              )
+          else
+            Row(children: [
+              Expanded(flex: 3, child: Text(o.itemLabel, style: const TextStyle(fontSize: 10))),
+              Expanded(child: Text('${o.quantity}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 10))),
+              Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: money(sub))),
+            ]),
           if (o.deliveryMethod == 'delivery')
             const Padding(
               padding: EdgeInsets.only(top: 4),

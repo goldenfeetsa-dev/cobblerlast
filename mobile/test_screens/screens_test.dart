@@ -169,5 +169,7 @@ void main() {
   testWidgets('receipt', (t) => shot(t, '11-receipt', const Size(390, 1300),
       Scaffold(backgroundColor: const Color(0xFFEEEEEE), body: SingleChildScrollView(child: Center(child: Receipt(order: Order(_orders[2]), shop: ShopInfo.fallback))))));
   testWidgets('scan', (t) => shot(t, '12-scan', phone, const PosShell(initial: 'scan')));
+  testWidgets('invoices', (t) => shot(t, '13-invoices', desktop, const PosShell(initial: 'invoices')));
+  testWidgets('sales', (t) => shot(t, '14-sales', desktop, const PosShell(initial: 'sales')));
   testWidgets('accounting', (t) => shot(t, '09-accounting', desktop, const PosShell(initial: 'accounting')));
 }

@@ -151,12 +151,11 @@ class GlassCard extends StatelessWidget {
         border: Border.all(color: Pos.glassBorder),
         boxShadow: Pos.shadow,
       ),
-      child: onTap == null
-          ? content
-          : Material(
-              color: Colors.transparent,
-              child: InkWell(borderRadius: BorderRadius.circular(Pos.radius), onTap: onTap, child: content),
-            ),
+      // Material شفاف حتى تظهر خلفيات ListTile وتأثير اللمس داخل البطاقة
+      child: Material(
+        type: MaterialType.transparency,
+        child: onTap == null ? content : InkWell(borderRadius: BorderRadius.circular(Pos.radius), onTap: onTap, child: content),
+      ),
     );
   }
 }
