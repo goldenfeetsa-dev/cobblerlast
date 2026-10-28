@@ -4,7 +4,7 @@ import {
   LayoutDashboard, PlusCircle, ListOrdered, Users, UserCog, 
   ScanBarcode, LogOut, Scissors, Trophy, Menu, X, Settings, Moon, Sun,
   Wrench, Clock, ExternalLink, MapPin, ClipboardList, Globe, BookOpen, Star, Tag, ShoppingBag, ShoppingCart, Shield, CalendarDays, Receipt, Wallet, Award, Truck, Scale, Briefcase, Undo2
-, Sparkles } from 'lucide-react';
+, Sparkles, Landmark } from 'lucide-react';
 import { getSession, clearSession } from '@/lib/sessionStore';
 import { isFullAdmin, isFinanceUser, isWorker, ROLES } from '@/lib/roles';
 import { queryClientInstance } from '@/lib/query-client';
@@ -13,7 +13,7 @@ const TONES = {
   '/pos':'tone-blue','/new-order':'tone-green','/staff':'tone-orange','/orders':'tone-indigo','/invoices':'tone-teal',
   '/calendar':'tone-red','/scan':'tone-gray','/assistant':'tone-purple','/sales':'tone-orange','/suppliers':'tone-gray',
   '/purchasing':'tone-pink','/returns':'tone-red','/admin/partners':'tone-indigo','/customers':'tone-blue','/employees':'tone-teal','/leaderboard':'tone-orange','/financial-reports':'tone-green',
-  '/tax-dashboard':'tone-indigo','/audit':'tone-red','/site-analytics':'tone-blue','/admin/bookings':'tone-pink','/admin/reviews':'tone-orange',
+  '/tax-dashboard':'tone-indigo','/accounting':'tone-orange','/audit':'tone-red','/site-analytics':'tone-blue','/admin/bookings':'tone-pink','/admin/reviews':'tone-orange',
   '/admin/brands':'tone-purple','/admin/shop':'tone-teal','/admin/services':'tone-gray','/admin/working-hours':'tone-blue',
   '/admin/branches':'tone-green','/admin/careers':'tone-indigo','/zatca':'tone-teal','/social-settings':'tone-pink',
   '/loyalty':'tone-orange','/loyalty-members':'tone-purple','/settings':'tone-gray',
@@ -56,6 +56,7 @@ const navGroups = [
     label: 'التقارير',
     financeOnly: true,
     items: [
+      { path: '/accounting', icon: Landmark, label: 'المركز المحاسبي', financeOnly: true },
       { path: '/financial-reports', icon: Wallet, label: 'التقارير المالية', financeOnly: true },
       { path: '/tax-dashboard', icon: Scale, label: 'لوحة الضرائب', financeOnly: true },
       { path: '/audit', icon: ClipboardList, label: 'لوحة التدقيق', adminOnly: true },

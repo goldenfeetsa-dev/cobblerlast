@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarter } from 'date-fns';
 import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
+import { fetchAccountingReport } from '@/lib/accounting';
 
 const EXPENSE_CATEGORIES = {
   rent: 'إيجار', salaries: 'رواتب', utilities: 'فواتير خدمات',
@@ -64,6 +65,8 @@ export default function FinancialReports() {
   const [custodies, setCustodies] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [trend, setTrend] = useState([]);
+  // محرك المحاسبة الموحّد — مصدر الأرقام الرئيسية (نفس أرقام المركز المحاسبي وتطبيق الجوال)
+  const [engine, setEngine] = useState(null);
   const [creditNotes, setCreditNotes] = useState([]);
   const [receivable, setReceivable] = useState(0);
   const [payable, setPayable] = useState(0);
@@ -106,23 +109,20 @@ export default function FinancialReports() {
     setReceivable(receivable);
     setPayable(payable);
 
-    // آخر 6 أشهر للرسم البياني — استعلام واحد مجمّع بقاعدة البيانات
-    // بدل 18 استعلام منفصل (كان السبب الرئيسي لبطء الصفحة)
-    const { data: trendRaw, error: trendErr } = await supabase.rpc('get_monthly_financial_trend', { months_count: 6 });
-    if (trendErr) {
-      console.error('trend rpc error', trendErr);
+    // الأرقام الرئيسية + الاتجاه الشهري من المحرك الموحّد (قاعدة البيانات)
+    try {
+      const rep = await fetchAccountingReport(start, end);
+      setEngine(rep);
+      setTrend((rep.trend || []).slice(-6).map((row) => ({
+        month: format(new Date(`${row.month}-01T00:00:00`), 'MM/yyyy'),
+        الإيراد: Math.round(row.revenue || 0),
+        المصاريف: Math.round(row.costs || 0),
+      })));
+    } catch (err) {
+      console.error('accounting engine error', err);
+      setEngine(null);
       setTrend([]);
-    } else {
-      const trendRows = (trendRaw || []).map((row) => {
-        const settlement = (st || []).find((x) => x.month_key === row.month_key);
-        const materialCost = settlement ? (settlement.total_workshop_cost || 0) : 0;
-        return {
-          month: format(new Date(`${row.month_key}-01`), 'MM/yyyy'),
-          الإيراد: Math.round(row.revenue || 0),
-          المصاريف: Math.round((row.manual_expenses || 0) + materialCost),
-        };
-      });
-      setTrend(trendRows);
+      toast.error(err.message);
     }
     setLoading(false);
   };
@@ -145,7 +145,7 @@ export default function FinancialReports() {
     const net = (n.amount || 0) - (n.vat_amount || 0);
     return s + (n.note_type === 'credit' ? -net : net);
   }, 0), [creditNotes]);
-  const totalRevenue = repairRevenue + productRevenue + netNotesAdjustment;
+  const localRevenue = repairRevenue + productRevenue + netNotesAdjustment;
 
   const manualExpenseTotal = useMemo(() => expenses.reduce((s, e) => s + (e.amount || 0), 0), [expenses]);
   const expenseByCategory = useMemo(() => {
@@ -168,28 +168,24 @@ export default function FinancialReports() {
     return { total: settledCost + rawUnsettled, hasEstimate: custodies.some(c => !settledKeys.has(c.month_key)) };
   }, [custodies, settlements, start, end]);
 
-  const totalExpenses = manualExpenseTotal + materialCost.total;
-  const netProfit = totalRevenue - totalExpenses;
+  const IS = engine?.income_statement;
+  // المحرك هو المرجع؛ الحساب المحلي احتياطي فقط لو تعذّر الاتصال به
+  const totalRevenue = IS ? Number(IS.revenue_total) : localRevenue;
+  const totalExpenses = IS ? Number(IS.cost_of_revenue) + Number(IS.operating_expenses) : manualExpenseTotal + materialCost.total;
+  const netProfit = IS ? Number(IS.net_profit) : totalRevenue - totalExpenses;
 
   // ضرائب — فقط الفواتير المُبلَّغة فعلياً لزاتكا (رقم رسمي يُعتمد عليه)
-  const reportedOrders = orders.filter(o => o.zatca_status === 'REPORTED');
-  const reportedSales = sales.filter(s => s.zatca_status === 'REPORTED');
-  const vatCollected = [...reportedOrders, ...reportedSales].reduce((s, r) => {
-    // نفس إصلاح TaxDashboard: نعتمد على vat_amount المخزَّن فعلياً بدل افتراض 15% دائماً،
-    // لاحترام حالة تعطيل الضريبة (vat_enabled) على مستوى الطلب.
-    if (r.vat_amount != null) return s + Number(r.vat_amount);
-    const sub = r.subtotal ?? (r.total_price ? r.total_price / 1.15 : 0);
-    return s + sub * 0.15;
-  }, 0) + creditNotes.reduce((s, n) => s + (n.note_type === 'credit' ? -(n.vat_amount || 0) : (n.vat_amount || 0)), 0);
-  const unreportedCount = (orders.length + sales.length) - (reportedOrders.length + reportedSales.length);
+  // ضريبة المخرجات لكل الفواتير الصادرة (المرحلة الأولى — نفس لوحة الضرائب والمحرك).
+  // سابقاً كانت تُحتسب للفواتير «المُبلَّغة لزاتكا» فقط فتظهر صفراً دائماً.
+  const vatCollected = engine?.vat ? Number(engine.vat.output_vat) : 0;
 
   const statementRows = useMemo(() => {
     const rows = [];
-    orders.forEach(o => rows.push({ date: o.created_at, type: 'إيراد — إصلاح', desc: `${o.order_number || ''} ${o.customer_name || ''}`.trim(), amount: o.subtotal ?? (o.total_price || 0) / 1.15, sign: 1 }));
+    activeOrders.forEach(o => rows.push({ date: o.created_at, type: 'إيراد — إصلاح', desc: `${o.order_number || ''} ${o.customer_name || ''}`.trim(), amount: o.subtotal ?? (o.total_price || 0) / 1.15, sign: 1 }));
     sales.forEach(s => rows.push({ date: s.created_at, type: 'إيراد — منتجات', desc: s.invoice_number || '', amount: s.subtotal || 0, sign: 1 }));
     expenses.forEach(e => rows.push({ date: e.expense_date, type: `مصروف — ${EXPENSE_CATEGORIES[e.category] || e.category}`, desc: e.description || '', amount: e.amount || 0, sign: -1 }));
     return rows.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [orders, sales, expenses]);
+  }, [activeOrders, sales, expenses]);
 
   const addExpense = async () => {
     if (!newExpense.amount || Number(newExpense.amount) <= 0) { toast.error('أدخل مبلغاً صحيحاً'); return; }
@@ -319,10 +315,10 @@ export default function FinancialReports() {
 
       {/* ── بطاقات ملخّص ─────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard icon={TrendingUp} label="الإيراد الفعلي" value={totalRevenue} color="green" sub={`إصلاح ${fmt(repairRevenue)} + منتجات ${fmt(productRevenue)}${netNotesAdjustment ? ` ${netNotesAdjustment >= 0 ? '+' : '−'} ${fmt(Math.abs(netNotesAdjustment))} إشعارات` : ''}`} />
+        <SummaryCard icon={TrendingUp} label="الإيراد الفعلي" value={totalRevenue} color="green" sub={IS ? `إصلاح ${fmt(IS.revenue_repair)} + منتجات ${fmt(IS.revenue_products)} + شركات ${fmt(IS.revenue_partners)}` : `إصلاح ${fmt(repairRevenue)} + منتجات ${fmt(productRevenue)}`} />
         <SummaryCard icon={TrendingDown} label="المصاريف" value={totalExpenses} color="red" sub={materialCost.hasEstimate ? 'يشمل تقدير مواد غير مُسوّاة' : 'مصاريف + مواد مُسوّاة'} />
-        <SummaryCard icon={Wallet} label="صافي الربح" value={netProfit} color={netProfit >= 0 ? 'blue' : 'red'} sub="إيراد − مصاريف" />
-        <SummaryCard icon={Receipt} label="ضريبة مُحصّلة (مُبلَّغة)" value={vatCollected} color="purple" sub={unreportedCount > 0 ? `⚠️ ${unreportedCount} فاتورة لسا ما أُبلغت` : 'كل الفواتير مُبلَّغة'} />
+        <SummaryCard icon={Wallet} label="صافي الربح" value={netProfit} color={netProfit >= 0 ? 'blue' : 'red'} sub="إيراد − تكلفة الإيراد − مصاريف" />
+        <SummaryCard icon={Receipt} label="ضريبة المخرجات" value={vatCollected} color="purple" sub={engine?.vat ? `الصافي المستحق بعد المدخلات: ${fmt(engine.vat.net_vat_due)}` : 'كل الفواتير الصادرة'} />
       </div>
 
       {/* لي / علي — أرصدة لحظية، غير مرتبطة بالفترة المختارة أعلاه */}

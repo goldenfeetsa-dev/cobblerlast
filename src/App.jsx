@@ -19,6 +19,7 @@ const StaffOrderDetail = lazy(() => import('./pages/StaffOrderDetail'));
 const CalendarView = lazy(() => import('./pages/CalendarView'));
 const ZATCASettings = lazy(() => import('./pages/ZATCASettings'));
 const FinancialReports = lazy(() => import('./pages/FinancialReports'));
+const AccountingCenter = lazy(() => import('./pages/AccountingCenter'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
@@ -168,6 +169,7 @@ const AuthenticatedApp = () => {
           <Route path="/social-settings" element={<SocialSettings />} />
           <Route path="/admin/bookings" element={<BookingAdmin />} />
           <Route path="/zatca" element={<ZATCASettings />} />
+          <Route path="/accounting" element={<AccountingCenter />} />
           <Route path="/financial-reports" element={<FinancialReports />} />
           <Route path="/loyalty" element={<LoyaltyDashboard />} />
           <Route path="/loyalty-members" element={<LoyaltyMembersAdmin />} />

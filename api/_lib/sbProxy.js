@@ -74,6 +74,8 @@ const RPC = {
   erase_customer: { roles: OWN },
   auction_submitters: { roles: OWN },
   get_monthly_financial_trend: { roles: FIN },
+  // محرك المحاسبة الموحّد (migration 053) — نفس الأرقام للموقع وتطبيق الجوال
+  accounting_report: { roles: FIN },
 };
 
 const FN = { 'loyalty-notify': NS, 'send-email': NS };

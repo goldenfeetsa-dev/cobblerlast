@@ -57,7 +57,7 @@ export const WORKER_ALLOWED_PREFIXES = ['/staff', '/scan', '/orders', '/calendar
 
 // الصفحات الممنوعة عن الكاشير (إدارة/تقارير/إعدادات) — كل الباقي مسموح له
 export const CASHIER_DENIED_PREFIXES = [
-  '/pos', '/employees', '/leaderboard', '/financial-reports', '/audit',
+  '/pos', '/employees', '/leaderboard', '/financial-reports', '/accounting', '/tax-dashboard', '/audit',
   '/site-analytics', '/admin', '/zatca', '/social-settings', '/settings',
   '/operations', '/staff',
 ];

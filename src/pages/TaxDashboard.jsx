@@ -27,6 +27,7 @@ import {
   format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subQuarters, addMonths,
 } from 'date-fns';
 import { SarSymbol, Sar } from '@/components/shared/SarCurrency';
+import { fetchAccountingReport, EXPENSE_CATEGORY_LABELS } from '@/lib/accounting';
 
 // أرقام لاتينية دائماً (en-US) حتى تتطابق مع أرقام بوابة الهيئة
 const fmt = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -66,6 +67,7 @@ export default function TaxDashboard() {
   const [preparedAt, setPreparedAt] = useState(null);
   const [printDoc, setPrintDoc] = useState(null);       // 'tax' | 'mgmt'
   const [view, setView] = useState('tax');
+  const [engine, setEngine] = useState(null); // محرك المحاسبة الموحّد (لتقرير الأداء)
 
   const [start, end] = range;
 
@@ -96,6 +98,7 @@ export default function TaxDashboard() {
       setZatcaSettings(zs || null);
       setCreditNotes(A(notes));
       setShop((Array.isArray(st) && st[0]) || null);
+      fetchAccountingReport(start, end).then(setEngine).catch(() => setEngine(null));
     } catch (e) { toast.error('تعذّر تحميل البيانات: ' + (e.message || '')); }
     setLoading(false);
   };
@@ -181,7 +184,11 @@ export default function TaxDashboard() {
   const revenueNet = salesDocs.reduce((s, d) => s + d.net, 0) + adjNet;
   const purchasesNet = purchases.reduce((s, p) => s + num(p.taxable_amount), 0);
   const expensesNet = allExpenses.reduce((s, e) => s + num(e.subtotal ?? e.amount), 0);
-  const netProfit = revenueNet - purchasesNet - expensesNet;
+  // صافي الربح من المحرك الموحّد (نفس المركز المحاسبي والتقارير والجوال):
+  // مشتريات المخزون أصل لا تُخصم مباشرة؛ تدخل التكلفة عند البيع أو السحب للورشة.
+  const IS = engine?.income_statement;
+  const netProfit = IS ? Number(IS.net_profit) : revenueNet - purchasesNet - expensesNet;
+  const revenueShown = IS ? Number(IS.revenue_total) : revenueNet;
 
   // ═══ فحوصات الجاهزية ═══
   const checks = [
@@ -349,11 +356,22 @@ export default function TaxDashboard() {
         <thead><tr><th className="lb" colSpan={2}>البند<i>Description</i></th><th className="n">المبلغ<i>SAR (ex. VAT)</i></th></tr></thead>
         <tbody>
           <tr className="sec"><td colSpan={3}>الإيرادات · Revenue</td></tr>
-          <tr><td className="lb" colSpan={2}>صافي المبيعات (بعد إشعارات الدائن)</td><td className="n"><Money v={r2(revenueNet)} /></td></tr>
+          <tr><td className="lb" colSpan={2}>صافي المبيعات (بعد إشعارات الدائن)</td><td className="n"><Money v={r2(revenueShown)} /></td></tr>
           <tr className="sec"><td colSpan={3}>التكاليف · Costs</td></tr>
-          <tr><td className="lb" colSpan={2}>المشتريات ({purchases.length} فاتورة)</td><td className="n"><Money v={-purchasesNet} /></td></tr>
-          {expensesByCategory.map(([c, v]) => (<tr key={c}><td className="lb" colSpan={2}>مصروفات — {c}</td><td className="n"><Money v={-v} /></td></tr>))}
-          <tr className="tot strong"><td className="lb" colSpan={2}>{netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة'}<i>هامش {revenueNet > 0 ? ((netProfit / revenueNet) * 100).toFixed(1) : '0.0'}%</i></td><td className="n"><Money v={r2(netProfit)} /></td></tr>
+          {IS ? (
+            <>
+              <tr><td className="lb" colSpan={2}>تكلفة البضاعة المباعة</td><td className="n"><Money v={-Number(IS.cogs_products)} /></td></tr>
+              <tr><td className="lb" colSpan={2}>مواد الورشة{IS.materials_estimated ? ' (تقديري)' : ''}</td><td className="n"><Money v={-Number(IS.cogs_materials)} /></td></tr>
+              {(engine.expenses_by_category || []).map((x) => (<tr key={x.category}><td className="lb" colSpan={2}>مصروفات — {EXPENSE_CATEGORY_LABELS[x.category] || x.category}</td><td className="n"><Money v={-Number(x.amount)} /></td></tr>))}
+              <tr><td className="lb" colSpan={2}>للعلم: مشتريات مخزون بالفترة ({purchases.length} فاتورة) — أصل، لا تُخصم مباشرة</td><td className="n"><Money v={purchasesNet} /></td></tr>
+            </>
+          ) : (
+            <>
+              <tr><td className="lb" colSpan={2}>المشتريات ({purchases.length} فاتورة)</td><td className="n"><Money v={-purchasesNet} /></td></tr>
+              {expensesByCategory.map(([c, v]) => (<tr key={c}><td className="lb" colSpan={2}>مصروفات — {c}</td><td className="n"><Money v={-v} /></td></tr>))}
+            </>
+          )}
+          <tr className="tot strong"><td className="lb" colSpan={2}>{netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة'}<i>هامش {revenueShown > 0 ? ((netProfit / revenueShown) * 100).toFixed(1) : '0.0'}%</i></td><td className="n"><Money v={r2(netProfit)} /></td></tr>
         </tbody>
       </table>
       <div className="vr-ft"><span>مستند داخلي لمتابعة الأداء</span><span dir="ltr">{format(preparedAt || new Date(), 'yyyy-MM-dd HH:mm:ss')}</span></div>
