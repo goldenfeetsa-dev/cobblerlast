@@ -92,7 +92,7 @@ function CobblerTab({ session }) {
     const total = parseFloat(form.total_price) || 0;
     const lines = pieces.map((p) => ({ label: [ITEM_TYPES.find((t) => t.value === p.item_type)?.label || '', ...(p.services || [])].filter(Boolean).join(' — ') })).filter((l) => l.label);
     const subtotal = total / 1.15;
-    publishDisplay(total > 0 ? { mode: 'order', name: form.customer_name?.trim().split(' ')[0] || '', lines, subtotal, vat: total - subtotal, total } : null);
+    publishDisplay((total > 0 || lines.length) ? { mode: 'order', name: form.customer_name?.trim().split(' ')[0] || '', lines, subtotal, vat: total - subtotal, total } : null);
   }, [pieces, form.total_price, form.customer_name]);
   useEffect(() => () => publishDisplay(null), []);
   // مسودة جاهزة من المساعد الذكي: تعبئة النموذج للمراجعة فقط، والحفظ يتم من المستخدم

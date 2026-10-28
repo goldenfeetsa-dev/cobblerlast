@@ -1,14 +1,38 @@
-// قناة بين شاشة الكاشير وشاشة العميل (نافذة ثانية على نفس الجهاز) — بدون سيرفر وبدون تخزين.
+// قناة بين شاشة الكاشير وشاشة العميل (نافذة ثانية على نفس المتصفح/الجهاز) — بدون سيرفر.
+// ثلاث طبقات لضمان الظهور: BroadcastChannel + مصافحة عند فتح الشاشة (ترسل آخر حالة) + نبض كل 10 ثوانٍ + localStorage احتياطي.
 const NAME = 'nt-customer-display';
-let ch = null;
-const channel = () => { try { return (ch ||= new BroadcastChannel(NAME)); } catch { return null; } };
+const KEY = 'nt-customer-display-state';
+let ch = null, last = null, hb = null;
+const channel = () => {
+  try {
+    if (!ch) {
+      ch = new BroadcastChannel(NAME);
+      ch.onmessage = (e) => { if (e.data?.hello && last) post(); };   // الشاشة فُتحت للتو وتطلب الحالة الحالية
+    }
+    return ch;
+  } catch { return null; }
+};
+const post = () => channel()?.postMessage({ t: Date.now(), state: last });
+if (typeof window !== 'undefined') channel();
 
 /** state: null = عودة للعرض الفاخر، أو { mode:'order'|'sale', name, lines:[{label,qty,amount}], subtotal, vat, total } */
-export function publishDisplay(state) { channel()?.postMessage({ t: Date.now(), state }); }
+export function publishDisplay(state) {
+  last = state;
+  try { localStorage.setItem(KEY, JSON.stringify({ t: Date.now(), state })); } catch { /* ignore */ }
+  post();
+  clearInterval(hb);
+  if (state) hb = setInterval(post, 10000);
+}
 export function subscribeDisplay(cb) {
-  const c = new BroadcastChannel(NAME);
-  c.onmessage = (e) => cb(e.data?.state ?? null);
-  return () => c.close();
+  let c = null;
+  try { c = new BroadcastChannel(NAME); c.onmessage = (e) => { if (!e.data?.hello) cb(e.data?.state ?? null); }; c.postMessage({ hello: true }); } catch { /* ignore */ }
+  const onStorage = (e) => {
+    if (e.key !== KEY || !e.newValue) return;
+    try { cb(JSON.parse(e.newValue).state ?? null); } catch { /* ignore */ }
+  };
+  window.addEventListener('storage', onStorage);
+  try { const v = JSON.parse(localStorage.getItem(KEY) || 'null'); if (v && Date.now() - v.t < 40000) cb(v.state ?? null); } catch { /* ignore */ }
+  return () => { c?.close(); window.removeEventListener('storage', onStorage); };
 }
 export function openCustomerDisplay() {
   window.open('/customer-display', 'nt-customer-display', 'popup=yes,width=1280,height=800');
