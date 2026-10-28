@@ -177,7 +177,7 @@ jobs:
             dart run msix:create --build-windows false --store --identity-name "$MS_IDENTITY" --publisher "$MS_PUBLISHER" --version "$V" --output-path build/msix 2>&1 | tee msix.txt
           else
             echo "::warning::ناقص MS_STORE_IDENTITY_NAME / MS_STORE_PUBLISHER — بنيت نسخة تجربة فقط (غير صالحة للرفع للمتجر)"
-            dart run msix:create --build-windows false --version "$V" --output-path build/msix 2>&1 | tee msix.txt
+            dart run msix:create --build-windows false --install-certificate false --version "$V" --output-path build/msix 2>&1 | tee msix.txt
           fi
       - uses: actions/upload-artifact@v4
         with:
