@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/rest.dart';
 import '../../models/order.dart';
 import '../pos_ui.dart';
+import 'employees_screen.dart' show roleBadges;
 import 'order_details_screen.dart';
 
 // ───────────────────────── عمليات موحّدة (نفس lib/analytics.js) ─────────────────────────
@@ -274,7 +275,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: 14),
               const _SectionTitle(Icons.trending_up_rounded, 'أدوار أخرى (مرجعي)', muted: true),
               for (var i = 0; i < others.length; i++)
-                _RankRow(i: i, name: '${others[i].e['name']} — ${others[i].e['role'] ?? 'بدون دور'}', branch: _bn(others[i].e), top: others[i].total > 0, metric: _metricMoney(others[i].total, 'إجمالي')),
+                _RankRow(i: i, name: '${others[i].e['name']} — ${roleBadges[others[i].e['role']]?.$1 ?? others[i].e['role'] ?? 'بدون دور'}', branch: _bn(others[i].e), top: others[i].total > 0, metric: _metricMoney(others[i].total, 'إجمالي')),
             ],
           ],
         ],
@@ -361,7 +362,7 @@ class _WorkerRace extends StatelessWidget {
             ),
         if (live.isNotEmpty) ...[
           const SizedBox(height: 6),
-          const Text('⏱ جارية الآن', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          const _IconText(Icons.timer_outlined, 'جارية الآن', color: Pos.fg, bold: true),
           const SizedBox(height: 4),
           for (final o in live)
             Container(
@@ -963,7 +964,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
     Widget act(String label, Color c, String to) => Padding(
           padding: const EdgeInsetsDirectional.only(end: 6),
           child: FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: c, minimumSize: const Size(0, 32), padding: const EdgeInsets.symmetric(horizontal: 10), textStyle: const TextStyle(fontSize: 12)),
+            style: FilledButton.styleFrom(backgroundColor: c, minimumSize: const Size(0, 32), padding: const EdgeInsets.symmetric(horizontal: 10), textStyle: const TextStyle(fontSize: 12, fontFamily: 'IBMPlexSansArabic', fontWeight: FontWeight.w600)),
             onPressed: () => _setStatus(b, to),
             child: Text(label),
           ),
@@ -997,13 +998,13 @@ class _BookingsScreenState extends State<BookingsScreen> {
             ]),
             const SizedBox(height: 4),
             Wrap(spacing: 12, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-              Text('📞 ${b['customer_phone'] ?? ''}', textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 12, color: Pos.muted)),
-              Text('📅 ${b['booking_date'] ?? ''} — ${b['booking_time'] ?? ''}', style: const TextStyle(fontSize: 12, color: Pos.muted)),
-              Text('${b['booking_type'] == 'home_visit' ? '🚚' : '🏪'} ${b['service_name'] ?? ''}', style: const TextStyle(fontSize: 12, color: Pos.muted)),
+              _IconText(Icons.phone_outlined, '${b['customer_phone'] ?? ''}', ltr: true),
+              _IconText(Icons.calendar_today_outlined, '${b['booking_date'] ?? ''} — ${b['booking_time'] ?? ''}'),
+              _IconText(b['booking_type'] == 'home_visit' ? Icons.local_shipping_outlined : Icons.storefront_outlined, '${b['service_name'] ?? ''}'),
               if (b['latitude'] != null)
                 InkWell(
                   onTap: () => _open('https://maps.google.com/?q=${b['latitude']},${b['longitude']}'),
-                  child: const Text('📍 موقع العميل', style: TextStyle(fontSize: 12, color: Pos.blue, decoration: TextDecoration.underline)),
+                  child: const _IconText(Icons.location_on_outlined, 'موقع العميل', color: Pos.blue),
                 ),
               PosMoney(((b['total_price'] as num?) ?? 0).toDouble(), size: 12.5, weight: FontWeight.w800, color: const Color(0xFFD97706)),
             ]),
@@ -1024,4 +1025,18 @@ class _BookingsScreenState extends State<BookingsScreen> {
       ]),
     );
   }
+}
+
+class _IconText extends StatelessWidget {
+  const _IconText(this.icon, this.text, {this.color = Pos.muted, this.ltr = false, this.bold = false});
+  final IconData icon;
+  final String text;
+  final Color color;
+  final bool ltr, bold;
+  @override
+  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(text, textDirection: ltr ? TextDirection.ltr : null, style: TextStyle(fontSize: 12, color: color, fontWeight: bold ? FontWeight.w700 : null)),
+      ]);
 }

@@ -101,6 +101,11 @@ class _FakeApi extends ApiClient {
     if (path.endsWith('/branches')) return [{'id': 'br1', 'name': 'الفرع الرئيسي', 'address': 'الرياض — حي الملقا', 'phone': '0549678191', 'working_hours': 'السبت-الخميس 11:30ص-11:30م', 'is_active': true, 'maps_url': 'https://maps.google.com'}];
     if (path.endsWith('/services')) return [{'id': 'sv1', 'name_ar': 'تغيير نعل', 'category': 'shoes', 'price': 80, 'duration_minutes': 45, 'is_active': true, 'description': 'نعل جلد طبيعي'}, {'id': 'sv2', 'name_ar': 'تنظيف شنطة', 'category': 'bags', 'price': 120, 'duration_minutes': 60, 'is_active': false}];
     if (path.endsWith('/loyalty_cards')) return [{'id': 'l1', 'customer_name': 'منى', 'customer_phone': '0551112223', 'stamps': 3, 'free_after': 3, 'total_orders': 3}, {'id': 'l2', 'customer_name': 'عبدالله', 'customer_phone': '0503334445', 'stamps': 1, 'free_after': 3, 'total_orders': 4}];
+    if (path.endsWith('/job_postings')) return [{'id': 'j1', 'title': 'فني إصلاح أحذية', 'department': 'الورشة', 'employment_type': 'full_time', 'location': 'الرياض', 'apply_method': 'whatsapp', 'is_active': true}];
+    if (path.endsWith('/site_visits')) return [for (var i = 0; i < 30; i++) {'id': 'v$i', 'country': i.isEven ? 'السعودية' : 'الإمارات', 'city': i % 3 == 0 ? 'الرياض' : 'جدة', 'is_mobile': i % 4 != 0, 'ip': '1.1.1.${i % 9}', 'page': '/book', 'created_at': DateTime.now().subtract(Duration(hours: i * 9)).toUtc().toIso8601String()}];
+    if (path == '/api/secure/data' && query?['resource'] == 'auction_listings') return [{'id': 'au1', 'title_ar': 'حقيبة جلد مجدّدة', 'category': 'bags', 'status': 'active', 'current_price': 650, 'ends_at': DateTime.now().add(const Duration(hours: 5)).toUtc().toIso8601String(), 'is_featured': true}];
+    if (path == '/api/secure/zatca' && query?['resource'] == 'settings') return {'seller_name': 'إبرة وخيط الإسكافي', 'vat_number': '314151483700003', 'cr_number': '7051288830', 'city': 'الرياض', 'environment': 'simulation'};
+    if (path == '/api/zatca/health') return {'ready': true, 'environment': 'simulation', 'checks': {'businessInfoComplete': false, 'hasPrivateKey': true, 'hasCert': true, 'hasSecret': true}};
     if (path.endsWith('/reviews')) return [{'id': 'r1', 'customer_name': 'ريم', 'rating': 5, 'text': 'شغل ممتاز وسريع', 'is_approved': false, 'service': 'تلميع'}];
     if (path == '/api/secure/data' && query?['resource'] == 'customers') return _customers;
     return const [];
@@ -208,5 +213,10 @@ void main() {
   testWidgets('working-hours', (t) => shot(t, '26-working-hours', phone, const PosShell(initial: 'working-hours')));
   testWidgets('reviews', (t) => shot(t, '27-reviews', phone, const PosShell(initial: 'reviews')));
   testWidgets('loyalty', (t) => shot(t, '28-loyalty', phone, const PosShell(initial: 'loyalty')));
+  testWidgets('careers', (t) => shot(t, '29-careers', desktop, const PosShell(initial: 'careers-admin')));
+  testWidgets('auction', (t) => shot(t, '30-auction', phone, const PosShell(initial: 'auction-admin')));
+  testWidgets('zatca', (t) => shot(t, '31-zatca', tall, const PosShell(initial: 'zatca')));
+  testWidgets('site-analytics', (t) => shot(t, '32-site-analytics', desktop, const PosShell(initial: 'site-analytics')));
+  testWidgets('assistant', (t) => shot(t, '33-assistant', phone, const PosShell(initial: 'assistant')));
   testWidgets('accounting', (t) => shot(t, '09-accounting', desktop, const PosShell(initial: 'accounting')));
 }

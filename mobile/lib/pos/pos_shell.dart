@@ -8,7 +8,9 @@ import '../screens/accounting_section.dart';
 import '../state/accounting_controller.dart';
 import '../state/auth_controller.dart';
 import 'pos_ui.dart';
+import 'screens/assistant_screen.dart';
 import 'screens/calendar_screen.dart';
+import 'screens/careers_auction_screens.dart';
 import 'screens/content_screens.dart';
 import 'screens/customers_screen.dart';
 import 'screens/employees_screen.dart';
@@ -23,6 +25,8 @@ import 'screens/returns_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/settings_screens.dart';
+import 'screens/site_analytics_screen.dart';
+import 'screens/zatca_settings_screen.dart';
 import 'screens/staff_screens.dart';
 import 'screens/team_screens.dart';
 
@@ -65,6 +69,7 @@ const navGroups = <NavGroup>[
     NavItem('invoices', 'الفواتير', Icons.receipt_rounded, Tone.teal, financeOnly: true),
     NavItem('calendar', 'الجدولة المرئية', Icons.calendar_month_rounded, Tone.blue),
     NavItem('scan', 'مسح الباركود', Icons.qr_code_scanner_rounded, Tone.gray),
+    NavItem('assistant', 'المساعد الذكي', Icons.auto_awesome_rounded, Tone.purple),
   ]),
   NavGroup('الأنظمة', [
     NavItem('sales', 'المبيعات والمخازن', Icons.shopping_cart_outlined, Tone.orange, hideForWorker: true),
@@ -81,17 +86,21 @@ const navGroups = <NavGroup>[
   NavGroup('التقارير', [
     NavItem('accounting', 'المركز المحاسبي', Icons.account_balance_rounded, Tone.orange, financeOnly: true),
     NavItem('audit', 'لوحة التدقيق', Icons.fact_check_rounded, Tone.indigo, adminOnly: true),
+    NavItem('site-analytics', 'إحصائيات الموقع', Icons.public_rounded, Tone.teal, adminOnly: true),
   ]),
   NavGroup('المحتوى والموقع', [
     NavItem('bookings', 'الحجوزات', Icons.event_available_rounded, Tone.purple, hideForWorker: true),
     NavItem('reviews', 'التقييمات', Icons.star_rounded, Tone.orange, adminOnly: true),
     NavItem('brands', 'الماركات', Icons.sell_rounded, Tone.indigo, adminOnly: true),
     NavItem('shop-admin', 'المتجر', Icons.storefront_rounded, Tone.pink, adminOnly: true),
+    NavItem('auction-admin', 'سوق المزاد', Icons.gavel_rounded, Tone.purple, adminOnly: true),
   ]),
   NavGroup('الإعدادات', [
     NavItem('services-admin', 'إدارة الخدمات', Icons.build_rounded, Tone.orange, adminOnly: true),
     NavItem('working-hours', 'أوقات العمل', Icons.schedule_rounded, Tone.teal, adminOnly: true),
     NavItem('branches', 'الفروع', Icons.location_on_rounded, Tone.red, adminOnly: true),
+    NavItem('careers-admin', 'الوظائف الشاغرة', Icons.work_outline_rounded, Tone.indigo, adminOnly: true),
+    NavItem('zatca', 'زاتكا ZATCA', Icons.verified_user_rounded, Tone.green, financeOnly: true),
     NavItem('social-settings', 'التواصل الاجتماعي', Icons.share_rounded, Tone.pink, adminOnly: true),
     NavItem('loyalty', 'بطاقات الولاء', Icons.star_rounded, Tone.orange, hideForWorker: true),
     NavItem('loyalty-members', 'برنامج الولاء (النقاط)', Icons.workspace_premium_rounded, Tone.purple, hideForWorker: true),
@@ -148,6 +157,11 @@ class _PosShellState extends State<PosShell> {
         'working-hours' => const WorkingHoursScreen(),
         'branches' => const BranchesScreen(),
         'settings' => const SettingsScreen(),
+        'assistant' => AssistantScreen(onNavigate: _go),
+        'site-analytics' => const SiteAnalyticsScreen(),
+        'zatca' => const ZatcaSettingsScreen(),
+        'careers-admin' => const CareersAdminScreen(),
+        'auction-admin' => const AuctionAdminScreen(),
         'brands' => const BrandsScreen(),
         'shop-admin' => const ShopAdminScreen(),
         'social-settings' => const SocialSettingsScreen(),
