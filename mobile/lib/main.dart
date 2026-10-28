@@ -5,21 +5,23 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import 'core/api_client.dart';
+import 'core/rest.dart';
 import 'core/session_storage.dart';
-import 'screens/home_shell.dart';
+import 'pos/pos_shell.dart';
+import 'pos/pos_ui.dart';
 import 'screens/login_screen.dart';
 import 'state/accounting_controller.dart';
 import 'state/auth_controller.dart';
-import 'theme.dart';
+import 'state/order_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ar');
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AC.s1,
-    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Pos.bg,
+    systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
   final storage = SessionStorage();
@@ -28,24 +30,45 @@ Future<void> main() async {
   // لا ننتظر — شاشة البدء تظهر فوراً أثناء التحقق من الجلسة
   auth.restore();
 
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider.value(value: auth),
-      ChangeNotifierProvider(create: (_) => AccountingController(api)),
-    ],
-    child: const CobblerAccountingApp(),
-  ));
+  runApp(AppProviders(api: api, auth: auth, child: const CobblerApp()));
 }
 
-class CobblerAccountingApp extends StatelessWidget {
-  const CobblerAccountingApp({super.key});
+/// كل الخدمات المشتركة — منفصلة حتى تستخدمها اختبارات لقطات الشاشة بنفس الشكل.
+class AppProviders extends StatelessWidget {
+  const AppProviders({super.key, required this.api, required this.auth, required this.child, this.accounting});
+  final ApiClient api;
+  final AuthController auth;
+  final AccountingController? accounting;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final rest = Rest(api);
+    return MultiProvider(
+      providers: [
+        Provider<ApiClient>.value(value: api),
+        Provider<Rest>.value(value: rest),
+        Provider<OrderService>.value(value: OrderService(rest, api)),
+        ChangeNotifierProvider<AuthController>.value(value: auth),
+        if (accounting != null)
+          ChangeNotifierProvider<AccountingController>.value(value: accounting!)
+        else
+          ChangeNotifierProvider<AccountingController>(create: (_) => AccountingController(api)),
+      ],
+      child: child,
+    );
+  }
+}
+
+class CobblerApp extends StatelessWidget {
+  const CobblerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'المركز المحاسبي — إبرة وخيط الإسكافي',
+      title: 'إبرة وخيط الإسكافي',
       debugShowCheckedModeBanner: false,
-      theme: AC.theme(),
+      theme: Pos.theme(),
       locale: const Locale('ar', 'SA'),
       supportedLocales: const [Locale('ar', 'SA'), Locale('en')],
       localizationsDelegates: const [
@@ -67,7 +90,7 @@ class _Gate extends StatelessWidget {
     final status = context.select<AuthController, AuthStatus>((a) => a.status);
     final Widget child = switch (status) {
       AuthStatus.checking => const _Splash(),
-      AuthStatus.authenticated => const HomeShell(),
+      AuthStatus.authenticated => const PosShell(),
       AuthStatus.unauthenticated || AuthStatus.authenticating => const LoginScreen(),
     };
     return AnimatedSwitcher(
@@ -83,12 +106,14 @@ class _Splash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Image.asset('assets/images/cobblers-official-mark-white.png', height: 96),
-          const SizedBox(height: 26),
-          const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
-        ]),
+      body: PosBackground(
+        child: Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Image.asset('assets/images/cobblers-official-mark.png', height: 96, color: Pos.fg),
+            const SizedBox(height: 26),
+            const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+          ]),
+        ),
       ),
     );
   }

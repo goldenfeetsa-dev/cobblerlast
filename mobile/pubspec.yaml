@@ -1,5 +1,5 @@
 name: cobbler_accounting
-description: "المركز المحاسبي — إبرة وخيط الإسكافي (Needle & Thread Cobbler). نفس نظام الموقع ونفس الأرقام."
+description: "نظام إبرة وخيط الإسكافي — نقاط البيع والورشة والمحاسبة (Needle & Thread Cobbler POS)."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -14,6 +14,7 @@ dependencies:
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
   provider: ^6.1.2
+  url_launcher: ^6.3.1
   intl: any
 
 dev_dependencies:

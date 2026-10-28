@@ -169,6 +169,26 @@ class ApiClient {
     _ensureOk(res);
   }
 
+  // ═══════════════════ طلب عام (تستخدمه طبقة Rest) ═══════════════════
+
+  /// طلب HTTP عام عبر نفس الـ Interceptor (الجلسة + 401) مع رسائل خطأ موحّدة.
+  Future<dynamic> request(
+    String method,
+    String path, {
+    Map<String, dynamic>? query,
+    Object? data,
+    Map<String, String>? headers,
+  }) async {
+    final res = await _send(() => _dio.request<dynamic>(
+          path,
+          data: data,
+          queryParameters: query,
+          options: Options(method: method, headers: headers),
+        ));
+    _ensureOk(res);
+    return res.data;
+  }
+
   // ═══════════════════ أدوات داخلية ═══════════════════
 
   Future<Response<dynamic>> _send(Future<Response<dynamic>> Function() call) async {
@@ -196,7 +216,7 @@ class ApiClient {
     final body = _asMap(res.data);
     final msg = switch (code) {
       401 => 'انتهت الجلسة — سجّل الدخول من جديد',
-      403 => 'هذا القسم للإدارة والمحاسب فقط',
+      403 => 'ليس لديك صلاحية لهذا الإجراء',
       404 => 'الخدمة غير متاحة على الخادم بعد — حدّث الموقع',
       429 => 'طلبات كثيرة — انتظر قليلاً',
       _ when code >= 500 => 'خطأ في الخادم — حاول بعد قليل',

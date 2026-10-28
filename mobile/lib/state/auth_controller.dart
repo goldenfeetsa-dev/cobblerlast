@@ -44,19 +44,12 @@ class AuthController extends ChangeNotifier {
         _set(AuthStatus.unauthenticated);
         return;
       }
-      if (!me.isFinance) {
-        await _api.logout();
-        _employee = null;
-        _message = 'المركز المحاسبي للإدارة والمحاسب فقط';
-        _set(AuthStatus.unauthenticated);
-        return;
-      }
       _employee = me;
       await _storage.saveEmployee(me);
       _set(AuthStatus.authenticated);
     } on ApiException {
       // بدون إنترنت: نسمح بفتح التطبيق بالجلسة المحلية السارية؛ الطلبات ستُظهر خطأ الاتصال
-      if (saved.employee?.isFinance == true) {
+      if (saved.employee != null) {
         _set(AuthStatus.authenticated);
       } else {
         _set(AuthStatus.unauthenticated);
@@ -69,13 +62,6 @@ class AuthController extends ChangeNotifier {
     _set(AuthStatus.authenticating);
     try {
       final emp = await _api.login(pin);
-      if (!emp.isFinance) {
-        // نفس قاعدة الموقع: المركز المحاسبي للإدارة والمحاسب
-        await _api.logout();
-        _message = 'المركز المحاسبي للإدارة والمحاسب فقط — استخدم نظام الكاشير على الموقع';
-        _set(AuthStatus.unauthenticated);
-        return false;
-      }
       _employee = emp;
       _set(AuthStatus.authenticated);
       return true;
