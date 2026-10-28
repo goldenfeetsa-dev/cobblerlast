@@ -1,9 +1,9 @@
 import React from 'react';
 
 // شارة مدى مبسّطة (نص + شريطان بلون الهوية). للاعتماد الرسمي استبدلها بملف الشعار من دليل هوية «مدى» (المدفوعات السعودية).
-function Mada({ h }) {
+function Mada({ h, dark }) {
   return (
-    <svg viewBox="0 0 750 471" style={{ height: h, width: 'auto' }} role="img" aria-label="mada">
+    <svg viewBox="0 0 750 471" style={{ height: h, width: 'auto', borderRadius: '.6vh', boxShadow: dark ? '0 0 0 1px rgba(255,255,255,.4)' : undefined }} role="img" aria-label="mada">
       <rect width="750" height="471" rx="40" fill="#fff" stroke="#d8d4cc" strokeWidth="6" />
       <path d="M90 330 L210 90 L270 90 L150 330Z" fill="#259bd6" />
       <path d="M170 330 L290 90 L350 90 L230 330Z" fill="#84bd00" />
@@ -13,15 +13,16 @@ function Mada({ h }) {
   );
 }
 
-export default function PaymentLogos({ height = '5.4vh', gap = '1.6vh', label = 'نقبل الدفع عبر', color = '#5a5247' }) {
-  const img = (src, alt) => <img key={alt} src={src} alt={alt} style={{ height, width: 'auto', borderRadius: '.6vh', boxShadow: '0 .2vh .8vh rgba(0,0,0,.18)' }} />;
+export default function PaymentLogos({ height = '5.4vh', gap = '1.6vh', label = 'نقبل الدفع عبر', color = '#5a5247', dark = false }) {
+  const ring = dark ? '0 0 0 1px rgba(255,255,255,.4)' : '0 .2vh .8vh rgba(0,0,0,.18)';
+  const img = (src, alt, inv) => <img key={alt} src={src} alt={alt} style={{ height, width: 'auto', borderRadius: '.6vh', boxShadow: ring, filter: dark && inv ? 'invert(1)' : undefined }} />;
   return (
     <div className="flex items-center justify-center flex-wrap" style={{ gap }}>
       {label && <span style={{ fontSize: '2.2vh', color, marginInlineEnd: '.6vh' }}>{label}</span>}
-      <Mada h={height} />
+      <Mada h={height} dark={dark} />
       {img('/images/payments/mastercard.svg', 'Mastercard')}
       {img('/images/payments/visa.svg', 'Visa')}
-      {img('/images/payments/applepay.svg', 'Apple Pay')}
+      {img('/images/payments/applepay.svg', 'Apple Pay', true)}
       {img('/images/payments/amex.svg', 'American Express')}
     </div>
   );
