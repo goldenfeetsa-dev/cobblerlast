@@ -30,9 +30,11 @@ export default function ApplyForm({ job, isAr }) {
     setFile(x);
   };
 
+  const [agree, setAgree] = useState(false);
   const submit = async (e) => {
     e.preventDefault();
     if (!file) return toast.error(L('أرفق سيرتك الذاتية', 'Please attach your CV'));
+    if (!agree) return toast.error(L('يلزم الموافقة على معالجة بياناتك', 'Please accept the data processing consent'));
     setBusy(true);
     try {
       const cvText = await extractCvText(file);
@@ -85,6 +87,10 @@ export default function ApplyForm({ job, isAr }) {
         {file ? <FileText className="w-4 h-4 shrink-0" /> : <Upload className="w-4 h-4 shrink-0" />}
         <span className="truncate">{file ? file.name : L('أرفق سيرتك الذاتية (PDF أو Word) — حتى 3 ميجا *', 'Attach your CV (PDF or Word) — up to 3 MB *')}</span>
         <input type="file" accept={CV_ACCEPT} className="hidden" onChange={pick} />
+      </label>
+      <label className="flex items-start gap-3 text-xs font-light leading-relaxed cursor-pointer" style={{ color: '#a8a398' }}>
+        <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" required />
+        <span>{L('أوافق على معالجة بياناتي وسيرتي الذاتية لأغراض التوظيف فقط وحفظها 12 شهراً كحد أقصى، وفق ', 'I consent to my data and CV being processed for recruitment only and kept for up to 12 months, per the ')}<a href={isAr ? '/privacy' : '/en/privacy'} target="_blank" rel="noreferrer" className="underline">{L('سياسة الخصوصية', 'Privacy Policy')}</a></span>
       </label>
       <button disabled={busy} className="w-full min-h-[52px] font-semibold flex items-center justify-center gap-2 disabled:opacity-60" style={{ background: INK, color: '#0b0b0c' }}>
         {busy ? <><Loader2 className="w-4 h-4 animate-spin" />{L('جارٍ التحليل والإرسال…', 'Analysing and sending…')}</> : L('إرسال الطلب', 'Submit application')}

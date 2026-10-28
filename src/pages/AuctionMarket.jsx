@@ -150,6 +150,7 @@ function BidDialog({ listing, isAr, dir, onClose, onSuccess }) {
         <input className={inputCls} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder={isAr ? 'الاسم' : 'Name'} maxLength={80} />
         <input className={inputCls} style={inputStyle} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XXXXXXXX" dir="ltr" inputMode="tel" />
         <input className={inputCls + ' font-bold'} style={inputStyle} value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={minBid} dir="ltr" />
+        <p className="text-[11px]" style={{ color: MUTED }}>{isAr ? 'بالمتابعة توافق على معالجة بياناتك لأغراض المزاد وفق ' : 'By continuing you agree to your data being processed for the auction per the '}<a href={isAr ? '/privacy' : '/en/privacy'} target="_blank" rel="noreferrer" className="underline">{isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}</a></p>
         {error && <p className="text-xs font-bold" style={{ color: '#f87171' }}>{error}</p>}
         <button onClick={submit} disabled={busy} className="w-full min-h-[50px] font-semibold flex items-center justify-center gap-2 disabled:opacity-60" style={{ background: INK, color: '#0b0b0c' }}>
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (isAr ? 'تأكيد المزايدة' : 'Confirm bid')}
@@ -213,6 +214,7 @@ function SubmitItemDialog({ isAr, dir, brands, onClose, onSuccess }) {
         <label className="block text-xs" style={{ color: MUTED }}>{isAr ? 'صورة القطعة (اختياري)' : 'Photo (optional)'}
           <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} className="block mt-1 w-full text-xs" />
         </label>
+        <p className="text-[11px]" style={{ color: MUTED }}>{isAr ? 'بالمتابعة توافق على معالجة بياناتك لأغراض المزاد وفق ' : 'By continuing you agree to your data being processed for the auction per the '}<a href={isAr ? '/privacy' : '/en/privacy'} target="_blank" rel="noreferrer" className="underline">{isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}</a></p>
         {error && <p className="text-xs font-bold" style={{ color: '#f87171' }}>{error}</p>}
         <button onClick={submit} disabled={busy} className="w-full min-h-[50px] font-semibold flex items-center justify-center gap-2 disabled:opacity-60" style={{ background: INK, color: '#0b0b0c' }}>
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (isAr ? 'إرسال الطلب' : 'Submit request')}
