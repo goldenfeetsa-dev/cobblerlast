@@ -45,6 +45,24 @@ async function fetchProducts() {
   } catch (e) { console.warn('[seo-build] تعذّر جلب المنتجات (تم تجاهله):', e.message); return []; }
 }
 const PRODUCTS = await fetchProducts();
+async function fetchJobs() {
+  try {
+    if (process.env.SEO_JOBS_FILE) return JSON.parse(fs.readFileSync(process.env.SEO_JOBS_FILE, 'utf8'));
+    const base = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://bwuvldnlfgobqpdfhyql.supabase.co';
+    const key = process.env.VITE_SUPABASE_ANON_KEY || '';
+    if (!key) return [];
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(`${base}/rest/v1/job_postings?select=id,slug,title,title_en,description,description_en,employment_type,location,department,created_at&is_active=eq.true`, { headers: { apikey: key, Authorization: `Bearer ${key}` }, signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows.filter((j) => j.id && j.slug && j.title) : [];
+  } catch (e) { console.warn('[seo-build] تعذّر جلب الوظائف (تم تجاهله):', e.message); return []; }
+}
+const JOBS = await fetchJobs();
+const jTitle = (j, lang) => (lang === 'ar' ? j.title : j.title_en || j.title);
+const jTasks = (j, lang) => String((lang === 'ar' ? j.description : j.description_en || j.description) || '').split('\n').map((x) => x.trim()).filter(Boolean);
+const JOB_EMP = { full_time: 'FULL_TIME', part_time: 'PART_TIME', contract: 'CONTRACTOR' };
 const prodName = (p, lang) => (lang === 'ar' ? (p.name_ar || p.name) : (p.name || p.name_ar));
 const prodDesc = (p, lang) => String((lang === 'en' ? p.description_en : p.description) || '').trim() || (lang === 'ar' ? `${p.name_ar || p.name} — من متجر إبرة وخيط الإسكافي، توصيل داخل الرياض.` : `${p.name || p.name_ar} — from Ebra & Khait Cobbler shop, delivery in Riyadh.`);
 
@@ -60,6 +78,9 @@ const REG = [
   ...PRODUCTS.map((p) => ({ path: `/shop/${p.id}`, priority: '0.7', changefreq: 'weekly', kind: 'product', prod: p,
     ar: { title: `${prodName(p, 'ar')} | متجر إبرة وخيط الإسكافي`, description: prodDesc(p, 'ar').slice(0, 300) },
     en: { title: `${prodName(p, 'en')} | Ebra & Khait Cobbler Shop`, description: prodDesc(p, 'en').slice(0, 300) } })),
+  ...JOBS.map((j) => ({ path: `/careers/${encodeURI(j.slug)}`, priority: '0.6', changefreq: 'weekly', kind: 'job', job: j,
+    ar: { title: `${j.title} — وظيفة في الرياض | إبرة وخيط الإسكافي`, description: (jTasks(j, 'ar').slice(0, 3).join('، ') || j.title).slice(0, 155) },
+    en: { title: `${jTitle(j, 'en')} — Job in Riyadh | Ebra & Khait Cobbler`, description: (jTasks(j, 'en').slice(0, 3).join(', ') || jTitle(j, 'en')).slice(0, 155) } })),
 ];
 const pathOf = (p, lang) => (lang === 'ar' ? p : p === '/' ? '/en' : '/en' + p);
 const urlOf = (p, lang) => { const x = pathOf(p, lang); return x === '/' ? SITE.url + '/' : SITE.url + x; };
@@ -132,6 +153,21 @@ function graphFor(page, lang) {
       provider: { '@id': BUSINESS_ID }, url });
     nodes.push(faqNode(lang, c.faq, `${url}#faq`));
   }
+  if (page.kind === 'job') {
+    const j = page.job, ar2 = lang === 'ar';
+    const posted = (j.created_at || '').slice(0, 10);
+    const until = new Date(Math.max(new Date(j.created_at).getTime() + 90 * 864e5, Date.now() + 30 * 864e5)).toISOString().slice(0, 10);
+    crumbs.length = 1;
+    crumbs.push({ '@type': 'ListItem', position: 2, name: ar2 ? 'الوظائف' : 'Careers', item: urlOf('/careers', lang) });
+    crumbs.push({ '@type': 'ListItem', position: 3, name: jTitle(j, lang), item: url });
+    nodes[1] = { '@type': 'BreadcrumbList', itemListElement: crumbs };
+    nodes.push({ '@type': 'JobPosting', '@id': `${url}#job`, title: jTitle(j, lang), url, inLanguage: lang, directApply: true,
+      description: `<p>${esc(ar2 ? 'ورشة سعودية في الرياض متخصصة في ترميم وإصلاح الأحذية والحقائب الجلدية الفاخرة.' : 'A Saudi workshop in Riyadh specialising in the restoration and repair of luxury leather shoes and handbags.')}</p><ul>${jTasks(j, lang).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`,
+      identifier: { '@type': 'PropertyValue', name: 'Ebra & Khait Cobbler', value: j.id },
+      datePosted: posted, validThrough: until, employmentType: JOB_EMP[j.employment_type] || 'FULL_TIME', industry: 'Leather goods repair and restoration',
+      hiringOrganization: { '@type': 'Organization', name: SITE.nameAr, alternateName: SITE.nameEn, sameAs: SITE.url, logo: SITE.logo },
+      jobLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality: 'Riyadh', addressRegion: 'Riyadh Region', addressCountry: 'SA' } } });
+  }
   if (page.kind === 'product') {
     const p = page.prod, shop = urlOf('/shop', lang);
     crumbs.length = 1;
@@ -190,6 +226,11 @@ function bodyFor(page, lang) {
       `<h2>${ar ? 'أسئلة شائعة' : 'FAQ'}</h2>${c.faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('')}` +
       `<p><a href="${pathOf('/book', lang)}">${ar ? 'احجز موعدك' : 'Book your repair'}</a></p>` +
       `<h2>${T.other_h}</h2><ul>${others.map((s) => `<li><a href="${pathOf('/services/' + s.slug, lang)}">${esc(s[lang].name)}</a></li>`).join('')}</ul>` + contactHtml(lang);
+  } else if (page.kind === 'job') {
+    const j = page.job;
+    inner = h(jTitle(j, lang)) + `<p>${ar ? 'إبرة وخيط الإسكافي — ورشة سعودية في الرياض متخصصة في ترميم وإصلاح الأحذية والحقائب الجلدية الفاخرة.' : 'Ebra & Khait Cobbler — a Saudi workshop in Riyadh specialising in restoring and repairing luxury leather shoes and handbags.'}</p>` +
+      `<h2>${ar ? 'مهام الوظيفة' : 'Role responsibilities'}</h2>${li(jTasks(j, lang))}` +
+      `<p><a href="${pathOf('/careers', lang)}">${ar ? 'كل الوظائف' : 'All positions'}</a></p>` + contactHtml(lang);
   } else if (page.kind === 'product') {
     const p = page.prod;
     inner = h(prodName(p, lang)) + (p.image_url ? `<p><img src="${esc(absImg(p.image_url))}" alt="${esc(prodName(p, lang))}" width="480" /></p>` : '') +

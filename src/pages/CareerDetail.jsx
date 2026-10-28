@@ -32,7 +32,7 @@ export default function CareerDetail() {
   const pageTitle = isAr ? `${title} — وظيفة في الرياض | إبرة وخيط الإسكافي` : `${title} — Job in Riyadh | Ebra & Khait Cobbler`;
   const metaDesc = (tasks.slice(0, 3).join(isAr ? '، ' : ', ') || title).slice(0, 155);
   const posted = job.created_at?.slice(0, 10);
-  const until = new Date(new Date(job.created_at).getTime() + 90 * 864e5).toISOString().slice(0, 10);
+  const until = new Date(Math.max(new Date(job.created_at).getTime() + 90 * 864e5, Date.now() + 30 * 864e5)).toISOString().slice(0, 10);
   const htmlDesc = `<p>${about.p}</p><ul>${tasks.map((t) => `<li>${t.replace(/</g, '&lt;')}</li>`).join('')}</ul>`;
 
   return (
