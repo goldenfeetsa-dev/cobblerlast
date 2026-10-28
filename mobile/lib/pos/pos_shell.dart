@@ -12,6 +12,7 @@ import 'screens/customers_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/new_order_screen.dart';
 import 'screens/orders_screen.dart';
+import 'screens/scan_screen.dart';
 import 'screens/staff_screens.dart';
 
 /// عنصر في القائمة الجانبية — نفس navGroups في src/components/pos/Sidebar.jsx
@@ -49,6 +50,7 @@ const navGroups = <NavGroup>[
     NavItem('new-order', 'طلب جديد', Icons.add_circle_outline_rounded, Tone.green, hideForWorker: true),
     NavItem('staff', 'مهامي 🔧', Icons.content_cut_rounded, Tone.orange, workerOnly: true),
     NavItem('orders', 'الطلبات', Icons.format_list_bulleted_rounded, Tone.indigo),
+    NavItem('scan', 'مسح الباركود', Icons.qr_code_scanner_rounded, Tone.gray),
   ]),
   NavGroup('العملاء والفريق', [
     NavItem('customers', 'العملاء', Icons.groups_rounded, Tone.blue, hideForWorker: true),
@@ -97,6 +99,7 @@ class _PosShellState extends State<PosShell> {
         'new-order' => NewOrderScreen(onCreated: (_) => _go('orders')),
         'orders' => const OrdersScreen(),
         'customers' => const CustomersScreen(),
+        'scan' => const ScanScreen(),
         'accounting' => const AccountingSection(),
         _ => const OrdersScreen(),
       };

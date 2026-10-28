@@ -16,6 +16,11 @@ dependencies:
   provider: ^6.1.2
   url_launcher: ^6.3.1
   image_picker: ^1.1.2
+  mobile_scanner: ^7.0.0
+  printing: ^5.13.4
+  pdf: ^3.11.1
+  qr_flutter: ^4.1.0
+  barcode_widget: ^2.0.4
   intl: any
 
 dev_dependencies:

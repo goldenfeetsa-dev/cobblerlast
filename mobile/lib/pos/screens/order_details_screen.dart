@@ -7,6 +7,7 @@ import '../../models/order.dart';
 import '../../state/auth_controller.dart';
 import '../../state/order_service.dart';
 import '../pos_ui.dart';
+import '../receipt.dart';
 
 /// رسالة واتساب للعميل — نفس buildWhatsAppMessage في الموقع حرفياً.
 String whatsappMessage(Order o, String status) {
@@ -33,8 +34,11 @@ Future<void> openWhatsApp(BuildContext context, Order o, String status) async {
 }
 
 class OrderDetailsScreen extends StatefulWidget {
-  const OrderDetailsScreen({super.key, required this.orderId});
+  const OrderDetailsScreen({super.key, required this.orderId, this.justCreated = false});
   final String orderId;
+
+  /// بعد إنشاء الطلب مباشرة: يفتح تبويب الفاتورة ويطبع تلقائياً (مثل الموقع).
+  final bool justCreated;
 
   @override
   State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
@@ -44,6 +48,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   Order? _o;
   String? _error;
   bool _busy = false;
+  late bool _receipt = widget.justCreated;
 
   @override
   void initState() {
@@ -146,10 +151,32 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       final wide = c.maxWidth >= 900;
       final left = [_photosCard(o)];
       final right = [_customerCard(o), _itemCard(o), _paymentCard(o, isAdmin)];
+      final tabs = Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(value: false, label: Text('التفاصيل')),
+              ButtonSegment(value: true, label: Text('الفاتورة والباركود')),
+            ],
+            selected: {_receipt},
+            showSelectedIcon: false,
+            onSelectionChanged: (v) => setState(() => _receipt = v.first),
+          ),
+        ),
+      );
+      if (_receipt) {
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
+          children: [tabs, ReceiptPanel(order: o, autoPrint: widget.justCreated)],
+        );
+      }
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
+          tabs,
           _statusBar(o, isAdmin),
           if (o.workStartedAt != null || o.workDoneAt != null) _timingCard(o),
           if (wide)

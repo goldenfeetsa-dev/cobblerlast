@@ -10,6 +10,8 @@ import 'package:cobbler_accounting/main.dart';
 import 'package:cobbler_accounting/models/employee.dart';
 import 'package:cobbler_accounting/pos/pos_shell.dart';
 import 'package:cobbler_accounting/pos/pos_ui.dart';
+import 'package:cobbler_accounting/pos/receipt.dart';
+import 'package:cobbler_accounting/models/order.dart';
 import 'package:cobbler_accounting/screens/login_screen.dart';
 import 'package:cobbler_accounting/pos/screens/order_details_screen.dart';
 import 'package:cobbler_accounting/state/auth_controller.dart';
@@ -164,5 +166,8 @@ void main() {
   testWidgets('customers', (t) => shot(t, '07-customers', desktop, const PosShell(initial: 'customers')));
   testWidgets('staff', (t) => shot(t, '08-staff', tall, const PosShell(), role: 'staff'));
   testWidgets('new-order', (t) => shot(t, '10-new-order', const Size(390, 2300), const PosShell(initial: 'new-order'), role: 'cashier'));
+  testWidgets('receipt', (t) => shot(t, '11-receipt', const Size(390, 1300),
+      Scaffold(backgroundColor: const Color(0xFFEEEEEE), body: SingleChildScrollView(child: Center(child: Receipt(order: Order(_orders[2]), shop: ShopInfo.fallback))))));
+  testWidgets('scan', (t) => shot(t, '12-scan', phone, const PosShell(initial: 'scan')));
   testWidgets('accounting', (t) => shot(t, '09-accounting', desktop, const PosShell(initial: 'accounting')));
 }

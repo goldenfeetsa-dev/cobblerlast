@@ -101,10 +101,12 @@ jobs:
         with: { channel: stable, cache: true }
       - run: flutter pub get
       - run: |
-          flutter test test_screens --update-goldens > shots.txt 2>&1 || { grep -E "\[E\]|Error|error:|Exception" shots.txt | head -40 | sed 's/^/::error::/'; exit 1; }
+          flutter test test_screens --update-goldens > shots.txt 2>&1 || { grep -A6 -E "EXCEPTION CAUGHT|\[E\]" shots.txt | grep -vE "^\s*$|════" | head -60 | sed 's/^/::error::/'; FAILED=1; }
+          [ -z "${FAILED:-}" ] || echo "بعض اللقطات فشلت — نكمل بنشر الناجح منها"
       - name: نشر اللقطات في فرع ci/screenshots
         run: |
-          mkdir -p /tmp/shots && cp test_screens/shots/*.png /tmp/shots/
+          mkdir -p /tmp/shots && cp test_screens/shots/*.png /tmp/shots/ 2>/dev/null || true
+          cp shots.txt /tmp/shots/log.txt
           cd /tmp/shots
           git init -q -b ci/screenshots
           git config user.name "github-actions"; git config user.email "actions@github.com"

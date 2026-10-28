@@ -160,7 +160,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
       );
       if (!mounted) return;
       toast(context, r.warning ?? (r.zatcaStatus == 'REPORTED' ? 'تم إنشاء الطلب وإبلاغه لزاتكا رسمياً ✅' : 'تم إنشاء الطلب ✅'), error: r.warning != null);
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => OrderDetailsScreen(orderId: r.order.id)));
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => OrderDetailsScreen(orderId: r.order.id, justCreated: true)));
       widget.onCreated(r.order.id);
     } on ApiException catch (e) {
       if (mounted) toast(context, 'فشل حفظ الطلب: ${e.message}', error: true);
