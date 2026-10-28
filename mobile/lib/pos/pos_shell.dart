@@ -9,6 +9,7 @@ import '../state/accounting_controller.dart';
 import '../state/auth_controller.dart';
 import 'pos_ui.dart';
 import 'screens/customers_screen.dart';
+import 'screens/employees_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/invoices_screen.dart';
 import 'screens/new_order_screen.dart';
@@ -19,6 +20,7 @@ import 'screens/returns_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/staff_screens.dart';
+import 'screens/team_screens.dart';
 
 /// عنصر في القائمة الجانبية — نفس navGroups في src/components/pos/Sidebar.jsx
 /// (نفس الترتيب، الأيقونات، الألوان، وقواعد الظهور حسب الدور).
@@ -68,9 +70,15 @@ const navGroups = <NavGroup>[
   ]),
   NavGroup('العملاء والفريق', [
     NavItem('customers', 'العملاء', Icons.groups_rounded, Tone.blue, hideForWorker: true),
+    NavItem('employees', 'الموظفون', Icons.manage_accounts_rounded, Tone.teal, adminOnly: true),
+    NavItem('leaderboard', 'المتصدرون', Icons.emoji_events_rounded, Tone.orange, adminOnly: true),
   ]),
   NavGroup('التقارير', [
     NavItem('accounting', 'المركز المحاسبي', Icons.account_balance_rounded, Tone.orange, financeOnly: true),
+    NavItem('audit', 'لوحة التدقيق', Icons.fact_check_rounded, Tone.indigo, adminOnly: true),
+  ]),
+  NavGroup('المحتوى والموقع', [
+    NavItem('bookings', 'الحجوزات', Icons.event_available_rounded, Tone.purple, hideForWorker: true),
   ]),
 ];
 
@@ -113,6 +121,10 @@ class _PosShellState extends State<PosShell> {
         'new-order' => NewOrderScreen(onCreated: (_) => _go('orders')),
         'orders' => const OrdersScreen(),
         'customers' => const CustomersScreen(),
+        'employees' => const EmployeesScreen(),
+        'leaderboard' => const LeaderboardScreen(),
+        'audit' => const AuditLogScreen(),
+        'bookings' => const BookingsScreen(),
         'scan' => const ScanScreen(),
         'invoices' => const InvoicesScreen(),
         'sales' => const SalesScreen(),

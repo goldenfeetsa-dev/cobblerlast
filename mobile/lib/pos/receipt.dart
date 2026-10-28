@@ -81,8 +81,8 @@ class Receipt extends StatelessWidget {
 
     Widget row(String l, String v, {bool bold = false, bool large = false}) => Padding(
           padding: const EdgeInsets.only(bottom: 3),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(child: Text(l, style: TextStyle(fontSize: large ? 12 : 10, fontWeight: FontWeight.w600, color: _black))),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Flexible(child: Text(l, style: TextStyle(fontSize: large ? 12 : 10, fontWeight: FontWeight.w600, color: _black))),
             const SizedBox(width: 6),
             Flexible(
               child: Text(v,
@@ -266,7 +266,7 @@ class Receipt extends StatelessWidget {
                 ),
               ),
             ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 8),
           const Center(
             child: SizedBox(
               width: 200,

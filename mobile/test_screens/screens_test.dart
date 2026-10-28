@@ -67,6 +67,21 @@ const _report = '''
 "inventory_purchases":420,"expenses_by_category":[{"category":"rent","amount":1376.48},{"category":"electricity","amount":223.52}]}
 ''';
 
+final _employees = [
+  {'id': 'e1', 'name': 'أبو فهد', 'role': 'owner', 'branch_name': 'الفرع الرئيسي', 'is_active': true, 'total_orders': 120, 'total_revenue': 18400},
+  {'id': 'e2', 'name': 'سارة', 'role': 'cashier', 'branch_name': 'الفرع الرئيسي', 'is_active': true, 'total_orders': 64, 'total_revenue': 9200},
+  {'id': 'e3', 'name': 'محمد الفني', 'role': 'staff', 'branch_name': 'الفرع الرئيسي', 'is_active': true, 'total_orders': 80, 'total_revenue': 0},
+  {'id': 'e4', 'name': 'خالد', 'role': 'accountant', 'branch_name': '', 'is_active': false, 'total_orders': 0, 'total_revenue': 0},
+];
+final _bookings = [
+  {'id': 'b1', 'booking_number': 'BK1029', 'customer_name': 'نورة', 'customer_phone': '0551234567', 'booking_date': '2026-10-29', 'booking_time': '10:00', 'booking_type': 'home_visit', 'service_name': 'تلميع حذاء', 'status': 'pending', 'total_price': 60, 'item_photos': ['x'], 'latitude': 24.7, 'longitude': 46.6},
+  {'id': 'b2', 'booking_number': 'BK1030', 'customer_name': 'فيصل', 'customer_phone': '0509876543', 'booking_date': '2026-10-28', 'booking_time': '17:30', 'booking_type': 'in_store', 'service_name': 'تبديل نعل', 'status': 'completed', 'total_price': 120},
+];
+final _auditLogs = [
+  {'id': 'a1', 'employee_name': 'أبو فهد', 'employee_role': 'owner', 'page': 'الموظفون', 'action': 'create', 'entity': 'employee', 'entity_id': 'e2abcdef12', 'created_at': '2026-10-27T09:12:00Z'},
+  {'id': 'a2', 'employee_name': 'سارة', 'employee_role': 'cashier', 'page': 'الطلبات', 'action': 'update', 'entity': 'order', 'entity_id': '00000000-1', 'created_at': '2026-10-27T11:40:00Z'},
+];
+
 /// خادم وهمي يرد بنفس شكل بوابة الموقع.
 class _FakeApi extends ApiClient {
   _FakeApi() : super(SessionStorage());
@@ -79,6 +94,9 @@ class _FakeApi extends ApiClient {
       return _orders;
     }
     if (path.endsWith('/sales_invoices')) return const [];
+    if (path.endsWith('/employees')) return _employees;
+    if (path.endsWith('/bookings')) return _bookings;
+    if (path.endsWith('/audit_logs')) return _auditLogs;
     if (path == '/api/secure/data' && query?['resource'] == 'customers') return _customers;
     return const [];
   }
@@ -174,5 +192,9 @@ void main() {
   testWidgets('purchasing', (t) => shot(t, '15-purchasing', desktop, const PosShell(initial: 'purchasing')));
   testWidgets('returns', (t) => shot(t, '16-returns', phone, const PosShell(initial: 'returns')));
   testWidgets('partners', (t) => shot(t, '17-partners', desktop, const PosShell(initial: 'partners')));
+  testWidgets('employees', (t) => shot(t, '18-employees', desktop, const PosShell(initial: 'employees')));
+  testWidgets('leaderboard', (t) => shot(t, '19-leaderboard', tall, const PosShell(initial: 'leaderboard')));
+  testWidgets('audit', (t) => shot(t, '20-audit', desktop, const PosShell(initial: 'audit')));
+  testWidgets('bookings', (t) => shot(t, '21-bookings', tall, const PosShell(initial: 'bookings')));
   testWidgets('accounting', (t) => shot(t, '09-accounting', desktop, const PosShell(initial: 'accounting')));
 }

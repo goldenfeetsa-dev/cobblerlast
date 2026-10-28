@@ -475,7 +475,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
             child: Row(children: [
               Icon(icon, color: sel ? Pos.primary : Pos.muted),
               const SizedBox(width: 8),
-              Expanded(child: Text(label, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))),
+              Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5))),
             ]),
           ),
         ),
