@@ -59,7 +59,7 @@ function Bill({ s }) {
           <span className="text-xl" style={{ color: GOLD }}>الإجمالي</span>
           <span className="text-5xl font-light" style={{ color: INK }}><SarAmount value={Number(s.total || 0).toFixed(2)} /></span>
         </div>
-        <div className="pt-4"><PaymentLogos height="4.6vh" color={MUTED} dark /></div>
+        <div className="pt-4"><PaymentLogos height="3.8vh" color={MUTED} dark /></div>
       </div>
     </div>
   );
@@ -113,7 +113,7 @@ function OrderLive({ s }) {
             </div>
           </>
         ) : <p className="text-center text-sm pt-2" style={{ color: MUTED, borderTop: `1px solid ${HAIR}` }}>السعر يظهر هنا بعد التقييم</p>}
-        <div className="pt-3"><PaymentLogos height="4.2vh" color={MUTED} dark /></div>
+        <div className="pt-3"><PaymentLogos height="3.8vh" color={MUTED} dark /></div>
       </div>
     </div>
   );
