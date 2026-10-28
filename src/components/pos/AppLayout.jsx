@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import React, { useEffect } from 'react';
+import { openCustomerDisplay } from '@/lib/customerDisplay';
 import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import OrderNotifications from './OrderNotifications';
@@ -59,10 +60,10 @@ export default function AppLayout() {
     <div className="min-h-screen pos-shell">
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" />
       </Helmet>
       <RealtimeSync />
       <OrderNotifications />
+      <button type="button" onClick={openCustomerDisplay} className="fixed bottom-4 left-4 z-40 px-3 h-9 rounded-full text-xs font-bold shadow-lg" style={{ background: '#0b0b0c', color: '#ece8df', border: '1px solid rgba(201,168,76,.6)' }} title="افتح شاشة العميل ثم اسحبها للشاشة الثانية">شاشة العميل</button>
       <Sidebar />
       <main className="lg:mr-64 min-h-screen pt-14 lg:pt-0">
         <div className="p-4 sm:p-6 lg:p-8">

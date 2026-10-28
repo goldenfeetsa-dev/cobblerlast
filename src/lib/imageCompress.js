@@ -1,28 +1,16 @@
-// ضغط الصورة قبل رفعها لـ Supabase Storage — تقلل الحجم والوقت
-// دون التأثير على الوضوح بشكل ملحوظ.
-export async function compressImage(file, maxWidth = 900, quality = 0.75) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => {
-          const result = blob && blob.size < file.size ? blob : file;
-          const compressed = new File([result], file.name, { type: 'image/jpeg' });
-          resolve(compressed);
-        },
-        'image/jpeg',
-        quality
-      );
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    img.src = url;
-  });
+/** ضغط الصور في المتصفح قبل الرفع (يوفّر التخزين: صورة ~100–200KB بدل 1–5MB). */
+export async function compressImage(file, { maxSide = 1280, quality = 0.72 } = {}) {
+  if (!file || !file.type?.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+  if (file.size < 120 * 1024) return file;
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+    const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+    bmp.close?.();
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/webp', quality));
+    if (!blob || blob.type !== 'image/webp' || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' });
+  } catch { return file; }
 }

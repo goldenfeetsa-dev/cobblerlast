@@ -409,10 +409,17 @@ function OrderDetailsFull() {
                 {shouldHidePhotos(order) ? (
                   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
                     <span className="text-3xl">🗑️</span>
-                    <p className="text-sm text-center">تم حذف الصور تلقائياً بعد أسبوعين من إكمال الطلب</p>
+                    <p className="text-sm text-center">تم حذف الصور تلقائياً بعد 30 يوماً من إكمال الطلب (توفيراً للمساحة)</p>
                   </div>
                 ) : (
                   <PhotoCarousel photos={order.photos || []} />
+                )}
+                {(order.photos?.length > 0 || order.keep_photos) && (
+                  <label className="flex items-center gap-2 text-xs mt-3 cursor-pointer select-none text-muted-foreground">
+                    <input type="checkbox" checked={!!order.keep_photos}
+                      onChange={(e) => db.Order.update(orderId, { keep_photos: e.target.checked }).then(() => { queryClient.invalidateQueries({ queryKey: ['order', orderId] }); toast.success(e.target.checked ? 'ستبقى الصور للمعرض' : 'ستُحذف الصور تلقائياً'); })} />
+                    احتفظ بصور هذا الطلب للمعرض/الشهادة (لا تُحذف تلقائياً)
+                  </label>
                 )}
               </CardContent>
             </Card>

@@ -1,33 +1,25 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
+/**
+ * إحصاء زيارات مجهول الهوية: لا نجمع عنوان IP ولا نرسل شيئاً لأي طرف خارجي
+ * (كان يُستدعى ipapi.co ويُخزَّن IP مشفّراً بشكل قابل للعكس — أُوقف لأنه بيانات شخصية بنظام حماية البيانات PDPL).
+ * نحفظ فقط: الصفحة، نوع الجهاز، المرجع.
+ */
 export function useTrackVisit(page = '/booking') {
   useEffect(() => {
-    async function track() {
+    const track = async () => {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
-        const geo = await fetch('https://ipapi.co/json/', { signal: controller.signal })
-          .then(r => r.json())
-          .catch(() => ({}))
-          .finally(() => clearTimeout(timeoutId));
-        const ua  = navigator.userAgent;
+        const ua = navigator.userAgent;
         await supabase.from('site_visits').insert({
           page,
-          country:    geo.country_name || '',
-          city:       geo.city || '',
-          ip:         geo.ip ? btoa(geo.ip).slice(0, 16) : '',
-          user_agent: ua.slice(0, 200),
-          referrer:   document.referrer.slice(0, 200) || '',
-          is_mobile:  /Mobi|Android|iPhone|iPad/i.test(ua),
+          country: '', city: '', ip: '',
+          user_agent: /Mobi|Android|iPhone|iPad/i.test(ua) ? 'mobile' : 'desktop',
+          referrer: (document.referrer ? new URL(document.referrer).origin : '').slice(0, 120),
+          is_mobile: /Mobi|Android|iPhone|iPad/i.test(ua),
         });
       } catch { /* silent */ }
-    }
-
-    // نؤجل استدعاء خدمة تحديد الموقع الخارجية (ipapi.co) حتى تصبح الصفحة جاهزة للتفاعل،
-    // حتى لا تتنافس مع تحميل الصفحة الرئيسية على الشبكة (كانت أحد أسباب البطء).
-    // كما أن بعض المتصفحات/الإضافات (مانعات الإعلانات، حماية التتبع في Chrome) تحظر
-    // نطاق ipapi.co أحياناً — الكود هنا يتعامل مع ذلك بصمت دون التأثير على عرض الصفحة.
+    };
     if ('requestIdleCallback' in window) {
       const id = window.requestIdleCallback(track, { timeout: 2000 });
       return () => window.cancelIdleCallback?.(id);

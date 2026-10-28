@@ -29,6 +29,7 @@ const MyLoyalty = lazy(() => import('./pages/MyLoyalty'));
 const PinLogin = lazy(() => import('./pages/PinLogin'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NewOrder = lazy(() => import('./pages/NewOrder'));
+const CustomerDisplay = lazy(() => import('./pages/CustomerDisplay'));
 const Orders = lazy(() => import('./pages/Orders'));
 const OrderDetails = lazy(() => import('./pages/OrderDetails'));
 const ScanBarcode = lazy(() => import('./pages/ScanBarcode'));
@@ -104,6 +105,7 @@ const AuthenticatedApp = () => {
       <Routes>
         {/* /login مخفية — لا تظهر في أي رابط، تدخل بكتابتها يدوياً */}
         <Route path="/login" element={<PinLogin />} />
+        <Route path="/customer-display" element={<CustomerDisplay />} />
 
         {/* الصفحة الرئيسية = صفحة الحجز */}
         <Route path="/" element={<BookingLanding />} />

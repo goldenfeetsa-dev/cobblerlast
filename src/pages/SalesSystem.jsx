@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { publishDisplay } from '@/lib/customerDisplay';
 import { db } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
@@ -419,6 +420,10 @@ function InvoiceTab({ items, branches, session }) {
   const subtotal = cart.reduce((s, c) => s + c.sell_price * c.qty, 0);
   const vatAmt = subtotal * 0.15;
   const total = subtotal + vatAmt;
+  useEffect(() => {
+    publishDisplay(cart.length ? { mode: 'sale', name: customer.name?.trim().split(' ')[0] || '', lines: cart.map((c) => ({ label: c.item_name, qty: c.qty, amount: c.sell_price * c.qty })), subtotal, vat: vatAmt, total } : null);
+  }, [cart, customer.name, subtotal, vatAmt, total]);
+  useEffect(() => () => publishDisplay(null), []);
   const costTotal = cart.reduce((s, c) => s + c.cost_price * c.qty, 0);
   const grossProfit = subtotal - costTotal;
 

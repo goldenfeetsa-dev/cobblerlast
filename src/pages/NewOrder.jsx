@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { publishDisplay } from '@/lib/customerDisplay';
 import { useNavigate } from 'react-router-dom';
 import { db, EMPLOYEE_SAFE_COLUMNS, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
 import { supabase } from '@/lib/supabaseClient';
@@ -86,6 +87,14 @@ function CobblerTab({ session }) {
   });
 
   const formRef = useRef(null);
+  // شاشة العميل: نبثّ الطلب الحالي (بدون بيانات تواصل) ونرجع للعرض الفاخر عند مغادرة الصفحة
+  useEffect(() => {
+    const total = parseFloat(form.total_price) || 0;
+    const lines = pieces.map((p) => ({ label: [ITEM_TYPES.find((t) => t.value === p.item_type)?.label || '', ...(p.services || [])].filter(Boolean).join(' — ') })).filter((l) => l.label);
+    const subtotal = total / 1.15;
+    publishDisplay(total > 0 ? { mode: 'order', name: form.customer_name?.trim().split(' ')[0] || '', lines, subtotal, vat: total - subtotal, total } : null);
+  }, [pieces, form.total_price, form.customer_name]);
+  useEffect(() => () => publishDisplay(null), []);
   // مسودة جاهزة من المساعد الذكي: تعبئة النموذج للمراجعة فقط، والحفظ يتم من المستخدم
   useEffect(() => {
     try {

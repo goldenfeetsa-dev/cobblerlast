@@ -124,8 +124,11 @@ function createSecureEntity(resource) {
   };
 }
 
+import { compressImage } from '@/lib/imageCompress';
 // ── File Upload ──────────────────────────────────────────────
+const COMPRESS_BUCKETS = ['order-photos', 'auction-submissions', 'shop-products'];
 async function uploadFile({ file, bucket = 'order-photos' }) {
+  if (COMPRESS_BUCKETS.includes(bucket)) file = await compressImage(file);
   const ext  = file.name.split('.').pop() || 'jpg';
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await supabase.storage.from(bucket).upload(path, file, {
