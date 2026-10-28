@@ -176,7 +176,7 @@ export async function handleSbProxy(req, res) {
     if (target.startsWith('rpc/')) {
       const fn = target.slice(4);
       const rule = RPC[fn];
-      if (!rule || method !== 'POST') return deny(res, 403, 'forbidden_rpc');
+      if (!rule || method !== 'POST') return isPublic ? deny(res, 404, 'not_found') : deny(res, 403, 'forbidden_rpc');
       if (rule.pub) {
         if (rateLimited(ip, 'rpc', 40, 60_000)) return deny(res, 429, 'too_many_requests');
       } else if (!role || !rule.roles.includes(role)) return deny(res, 403, 'forbidden');
@@ -185,7 +185,7 @@ export async function handleSbProxy(req, res) {
     } else {
       const table = target.split('/')[0];
       const pol = T[table];
-      if (!pol) return deny(res, 403, 'forbidden_table');
+      if (!pol) return isPublic ? deny(res, 404, 'not_found') : deny(res, 403, 'forbidden_table');
       const op = method === 'GET' || method === 'HEAD' ? 'r' : method === 'POST' ? 'i' : method === 'PATCH' ? 'u' : method === 'DELETE' ? 'd' : null;
       if (!op) return deny(res, 405, 'method_not_allowed');
       const upsert = /resolution=(merge|ignore)-duplicates/.test(String(req.headers.prefer || ''));
@@ -303,7 +303,7 @@ export async function handleSbProxy(req, res) {
     const rest = path.slice('storage/v1/object/'.length);
     const bucket = rest.split('/')[0];
     const b = BUCKETS[bucket];
-    if (!b || rest.startsWith('public/') || rest.startsWith('sign/')) return deny(res, 403, 'forbidden_bucket');
+    if (!b || rest.startsWith('public/') || rest.startsWith('sign/')) return isPublic ? deny(res, 404, 'not_found') : deny(res, 403, 'forbidden_bucket');
     if (method === 'POST' || method === 'PUT') {
       if (isPublic ? !b.pubUp : !b.up.includes(role)) return deny(res, isPublic ? 401 : 403, 'forbidden');
       if (isPublic && rateLimited(ip, 'up', 10, 60_000)) return deny(res, 429, 'too_many_requests');
