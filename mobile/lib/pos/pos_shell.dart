@@ -13,6 +13,9 @@ import 'screens/dashboard_screen.dart';
 import 'screens/invoices_screen.dart';
 import 'screens/new_order_screen.dart';
 import 'screens/orders_screen.dart';
+import 'screens/partners_screens.dart';
+import 'screens/purchasing_screens.dart';
+import 'screens/returns_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/staff_screens.dart';
@@ -20,12 +23,12 @@ import 'screens/staff_screens.dart';
 /// عنصر في القائمة الجانبية — نفس navGroups في src/components/pos/Sidebar.jsx
 /// (نفس الترتيب، الأيقونات، الألوان، وقواعد الظهور حسب الدور).
 class NavItem {
-  const NavItem(this.id, this.label, this.icon, this.tone, {this.adminOnly = false, this.financeOnly = false, this.workerOnly = false, this.hideForWorker = false});
+  const NavItem(this.id, this.label, this.icon, this.tone, {this.adminOnly = false, this.financeOnly = false, this.workerOnly = false, this.hideForWorker = false, this.ownerOnly = false});
   final String id;
   final String label;
   final IconData icon;
   final Tone tone;
-  final bool adminOnly, financeOnly, workerOnly, hideForWorker;
+  final bool adminOnly, financeOnly, workerOnly, hideForWorker, ownerOnly;
 
   bool visibleFor(Employee e) {
     final admin = {'owner', 'admin', 'manager'}.contains(e.role);
@@ -35,6 +38,7 @@ class NavItem {
     if (financeOnly && !finance) return false;
     if (workerOnly && !worker) return false;
     if (hideForWorker && worker) return false;
+    if (ownerOnly && e.role != 'owner') return false;
     return true;
   }
 }
@@ -57,6 +61,10 @@ const navGroups = <NavGroup>[
   ]),
   NavGroup('الأنظمة', [
     NavItem('sales', 'المبيعات والمخازن', Icons.shopping_cart_outlined, Tone.orange, hideForWorker: true),
+    NavItem('suppliers', 'الموردون', Icons.local_shipping_outlined, Tone.gray, ownerOnly: true),
+    NavItem('purchasing', 'المشتريات', Icons.shopping_bag_outlined, Tone.pink, financeOnly: true),
+    NavItem('returns', 'المرتجعات', Icons.undo_rounded, Tone.red, hideForWorker: true),
+    NavItem('partners', 'الشركاء', Icons.business_rounded, Tone.indigo, adminOnly: true),
   ]),
   NavGroup('العملاء والفريق', [
     NavItem('customers', 'العملاء', Icons.groups_rounded, Tone.blue, hideForWorker: true),
@@ -108,6 +116,10 @@ class _PosShellState extends State<PosShell> {
         'scan' => const ScanScreen(),
         'invoices' => const InvoicesScreen(),
         'sales' => const SalesScreen(),
+        'purchasing' => const PurchasingScreen(),
+        'suppliers' => const SuppliersScreen(),
+        'returns' => const ReturnsScreen(),
+        'partners' => const PartnersScreen(),
         'accounting' => const AccountingSection(),
         _ => const OrdersScreen(),
       };

@@ -171,5 +171,8 @@ void main() {
   testWidgets('scan', (t) => shot(t, '12-scan', phone, const PosShell(initial: 'scan')));
   testWidgets('invoices', (t) => shot(t, '13-invoices', desktop, const PosShell(initial: 'invoices')));
   testWidgets('sales', (t) => shot(t, '14-sales', desktop, const PosShell(initial: 'sales')));
+  testWidgets('purchasing', (t) => shot(t, '15-purchasing', desktop, const PosShell(initial: 'purchasing')));
+  testWidgets('returns', (t) => shot(t, '16-returns', phone, const PosShell(initial: 'returns')));
+  testWidgets('partners', (t) => shot(t, '17-partners', desktop, const PosShell(initial: 'partners')));
   testWidgets('accounting', (t) => shot(t, '09-accounting', desktop, const PosShell(initial: 'accounting')));
 }
