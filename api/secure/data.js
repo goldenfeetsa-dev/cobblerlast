@@ -1122,6 +1122,25 @@ ${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كل
     }
   }
 
+  // ── مستندات خاصة (فواتير المشتريات...): رابط موقّع قصير (120 ثانية) — للمالية والإدارة فقط ──
+  if (resourceKey === 'docurl') {
+    const sess = getSessionFromRequest(req);
+    if (!sess) return res.status(401).json({ error: 'unauthenticated' });
+    if (!['owner', 'admin', 'manager', 'accountant'].includes(sess.role)) return res.status(403).json({ error: 'forbidden' });
+    const PRIVATE = ['purchase-invoices', 'purchase-documents'];
+    const bucket = String(req.query.bucket || '');
+    if (!PRIVATE.includes(bucket)) return res.status(400).json({ error: 'bad_bucket' });
+    let path = String(req.query.u || '');
+    const mk = `/object/public/${bucket}/`; const i = path.indexOf(mk);
+    if (i !== -1) path = path.slice(i + mk.length);
+    path = decodeURIComponent(path.split('?')[0]);
+    if (!path || path.includes('..') || path.startsWith('/')) return res.status(400).json({ error: 'bad_path' });
+    const { data, error } = await getSupabaseAdmin().storage.from(bucket).createSignedUrl(path, 120);
+    if (error) return res.status(404).json({ error: 'not_found' });
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json({ url: data.signedUrl });
+  }
+
   // ── طلبات التوظيف: عرض/تنزيل السيرة (رابط موقّع قصير)/تحديث الحالة/حذف — owner/admin/manager ──
   if (resourceKey === 'applications') {
     const sess = getSessionFromRequest(req);

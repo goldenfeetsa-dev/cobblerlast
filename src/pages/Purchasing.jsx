@@ -30,6 +30,7 @@ import {
   Package, Sparkles, Loader2, Wallet, UserPlus,
 } from 'lucide-react';
 import DocumentUploader from '@/components/common/DocumentUploader';
+import { signedDocUrl } from '@/lib/signedDoc';
 import { isValidVatFormat, VAT_RATE_DEFAULT } from '@/lib/vatValidation';
 import { SarAmount } from '@/components/shared/SarCurrency';
 
@@ -238,7 +239,7 @@ export default function Purchasing() {
                   <DocumentUploader value={form.document_url} onChange={v => setForm(p => ({ ...p, document_url: v }))} />
                   {form.document_url && !form.document_url.toLowerCase().includes('.pdf') && (
                     <Button type="button" size="sm" variant="outline" disabled={ocrBusy}
-                      onClick={() => fetch(form.document_url).then(r => r.blob()).then(b => runOcr(new File([b], 'invoice.jpg', { type: b.type })))}>
+                      onClick={() => signedDocUrl(form.document_url).then(u => fetch(u)).then(r => r.blob()).then(b => runOcr(new File([b], 'invoice.jpg', { type: b.type })))}>
                       {ocrBusy ? <Loader2 className="w-3.5 h-3.5 ml-1 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 ml-1" />}
                       {ocrBusy ? `قراءة الفاتورة... ${ocrProgress}%` : 'تعبئة تلقائية من الصورة (OCR)'}
                     </Button>

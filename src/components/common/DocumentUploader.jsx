@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { signedDocUrl } from '@/lib/signedDoc';
 import { Camera, X, FileText, Loader2, FileCheck2 } from 'lucide-react';
 import { storage } from '@/api/supabaseApi';
 import { toast } from 'sonner';
@@ -11,6 +12,8 @@ import { toast } from 'sonner';
 export default function DocumentUploader({ value, onChange, bucket = 'purchase-invoices', label = 'مستند الفاتورة (صورة أو PDF)' }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState('');
+  useEffect(() => { let off = false; if (!value) { setPreview(''); return; } signedDocUrl(value, bucket).then((u) => { if (!off) setPreview(u); }).catch(() => { if (!off) setPreview(''); }); return () => { off = true; }; }, [value, bucket]);
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -45,7 +48,7 @@ export default function DocumentUploader({ value, onChange, bucket = 'purchase-i
       <div className="flex items-center gap-3">
         <div className="relative w-16 h-16 rounded-lg overflow-hidden border shrink-0 bg-muted flex items-center justify-center" style={{ borderColor: 'hsl(var(--border))' }}>
           {value ? (
-            isPdf ? <FileCheck2 className="w-6 h-6 text-primary" /> : <img src={value} alt="مستند الفاتورة" className="w-full h-full object-cover" />
+            isPdf ? <FileCheck2 className="w-6 h-6 text-primary" /> : <img src={preview} alt="مستند الفاتورة" className="w-full h-full object-cover" />
           ) : (
             <FileText className="w-5 h-5 text-muted-foreground" />
           )}
