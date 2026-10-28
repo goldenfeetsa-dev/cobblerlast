@@ -171,11 +171,13 @@ jobs:
       - name: حزمة MSIX
         run: |
           V="1.0.${{ github.run_number }}.0"
+          set -o pipefail
+          trap 'tail -25 msix.txt | sed "s/^/::error::/"' ERR
           if [ -n "$MS_IDENTITY" ] && [ -n "$MS_PUBLISHER" ]; then
-            dart run msix:create --build-windows false --store --identity-name "$MS_IDENTITY" --publisher "$MS_PUBLISHER" --version "$V" --output-path build/msix
+            dart run msix:create --build-windows false --store --identity-name "$MS_IDENTITY" --publisher "$MS_PUBLISHER" --version "$V" --output-path build/msix 2>&1 | tee msix.txt
           else
             echo "::warning::ناقص MS_STORE_IDENTITY_NAME / MS_STORE_PUBLISHER — بنيت نسخة تجربة فقط (غير صالحة للرفع للمتجر)"
-            dart run msix:create --build-windows false --version "$V" --output-path build/msix
+            dart run msix:create --build-windows false --version "$V" --output-path build/msix 2>&1 | tee msix.txt
           fi
       - uses: actions/upload-artifact@v4
         with:
