@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '@/api/supabaseApi';
+import { supabase } from '@/lib/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSession } from '@/lib/sessionStore';
 import { Button } from '@/components/ui/button';
@@ -104,7 +105,12 @@ export default function AuctionAdmin() {
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ['auction-listings-admin'],
-    queryFn: () => auctionApi.list('-created_at', 200),
+    queryFn: async () => {
+      const rows = await auctionApi.list('-created_at', 200);
+      const { data: subs } = await supabase.rpc('auction_submitters');
+      const m = Object.fromEntries((subs || []).map((x) => [x.id, x]));
+      return rows.map((r) => (m[r.id] ? { ...r, submitter_name: m[r.id].name, submitter_phone: m[r.id].phone } : r));
+    },
   });
   const { data: brands = [] } = useQuery({
     queryKey: ['brands-for-auction-admin'],
@@ -156,7 +162,7 @@ export default function AuctionAdmin() {
   const [bidsFor, setBidsFor] = useState(null);
   const { data: bids = [] } = useQuery({
     queryKey: ['auction-bids-admin', bidsFor?.id], enabled: !!bidsFor,
-    queryFn: () => bidsApi.filter({ listing_id: bidsFor.id }, '-amount', 50),
+    queryFn: async () => { const { data, error } = await supabase.rpc('auction_bids_admin', { p_listing: bidsFor.id }); if (error) throw error; return data || []; },
   });
 
   if (!['admin', 'owner', 'manager'].includes(session?.role)) {

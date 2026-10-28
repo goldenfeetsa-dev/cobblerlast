@@ -1158,11 +1158,7 @@ ${isWorkerRole ? 'المتحدث فني ورشة يداه مشغولتان: كل
         return res.status(200).json({ url: data.signedUrl });
       }
       if (req.method === 'GET') {
-        let q = sb.from('job_applications')
-          .select('id,job_id,full_name,phone,email,city,years_experience,about,cv_path,ats_score,ats_matched,ats_missing,status,created_at')
-          .order('ats_score', { ascending: false }).order('created_at', { ascending: false }).limit(300);
-        if (job_id) q = q.eq('job_id', job_id);
-        const { data, error } = await q;
+        const { data, error } = await sb.rpc('applications_admin_list', { p_job: job_id || null });
         if (error) throw error;
         return res.status(200).json(data || []);
       }

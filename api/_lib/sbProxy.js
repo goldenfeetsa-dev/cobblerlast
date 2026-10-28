@@ -70,6 +70,8 @@ const RPC = {
   auction_place_bid: { pub: true },
   auction_submit_item: { pub: true },
   submit_job_application: { pub: true },
+  auction_bids_admin: { roles: OWN },
+  auction_submitters: { roles: OWN },
   get_monthly_financial_trend: { roles: FIN },
 };
 
