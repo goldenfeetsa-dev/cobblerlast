@@ -1,0 +1,80 @@
+name: تطبيق المركز المحاسبي (Flutter)
+
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/mobile.yml']
+  pull_request:
+    paths: ['mobile/**', '.github/workflows/mobile.yml']
+  workflow_dispatch:
+    inputs:
+      apple:
+        description: 'بناء iOS و macOS أيضاً (أبطأ)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: mobile
+    shell: bash
+
+jobs:
+  android:
+    name: فحص + اختبارات + Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: flutter --version
+      - name: تجهيز المنصات
+        run: PLATFORMS=android bash tool/bootstrap.sh
+      - name: تحليل الكود
+        run: flutter analyze --no-fatal-infos
+      - name: الاختبارات
+        run: flutter test
+      - name: بناء APK
+        run: flutter build apk --release --split-per-abi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: mobile/build/app/outputs/flutter-apk/*-release.apk
+          retention-days: 30
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    needs: android
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: PLATFORMS=windows bash tool/bootstrap.sh
+      - run: flutter build windows --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: mobile/build/windows/x64/runner/Release/
+          retention-days: 30
+
+  apple:
+    name: iOS + macOS (بدون توقيع)
+    if: github.event_name == 'workflow_dispatch' && inputs.apple
+    runs-on: macos-latest
+    needs: android
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: PLATFORMS=ios,macos bash tool/bootstrap.sh
+      - run: flutter build ios --release --no-codesign
+      - run: flutter build macos --release

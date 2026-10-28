@@ -1,0 +1,22 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# مجلدات المنصات تُولَّد بـ tool/bootstrap.sh
+android/
+ios/
+macos/
+windows/
+linux/
+web/
+
+# IDE
+.idea/
+*.iml
+.vscode/

@@ -15,6 +15,51 @@ const FINANCE_ROLES = ['owner', 'admin', 'manager', 'accountant'];
 const FULL_ADMIN_ROLES = ['owner', 'admin', 'manager'];
 const TABLE = 'expenses';
 
+// ── تنقية المدخلات ────────────────────────────────────────────────
+// كانت الواجهة ترسل created_by = اسم الموظف بينما العمود uuid (مرتبط بجدول
+// الموظفين) فيُرفض كل حفظ لمصروف. الحل: الخادم هو من يحدد المنشئ من الجلسة
+// الموقّعة، ولا نقبل إلا حقولاً معروفة بقيم صحيحة.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CATEGORIES = ['rent', 'salaries', 'electricity', 'water', 'internet', 'marketing', 'maintenance', 'supplies', 'transportation', 'other'];
+const money2 = (v) => Math.round(Number(v) * 100) / 100;
+
+function cleanExpense(body, { partial = false } = {}) {
+  const b = body && typeof body === 'object' && !Array.isArray(body) ? body : {};
+  const out = {};
+  const has = (k) => Object.prototype.hasOwnProperty.call(b, k);
+
+  if (has('category') || !partial) {
+    // قيم قديمة من الواجهة تُحوَّل لأقرب تصنيف صحيح بدل الرفض
+    const c = b.category === 'utilities' ? 'electricity' : b.category;
+    out.category = CATEGORIES.includes(c) ? c : 'other';
+  }
+  if (has('amount') || !partial) {
+    const a = Number(b.amount);
+    if (!Number.isFinite(a) || a <= 0 || a > 10_000_000) return { error: 'المبلغ غير صحيح' };
+    out.amount = money2(a);
+  }
+  if (has('expense_date') || !partial) {
+    const d = String(b.expense_date || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(Date.parse(d))) return { error: 'التاريخ غير صحيح' };
+    out.expense_date = d;
+  }
+  if (has('description')) out.description = String(b.description ?? '').slice(0, 500);
+  if (has('is_vat_applicable')) out.is_vat_applicable = b.is_vat_applicable === true;
+  if (has('has_tax_invoice')) out.has_tax_invoice = b.has_tax_invoice === true;
+  if (has('vat_amount')) { const v = Number(b.vat_amount); out.vat_amount = Number.isFinite(v) && v >= 0 ? money2(v) : 0; }
+  if (has('subtotal')) { const v = Number(b.subtotal); out.subtotal = Number.isFinite(v) && v >= 0 ? money2(v) : null; }
+  if (has('supplier_vat_number')) {
+    const v = b.supplier_vat_number == null ? '' : String(b.supplier_vat_number).trim();
+    if (v && !/^3\d{13}3$/.test(v)) return { error: 'الرقم الضريبي للمورد غير صحيح' };
+    out.supplier_vat_number = v || null;
+  }
+  if (has('receipt_url')) out.receipt_url = b.receipt_url ? String(b.receipt_url).slice(0, 1000) : null;
+  // ضريبة بدون خضوع = تناقض: نصفّرها
+  if (out.is_vat_applicable === false) { out.vat_amount = 0; out.has_tax_invoice = false; out.supplier_vat_number = null; }
+  if (out.amount != null && out.vat_amount != null && out.vat_amount > out.amount) return { error: 'الضريبة أكبر من المبلغ' };
+  return { record: out };
+}
+
 export default async function handler(req, res) {
   const session = getSessionFromRequest(req);
   if (!session) return res.status(401).json({ error: 'unauthenticated' });
@@ -59,7 +104,10 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const record = req.body || {};
+      const { record, error: bad } = cleanExpense(req.body);
+      if (bad) return res.status(400).json({ error: bad });
+      record.created_by = UUID.test(String(session.employee_id || '')) ? session.employee_id : null;
+      if (UUID.test(String(session.branch_id || ''))) record.branch_id = session.branch_id;
       const { data, error } = await supabase.from(TABLE).insert(record).select().single();
       if (error) throw error;
       return res.status(200).json(data);
@@ -68,7 +116,9 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH') {
       const { id } = req.query;
       if (!id) return res.status(400).json({ error: 'missing_id' });
-      const record = req.body || {};
+      const { record, error: bad } = cleanExpense(req.body, { partial: true });
+      if (bad) return res.status(400).json({ error: bad });
+      if (!Object.keys(record).length) return res.status(400).json({ error: 'لا توجد حقول للتعديل' });
       const { data, error } = await supabase.from(TABLE).update(record).eq('id', id).select().single();
       if (error) throw error;
       return res.status(200).json(data);

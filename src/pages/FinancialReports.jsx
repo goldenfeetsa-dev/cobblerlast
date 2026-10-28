@@ -35,9 +35,10 @@ import { format, startOfMonth, endOfMonth, subMonths, startOfYear, startOfQuarte
 import { SarAmount, Sar, SarSymbol } from '@/components/shared/SarCurrency';
 import { fetchAccountingReport } from '@/lib/accounting';
 
+// نفس قيم نوع expense_category في قاعدة البيانات حرفياً (كان «utilities» غير موجود فيُرفض الحفظ)
 const EXPENSE_CATEGORIES = {
-  rent: 'إيجار', salaries: 'رواتب', utilities: 'فواتير خدمات',
-  supplies: 'مستلزمات', maintenance: 'صيانة', marketing: 'تسويق', other: 'أخرى',
+  rent: 'إيجار', salaries: 'رواتب', electricity: 'كهرباء', water: 'مياه', internet: 'إنترنت واتصالات',
+  supplies: 'مستلزمات', maintenance: 'صيانة', marketing: 'تسويق', transportation: 'نقل ومواصلات', other: 'أخرى',
 };
 const CHART_COLORS = ['#14407a', '#b42318', '#127a4a', '#9a6700', '#111827', '#6b7280', '#9aa1ad'];
 const fmtN = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
