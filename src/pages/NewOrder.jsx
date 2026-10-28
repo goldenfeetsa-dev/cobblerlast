@@ -220,14 +220,18 @@ function CobblerTab({ session }) {
         }
       }
 
+      // إحصائيات الموظف ثانوية: تعديل جدول الموظفين مسموح للمالك/المدير فقط على الخادم،
+      // فكان الكاشير يرى «فشل حفظ الطلب» رغم أن الطلب انحفظ فعلاً. الحين لا توقف العملية.
       if (session?.id) {
-        const me = await db.Employee.get(session.id, EMPLOYEE_SAFE_COLUMNS).catch(() => null);
-        if (me) {
-          await db.Employee.update(me.id, {
-            total_orders: (me.total_orders || 0) + 1,
-            total_revenue: (me.total_revenue || 0) + price,
-          }, EMPLOYEE_SAFE_COLUMNS);
-        }
+        try {
+          const me = await db.Employee.get(session.id, EMPLOYEE_SAFE_COLUMNS).catch(() => null);
+          if (me) {
+            await db.Employee.update(me.id, {
+              total_orders: (me.total_orders || 0) + 1,
+              total_revenue: (me.total_revenue || 0) + price,
+            }, EMPLOYEE_SAFE_COLUMNS);
+          }
+        } catch { /* ثانوي */ }
       }
 
       // ── ZATCA Phase 2 — طلبات الإصلاح تُفوتر رسمياً مثل المبيعات تماماً ──

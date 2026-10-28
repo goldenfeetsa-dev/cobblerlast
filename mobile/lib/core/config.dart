@@ -14,6 +14,9 @@ class AppConfig {
     defaultValue: 'https://www.needlecobbler.com',
   );
 
+  /// عنوان Supabase العام — فقط لبناء روابط الصور العامة (نفس SUPABASE_PUBLIC_URL في الموقع).
+  static const String supabasePublicUrl = 'https://bwuvldnlfgobqpdfhyql.supabase.co';
+
   /// اسم كوكي الجلسة الذي يصدره الخادم (api/_lib/session.js).
   static const String sessionCookie = 'nt_session';
 

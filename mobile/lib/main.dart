@@ -12,6 +12,7 @@ import 'pos/pos_ui.dart';
 import 'screens/login_screen.dart';
 import 'state/accounting_controller.dart';
 import 'state/auth_controller.dart';
+import 'state/new_order_service.dart';
 import 'state/order_service.dart';
 
 Future<void> main() async {
@@ -49,6 +50,7 @@ class AppProviders extends StatelessWidget {
         Provider<ApiClient>.value(value: api),
         Provider<Rest>.value(value: rest),
         Provider<OrderService>.value(value: OrderService(rest, api)),
+        Provider<NewOrderService>.value(value: NewOrderService(rest, api)),
         ChangeNotifierProvider<AuthController>.value(value: auth),
         if (accounting != null)
           ChangeNotifierProvider<AccountingController>.value(value: accounting!)

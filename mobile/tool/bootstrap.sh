@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PLATFORMS="${PLATFORMS:-android,ios,macos,windows}"
-APP_LABEL="المركز المحاسبي"
+APP_LABEL="إبرة وخيط"
 
 flutter create --project-name cobbler_accounting --org com.needlecobbler \
   --platforms="$PLATFORMS" --no-pub . >/dev/null
@@ -46,6 +46,8 @@ p, label = sys.argv[1], sys.argv[2]
 with open(p, 'rb') as f: d = plistlib.load(f)
 d['CFBundleDisplayName'] = label
 d['CFBundleDevelopmentRegion'] = 'ar'
+d['NSCameraUsageDescription'] = 'لتصوير قطع العميل وإرفاقها بالطلب'
+d['NSPhotoLibraryUsageDescription'] = 'لإرفاق صور القطع من المعرض بالطلب'
 with open(p, 'wb') as f: plistlib.dump(d, f)
 PY
 fi

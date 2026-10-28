@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'dart:typed_data';
+
 import 'api_client.dart';
+import 'config.dart';
 
 /// طبقة بيانات بنفس منطق `supabase-js` في الموقع، لكن عبر بوابة الخادم `/sb`
 /// (نفس الصلاحيات لكل جدول ولكل دور، ونفس إخفاء الأعمدة عن الفني).
@@ -72,6 +75,14 @@ class Rest {
 
   Future<dynamic> securePatch(String resource, String id, Map<String, dynamic> body) =>
       _api.request('PATCH', '/api/secure/data', query: {'resource': resource, 'id': id}, data: body);
+
+  /// رفع ملف للتخزين عبر البوابة (نفس storage.uploadFile في الموقع) ويرجع الرابط العام.
+  Future<String> upload(String bucket, String path, Uint8List bytes, {String contentType = 'image/jpeg'}) async {
+    await _api.request('POST', '/sb/storage/v1/object/$bucket/$path',
+        data: Stream.fromIterable([bytes]),
+        headers: {'Content-Type': contentType, 'Content-Length': '${bytes.length}', 'cache-control': '3600', 'x-upsert': 'false'});
+    return '${AppConfig.supabasePublicUrl}/storage/v1/object/public/$bucket/$path';
+  }
 
   static List<Map<String, dynamic>> _rows(dynamic data) {
     if (data is List) {

@@ -163,5 +163,6 @@ void main() {
   testWidgets('order-details-desktop', (t) => shot(t, '06-order-details-desktop', desktop, const OrderDetailsScreen(orderId: '00000000-0000-0000-0000-000000000001')));
   testWidgets('customers', (t) => shot(t, '07-customers', desktop, const PosShell(initial: 'customers')));
   testWidgets('staff', (t) => shot(t, '08-staff', tall, const PosShell(), role: 'staff'));
+  testWidgets('new-order', (t) => shot(t, '10-new-order', const Size(390, 2300), const PosShell(initial: 'new-order'), role: 'cashier'));
   testWidgets('accounting', (t) => shot(t, '09-accounting', desktop, const PosShell(initial: 'accounting')));
 }

@@ -10,6 +10,7 @@ import '../state/auth_controller.dart';
 import 'pos_ui.dart';
 import 'screens/customers_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/new_order_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/staff_screens.dart';
 
@@ -45,6 +46,7 @@ class NavGroup {
 const navGroups = <NavGroup>[
   NavGroup(null, [
     NavItem('pos', 'لوحة التحكم', Icons.grid_view_rounded, Tone.blue, adminOnly: true),
+    NavItem('new-order', 'طلب جديد', Icons.add_circle_outline_rounded, Tone.green, hideForWorker: true),
     NavItem('staff', 'مهامي 🔧', Icons.content_cut_rounded, Tone.orange, workerOnly: true),
     NavItem('orders', 'الطلبات', Icons.format_list_bulleted_rounded, Tone.indigo),
   ]),
@@ -57,10 +59,9 @@ const navGroups = <NavGroup>[
 ];
 
 /// الصفحة الافتراضية بعد الدخول حسب الدور — getHomePath في roles.js
-/// (الكاشير يبدأ بالطلبات حتى تكتمل شاشة «طلب جديد» في التطبيق).
 String homeFor(Employee e) {
   if (e.role == 'staff') return 'staff';
-  if (e.role == 'cashier') return 'orders';
+  if (e.role == 'cashier') return 'new-order';
   if (e.role == 'accountant') return 'accounting';
   return 'pos';
 }
@@ -93,6 +94,7 @@ class _PosShellState extends State<PosShell> {
   Widget _page(String id) => switch (id) {
         'pos' => DashboardScreen(onOpenOrders: () => _go('orders')),
         'staff' => const StaffTasksScreen(),
+        'new-order' => NewOrderScreen(onCreated: (_) => _go('orders')),
         'orders' => const OrdersScreen(),
         'customers' => const CustomersScreen(),
         'accounting' => const AccountingSection(),
