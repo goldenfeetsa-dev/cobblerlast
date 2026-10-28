@@ -77,5 +77,29 @@ PY
 done
 
 flutter pub get
-dart run flutter_launcher_icons >/dev/null || echo "⚠️ تعذّر توليد الأيقونات — يكمل البناء بالأيقونة الافتراضية"
+# أيقونة التطبيق وشاشة البداية بشعار المحل — أي فشل هنا يوقف البناء (ما نطلع بشعار فلاتر)
+{
+  echo "flutter_launcher_icons:"
+  echo '  image_path: "assets/images/app-icon-1024.png"'
+  [[ "$PLATFORMS" == *android* ]] && printf '  android: true\n  min_sdk_android: 23\n  adaptive_icon_background: "#F4F1EA"\n  adaptive_icon_foreground: "assets/images/app-icon-foreground.png"\n' || echo "  android: false"
+  [[ "$PLATFORMS" == *ios* ]] && printf '  ios: true\n  remove_alpha_ios: true\n' || echo "  ios: false"
+  [[ "$PLATFORMS" == *windows* ]] && printf '  windows:\n    generate: true\n    image_path: "assets/images/app-icon-1024.png"\n    icon_size: 256\n'
+  [[ "$PLATFORMS" == *macos* ]] && printf '  macos:\n    generate: true\n    image_path: "assets/images/app-icon-1024.png"\n'
+  true
+} > flutter_launcher_icons.yaml
+dart run flutter_launcher_icons -f flutter_launcher_icons.yaml > icons.txt 2>&1 || { tail -30 icons.txt | sed 's/^/::error::/'; exit 1; }
+if [[ "$PLATFORMS" == *android* || "$PLATFORMS" == *ios* ]]; then
+  {
+    echo "flutter_native_splash:"
+    echo '  color: "#F4F1EA"'
+    echo '  image: assets/images/splash-logo.png'
+    echo '  android_12:'
+    echo '    color: "#F4F1EA"'
+    echo '    image: assets/images/app-icon-foreground.png'
+    [[ "$PLATFORMS" == *android* ]] && echo '  android: true' || echo '  android: false'
+    [[ "$PLATFORMS" == *ios* ]] && echo '  ios: true' || echo '  ios: false'
+    echo '  web: false'
+  } > flutter_native_splash.yaml
+  dart run flutter_native_splash:create --path=flutter_native_splash.yaml > splash.txt 2>&1 || { tail -30 splash.txt | sed 's/^/::error::/'; exit 1; }
+fi
 echo "✓ المنصات جاهزة: $PLATFORMS"

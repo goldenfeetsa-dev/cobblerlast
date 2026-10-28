@@ -29,20 +29,9 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.1
   msix: ^3.16.7
+  flutter_native_splash: ^2.4.4
 
-flutter_launcher_icons:
-  android: true
-  ios: true
-  remove_alpha_ios: true
-  image_path: "assets/images/cobblers-app-icon.png"
-  adaptive_icon_background: "#0B0B0C"
-  adaptive_icon_foreground: "assets/images/cobblers-app-icon.png"
-  windows:
-    generate: true
-    image_path: "assets/images/cobblers-app-icon.png"
-  macos:
-    generate: true
-    image_path: "assets/images/cobblers-app-icon.png"
+# إعدادات الأيقونة تُولَّد حسب المنصات في tool/bootstrap.sh (من assets/images/app-icon-1024.png)
 
 # حزمة ويندوز لمتجر Microsoft — الهوية الحقيقية (identity/publisher) تُمرَّر من أسرار GitHub وقت النشر
 msix_config:
@@ -50,7 +39,7 @@ msix_config:
   publisher_display_name: مؤسسة إبرة وخيط الإسكافي للتجارة
   identity_name: com.needlecobbler.pos
   msix_version: 1.0.0.0
-  logo_path: assets/images/cobblers-app-icon.png
+  logo_path: assets/images/app-icon-1024.png
   capabilities: internetClient,webcam
   languages: ar-sa, en-us
 
