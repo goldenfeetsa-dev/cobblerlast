@@ -28,6 +28,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.1
+  msix: ^3.16.7
 
 flutter_launcher_icons:
   android: true
@@ -42,6 +43,16 @@ flutter_launcher_icons:
   macos:
     generate: true
     image_path: "assets/images/cobblers-app-icon.png"
+
+# حزمة ويندوز لمتجر Microsoft — الهوية الحقيقية (identity/publisher) تُمرَّر من أسرار GitHub وقت النشر
+msix_config:
+  display_name: إبرة وخيط
+  publisher_display_name: مؤسسة إبرة وخيط الإسكافي للتجارة
+  identity_name: com.needlecobbler.pos
+  msix_version: 1.0.0.0
+  logo_path: assets/images/cobblers-app-icon.png
+  capabilities: internetClient,webcam
+  languages: ar-sa, en-us
 
 flutter:
   uses-material-design: true

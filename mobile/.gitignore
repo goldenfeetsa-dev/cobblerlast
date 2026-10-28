@@ -23,3 +23,10 @@ web/
 
 # لقطات الشاشة المولّدة
 test_screens/shots/
+
+# مفاتيح التوقيع — لا تُرفع أبداً
+*.jks
+*.keystore
+*.p8
+*.p12
+key.properties

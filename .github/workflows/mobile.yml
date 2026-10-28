@@ -16,6 +16,10 @@ on:
         description: 'توليد لقطات شاشة للتصميم (فرع ci/screenshots)'
         type: boolean
         default: false
+      release:
+        description: 'نسخة نشر للمتاجر (Google Play + App Store + Microsoft Store) — تحتاج أسرار التوقيع'
+        type: boolean
+        default: false
 
 concurrency:
   group: mobile-${{ github.event_name }}-${{ github.ref }}
@@ -112,3 +116,113 @@ jobs:
           git config user.name "github-actions"; git config user.email "actions@github.com"
           git add . && git commit -qm "screenshots ${GITHUB_SHA::7}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci/screenshots
+
+  # ═══════════════════════ نسخ النشر للمتاجر ═══════════════════════
+  # الأسرار تُضاف من GitHub ← Settings ← Secrets and variables ← Actions، ولا تُكتب بالكود أبداً.
+
+  play-release:
+    name: Google Play (AAB موقّع)
+    if: github.event_name == 'workflow_dispatch' && inputs.release
+    runs-on: ubuntu-latest
+    needs: android
+    timeout-minutes: 40
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: PLATFORMS=android bash tool/bootstrap.sh
+      - name: مفتاح التوقيع
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then echo "::error::ناقص سر ANDROID_KEYSTORE_BASE64 — Google Play يرفض نسخة بدون توقيع"; exit 1; fi
+          echo "$KEYSTORE_B64" | base64 -d > android/app/upload-keystore.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n' "$KEYSTORE_PASSWORD" "${KEY_PASSWORD:-$KEYSTORE_PASSWORD}" "${KEY_ALIAS:-upload}" > android/key.properties
+      - run: flutter build appbundle --release --build-number ${{ github.run_number }}
+      - name: حذف المفتاح من الجهاز
+        if: always()
+        run: rm -f android/app/upload-keystore.jks android/key.properties
+      - uses: actions/upload-artifact@v4
+        with:
+          name: google-play-aab
+          path: mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  microsoft-store:
+    name: Microsoft Store (MSIX)
+    if: github.event_name == 'workflow_dispatch' && inputs.release
+    runs-on: windows-latest
+    needs: android
+    timeout-minutes: 40
+    env:
+      MS_IDENTITY: ${{ secrets.MS_STORE_IDENTITY_NAME }}
+      MS_PUBLISHER: ${{ secrets.MS_STORE_PUBLISHER }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: PLATFORMS=windows bash tool/bootstrap.sh
+      - run: flutter build windows --release --build-number ${{ github.run_number }}
+      - name: حزمة MSIX
+        run: |
+          V="1.0.${{ github.run_number }}.0"
+          if [ -n "$MS_IDENTITY" ] && [ -n "$MS_PUBLISHER" ]; then
+            dart run msix:create --build-windows false --store --identity-name "$MS_IDENTITY" --publisher "$MS_PUBLISHER" --version "$V" --output-path build/msix
+          else
+            echo "::warning::ناقص MS_STORE_IDENTITY_NAME / MS_STORE_PUBLISHER — بنيت نسخة تجربة فقط (غير صالحة للرفع للمتجر)"
+            dart run msix:create --build-windows false --version "$V" --output-path build/msix
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: microsoft-store-msix
+          path: mobile/build/msix/*.msix
+          retention-days: 30
+
+  app-store:
+    name: App Store (رفع لـ TestFlight)
+    if: github.event_name == 'workflow_dispatch' && inputs.release
+    runs-on: macos-latest
+    needs: android
+    timeout-minutes: 60
+    env:
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      ASC_KEY_B64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - name: التحقق من الأسرار
+        run: |
+          for v in TEAM_ID ASC_KEY_ID ASC_ISSUER ASC_KEY_B64; do
+            [ -n "${!v}" ] || { echo "::error::ناقص سر $v — راجع mobile/STORE_RELEASE.md"; exit 1; }
+          done
+      - run: PLATFORMS=ios bash tool/bootstrap.sh
+      - run: flutter build ios --release --no-codesign --build-number ${{ github.run_number }}
+      - name: أرشفة ورفع (توقيع تلقائي من Apple عبر مفتاح API)
+        run: |
+          KEY="$RUNNER_TEMP/AuthKey.p8"; echo "$ASC_KEY_B64" | base64 -d > "$KEY"
+          AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER")
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          PLIST
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic "${AUTH[@]}" archive | tail -20
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" "${AUTH[@]}" | tail -20
+          rm -f "$KEY"

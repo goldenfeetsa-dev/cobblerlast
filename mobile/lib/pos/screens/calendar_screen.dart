@@ -241,7 +241,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             crossAxisCount: 7,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 0.95,
+            childAspectRatio: 0.8,
             children: cells,
           ),
       ]),
@@ -275,14 +275,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text('${day.day}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: isToday && !sel ? const Color(0xFFD97706) : text)),
           if (n > 0)
-            Column(mainAxisSize: MainAxisSize.min, children: [
+            FittedBox(fit: BoxFit.scaleDown, child: Column(mainAxisSize: MainAxisSize.min, children: [
               Text('$n', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: sel ? text : border)),
               Row(mainAxisSize: MainAxisSize.min, children: [
                 for (final o in list.take(4))
                   Container(width: 5, height: 5, margin: const EdgeInsets.symmetric(horizontal: 1), decoration: BoxDecoration(shape: BoxShape.circle, color: _st[o['status']]?.$2 ?? const Color(0xFF9CA3AF))),
                 if (n > 4) Text('+${n - 4}', style: const TextStyle(fontSize: 8, color: Pos.muted)),
               ]),
-            ])
+            ]))
           else
             const SizedBox.shrink(),
         ]),

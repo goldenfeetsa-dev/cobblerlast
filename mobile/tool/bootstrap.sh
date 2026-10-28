@@ -10,6 +10,8 @@ cd "$(dirname "$0")/.."
 
 PLATFORMS="${PLATFORMS:-android,ios,macos,windows}"
 APP_LABEL="إبرة وخيط"
+# معرّف التطبيق في المتاجر — ثابت للأبد بعد أول نشر، لا تغيّره
+APP_ID="com.needlecobbler.pos"
 
 flutter create --project-name cobbler_accounting --org com.needlecobbler \
   --platforms="$PLATFORMS" --no-pub . >/dev/null
@@ -34,6 +36,7 @@ for G in android/app/build.gradle.kts android/app/build.gradle; do
     # EncryptedSharedPreferences تتطلب Android 6.0 (API 23) فأعلى
     sed -i.bak -E 's/minSdk( =|) *flutter\.minSdkVersion/minSdk\1 23/; s/minSdkVersion +flutter\.minSdkVersion/minSdkVersion 23/' "$G"
     rm -f "$G.bak"
+    /usr/bin/env python3 tool/patch_android.py "$G" "$APP_ID"
   fi
 done
 
@@ -48,8 +51,15 @@ d['CFBundleDisplayName'] = label
 d['CFBundleDevelopmentRegion'] = 'ar'
 d['NSCameraUsageDescription'] = 'لتصوير قطع العميل وإرفاقها بالطلب'
 d['NSPhotoLibraryUsageDescription'] = 'لإرفاق صور القطع من المعرض بالطلب'
+d['ITSAppUsesNonExemptEncryption'] = False  # HTTPS فقط
 with open(p, 'wb') as f: plistlib.dump(d, f)
 PY
+fi
+
+PBX=ios/Runner.xcodeproj/project.pbxproj
+if [ -f "$PBX" ]; then
+  # نفس معرّف Google Play لـ App Store
+  sed -i.bak -E "s/com\.needlecobbler\.cobblerAccounting/$APP_ID/g" "$PBX" && rm -f "$PBX.bak"
 fi
 
 # ── macOS: اتصال بالشبكة + سلسلة المفاتيح ────────────────────────
