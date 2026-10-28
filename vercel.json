@@ -3,29 +3,83 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/sb/:path*", "destination": "/api/secure/data?resource=sb&p=:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/sb/:path*",
+      "destination": "/api/secure/data?resource=sb&p=:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(self), geolocation=(self)" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'sha256-OiNIuCWaTbmYi8inVcSkmnW8NsBVWbh1R0k9Qr6CR3w=' 'sha256-j+aQ3f1csDP1wU1HZDciiuoShTFK8sXlhtEhMLMIRLE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://images.unsplash.com https://bwuvldnlfgobqpdfhyql.supabase.co https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; connect-src 'self' https://bwuvldnlfgobqpdfhyql.supabase.co wss://bwuvldnlfgobqpdfhyql.supabase.co https://nominatim.openstreetmap.org https://vitals.vercel-insights.com https://vitals.vercel-analytics.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests" }
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "0"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(self), geolocation=(self), payment=(), usb=(), bluetooth=(), serial=(), accelerometer=(), gyroscope=(), magnetometer=(), interest-cohort=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'sha256-OiNIuCWaTbmYi8inVcSkmnW8NsBVWbh1R0k9Qr6CR3w=' 'sha256-j+aQ3f1csDP1wU1HZDciiuoShTFK8sXlhtEhMLMIRLE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://images.unsplash.com https://bwuvldnlfgobqpdfhyql.supabase.co https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; connect-src 'self' https://bwuvldnlfgobqpdfhyql.supabase.co wss://bwuvldnlfgobqpdfhyql.supabase.co https://nominatim.openstreetmap.org https://vitals.vercel-insights.com https://vitals.vercel-analytics.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
       ]
     }
   ],
   "env": {
     "VITE_SUPABASE_URL": "https://bwuvldnlfgobqpdfhyql.supabase.co"
   },
-  "functions": { "api/secure/data.js": { "maxDuration": 30 } },
+  "functions": {
+    "api/secure/data.js": {
+      "maxDuration": 30
+    }
+  },
   "crons": [
-    { "path": "/api/zatca/retry-worker", "schedule": "0 3 * * *" },
-    { "path": "/api/secure/data?resource=booking-reminders", "schedule": "0 6 * * *" }
+    {
+      "path": "/api/zatca/retry-worker",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/secure/data?resource=booking-reminders",
+      "schedule": "0 6 * * *"
+    }
   ]
 }
