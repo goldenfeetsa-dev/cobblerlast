@@ -1,0 +1,39 @@
+
+::group::✅ Passing tests
+✅ login
+✅ dashboard-desktop
+✅ dashboard-phone
+✅ orders-desktop
+✅ orders-phone
+✅ order-details
+✅ order-details-desktop
+✅ customers
+✅ staff
+✅ new-order
+✅ receipt
+✅ scan
+✅ invoices
+✅ sales
+✅ purchasing
+✅ returns
+✅ partners
+✅ employees
+✅ leaderboard
+✅ audit
+✅ bookings
+✅ calendar
+✅ settings
+✅ branches
+✅ services-admin
+✅ working-hours
+✅ reviews
+✅ loyalty
+✅ careers
+✅ auction
+✅ zatca
+✅ site-analytics
+✅ assistant
+✅ accounting
+::endgroup::
+
+🎉 34 tests passed.
