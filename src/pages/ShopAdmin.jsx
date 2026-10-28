@@ -104,7 +104,12 @@ export default function ShopAdmin() {
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, ...d }) => db.Product.update(id, { ...d, price: Number(d.price), original_price: d.original_price ? Number(d.original_price) : undefined }),
+    // تبديل التوفر يرسل in_stock فقط — لا نلمس السعر وإلا يتحوّل لـ null
+    mutationFn: ({ id, ...d }) => db.Product.update(id, {
+      ...d,
+      ...('price' in d ? { price: Number(d.price) } : {}),
+      ...('original_price' in d ? { original_price: d.original_price ? Number(d.original_price) : null } : {}),
+    }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['products-admin'] }); setEditing(null); },
     // كانت الأخطاء هنا تُبتلع بصمت — لو فشل التعديل (صلاحيات RLS، عمود
     // مفقود، إلخ) ما كان يظهر شيء للمستخدم وتبدو الواجهة وكأنها "ما تشتغل"

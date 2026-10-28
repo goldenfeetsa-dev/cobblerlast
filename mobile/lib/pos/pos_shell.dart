@@ -8,10 +8,13 @@ import '../screens/accounting_section.dart';
 import '../state/accounting_controller.dart';
 import '../state/auth_controller.dart';
 import 'pos_ui.dart';
+import 'screens/calendar_screen.dart';
+import 'screens/content_screens.dart';
 import 'screens/customers_screen.dart';
 import 'screens/employees_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/invoices_screen.dart';
+import 'screens/loyalty_screens.dart';
 import 'screens/new_order_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/partners_screens.dart';
@@ -19,6 +22,7 @@ import 'screens/purchasing_screens.dart';
 import 'screens/returns_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/scan_screen.dart';
+import 'screens/settings_screens.dart';
 import 'screens/staff_screens.dart';
 import 'screens/team_screens.dart';
 
@@ -59,6 +63,7 @@ const navGroups = <NavGroup>[
     NavItem('staff', 'مهامي 🔧', Icons.content_cut_rounded, Tone.orange, workerOnly: true),
     NavItem('orders', 'الطلبات', Icons.format_list_bulleted_rounded, Tone.indigo),
     NavItem('invoices', 'الفواتير', Icons.receipt_rounded, Tone.teal, financeOnly: true),
+    NavItem('calendar', 'الجدولة المرئية', Icons.calendar_month_rounded, Tone.blue),
     NavItem('scan', 'مسح الباركود', Icons.qr_code_scanner_rounded, Tone.gray),
   ]),
   NavGroup('الأنظمة', [
@@ -79,6 +84,18 @@ const navGroups = <NavGroup>[
   ]),
   NavGroup('المحتوى والموقع', [
     NavItem('bookings', 'الحجوزات', Icons.event_available_rounded, Tone.purple, hideForWorker: true),
+    NavItem('reviews', 'التقييمات', Icons.star_rounded, Tone.orange, adminOnly: true),
+    NavItem('brands', 'الماركات', Icons.sell_rounded, Tone.indigo, adminOnly: true),
+    NavItem('shop-admin', 'المتجر', Icons.storefront_rounded, Tone.pink, adminOnly: true),
+  ]),
+  NavGroup('الإعدادات', [
+    NavItem('services-admin', 'إدارة الخدمات', Icons.build_rounded, Tone.orange, adminOnly: true),
+    NavItem('working-hours', 'أوقات العمل', Icons.schedule_rounded, Tone.teal, adminOnly: true),
+    NavItem('branches', 'الفروع', Icons.location_on_rounded, Tone.red, adminOnly: true),
+    NavItem('social-settings', 'التواصل الاجتماعي', Icons.share_rounded, Tone.pink, adminOnly: true),
+    NavItem('loyalty', 'بطاقات الولاء', Icons.star_rounded, Tone.orange, hideForWorker: true),
+    NavItem('loyalty-members', 'برنامج الولاء (النقاط)', Icons.workspace_premium_rounded, Tone.purple, hideForWorker: true),
+    NavItem('settings', 'الإعدادات', Icons.settings_rounded, Tone.gray, adminOnly: true),
   ]),
 ];
 
@@ -125,6 +142,17 @@ class _PosShellState extends State<PosShell> {
         'leaderboard' => const LeaderboardScreen(),
         'audit' => const AuditLogScreen(),
         'bookings' => const BookingsScreen(),
+        'calendar' => const CalendarScreen(),
+        'reviews' => const ReviewsAdminScreen(),
+        'services-admin' => const ServicesAdminScreen(),
+        'working-hours' => const WorkingHoursScreen(),
+        'branches' => const BranchesScreen(),
+        'settings' => const SettingsScreen(),
+        'brands' => const BrandsScreen(),
+        'shop-admin' => const ShopAdminScreen(),
+        'social-settings' => const SocialSettingsScreen(),
+        'loyalty' => const LoyaltyCardsScreen(),
+        'loyalty-members' => const LoyaltyMembersScreen(),
         'scan' => const ScanScreen(),
         'invoices' => const InvoicesScreen(),
         'sales' => const SalesScreen(),

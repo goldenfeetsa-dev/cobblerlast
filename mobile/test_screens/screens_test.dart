@@ -97,6 +97,11 @@ class _FakeApi extends ApiClient {
     if (path.endsWith('/employees')) return _employees;
     if (path.endsWith('/bookings')) return _bookings;
     if (path.endsWith('/audit_logs')) return _auditLogs;
+    if (path.endsWith('/app_settings')) return [{'id': 's1', 'shop_name': 'إبرة وخيط الإسكافي', 'vat_number': '314151483700003', 'cr_number': '7051288830', 'city': 'الرياض', 'phone': '0549678191', 'b2b_invoicing_enabled': true}];
+    if (path.endsWith('/branches')) return [{'id': 'br1', 'name': 'الفرع الرئيسي', 'address': 'الرياض — حي الملقا', 'phone': '0549678191', 'working_hours': 'السبت-الخميس 11:30ص-11:30م', 'is_active': true, 'maps_url': 'https://maps.google.com'}];
+    if (path.endsWith('/services')) return [{'id': 'sv1', 'name_ar': 'تغيير نعل', 'category': 'shoes', 'price': 80, 'duration_minutes': 45, 'is_active': true, 'description': 'نعل جلد طبيعي'}, {'id': 'sv2', 'name_ar': 'تنظيف شنطة', 'category': 'bags', 'price': 120, 'duration_minutes': 60, 'is_active': false}];
+    if (path.endsWith('/loyalty_cards')) return [{'id': 'l1', 'customer_name': 'منى', 'customer_phone': '0551112223', 'stamps': 3, 'free_after': 3, 'total_orders': 3}, {'id': 'l2', 'customer_name': 'عبدالله', 'customer_phone': '0503334445', 'stamps': 1, 'free_after': 3, 'total_orders': 4}];
+    if (path.endsWith('/reviews')) return [{'id': 'r1', 'customer_name': 'ريم', 'rating': 5, 'text': 'شغل ممتاز وسريع', 'is_approved': false, 'service': 'تلميع'}];
     if (path == '/api/secure/data' && query?['resource'] == 'customers') return _customers;
     return const [];
   }
@@ -196,5 +201,12 @@ void main() {
   testWidgets('leaderboard', (t) => shot(t, '19-leaderboard', tall, const PosShell(initial: 'leaderboard')));
   testWidgets('audit', (t) => shot(t, '20-audit', desktop, const PosShell(initial: 'audit')));
   testWidgets('bookings', (t) => shot(t, '21-bookings', tall, const PosShell(initial: 'bookings')));
+  testWidgets('calendar', (t) => shot(t, '22-calendar', tall, const PosShell(initial: 'calendar')));
+  testWidgets('settings', (t) => shot(t, '23-settings', desktop, const PosShell(initial: 'settings')));
+  testWidgets('branches', (t) => shot(t, '24-branches', phone, const PosShell(initial: 'branches')));
+  testWidgets('services-admin', (t) => shot(t, '25-services', desktop, const PosShell(initial: 'services-admin')));
+  testWidgets('working-hours', (t) => shot(t, '26-working-hours', phone, const PosShell(initial: 'working-hours')));
+  testWidgets('reviews', (t) => shot(t, '27-reviews', phone, const PosShell(initial: 'reviews')));
+  testWidgets('loyalty', (t) => shot(t, '28-loyalty', phone, const PosShell(initial: 'loyalty')));
   testWidgets('accounting', (t) => shot(t, '09-accounting', desktop, const PosShell(initial: 'accounting')));
 }
