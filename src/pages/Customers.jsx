@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { db, APP_SETTINGS_SAFE_COLUMNS } from '@/api/supabaseApi';
+import { supabase } from '@/lib/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,7 +49,12 @@ export default function Customers() {
   });
 
   const deleteCustomer = useMutation({
-    mutationFn: (id) => db.Customer.delete(id),
+    mutationFn: async (id) => {
+      // حذف نهائي لبيانات العميل الشخصية + إخفاء هويته من الطلبات والحجوزات والولاء (الفواتير الضريبية تبقى 6 سنوات نظاماً)
+      const { data, error } = await supabase.rpc('erase_customer', { p_id: id });
+      if (error || !data?.ok) throw new Error(error?.message || 'erase_failed');
+      return data;
+    },
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       logAudit({ action: 'delete', page: 'العملاء', entity: 'customer', entity_id: id });
@@ -247,7 +253,7 @@ export default function Customers() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>حذف العميل {c.name}؟</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  هذا الإجراء نهائي ولا يمكن التراجع عنه. لن يتأثر سجل الطلبات السابقة، لكن بيانات العميل نفسه ستُحذف.
+                                  هذا الإجراء نهائي ولا يمكن التراجع عنه. تُمسح بيانات العميل الشخصية وتُخفى هويته من الطلبات والحجوزات وبطاقات الولاء، وتبقى الفواتير الضريبية محفوظة 6 سنوات حسب النظام.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

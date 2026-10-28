@@ -111,7 +111,7 @@ export default function AboutUs() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <FadeIn>
               <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(236,232,223,0.12)' }}>
-                <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80"
+                <img src="/images/hero-workshop.jpg"
                   alt="ورشة إبرة وخيط الإسكافي" className="w-full h-72 object-cover" />
               </div>
             </FadeIn>

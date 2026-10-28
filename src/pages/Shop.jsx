@@ -14,20 +14,7 @@ const WA_NUMBER = '966549678191';
 const INK = '#ece8df';
 const HAIR = 'rgba(255,255,255,0.08)';
 
-const FALLBACK_IMAGES = [
-  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80',
-  'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80',
-  'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80',
-  'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=400&q=80',
-  'https://images.unsplash.com/photo-1558171813-05e6cbb28a77?w=400&q=80',
-  'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&q=80',
-  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  'https://images.unsplash.com/photo-1558171813-05e6cbb28a77?w=400&q=80',
-  'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400&q=80',
-  'https://images.unsplash.com/photo-1558171813-05e6cbb28a77?w=400&q=80',
-  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80',
-  'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=400&q=80',
-];
+const FALLBACK_IMAGES = Array(12).fill('/images/cobblers-official-mark-white.png');
 const FALLBACK_META = [
   { category: 'soles', price: 85, original_price: 120, in_stock: true, is_featured: true },
   { category: 'soles', price: 45, in_stock: true },
