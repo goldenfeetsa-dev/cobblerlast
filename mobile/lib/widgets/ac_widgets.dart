@@ -18,9 +18,11 @@ class Money extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neg = forceNeg || value < 0;
+    // تقريب لمنزلتين أولاً حتى لا يظهر «-0.00»
+    final v = (value * 100).roundToDouble() / 100;
+    final neg = forceNeg || v < 0;
     final c = neg ? AC.neg : (color ?? AC.tx);
-    final text = neg ? '(${money(value.abs())})' : money(value);
+    final text = neg ? '(${money(v.abs())})' : money(v == 0 ? 0 : v);
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Text.rich(
@@ -219,7 +221,7 @@ class AcHeader extends StatelessWidget {
             textDirection: TextDirection.ltr,
             child: Align(
               alignment: Alignment.centerRight,
-              child: Text('${ymd(ctl.from)} → ${ymd(ctl.to)}', style: TextStyle(fontSize: 12.5, color: AC.mu)),
+              child: Text('${ymd(ctl.from)}  –  ${ymd(ctl.to)}', style: TextStyle(fontSize: 12.5, color: AC.mu)),
             ),
           ),
           const SizedBox(height: 14),

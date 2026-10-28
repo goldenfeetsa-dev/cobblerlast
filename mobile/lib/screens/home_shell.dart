@@ -100,8 +100,8 @@ class _HomeShellState extends State<HomeShell> {
             indicatorColor: AC.goldSoft,
             selectedIconTheme: const IconThemeData(color: AC.gold),
             unselectedIconTheme: IconThemeData(color: AC.mu),
-            selectedLabelTextStyle: const TextStyle(color: AC.gold, fontWeight: FontWeight.w700, fontSize: 12),
-            unselectedLabelTextStyle: TextStyle(color: AC.mu, fontSize: 12),
+            selectedLabelTextStyle: const TextStyle(fontFamily: AC.font, color: AC.gold, fontWeight: FontWeight.w700, fontSize: 12),
+            unselectedLabelTextStyle: TextStyle(fontFamily: AC.font, color: AC.mu, fontSize: 12),
             destinations: [
               for (final it in _items)
                 NavigationRailDestination(icon: Icon(it.$1), selectedIcon: Icon(it.$2), label: Text(it.$3)),
