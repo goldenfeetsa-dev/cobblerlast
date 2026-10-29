@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../core/api_client.dart';
@@ -26,34 +28,35 @@ class AuthController extends ChangeNotifier {
   /// رسالة تظهر في شاشة الدخول (خطأ PIN، انتهاء جلسة، صلاحية...).
   String? get message => _message;
 
-  /// عند فتح التطبيق: نقرأ الجلسة المحفوظة ونتحقق منها مع الخادم.
+  /// عند فتح التطبيق: نفتح فوراً بالجلسة المحفوظة (بدون انتظار الإنترنت)،
+  /// ونتحقق منها مع الخادم بالخلفية — لو طلعت منتهية نرجع لشاشة الدخول.
   Future<void> restore() async {
     final saved = await _storage.read();
-    if (saved == null) {
+    if (saved == null || saved.isExpired || saved.employee == null) {
+      if (saved != null) await _storage.clear();
       _set(AuthStatus.unauthenticated);
       return;
     }
-    // نعرض بيانات آخر دخول فوراً، ثم نتحقق بصمت
     _employee = saved.employee;
+    _set(AuthStatus.authenticated);
+    unawaited(_revalidate());
+  }
+
+  Future<void> _revalidate() async {
     try {
       final me = await _api.me();
       if (me == null) {
         await _storage.clear();
-        _employee = null;
-        _message = 'انتهت جلستك — سجّل الدخول من جديد';
-        _set(AuthStatus.unauthenticated);
+        _expire('انتهت جلستك — سجّل الدخول من جديد');
         return;
       }
-      _employee = me;
-      await _storage.saveEmployee(me);
-      _set(AuthStatus.authenticated);
-    } on ApiException {
-      // بدون إنترنت: نسمح بفتح التطبيق بالجلسة المحلية السارية؛ الطلبات ستُظهر خطأ الاتصال
-      if (saved.employee != null) {
-        _set(AuthStatus.authenticated);
-      } else {
-        _set(AuthStatus.unauthenticated);
+      if (me.role != _employee?.role || me.name != _employee?.name || me.branchId != _employee?.branchId) {
+        _employee = me;
+        notifyListeners();
       }
+      await _storage.saveEmployee(me);
+    } on ApiException {
+      // بدون إنترنت: نكمل بالجلسة المحلية السارية
     }
   }
 

@@ -136,15 +136,44 @@ class _PosShellState extends State<PosShell> {
     _current = widget.initial ?? homeFor(context.read<AuthController>().employee!);
   }
 
-  void _go(String id) {
-    setState(() => _current = id);
+  // الصفحات اللي انفتحت تبقى بالذاكرة: الرجوع لها فوري بدون إعادة تحميل.
+  // تُحدَّث من جديد لو مر عليها أكثر من دقيقة، أو لو طلبنا ذلك (fresh).
+  final _alive = <String, ({Widget page, DateTime at, int gen})>{};
+  static const _staleAfter = Duration(seconds: 60);
+
+  void _go(String id, {bool fresh = false}) {
+    setState(() {
+      final old = _alive[id];
+      if (old != null && (fresh || DateTime.now().difference(old.at) > _staleAfter)) _alive.remove(id);
+      _leave(_current);
+      _current = id;
+    });
     if (_scaffold.currentState?.isDrawerOpen ?? false) Navigator.of(context).pop();
+  }
+
+  void _leave(String id) {
+    final old = _alive[id];
+    if (old != null) _alive[id] = (page: old.page, at: DateTime.now(), gen: old.gen);
+  }
+
+  Widget _stack() {
+    if (!_alive.containsKey(_current)) {
+      _alive[_current] = (page: _page(_current), at: DateTime.now(), gen: DateTime.now().microsecondsSinceEpoch);
+    }
+    return Stack(fit: StackFit.expand, children: [
+      for (final e in _alive.entries)
+        Offstage(
+          key: ValueKey('${e.key}-${e.value.gen}'),
+          offstage: e.key != _current,
+          child: TickerMode(enabled: e.key == _current, child: e.value.page),
+        ),
+    ]);
   }
 
   Widget _page(String id) => switch (id) {
         'pos' => DashboardScreen(onOpenOrders: () => _go('orders')),
         'staff' => const StaffTasksScreen(),
-        'new-order' => NewOrderScreen(onCreated: (_) => _go('orders')),
+        'new-order' => NewOrderScreen(onCreated: (_) => _go('orders', fresh: true)),
         'orders' => const OrdersScreen(),
         'customers' => const CustomersScreen(),
         'employees' => const EmployeesScreen(),
@@ -208,7 +237,7 @@ class _PosShellState extends State<PosShell> {
     final title = groups.expand((g) => g.items).firstWhere((i) => i.id == _current).label;
 
     final sidebar = _Sidebar(groups: groups, current: _current, me: me, onTap: _go, onLogout: _logout);
-    final body = KeyedSubtree(key: ValueKey(_current), child: _page(_current));
+    final body = _stack();
 
     if (wide) {
       return Scaffold(

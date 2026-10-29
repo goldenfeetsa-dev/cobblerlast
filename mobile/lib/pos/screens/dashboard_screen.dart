@@ -76,8 +76,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             limit: 500),
         rest.select('sales_invoices',
             select: 'id,invoice_number,branch_id,branch_name,total,subtotal,payment_method,payment_status,created_at,items', order: 'created_at.desc', limit: 500),
-        rest.secureList('customers', limit: 2000).catchError((_) => <Map<String, dynamic>>[]),
       ]);
+      // عدد العملاء ملف كبير — يتحمل بالخلفية بدون ما يأخّر بقية الأرقام
+      rest.secureList('customers', limit: 2000).then((c) {
+        if (mounted) setState(() => _customers = c.length);
+      }).catchError((_) {});
       final admin = {'admin', 'owner', 'manager'}.contains(me.role);
       bool inBranch(Map<String, dynamic> r) => admin || me.branchId == null || r['branch_id'] == null || r['branch_id'] == me.branchId;
       final orders = res[0].where(inBranch).map(Order.new).toList();
@@ -97,7 +100,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _all = tx;
         _orders = orders;
-        _customers = res[2].length;
         _error = null;
       });
     } on ApiException catch (e) {

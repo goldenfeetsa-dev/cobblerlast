@@ -27,7 +27,7 @@ class Pos {
   static const radius = 16.0;
 
   static List<BoxShadow> get shadow => const [
-        BoxShadow(color: Color(0x141F2D5A), blurRadius: 30, offset: Offset(0, 8)),
+        BoxShadow(color: Color(0x141F2D5A), blurRadius: 16, offset: Offset(0, 6)),
         BoxShadow(color: Color(0x0F1F2D5A), blurRadius: 3, offset: Offset(0, 1)),
       ];
 
